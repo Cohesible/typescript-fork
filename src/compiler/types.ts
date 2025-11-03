@@ -330,6 +330,7 @@ export const enum SyntaxKind {
     ThrowStatement,
     TryStatement,
     DebuggerStatement,
+    DeferStatement,
     VariableDeclaration,
     VariableDeclarationList,
     FunctionDeclaration,
@@ -1145,6 +1146,7 @@ export type HasChildren =
     | WithStatement
     | SwitchStatement
     | LabeledStatement
+    | DeferStatement
     | ThrowStatement
     | TryStatement
     | VariableDeclaration
@@ -3352,6 +3354,11 @@ export interface EmptyStatement extends Statement {
 
 export interface DebuggerStatement extends Statement, FlowContainer {
     readonly kind: SyntaxKind.DebuggerStatement;
+}
+
+export interface DeferStatement extends Statement, FlowContainer {
+    readonly kind: SyntaxKind.DeferStatement;
+    readonly statement: Statement;
 }
 
 export interface MissingDeclaration extends DeclarationStatement, PrimaryExpression {
@@ -9046,6 +9053,8 @@ export interface NodeFactory {
     createTryStatement(tryBlock: Block, catchClause: CatchClause | undefined, finallyBlock: Block | undefined): TryStatement;
     updateTryStatement(node: TryStatement, tryBlock: Block, catchClause: CatchClause | undefined, finallyBlock: Block | undefined): TryStatement;
     createDebuggerStatement(): DebuggerStatement;
+    createDeferStatement(statement: Statement): DeferStatement;
+    updateDeferStatement(node: DeferStatement, statement: Statement): DeferStatement;
     createVariableDeclaration(name: string | BindingName, exclamationToken?: ExclamationToken, type?: TypeNode, initializer?: Expression): VariableDeclaration;
     updateVariableDeclaration(node: VariableDeclaration, name: BindingName, exclamationToken: ExclamationToken | undefined, type: TypeNode | undefined, initializer: Expression | undefined): VariableDeclaration;
     createVariableDeclarationList(declarations: readonly VariableDeclaration[], flags?: NodeFlags): VariableDeclarationList;

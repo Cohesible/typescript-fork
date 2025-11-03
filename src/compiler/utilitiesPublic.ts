@@ -2418,7 +2418,8 @@ export function isStatement(node: Node): node is Statement {
     const kind = node.kind;
     return isStatementKindButNotDeclarationKind(kind)
         || isDeclarationStatementKind(kind)
-        || isBlockStatement(node);
+        || isBlockStatement(node)
+        || kind === SyntaxKind.DeferStatement;
 }
 
 function isBlockStatement(node: Node): node is Block {
@@ -2441,7 +2442,8 @@ export function isStatementOrBlock(node: Node): node is Statement | Block {
     const kind = node.kind;
     return isStatementKindButNotDeclarationKind(kind)
         || isDeclarationStatementKind(kind)
-        || kind === SyntaxKind.Block;
+        || kind === SyntaxKind.Block
+        || kind === SyntaxKind.DeferStatement;
 }
 
 // Module references

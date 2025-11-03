@@ -1393,6 +1393,13 @@ const visitEachChildTable: VisitEachChildTable = {
         );
     },
 
+    [SyntaxKind.DeferStatement]: function visitEachChildOfDeferStatement(node, visitor, context, _nodesVisitor, nodeVisitor, _tokenVisitor) {
+        return context.factory.updateDeferStatement(
+            node,
+            Debug.checkDefined(nodeVisitor(node.statement, visitor, isStatement, context.factory.liftToBlock)),
+        );
+    },
+
     [SyntaxKind.ThrowStatement]: function visitEachChildOfThrowStatement(node, visitor, context, _nodesVisitor, nodeVisitor, _tokenVisitor) {
         return context.factory.updateThrowStatement(
             node,

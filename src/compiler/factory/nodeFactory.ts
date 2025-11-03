@@ -61,6 +61,7 @@ import {
     createScanner,
     Debug,
     DebuggerStatement,
+    DeferStatement,
     Declaration,
     DeclarationName,
     Decorator,
@@ -741,6 +742,8 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         createTryStatement,
         updateTryStatement,
         createDebuggerStatement,
+        createDeferStatement,
+        updateDeferStatement,
         createVariableDeclaration,
         updateVariableDeclaration,
         createVariableDeclarationList,
@@ -4245,6 +4248,22 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         node.jsDoc = undefined; // initialized by parser (JsDocContainer)
         node.flowNode = undefined; // initialized by binder (FlowContainer)
         return node;
+    }
+
+    // @api
+    function createDeferStatement(statement: Statement) {
+        const node = createBaseNode<DeferStatement>(SyntaxKind.DeferStatement);
+        node.statement = statement;
+        node.jsDoc = undefined; // initialized by parser (JsDocContainer)
+        node.flowNode = undefined; // initialized by binder (FlowContainer)
+        return node;
+    }
+
+    // @api
+    function updateDeferStatement(node: DeferStatement, statement: Statement) {
+        return node.statement !== statement
+            ? update(createDeferStatement(statement), node)
+            : node;
     }
 
     // @api

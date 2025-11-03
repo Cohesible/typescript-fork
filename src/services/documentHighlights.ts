@@ -16,6 +16,7 @@ import {
     createTextSpanFromNode,
     Debug,
     DefaultClause,
+    DeferStatement,
     find,
     FindAllReferences,
     findAncestor,
@@ -176,6 +177,11 @@ export namespace DocumentHighlights {
                 return highlightSpans(getAsyncAndAwaitOccurrences(node));
             case SyntaxKind.YieldKeyword:
                 return highlightSpans(getYieldOccurrences(node));
+            case SyntaxKind.DeferKeyword:
+                if (node.parent.kind == SyntaxKind.DeferStatement) {
+                    return highlightSpans([node])
+                }
+                return 
             case SyntaxKind.InKeyword:
             case SyntaxKind.OutKeyword:
                 return undefined;
@@ -467,7 +473,7 @@ export namespace DocumentHighlights {
 
         return keywords;
     }
-
+    
     function getAsyncAndAwaitOccurrences(node: Node): Node[] | undefined {
         const func = getContainingFunction(node) as FunctionLikeDeclaration;
         if (!func) {

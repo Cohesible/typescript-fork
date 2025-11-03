@@ -60,6 +60,7 @@ import {
     Debug,
     Decorator,
     DefaultClause,
+    DeferStatement,
     DeleteExpression,
     Diagnostic,
     DiagnosticArguments,
@@ -880,6 +881,9 @@ const forEachChildTable: ForEachChildTable = {
     [SyntaxKind.LabeledStatement]: function forEachChildInLabeledStatement<T>(node: LabeledStatement, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNode(cbNode, node.label) ||
             visitNode(cbNode, node.statement);
+    },
+    [SyntaxKind.DeferStatement]: function forEachChildInDeferStatement<T>(node: DeferStatement, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+        return visitNode(cbNode, node.statement);
     },
     [SyntaxKind.ThrowStatement]: function forEachChildInThrowStatement<T>(node: ThrowStatement, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNode(cbNode, node.expression);
@@ -7120,6 +7124,27 @@ namespace Parser {
         return withJSDoc(finishNode(factory.createDebuggerStatement(), pos), hasJSDoc);
     }
 
+    function parseDeferStatement(): Statement {
+        const pos = getNodePos();
+
+        switch (lookAhead(nextToken)) {
+            case SyntaxKind.OpenBraceToken:
+            case SyntaxKind.Identifier:
+            case SyntaxKind.ThisKeyword: 
+            case SyntaxKind.SuperKeyword: 
+            case SyntaxKind.VoidKeyword: 
+            case SyntaxKind.AwaitKeyword: 
+            case SyntaxKind.DeleteKeyword:
+            case SyntaxKind.TypeOfKeyword:
+            case SyntaxKind.PlusPlusToken: 
+            case SyntaxKind.MinusMinusToken:
+                nextToken()
+                return finishNode(factory.createDeferStatement(parseStatement()), pos);
+        }
+
+        return parseExpressionOrLabeledStatement();
+    }
+
     function parseExpressionOrLabeledStatement(): ExpressionStatement | LabeledStatement {
         // Avoiding having to do the lookahead for a labeled statement by just trying to parse
         // out an expression, seeing if it is identifier and then seeing if it is followed by
@@ -7432,6 +7457,8 @@ namespace Parser {
                 return parseTryStatement();
             case SyntaxKind.DebuggerKeyword:
                 return parseDebuggerStatement();
+            case SyntaxKind.DeferKeyword:
+                return parseDeferStatement();
             case SyntaxKind.AtToken:
                 return parseDeclaration();
             case SyntaxKind.AsyncKeyword:

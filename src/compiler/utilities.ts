@@ -11520,6 +11520,8 @@ export function createNameResolver({
                         // A type parameter declared using 'infer T' in a conditional type is visible only in
                         // the true branch of the conditional type.
                         useResult = lastLocation === location.trueType;
+                    } else if (location.kind === SyntaxKind.IfStatement) {
+                        useResult = lastLocation !== location.elseStatement;
                     }
 
                     if (useResult) {

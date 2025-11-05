@@ -2290,6 +2290,8 @@ export function canHaveLocals(node: Node): node is HasLocals {
         case SyntaxKind.Constructor:
         case SyntaxKind.ConstructorType:
         case SyntaxKind.ConstructSignature:
+        case SyntaxKind.IfStatement:
+        case SyntaxKind.WhileStatement:
         case SyntaxKind.ForStatement:
         case SyntaxKind.ForInStatement:
         case SyntaxKind.ForOfStatement:

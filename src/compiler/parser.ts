@@ -3073,6 +3073,9 @@ namespace Parser {
         if (token() === SyntaxKind.EqualsGreaterThanToken) {
             return true;
         }
+        if (token() === SyntaxKind.CloseParenToken) {
+            return true;
+        }
 
         // Keep trying to parse out variable declarators.
         return false;
@@ -6891,6 +6894,13 @@ namespace Parser {
         parseExpected(SyntaxKind.IfKeyword);
         const openParenPosition = scanner.getTokenStart();
         const openParenParsed = parseExpected(SyntaxKind.OpenParenToken);
+        if (token() == SyntaxKind.ConstKeyword || token() == SyntaxKind.LetKeyword) {
+            const expression = parseVariableDeclarationList(false);
+            parseExpectedMatchingBrackets(SyntaxKind.OpenParenToken, SyntaxKind.CloseParenToken, openParenParsed, openParenPosition);
+            const thenStatement = parseStatement();
+            const elseStatement = parseOptional(SyntaxKind.ElseKeyword) ? parseStatement() : undefined;
+            return withJSDoc(finishNode(factoryCreateIfStatement(expression as any, thenStatement, elseStatement), pos), hasJSDoc);
+        }
         const expression = allowInAnd(parseExpression);
         parseExpectedMatchingBrackets(SyntaxKind.OpenParenToken, SyntaxKind.CloseParenToken, openParenParsed, openParenPosition);
         const thenStatement = parseStatement();
@@ -6923,6 +6933,12 @@ namespace Parser {
         parseExpected(SyntaxKind.WhileKeyword);
         const openParenPosition = scanner.getTokenStart();
         const openParenParsed = parseExpected(SyntaxKind.OpenParenToken);
+        if (token() == SyntaxKind.ConstKeyword || token() == SyntaxKind.LetKeyword) {
+            const expression = parseVariableDeclarationList(false);
+            parseExpectedMatchingBrackets(SyntaxKind.OpenParenToken, SyntaxKind.CloseParenToken, openParenParsed, openParenPosition);
+            const statement = parseStatement();
+            return withJSDoc(finishNode(factoryCreateWhileStatement(expression as any, statement), pos), hasJSDoc);
+        }
         const expression = allowInAnd(parseExpression);
         parseExpectedMatchingBrackets(SyntaxKind.OpenParenToken, SyntaxKind.CloseParenToken, openParenParsed, openParenPosition);
         const statement = parseStatement();
@@ -7128,7 +7144,20 @@ namespace Parser {
         const pos = getNodePos();
 
         switch (lookAhead(nextToken)) {
+            // `defer catch`
+            // case SyntaxKind.CatchKeyword:
+            //     nextToken()
+            //     return finishNode(factory.createDeferStatement(parseCatchClause() as any), pos);
+
+            // statements
+            case SyntaxKind.IfKeyword:
+            case SyntaxKind.WhileKeyword:
+            case SyntaxKind.ForKeyword:
+            case SyntaxKind.DoKeyword:
+            case SyntaxKind.SwitchKeyword:
+            case SyntaxKind.TryKeyword:
             case SyntaxKind.OpenBraceToken:
+            // expressions
             case SyntaxKind.Identifier:
             case SyntaxKind.ThisKeyword: 
             case SyntaxKind.SuperKeyword: 

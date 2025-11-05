@@ -1822,6 +1822,8 @@ namespace deleteDeclaration {
                 changes.replaceNode(sourceFile, node, factory.createObjectLiteralExpression());
                 break;
 
+            case SyntaxKind.IfStatement:
+            case SyntaxKind.WhileStatement:
             case SyntaxKind.ForStatement:
                 deleteNode(changes, sourceFile, parent);
                 break;

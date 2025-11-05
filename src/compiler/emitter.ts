@@ -3057,6 +3057,9 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
         const openParenPos = emitTokenWithComment(SyntaxKind.IfKeyword, node.pos, writeKeyword, node);
         writeSpace();
         emitTokenWithComment(SyntaxKind.OpenParenToken, openParenPos, writePunctuation, node);
+        if (node.expression.kind === SyntaxKind.VariableDeclarationList) {
+            throw new Error('TODO')
+        }
         emitExpression(node.expression);
         emitTokenWithComment(SyntaxKind.CloseParenToken, node.expression.end, writePunctuation, node);
         emitEmbeddedStatement(node, node.thenStatement);

@@ -43,6 +43,7 @@ import {
     Debug,
     Declaration,
     declarationNameToString,
+    DeferStatement,
     DeleteExpression,
     DestructuringAssignment,
     DiagnosticArguments,
@@ -546,6 +547,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
     var hasExplicitReturn: boolean;
     var inReturnPosition: boolean;
     var hasFlowEffects: boolean;
+    var inDefer = false;
 
     // state used for emit helpers
     var emitFlags: NodeFlags;
@@ -1133,8 +1135,13 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             case SyntaxKind.IfStatement:
                 bindIfStatement(node as IfStatement);
                 break;
-            case SyntaxKind.ReturnStatement:
             case SyntaxKind.ThrowStatement:
+                if (inDefer) {
+                    bind((node as ThrowStatement).expression);
+                    break;
+                }
+                // falls through
+            case SyntaxKind.ReturnStatement:
                 bindReturnOrThrow(node as ReturnStatement | ThrowStatement);
                 break;
             case SyntaxKind.BreakStatement:
@@ -1143,6 +1150,9 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                 break;
             case SyntaxKind.TryStatement:
                 bindTryStatement(node as TryStatement);
+                break;
+            case SyntaxKind.DeferStatement:
+                bindDeferStatement(node as DeferStatement);
                 break;
             case SyntaxKind.SwitchStatement:
                 bindSwitchStatement(node as SwitchStatement);
@@ -1513,7 +1523,19 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
         const postWhileLabel = createBranchLabel();
         addAntecedent(preWhileLabel, currentFlow);
         currentFlow = preWhileLabel;
-        bindCondition(node.expression, preBodyLabel, postWhileLabel);
+
+        if (node.expression.kind !== SyntaxKind.VariableDeclarationList) {
+            bindCondition(node.expression, preBodyLabel, postWhileLabel);
+        } else {
+            bind(node.expression);
+            const decl = (node.expression as any).declarations[0];
+            const initializer = decl?.initializer
+            if (initializer) {
+                addAntecedent(preBodyLabel, createFlowCondition(FlowFlags.TrueCondition, currentFlow, initializer));
+                addAntecedent(postWhileLabel, createFlowCondition(FlowFlags.FalseCondition, currentFlow, initializer));
+            }
+        }
+        
         currentFlow = finishFlowLabel(preBodyLabel);
         bindIterativeStatement(node.statement, postWhileLabel, preWhileLabel);
         addAntecedent(preWhileLabel, currentFlow);
@@ -1574,7 +1596,17 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
         const thenLabel = createBranchLabel();
         const elseLabel = createBranchLabel();
         const postIfLabel = createBranchLabel();
-        bindCondition(node.expression, thenLabel, elseLabel);
+        if (node.expression.kind !== SyntaxKind.VariableDeclarationList) {
+            bindCondition(node.expression, thenLabel, elseLabel);
+        } else {
+            bind(node.expression);
+            const decl = (node.expression as any).declarations[0];
+            const initializer = decl?.initializer
+            if (initializer) {
+                addAntecedent(thenLabel, createFlowCondition(FlowFlags.TrueCondition, currentFlow, initializer));
+                addAntecedent(elseLabel, createFlowCondition(FlowFlags.FalseCondition, currentFlow, initializer));
+            }
+        }
         currentFlow = finishFlowLabel(thenLabel);
         bind(node.thenStatement);
         addAntecedent(postIfLabel, currentFlow);
@@ -1707,6 +1739,27 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
         else {
             currentFlow = finishFlowLabel(normalExitLabel);
         }
+    }
+
+    function bindDeferStatement(node: DeferStatement) {
+        inDefer = true;
+        bind(node.statement);
+        inDefer = false;
+
+        // Debug.log('????')
+        // if (node.statement.kind === SyntaxKind.CatchClause) {
+        //     const saveReturnTarget = currentReturnTarget;
+        //     const saveExceptionTarget = currentExceptionTarget;
+        //     const exceptionLabel = createBranchLabel();
+        //     addAntecedent(exceptionLabel, currentFlow);
+        //     currentExceptionTarget = exceptionLabel;
+        //     bind(node.statement);
+            
+        //     //addAntecedent(saveReturnTarget, currentFlow); 
+        //     currentExceptionTarget = saveExceptionTarget;
+        // } else {
+        //     bind(node.statement);
+        // }
     }
 
     function bindSwitchStatement(node: SwitchStatement): void {
@@ -3963,6 +4016,9 @@ export function getContainerFlags(node: Node): ContainerFlags {
             return ContainerFlags.IsControlFlowContainer;
         case SyntaxKind.PropertyDeclaration:
             return (node as PropertyDeclaration).initializer ? ContainerFlags.IsControlFlowContainer : 0;
+
+        case SyntaxKind.IfStatement:
+        case SyntaxKind.WhileStatement:
 
         case SyntaxKind.CatchClause:
         case SyntaxKind.ForStatement:

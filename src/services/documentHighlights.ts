@@ -181,7 +181,7 @@ export namespace DocumentHighlights {
                 if (node.parent.kind == SyntaxKind.DeferStatement) {
                     return highlightSpans([node])
                 }
-                return 
+                // falls through
             case SyntaxKind.InKeyword:
             case SyntaxKind.OutKeyword:
                 return undefined;

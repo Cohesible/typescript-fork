@@ -1137,6 +1137,8 @@ import {
     WithStatement,
     WriterContextOut,
     YieldExpression,
+    DeferStatement,
+    CatchClause,
 } from "./_namespaces/ts.js";
 import * as moduleSpecifiers from "./_namespaces/ts.moduleSpecifiers.js";
 import * as performance from "./_namespaces/ts.performance.js";
@@ -11793,6 +11795,11 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             // or it may have led to an error inside getElementTypeOfIterable.
             const forOfStatement = declaration.parent.parent;
             return checkRightHandSideOfForOf(forOfStatement) || anyType;
+        }
+
+        if (isVariableDeclaration(declaration) && (declaration.parent.parent.kind === SyntaxKind.IfStatement || declaration.parent.parent.kind === SyntaxKind.WhileStatement)) {
+            const type = widenTypeInferredFromInitializer(declaration, checkDeclarationInitializer(declaration, checkMode));
+            return getAdjustedTypeWithFacts(type, TypeFacts.Truthy);
         }
 
         if (isBindingPattern(declaration.parent)) {
@@ -45138,8 +45145,20 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     function checkIfStatement(node: IfStatement) {
         // Grammar checking
         checkGrammarStatementInAmbientContext(node);
-        const type = checkTruthinessExpression(node.expression);
-        checkTestingKnownTruthyCallableOrAwaitableOrEnumMemberType(node.expression, type, node.thenStatement);
+        if (isVariableDeclarationList(node.expression)) {
+            const decl = node.expression.declarations[0];
+            if (!decl.initializer) {
+                error(node.thenStatement, Diagnostics.The_body_of_an_if_statement_cannot_be_the_empty_statement);
+            } else {
+                checkGrammarVariableDeclarationList(node.expression);
+                const type = checkTruthinessExpression(decl.initializer);
+                checkTestingKnownTruthyCallableOrAwaitableOrEnumMemberType(decl.initializer, type, node.thenStatement);
+            }
+        } else {
+            const type = checkTruthinessExpression(node.expression);
+            checkTestingKnownTruthyCallableOrAwaitableOrEnumMemberType(node.expression, type, node.thenStatement);
+        }
+
         checkSourceElement(node.thenStatement);
 
         if (node.thenStatement.kind === SyntaxKind.EmptyStatement) {
@@ -45290,7 +45309,19 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         // Grammar checking
         checkGrammarStatementInAmbientContext(node);
 
-        checkTruthinessExpression(node.expression);
+        if (isVariableDeclarationList(node.expression)) {
+            const decl = node.expression.declarations[0];
+            if (!decl.initializer) {
+                error(node.expression, Diagnostics.The_body_of_an_if_statement_cannot_be_the_empty_statement);
+            } else {
+                checkGrammarVariableDeclarationList(node.expression);
+                const type = checkTruthinessExpression(decl.initializer);
+               //  checkTestingKnownTruthyCallableOrAwaitableOrEnumMemberType(decl.initializer, type, node.thenStatement);
+            }
+        } else {
+            checkTruthinessExpression(node.expression);
+        }
+
         checkSourceElement(node.statement);
     }
 
@@ -46530,6 +46561,36 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
     }
 
+    function checkCatchClause(catchClause: CatchClause) {
+        // Grammar checking
+        if (catchClause.variableDeclaration) {
+            const declaration = catchClause.variableDeclaration;
+            checkVariableLikeDeclaration(declaration);
+            const typeNode = getEffectiveTypeAnnotationNode(declaration);
+            if (typeNode) {
+                const type = getTypeFromTypeNode(typeNode);
+                if (type && !(type.flags & TypeFlags.AnyOrUnknown)) {
+                    grammarErrorOnFirstToken(typeNode, Diagnostics.Catch_clause_variable_type_annotation_must_be_any_or_unknown_if_specified);
+                }
+            }
+            else if (declaration.initializer) {
+                grammarErrorOnFirstToken(declaration.initializer, Diagnostics.Catch_clause_variable_cannot_have_an_initializer);
+            }
+            else {
+                const blockLocals = catchClause.block.locals;
+                if (blockLocals) {
+                    forEachKey(catchClause.locals!, caughtName => {
+                        const blockLocal = blockLocals.get(caughtName);
+                        if (blockLocal?.valueDeclaration && (blockLocal.flags & SymbolFlags.BlockScopedVariable) !== 0) {
+                            grammarErrorOnNode(blockLocal.valueDeclaration, Diagnostics.Cannot_redeclare_identifier_0_in_catch_clause, unescapeLeadingUnderscores(caughtName));
+                        }
+                    });
+                }
+            }
+        }
+        checkBlock(catchClause.block);
+    }
+
     function checkTryStatement(node: TryStatement) {
         // Grammar checking
         checkGrammarStatementInAmbientContext(node);
@@ -46537,34 +46598,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         checkBlock(node.tryBlock);
         const catchClause = node.catchClause;
         if (catchClause) {
-            // Grammar checking
-            if (catchClause.variableDeclaration) {
-                const declaration = catchClause.variableDeclaration;
-                checkVariableLikeDeclaration(declaration);
-                const typeNode = getEffectiveTypeAnnotationNode(declaration);
-                if (typeNode) {
-                    const type = getTypeFromTypeNode(typeNode);
-                    if (type && !(type.flags & TypeFlags.AnyOrUnknown)) {
-                        grammarErrorOnFirstToken(typeNode, Diagnostics.Catch_clause_variable_type_annotation_must_be_any_or_unknown_if_specified);
-                    }
-                }
-                else if (declaration.initializer) {
-                    grammarErrorOnFirstToken(declaration.initializer, Diagnostics.Catch_clause_variable_cannot_have_an_initializer);
-                }
-                else {
-                    const blockLocals = catchClause.block.locals;
-                    if (blockLocals) {
-                        forEachKey(catchClause.locals!, caughtName => {
-                            const blockLocal = blockLocals.get(caughtName);
-                            if (blockLocal?.valueDeclaration && (blockLocal.flags & SymbolFlags.BlockScopedVariable) !== 0) {
-                                grammarErrorOnNode(blockLocal.valueDeclaration, Diagnostics.Cannot_redeclare_identifier_0_in_catch_clause, unescapeLeadingUnderscores(caughtName));
-                            }
-                        });
-                    }
-                }
-            }
-
-            checkBlock(catchClause.block);
+            checkCatchClause(catchClause);
         }
 
         if (node.finallyBlock) {
@@ -48820,6 +48854,14 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
     }
 
+    function checkDeferStatement(node: DeferStatement) {
+        if (node.statement.kind === SyntaxKind.CatchClause) {
+            checkCatchClause(node.statement as any);
+        } else {
+            checkSourceElement(node.statement);
+        }
+    }
+
     function hasExportedMembers(moduleSymbol: Symbol) {
         return forEachEntry(moduleSymbol.exports!, (_, id) => id !== "export=");
     }
@@ -49086,6 +49128,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return checkExportDeclaration(node as ExportDeclaration);
             case SyntaxKind.ExportAssignment:
                 return checkExportAssignment(node as ExportAssignment);
+            case SyntaxKind.DeferStatement:
+                return checkDeferStatement(node as DeferStatement);
             case SyntaxKind.EmptyStatement:
             case SyntaxKind.DebuggerStatement:
                 checkGrammarStatementInAmbientContext(node);

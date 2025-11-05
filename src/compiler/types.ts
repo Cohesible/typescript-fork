@@ -1531,6 +1531,8 @@ export type HasLocals =
     | ForStatement
     | ForInStatement
     | ForOfStatement
+    | IfStatement
+    | WhileStatement
     | FunctionDeclaration
     | FunctionExpression
     | FunctionTypeNode
@@ -1887,7 +1889,7 @@ export type InitializedVariableDeclaration = VariableDeclaration & { readonly in
 
 export interface VariableDeclarationList extends Node {
     readonly kind: SyntaxKind.VariableDeclarationList;
-    readonly parent: VariableStatement | ForStatement | ForOfStatement | ForInStatement;
+    readonly parent: VariableStatement | ForStatement | ForOfStatement | ForInStatement | IfStatement | WhileStatement;
     readonly declarations: NodeArray<VariableDeclaration>;
 }
 
@@ -3397,9 +3399,9 @@ export interface PrologueDirective extends ExpressionStatement {
     readonly expression: StringLiteral;
 }
 
-export interface IfStatement extends Statement, FlowContainer {
+export interface IfStatement extends Statement, LocalsContainer, FlowContainer {
     readonly kind: SyntaxKind.IfStatement;
-    readonly expression: Expression;
+    readonly expression: Expression | VariableDeclarationList;
     readonly thenStatement: Statement;
     readonly elseStatement?: Statement;
 }
@@ -3413,7 +3415,7 @@ export interface DoStatement extends IterationStatement, FlowContainer {
     readonly expression: Expression;
 }
 
-export interface WhileStatement extends IterationStatement, FlowContainer {
+export interface WhileStatement extends IterationStatement, LocalsContainer, FlowContainer {
     readonly kind: SyntaxKind.WhileStatement;
     readonly expression: Expression;
 }

@@ -11798,8 +11798,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
 
         if (isVariableDeclaration(declaration) && (declaration.parent.parent.kind === SyntaxKind.IfStatement || declaration.parent.parent.kind === SyntaxKind.WhileStatement)) {
-            const type = widenTypeInferredFromInitializer(declaration, checkDeclarationInitializer(declaration, checkMode));
-            return getAdjustedTypeWithFacts(type, TypeFacts.Truthy);
+            if (declaration.initializer) {
+                const type = widenTypeInferredFromInitializer(declaration, checkDeclarationInitializer(declaration, checkMode));
+                return getAdjustedTypeWithFacts(type, TypeFacts.Truthy);
+            }
         }
 
         if (isBindingPattern(declaration.parent)) {

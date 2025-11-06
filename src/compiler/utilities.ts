@@ -9890,6 +9890,7 @@ export function getScriptKindFromFileName(fileName: string): ScriptKind {
         case Extension.Ts:
         case Extension.Cts:
         case Extension.Mts:
+        case Extension.Syn:
             return ScriptKind.TS;
         case Extension.Tsx:
             return ScriptKind.TSX;
@@ -9903,7 +9904,7 @@ export function getScriptKindFromFileName(fileName: string): ScriptKind {
 /**
  *  Groups of supported extensions in order of file resolution precedence. (eg, TS > TSX > DTS and seperately, CTS > DCTS)
  */
-const supportedTSExtensions: readonly Extension[][] = [[Extension.Ts, Extension.Tsx, Extension.Dts], [Extension.Cts, Extension.Dcts], [Extension.Mts, Extension.Dmts]];
+const supportedTSExtensions: readonly Extension[][] = [[Extension.Syn, Extension.Ts, Extension.Tsx, Extension.Dts], [Extension.Cts, Extension.Dcts], [Extension.Mts, Extension.Dmts]];
 /** @internal */
 export const supportedTSExtensionsFlat: readonly Extension[] = flatten(supportedTSExtensions);
 const supportedTSExtensionsWithJson: readonly Extension[][] = [...supportedTSExtensions, [Extension.Json]];

@@ -360,6 +360,7 @@ function kindModifiersFromExtension(extension: Extension | undefined): ScriptEle
             return ScriptElementKindModifier.jsonModifier;
         case Extension.Jsx:
             return ScriptElementKindModifier.jsxModifier;
+        case Extension.Syn:
         case Extension.Ts:
             return ScriptElementKindModifier.tsModifier;
         case Extension.Tsx:

@@ -8060,6 +8060,7 @@ export const enum Extension {
     Ts = ".ts",
     Tsx = ".tsx",
     Dts = ".d.ts",
+    Syn = ".syn",
     Js = ".js",
     Jsx = ".jsx",
     Json = ".json",

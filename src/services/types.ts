@@ -1742,10 +1742,10 @@ export const enum ScriptElementKind {
      * Inside module and script only
      * function f() { }
      */
-    functionElement = "fn",
+    functionElement = "function",
 
     /** Inside function */
-    localFunctionElement = "local fn",
+    localFunctionElement = "local function",
 
     /** class X { [public|private]* foo() {} } */
     memberFunctionElement = "method",

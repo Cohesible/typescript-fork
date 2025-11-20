@@ -1139,6 +1139,7 @@ import {
     YieldExpression,
     DeferStatement,
     CatchClause,
+    ReifyExpression,
 } from "./_namespaces/ts.js";
 import * as moduleSpecifiers from "./_namespaces/ts.moduleSpecifiers.js";
 import * as performance from "./_namespaces/ts.performance.js";
@@ -2303,6 +2304,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     var deferredGlobalClassAccessorDecoratorTargetType: GenericType | undefined;
     var deferredGlobalClassAccessorDecoratorResultType: GenericType | undefined;
     var deferredGlobalClassFieldDecoratorContextType: GenericType | undefined;
+
+    // For `reify` expressions
+    var deferredGlobalTypeNamespaceSymbol: Symbol | undefined;
 
     var allPotentiallyUnusedIdentifiers = new Map<Path, PotentiallyUnusedIdentifier[]>(); // key is file name
 
@@ -17637,6 +17641,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return deferredGlobalRecordSymbol === unknownSymbol ? undefined : deferredGlobalRecordSymbol;
     }
 
+    function getGlobalTypeNamespaceSymbol(): Symbol | undefined {
+        return deferredGlobalTypeNamespaceSymbol ||= getGlobalTypeSymbol("type" as __String, /*reportErrors*/ false);
+    }
+
     /**
      * Instantiates a global type that is generic with some element type, and returns that instantiation.
      */
@@ -29212,6 +29220,11 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 const access = getDiscriminantPropertyAccess(expr, type);
                 if (access) {
                     type = narrowTypeBySwitchOnDiscriminantProperty(type, access, flow.node);
+                } else if (expr.kind === SyntaxKind.CallExpression) {
+                    const target = getSymbolAtLocation((expr as CallExpression).expression)
+                    if (target?.escapedName === 'tag' && target.parent === getGlobalTypeNamespaceSymbol()) {
+                        type = narrowTypeBySwitchOnTypeTag(type, flow.node);
+                    }
                 }
             }
             return createFlowType(type, isIncomplete(flowType));
@@ -29706,6 +29719,47 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return type;
             }
             return narrowTypeByLiteralExpression(type, literal, assumeTrue);
+        }
+
+        function narrowTypeBySwitchOnTypeTag(type: Type, { switchStatement, clauseStart, clauseEnd }: FlowSwitchClauseData): Type {
+            function getTypeFromTag(tagName: string) {
+                const ns = getGlobalTypeNamespaceSymbol()!;
+                const tags = ns.exports!.get('Tags' as any)!;
+                const member = tags.members!.get(tagName as any);
+
+                return member ? getTypeOfSymbol(member) : undefined;
+            }
+
+            function narrowTypeByTypeTagName(type: Type, tagName: string) {
+                const memberType = getTypeFromTag(tagName);
+
+                return memberType ? intersectTypes(type, memberType) : type;
+            }
+
+            const witnesses = getSwitchClauseTypeOfWitnesses(switchStatement);
+            if (!witnesses) {
+                return type;
+            }
+            // Equal start and end denotes implicit fallthrough; undefined marks explicit default clause.
+            const defaultIndex = findIndex(switchStatement.caseBlock.clauses, clause => clause.kind === SyntaxKind.DefaultClause);
+            const hasDefaultClause = clauseStart === clauseEnd || (defaultIndex >= clauseStart && defaultIndex < clauseEnd);
+            if (hasDefaultClause) {
+                const set = new Set<Type>();
+                for (let i = 0; i < witnesses.length; i++) {
+                    if (!(i < clauseStart || i >= clauseEnd)) continue;
+                    const witness = witnesses[i];
+                    if (witness === undefined) continue;
+                    const t = getTypeFromTag(witness);
+                    if (t !== undefined) {
+                        set.add(t);
+                    }
+                }
+
+                return filterType(type, t => !set.has(t));
+            }
+            // In the non-default cause we create a union of the type narrowed by each of the listed cases.
+            const clauseWitnesses = witnesses.slice(clauseStart, clauseEnd);
+            return getUnionType(map(clauseWitnesses, text => text ? narrowTypeByTypeTagName(type, text) : neverType));
         }
 
         function narrowTypeByLiteralExpression(type: Type, literal: LiteralExpression, assumeTrue: boolean) {
@@ -41829,6 +41883,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return checkVoidExpression(node as VoidExpression);
             case SyntaxKind.AwaitExpression:
                 return checkAwaitExpression(node as AwaitExpression);
+            case SyntaxKind.ReifyExpression:
+                return checkReifyExpression(node as ReifyExpression);
             case SyntaxKind.PrefixUnaryExpression:
                 return checkPrefixUnaryExpression(node as PrefixUnaryExpression);
             case SyntaxKind.PostfixUnaryExpression:
@@ -48862,6 +48918,107 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         } else {
             checkSourceElement(node.statement);
         }
+    }
+
+    function getTypeOfReifiedType(subject: Type) {
+        const ns = getGlobalTypeNamespaceSymbol();
+        if (!ns) {
+            return unknownType; // TODO
+        }
+
+        function getMemberType(name: string) {
+            const sym = ns!.exports!.get(name as __String);
+
+            return getDeclaredTypeOfSymbol(sym!);
+        }
+
+        if (isErrorType(subject)) {
+            return unknownType;
+        }
+        else if (subject.flags & TypeFlags.Instantiable) {
+            return getMemberType('Parameterized');
+        }
+        else if (subject.flags & TypeFlags.Union) {
+            return createTypeReference(getMemberType('Union') as GenericType, [getDeclaredTypeOfTypeAlias(ns)])
+        }
+        else if (subject.flags & TypeFlags.Intersection) {
+            const apparent = getReducedApparentType(subject);
+            if (apparent === subject) {
+                return getMemberType('Object');
+            }
+            return getTypeOfReifiedType(apparent);
+        }
+        else if (subject.flags & TypeFlags.Any) {
+            return getMemberType('Intrinsic');
+        }
+        else if (isTypeAssignableToKind(subject, TypeFlags.Void | TypeFlags.Never)) {
+            return getMemberType('Intrinsic');
+        }
+        else if (isTypeAssignableToKind(subject, TypeFlags.Literal | TypeFlags.UniqueESSymbol | TypeFlags.Undefined | TypeFlags.Null)) {
+            return subject;
+        }
+        else if (isTypeAssignableToKind(subject, TypeFlags.BooleanLike)) {
+            return getMemberType('Intrinsic');
+        }
+        else if (isTypeAssignableToKind(subject, TypeFlags.NumberLike)) {
+            return getMemberType('Intrinsic');
+        }
+        else if (isTypeAssignableToKind(subject, TypeFlags.BigIntLike)) {
+            return getMemberType('Intrinsic');
+        }
+        else if (isTypeAssignableToKind(subject, TypeFlags.StringLike)) {
+            return getMemberType('Intrinsic');
+        }
+        else if (isTupleType(subject)) {
+            return getMemberType('Tuple');
+        }
+        else if (isTypeAssignableToKind(subject, TypeFlags.ESSymbolLike)) {
+            return getMemberType('Intrinsic');
+        }
+        else if (isFunctionType(subject)) {
+            return getMemberType('Function');
+        }
+        else if (isArrayType(subject)) {
+            return getMemberType('Array');
+        } else if (isObjectLiteralType(subject) || isTypeAssignableToKind(subject, TypeFlags.Object)) {
+            return getMemberType('Object');
+        }
+
+        return getDeclaredTypeOfTypeAlias(ns);
+    }
+
+    function checkReifyExpression(node: ReifyExpression) {
+        const ns = getGlobalTypeNamespaceSymbol();
+        if (!ns) {
+            return unknownType; // TODO
+        }
+
+        if (node.typeParameters) {
+            const ref = getDeclaredTypeOfTypeAlias(ns);
+            const elementFlags = new Array(node.typeParameters.length);
+            for (let i = 0; i < node.typeParameters.length; i++) {
+                elementFlags[i] = 0;
+                if (node.typeParameters[i].default) {
+                    elementFlags[i] |= ElementFlags.Optional;
+                }
+            }
+            const tuple = createTupleType(node.typeParameters.map(x => ref), elementFlags, undefined, node.typeParameters.map(x => {
+                return factory.createNamedTupleMember(undefined, x.name, undefined, factory.createTypeReferenceNode('any'));
+            }));
+            return createTypeReference(
+                getMemberType('Parameterized') as GenericType,
+                [tuple, ref],
+            )
+        }
+
+        function getMemberType(name: string) {
+            const sym = ns!.exports!.get(name as __String);
+
+            return getDeclaredTypeOfSymbol(sym!);
+        }
+
+        const subject = getTypeFromTypeNode(node.subject);
+        return getTypeOfReifiedType(subject);
     }
 
     function hasExportedMembers(moduleSymbol: Symbol) {

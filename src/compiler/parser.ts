@@ -322,6 +322,7 @@ import {
     QuestionToken,
     ReadonlyKeyword,
     ReadonlyPragmaMap,
+    ReifyExpression,
     ResolutionMode,
     RestTypeNode,
     ReturnStatement,
@@ -795,6 +796,9 @@ const forEachChildTable: ForEachChildTable = {
     },
     [SyntaxKind.SatisfiesExpression]: function forEachChildInSatisfiesExpression<T>(node: SatisfiesExpression, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNode(cbNode, node.expression) || visitNode(cbNode, node.type);
+    },
+    [SyntaxKind.ReifyExpression]: function forEachChildInReifyExpression<T>(node: ReifyExpression, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+        return visitNodes(cbNode, cbNodes, node.typeParameters) || visitNode(cbNode, node.subject);
     },
     [SyntaxKind.MetaProperty]: function forEachChildInMetaProperty<T>(node: MetaProperty, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNode(cbNode, node.name);
@@ -5735,6 +5739,33 @@ namespace Parser {
         return finishNode(factory.createAwaitExpression(nextTokenAnd(parseSimpleUnaryExpression)), pos);
     }
 
+    function isReifyExpression(): boolean {
+        return lookAhead(() => {
+            nextToken();
+            if (scanner.hasPrecedingLineBreak()) {
+                return false;
+            }
+            if (token() === SyntaxKind.OpenBraceToken) {
+                return true;
+            }
+            if (token() === SyntaxKind.OpenParenToken || token() === SyntaxKind.OpenBracketToken) {
+                return scanner.getTokenFullStart() !== scanner.getTokenStart();
+            }
+            if (token() === SyntaxKind.LessThanToken) {
+                return scanner.getTokenFullStart() === scanner.getTokenStart();
+            }
+            return tokenIsIdentifierOrKeyword(token()) || token() === SyntaxKind.NumericLiteral || token() === SyntaxKind.BigIntLiteral || token() === SyntaxKind.StringLiteral;
+        })
+    }
+
+    function parseReifyExpression() {
+        const pos = getNodePos();
+        nextToken();
+        const typeParameters = token() === SyntaxKind.LessThanToken ? parseTypeParameters() : undefined
+        const subject = parseType();
+        return finishNode(factory.createReifyExpression(subject, typeParameters), pos);
+    }
+
     /**
      * Parse ES7 exponential expression and await expression
      *
@@ -5823,6 +5854,11 @@ namespace Parser {
                 //  UnaryExpression (modified):
                 //      < type > UnaryExpression
                 return parseTypeAssertion();
+            case SyntaxKind.ReifyKeyword:
+                if (isReifyExpression()) {
+                    return parseReifyExpression();
+                }
+                return parseUpdateExpression();
             case SyntaxKind.AwaitKeyword:
                 if (isAwaitExpression()) {
                     return parseAwaitExpression();
@@ -5855,6 +5891,7 @@ namespace Parser {
             case SyntaxKind.TypeOfKeyword:
             case SyntaxKind.VoidKeyword:
             case SyntaxKind.AwaitKeyword:
+            case SyntaxKind.ReifyKeyword:
                 return false;
             case SyntaxKind.LessThanToken:
                 // If we are not in JSX context, we are parsing TypeAssertion which is an UnaryExpression

@@ -9913,7 +9913,7 @@ const supportedTSExtensionsForExtractExtension: readonly Extension[] = [Extensio
 const supportedJSExtensions: readonly Extension[][] = [[Extension.Js, Extension.Jsx], [Extension.Mjs], [Extension.Cjs]];
 /** @internal */
 export const supportedJSExtensionsFlat: readonly Extension[] = flatten(supportedJSExtensions);
-const allSupportedExtensions: readonly Extension[][] = [[Extension.Ts, Extension.Tsx, Extension.Dts, Extension.Js, Extension.Jsx], [Extension.Cts, Extension.Dcts, Extension.Cjs], [Extension.Mts, Extension.Dmts, Extension.Mjs]];
+const allSupportedExtensions: readonly Extension[][] = [[Extension.Syn, Extension.Ts, Extension.Tsx, Extension.Dts, Extension.Js, Extension.Jsx], [Extension.Cts, Extension.Dcts, Extension.Cjs], [Extension.Mts, Extension.Dmts, Extension.Mjs]];
 const allSupportedExtensionsWithJson: readonly Extension[][] = [...allSupportedExtensions, [Extension.Json]];
 /** @internal */
 export const supportedDeclarationExtensions: readonly Extension[] = [Extension.Dts, Extension.Dcts, Extension.Dmts];
@@ -9985,6 +9985,7 @@ export const enum ModuleSpecifierEnding {
     Index,
     JsExtension,
     TsExtension,
+    SynExtension,
 }
 
 function usesExtensionsOnImports({ imports }: SourceFile, hasExtension: (text: string) => boolean = or(hasJSFileExtension, hasTSFileExtension)): boolean {
@@ -10104,7 +10105,7 @@ export function compareNumberOfDirectorySeparators(path1: string, path2: string)
     );
 }
 
-const extensionsToRemove = [Extension.Dts, Extension.Dmts, Extension.Dcts, Extension.Mjs, Extension.Mts, Extension.Cjs, Extension.Cts, Extension.Ts, Extension.Js, Extension.Tsx, Extension.Jsx, Extension.Json];
+const extensionsToRemove = [Extension.Dts, Extension.Dmts, Extension.Dcts, Extension.Mjs, Extension.Mts, Extension.Cjs, Extension.Cts, Extension.Ts, Extension.Js, Extension.Tsx, Extension.Jsx, Extension.Json, Extension.Syn];
 /** @internal */
 export function removeFileExtension(path: string): string {
     for (const ext of extensionsToRemove) {

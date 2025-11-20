@@ -2157,10 +2157,19 @@ function tryAddingExtensions(candidate: string, extensions: Extensions, original
                 || extensions & Extensions.Declaration && tryExtension(Extension.Dts, originalExtension === Extension.Tsx)
                 || extensions & Extensions.JavaScript && (tryExtension(Extension.Jsx) || tryExtension(Extension.Js))
                 || undefined;
+
+        case "":
+        case Extension.Syn: {
+            const result = tryExtension(Extension.Syn);
+            if (result !== undefined) {
+                return result;
+            }
+            // falls through
+        }
+
         case Extension.Ts:
         case Extension.Dts:
         case Extension.Js:
-        case "":
             return extensions & Extensions.TypeScript && (tryExtension(Extension.Ts, originalExtension === Extension.Ts || originalExtension === Extension.Dts) || tryExtension(Extension.Tsx, originalExtension === Extension.Ts || originalExtension === Extension.Dts))
                 || extensions & Extensions.Declaration && tryExtension(Extension.Dts, originalExtension === Extension.Ts || originalExtension === Extension.Dts)
                 || extensions & Extensions.JavaScript && (tryExtension(Extension.Js) || tryExtension(Extension.Jsx))

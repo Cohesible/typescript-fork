@@ -459,6 +459,7 @@ import {
     WhileStatement,
     WithStatement,
     YieldExpression,
+    ReifyExpression,
 } from "../_namespaces/ts.js";
 
 let nextAutoGenerateId = 0;
@@ -699,6 +700,8 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         updateNonNullExpression,
         createSatisfiesExpression,
         updateSatisfiesExpression,
+        createReifyExpression,
+        updateReifyExpression,
         createNonNullChain,
         updateNonNullChain,
         createMetaProperty,
@@ -3772,6 +3775,22 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         return node.expression !== expression
                 || node.type !== type
             ? update(createSatisfiesExpression(expression, type), node)
+            : node;
+    }
+
+    // @api
+    function createReifyExpression(subject: TypeNode, typeParameters?: NodeArray<TypeParameterDeclaration>) {
+        const node = createBaseNode<ReifyExpression>(SyntaxKind.ReifyExpression);
+        node.subject = subject;
+        node.typeParameters = typeParameters;
+        node.transformFlags |= propagateChildFlags(node.subject) | TransformFlags.ContainsTypeScript;
+        return node;
+    }
+
+    // @api
+    function updateReifyExpression(node: ReifyExpression, subject: TypeNode, typeParameters?: NodeArray<TypeParameterDeclaration>) {
+        return node.subject !== subject || node.typeParameters !== typeParameters
+            ? update(createReifyExpression(subject, typeParameters), node)
             : node;
     }
 

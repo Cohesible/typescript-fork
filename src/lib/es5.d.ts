@@ -1,5 +1,6 @@
 /// <reference lib="decorators" />
 /// <reference lib="decorators.legacy" />
+/// <reference lib="reify" />
 
 /////////////////////////////
 /// ECMAScript APIs

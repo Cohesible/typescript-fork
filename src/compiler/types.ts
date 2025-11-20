@@ -223,7 +223,8 @@ export const enum SyntaxKind {
     BigIntKeyword,
     OverrideKeyword,
     OfKeyword,
-    DeferKeyword, // LastKeyword and LastToken and LastContextualKeyword
+    DeferKeyword, 
+    ReifyKeyword, // LastKeyword and LastToken and LastContextualKeyword
 
     // Parse tree nodes
 
@@ -306,6 +307,7 @@ export const enum SyntaxKind {
     MetaProperty,
     SyntheticExpression,
     SatisfiesExpression,
+    ReifyExpression,
 
     // Misc
     TemplateSpan,
@@ -464,7 +466,7 @@ export const enum SyntaxKind {
     FirstReservedWord = BreakKeyword,
     LastReservedWord = WithKeyword,
     FirstKeyword = BreakKeyword,
-    LastKeyword = DeferKeyword,
+    LastKeyword = ReifyKeyword,
     FirstFutureReservedWord = ImplementsKeyword,
     LastFutureReservedWord = YieldKeyword,
     FirstTypeNode = TypePredicate,
@@ -643,6 +645,7 @@ export type KeywordSyntaxKind =
     | SyntaxKind.OverrideKeyword
     | SyntaxKind.RequireKeyword
     | SyntaxKind.ReturnKeyword
+    | SyntaxKind.ReifyKeyword
     | SyntaxKind.SatisfiesKeyword
     | SyntaxKind.SetKeyword
     | SyntaxKind.StaticKeyword
@@ -1129,6 +1132,7 @@ export type HasChildren =
     | AsExpression
     | NonNullExpression
     | SatisfiesExpression
+    | ReifyExpression
     | MetaProperty
     | TemplateSpan
     | Block
@@ -3156,6 +3160,12 @@ export interface SatisfiesExpression extends Expression {
     readonly kind: SyntaxKind.SatisfiesExpression;
     readonly expression: Expression;
     readonly type: TypeNode;
+}
+
+export interface ReifyExpression extends UnaryExpression {
+    readonly kind: SyntaxKind.ReifyExpression;
+    readonly subject: TypeNode;
+    readonly typeParameters?: NodeArray<TypeParameterDeclaration>
 }
 
 export type AssertionExpression =
@@ -7657,6 +7667,7 @@ export const enum ScriptKind {
      * Deferred extensions are going to be included in all project contexts.
      */
     Deferred = 7,
+    Synapse = 8,
 }
 
 // NOTE: We must reevaluate the target for upcoming features when each successive TC39 edition is ratified in
@@ -9007,6 +9018,8 @@ export interface NodeFactory {
     updateMetaProperty(node: MetaProperty, name: Identifier): MetaProperty;
     createSatisfiesExpression(expression: Expression, type: TypeNode): SatisfiesExpression;
     updateSatisfiesExpression(node: SatisfiesExpression, expression: Expression, type: TypeNode): SatisfiesExpression;
+    createReifyExpression(subject: TypeNode, typeParameters?: readonly TypeParameterDeclaration[]): ReifyExpression;
+    updateReifyExpression(node: ReifyExpression, subject: TypeNode, typeParameters?: readonly TypeParameterDeclaration[]): ReifyExpression;
 
     //
     // Misc

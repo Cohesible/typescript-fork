@@ -5104,6 +5104,7 @@ export function resolveProjectReferencePath(ref: ProjectReference): ResolvedConf
  */
 export function getResolutionDiagnostic(options: CompilerOptions, { extension }: ResolvedModuleFull, { isDeclarationFile }: { isDeclarationFile: SourceFile["isDeclarationFile"]; }): DiagnosticMessage | undefined {
     switch (extension) {
+        case Extension.Syn:
         case Extension.Ts:
         case Extension.Dts:
         case Extension.Mts:

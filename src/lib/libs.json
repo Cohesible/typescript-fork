@@ -91,6 +91,7 @@
         "esnext.sharedmemory",
         "decorators",
         "decorators.legacy",
+        "reify",
         // Default libraries
         "es5.full",
         "es2015.full",

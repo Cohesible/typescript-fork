@@ -217,6 +217,8 @@ export function getModuleSpecifierPreferences(
                     return allowImportingTsExtension
                         ? [ModuleSpecifierEnding.JsExtension, ModuleSpecifierEnding.TsExtension, ModuleSpecifierEnding.Minimal, ModuleSpecifierEnding.Index]
                         : [ModuleSpecifierEnding.JsExtension, ModuleSpecifierEnding.Minimal, ModuleSpecifierEnding.Index];
+                case ModuleSpecifierEnding.SynExtension:
+                    return [ModuleSpecifierEnding.SynExtension, ModuleSpecifierEnding.TsExtension, ModuleSpecifierEnding.Minimal, ModuleSpecifierEnding.JsExtension, ModuleSpecifierEnding.Index];
                 case ModuleSpecifierEnding.TsExtension:
                     return [ModuleSpecifierEnding.TsExtension, ModuleSpecifierEnding.Minimal, ModuleSpecifierEnding.JsExtension, ModuleSpecifierEnding.Index];
                 case ModuleSpecifierEnding.Index:
@@ -1406,6 +1408,8 @@ function processEnding(fileName: string, allowedEndings: readonly ModuleSpecifie
                     ? noExtension
                     : noExtension + getJSExtensionForFile(fileName, options);
             }
+            return fileName;
+        case ModuleSpecifierEnding.SynExtension:
             return fileName;
         default:
             return Debug.assertNever(allowedEndings[0]);

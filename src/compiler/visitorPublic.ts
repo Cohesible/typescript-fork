@@ -1243,6 +1243,13 @@ const visitEachChildTable: VisitEachChildTable = {
         );
     },
 
+    [SyntaxKind.ReifyExpression]: function visitEachChildOfReifyExpression(node, visitor, context, _nodesVisitor, nodeVisitor, _tokenVisitor) {
+        return context.factory.updateReifyExpression(
+            node,
+            Debug.checkDefined(nodeVisitor(node.subject, visitor, isTypeNode)),
+        );
+    },
+
     [SyntaxKind.NonNullExpression]: function visitEachChildOfNonNullExpression(node, visitor, context, _nodesVisitor, nodeVisitor, _tokenVisitor) {
         return isOptionalChain(node) ?
             context.factory.updateNonNullChain(

@@ -192,6 +192,7 @@ export const textToKeywordObj: MapLike<KeywordSyntaxKind> = {
     require: SyntaxKind.RequireKeyword,
     global: SyntaxKind.GlobalKeyword,
     return: SyntaxKind.ReturnKeyword,
+    reify: SyntaxKind.ReifyKeyword,
     satisfies: SyntaxKind.SatisfiesKeyword,
     set: SyntaxKind.SetKeyword,
     static: SyntaxKind.StaticKeyword,

@@ -44,7 +44,7 @@ declare namespace type {
     }
 
     interface ObjectCallSignature {
-        readonly type: type.Function | type.Parameterized
+        readonly type: type.Function | type.TypeFunction
         readonly newable?: boolean
         readonly docs?: string
         readonly source?: Object
@@ -56,7 +56,6 @@ declare namespace type {
         readonly [name: string | number | symbol]: type
     }
 
-
     class Object {}
 
     function getDocs(t: type): string | undefined
@@ -64,6 +63,8 @@ declare namespace type {
     function getProperties(t: Object): Record<string | number | symbol, ObjectProperty>
     function getCallSignatures(t: Object): ObjectCallSignature[] | undefined
     function getIndexSignatures(t: Object): ObjectIndexSignature[] | undefined
+
+    // getBase
 
     interface Function {
         readonly params: (TupleElement & { name: string })[]
@@ -75,22 +76,22 @@ declare namespace type {
     class Function {}
 
     // Unions are readonly but we do not want to annotate it as such
-    interface Union<T extends type = type> {}
+    interface Union<T extends type = type> extends Set<T> {}
     class Union<T extends type = type> extends Set<T> {}
 
     // `foo${string}bar` -> { strings: ['foo', 'bar'], types: [type.string] }
-    interface TemplateString {
+    interface Template {
         readonly strings: string[]
         readonly types: type[]
     }
 
-    class TemplateString {}
+    class Template {}
 
-    interface Parameterized<T extends type[] = type[], U extends type = type> {
+    interface TypeFunction<T extends type[] = type[], U extends type = type> {
         (...args: T): U
     }
 
-    class Parameterized {}
+    class TypeFunction {}
 
     // so you can do `if (reify string === type.string) ...`
     const string: unique symbol
@@ -121,9 +122,10 @@ declare namespace type {
     function isObject(t: type): t is Object
     function isFunction(t: type): t is Function
     function isUnion(t: type): t is Union
-    function isTemplateString(t: type): t is TemplateString
-    function isParameterized(t: type): t is Parameterized
+    function isTemplate(t: type): t is Template
     function isIntrinsic(t: type): t is Intrinsic
+    function isLiteral(t: type): t is Literal
+    function isTypeFunction(t: type): t is TypeFunction
 
     type Literal = 
         | undefined
@@ -141,10 +143,10 @@ declare namespace type {
         object: Object
         function: Function
         union: Union
-        template: TemplateString
-        parameterized: Parameterized
+        template: Template
         intrinsic: Intrinsic
         literal: Literal
+        typeFunction: TypeFunction
         // enum ?
     }
 
@@ -157,8 +159,8 @@ type type =
     | type.Object
     | type.Function
     | type.Union
-    | type.TemplateString
-    | type.Parameterized
+    | type.Template
     | type.Intrinsic
     | type.Literal
+    | type.TypeFunction
 

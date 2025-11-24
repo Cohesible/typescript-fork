@@ -1,29 +1,22 @@
 // @declaration: true
 // @emitDeclarationOnly: true
-// @isolatedDeclarations: false
-type Foo = 1
-const x = reify Foo
-const x2 = reify<T, U = T> T
+// @target: es2016
 
-const x3 = reify { foo: string }
+function f<T>(t: reify T): T {
+    switch (type.tag(t)) {
+        case "array":
+            t
+            break
+        case "object":
+            const z = t['a']
+            break
+    }
 
-class Bar {
-    y = 1
+    return {} as any
 }
 
-const x4 = reify Bar
+const y = f(reify { x: number })
 
-const x5 = reify 1 | 2
+// if ((reify { x: number}).x === reify number) {
 
-switch (type.tag(x5)) {
-    case "array":
-        x5
-        break
-
-    case "union":
-        break
-
-    default:
-        x5
-        break
-}
+// }

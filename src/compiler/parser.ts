@@ -4760,7 +4760,7 @@ namespace Parser {
         return type;
     }
 
-    function parseTypeOperator(operator: SyntaxKind.KeyOfKeyword | SyntaxKind.UniqueKeyword | SyntaxKind.ReadonlyKeyword) {
+    function parseTypeOperator(operator: SyntaxKind.KeyOfKeyword | SyntaxKind.UniqueKeyword | SyntaxKind.ReadonlyKeyword | SyntaxKind.ReifyKeyword) {
         const pos = getNodePos();
         parseExpected(operator);
         return finishNode(factory.createTypeOperatorNode(operator, parseTypeOperatorOrHigher()), pos);
@@ -4795,6 +4795,7 @@ namespace Parser {
             case SyntaxKind.KeyOfKeyword:
             case SyntaxKind.UniqueKeyword:
             case SyntaxKind.ReadonlyKeyword:
+            case SyntaxKind.ReifyKeyword:
                 return parseTypeOperator(operator);
             case SyntaxKind.InferKeyword:
                 return parseInferType();

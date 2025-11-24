@@ -4808,7 +4808,7 @@ declare namespace ts {
     }
     interface TypeOperatorNode extends TypeNode {
         readonly kind: SyntaxKind.TypeOperator;
-        readonly operator: SyntaxKind.KeyOfKeyword | SyntaxKind.UniqueKeyword | SyntaxKind.ReadonlyKeyword;
+        readonly operator: SyntaxKind.KeyOfKeyword | SyntaxKind.UniqueKeyword | SyntaxKind.ReadonlyKeyword | SyntaxKind.ReifyKeyword;
         readonly type: TypeNode;
     }
     interface IndexedAccessTypeNode extends TypeNode {
@@ -6637,6 +6637,7 @@ declare namespace ts {
         NonPrimitive = 67108864,
         TemplateLiteral = 134217728,
         StringMapping = 268435456,
+        Reified = -2147483648,
         Literal = 2944,
         Unit = 109472,
         Freshable = 2976,
@@ -6654,9 +6655,9 @@ declare namespace ts {
         TypeVariable = 8650752,
         InstantiableNonPrimitive = 58982400,
         InstantiablePrimitive = 406847488,
-        Instantiable = 465829888,
-        StructuredOrInstantiable = 469499904,
-        Narrowable = 536624127,
+        Instantiable = -1681653760,
+        StructuredOrInstantiable = -1677983744,
+        Narrowable = -1610859521,
     }
     type DestructuringPattern = BindingPattern | ObjectLiteralExpression | ArrayLiteralExpression;
     interface Type {
@@ -6847,6 +6848,9 @@ declare namespace ts {
         extendsType: Type;
         resolvedTrueType?: Type;
         resolvedFalseType?: Type;
+    }
+    interface ReifiedType extends InstantiableType {
+        type: Type;
     }
     interface TemplateLiteralType extends InstantiableType {
         texts: readonly string[];
@@ -7601,7 +7605,7 @@ declare namespace ts {
         createParenthesizedType(type: TypeNode): ParenthesizedTypeNode;
         updateParenthesizedType(node: ParenthesizedTypeNode, type: TypeNode): ParenthesizedTypeNode;
         createThisTypeNode(): ThisTypeNode;
-        createTypeOperatorNode(operator: SyntaxKind.KeyOfKeyword | SyntaxKind.UniqueKeyword | SyntaxKind.ReadonlyKeyword, type: TypeNode): TypeOperatorNode;
+        createTypeOperatorNode(operator: SyntaxKind.KeyOfKeyword | SyntaxKind.UniqueKeyword | SyntaxKind.ReadonlyKeyword | SyntaxKind.ReifyKeyword, type: TypeNode): TypeOperatorNode;
         updateTypeOperatorNode(node: TypeOperatorNode, type: TypeNode): TypeOperatorNode;
         createIndexedAccessTypeNode(objectType: TypeNode, indexType: TypeNode): IndexedAccessTypeNode;
         updateIndexedAccessTypeNode(node: IndexedAccessTypeNode, objectType: TypeNode, indexType: TypeNode): IndexedAccessTypeNode;

@@ -1140,6 +1140,7 @@ import {
     DeferStatement,
     CatchClause,
     ReifyExpression,
+    ReifiedType,
 } from "./_namespaces/ts.js";
 import * as moduleSpecifiers from "./_namespaces/ts.moduleSpecifiers.js";
 import * as performance from "./_namespaces/ts.performance.js";
@@ -2044,6 +2045,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     var indexedAccessTypes = new Map<string, IndexedAccessType>();
     var templateLiteralTypes = new Map<string, TemplateLiteralType>();
     var stringMappingTypes = new Map<string, StringMappingType>();
+    var reifiedTypes = new Map<number, ReifiedType>();
     var substitutionTypes = new Map<string, SubstitutionType>();
     var subtypeReductionCache = new Map<string, Type[]>();
     var decoratorContextOverrideTypeCache = new Map<string, Type>();
@@ -6952,6 +6954,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             if (type.flags & TypeFlags.StringMapping) {
                 const typeNode = typeToTypeNodeHelper((type as StringMappingType).type, context);
                 return symbolToTypeNode((type as StringMappingType).symbol, context, SymbolFlags.Type, [typeNode]);
+            }
+            if (type.flags & TypeFlags.Reified) {
+                const typeNode = typeToTypeNodeHelper((type as ReifiedType).type, context);
+                return factory.createTypeOperatorNode(SyntaxKind.ReifyKeyword, typeNode);
             }
             if (type.flags & TypeFlags.IndexedAccess) {
                 const objectTypeNode = typeToTypeNodeHelper((type as IndexedAccessType).objectType, context);
@@ -15238,7 +15244,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function getBaseConstraintOfType(type: Type): Type | undefined {
-        if (type.flags & (TypeFlags.InstantiableNonPrimitive | TypeFlags.UnionOrIntersection | TypeFlags.TemplateLiteral | TypeFlags.StringMapping) || isGenericTupleType(type)) {
+        if (type.flags & (TypeFlags.InstantiableNonPrimitive | TypeFlags.UnionOrIntersection | TypeFlags.TemplateLiteral | TypeFlags.StringMapping | TypeFlags.Reified) || isGenericTupleType(type)) {
             const constraint = getResolvedBaseConstraint(type as InstantiableType | UnionOrIntersectionType);
             return constraint !== noConstraintType && constraint !== circularConstraintType ? constraint : undefined;
         }
@@ -15350,6 +15356,11 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             if (t.flags & TypeFlags.StringMapping) {
                 const constraint = getBaseConstraint((t as StringMappingType).type);
                 return constraint && constraint !== (t as StringMappingType).type ? getStringMappingType((t as StringMappingType).symbol, constraint) : stringType;
+            }
+            if (t.flags & TypeFlags.Reified) {
+                return t;
+                // const constraint = getBaseConstraint((t as ReifiedType).type);
+                // return constraint && constraint !== (t as ReifiedType).type ? getTypeOfReifiedType(constraint, true) : t;
             }
             if (t.flags & TypeFlags.IndexedAccess) {
                 if (isMappedTypeGenericIndexedAccess(t)) {
@@ -15866,6 +15877,29 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
         if (type.flags & TypeFlags.Union) {
             return getPropertyOfUnionOrIntersectionType(type as UnionOrIntersectionType, name, skipObjectFunctionPropertyAugment);
+        }
+        if (type.flags & TypeFlags.Reified) {
+            const inner = (type as ReifiedType).type;
+            if (inner.flags & TypeFlags.Object) {
+                const cache = (type as ReifiedType).propertyCache ||= createSymbolTable();
+                const cached = cache.get(name);
+                if (cached) return cached;
+
+                const member = getPropertyOfType(inner, name, skipObjectFunctionPropertyAugment, true);
+                if (!member) return undefined;
+
+                const clone = createSymbolWithType(member, createReifiedType(getTypeOfSymbol(member)));
+                clone.parent = member.valueDeclaration?.symbol?.parent;
+                cache.set(name, clone);
+
+                return clone;
+            }
+            if (inner.flags & TypeFlags.Union) {
+                if (!(type as ReifiedType).reified) {
+                    (type as ReifiedType).reified = getTypeOfReifiedType(inner, true, true)
+                }
+                return getPropertyOfType((type as ReifiedType).reified!, name, skipObjectFunctionPropertyAugment, true);
+            }
         }
         return undefined;
     }
@@ -18979,6 +19013,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 case SyntaxKind.ReadonlyKeyword:
                     links.resolvedType = getTypeFromTypeNode(node.type);
                     break;
+                case SyntaxKind.ReifyKeyword:
+                    links.resolvedType = createReifiedType(getTypeFromTypeNode(node.type));
+                    break;
                 default:
                     Debug.assertNever(node.operator);
             }
@@ -21046,6 +21083,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
         if (flags & TypeFlags.StringMapping) {
             return getStringMappingType((type as StringMappingType).symbol, instantiateType((type as StringMappingType).type, mapper));
+        }
+        if (flags & TypeFlags.Reified) {
+            return getTypeOfReifiedType(instantiateType((type as ReifiedType).type, mapper), true, false);
         }
         if (flags & TypeFlags.IndexedAccess) {
             const newAliasSymbol = aliasSymbol || type.aliasSymbol;
@@ -23538,6 +23578,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                         return isRelatedTo((source as StringMappingType).type, (target as StringMappingType).type, RecursionFlags.Both, /*reportErrors*/ false);
                     }
                 }
+                if (sourceFlags & TypeFlags.Reified) {
+                    return isRelatedTo((source as ReifiedType).type, (target as ReifiedType).type, RecursionFlags.Both, /*reportErrors*/ false);
+                }
                 if (!(sourceFlags & TypeFlags.Object)) {
                     return Ternary.False;
                 }
@@ -23825,6 +23868,13 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     }
                 }
             }
+            else if (target.flags & TypeFlags.Reified) {
+                const t = (target as ReifiedType).type
+                if (t === wildcardType) {
+                    return Ternary.True;
+                }
+                // TODO: more stuff
+            }
 
             if (sourceFlags & TypeFlags.TypeVariable) {
                 // IndexedAccess comparisons are handled above in the `targetFlags & TypeFlage.IndexedAccess` branch
@@ -23891,6 +23941,15 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     if (constraint && (result = isRelatedTo(constraint, target, RecursionFlags.Source, reportErrors))) {
                         return result;
                     }
+                }
+            } else if (sourceFlags & TypeFlags.Reified) {
+                if (target === getAnyReifiedType()) {
+                    return Ternary.True;
+                }
+
+                const constraint = getTypeOfReifiedType((source as ReifiedType).type, true);
+                if (constraint && (result = isRelatedTo(constraint, target, RecursionFlags.Source, reportErrors))) {
+                    return result;
                 }
             }
             else if (sourceFlags & TypeFlags.Conditional) {
@@ -26895,6 +26954,13 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     inferFromTypes((source as StringMappingType).type, (target as StringMappingType).type);
                 }
             }
+            else if (target.flags & TypeFlags.Reified) {
+                if (source.flags & TypeFlags.Reified) {
+                    inferFromTypes((source as ReifiedType).type, (target as ReifiedType).type);
+                } else if (source === getAnyReifiedType()) { // FIXME: we should do this for _all_ `type` types
+                    inferFromTypes(wildcardType, (target as ReifiedType).type);
+                }
+            }
             else if (source.flags & TypeFlags.Substitution) {
                 inferFromTypes((source as SubstitutionType).baseType, target);
                 inferWithPriority(getSubstitutionIntersection(source as SubstitutionType), target, InferencePriority.SubstituteSource); // Make substitute inference at a lower priority
@@ -29221,9 +29287,12 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 if (access) {
                     type = narrowTypeBySwitchOnDiscriminantProperty(type, access, flow.node);
                 } else if (expr.kind === SyntaxKind.CallExpression) {
-                    const target = getSymbolAtLocation((expr as CallExpression).expression)
-                    if (target?.escapedName === 'tag' && target.parent === getGlobalTypeNamespaceSymbol()) {
-                        type = narrowTypeBySwitchOnTypeTag(type, flow.node);
+                    const args = (expr as CallExpression).arguments
+                    if (args.length === 1) {
+                        const target = getSymbolAtLocation((expr as CallExpression).expression)
+                        if (target?.escapedName === 'tag' && target.parent === getGlobalTypeNamespaceSymbol() && isMatchingReference(reference, args[0])) {
+                            type = narrowTypeBySwitchOnTypeTag(type, flow.node);
+                        }
                     }
                 }
             }
@@ -29732,6 +29801,17 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
             function narrowTypeByTypeTagName(type: Type, tagName: string) {
                 const memberType = getTypeFromTag(tagName);
+                if (type.flags & TypeFlags.Reified) {
+                    type = getTypeOfReifiedType((type as ReifiedType).type, true, true, tagName);
+                    if (type === neverType) {
+                        return neverType;
+                    }
+                }
+
+                // handle direct references to `type`
+                if (type === getAnyReifiedType()) {
+                    return memberType ?? type;
+                }
 
                 return memberType ? intersectTypes(type, memberType) : type;
             }
@@ -29755,7 +29835,12 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     }
                 }
 
-                return filterType(type, t => !set.has(t));
+                let inner: Type = type;
+                if (type.flags & TypeFlags.Reified) {
+                    inner = getTypeOfReifiedType((type as ReifiedType).type, true)
+                }
+
+                return filterType(inner, t => !set.has(t));
             }
             // In the non-default cause we create a union of the type narrowed by each of the listed cases.
             const clauseWitnesses = witnesses.slice(clauseStart, clauseEnd);
@@ -48920,10 +49005,25 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
     }
 
-    function getTypeOfReifiedType(subject: Type) {
+    function createReifiedType(type: Type): ReifiedType {
+        const id = getTypeId(type);
+        let result = reifiedTypes.get(id);
+        if (!result) {
+            result = createType(TypeFlags.Reified) as ReifiedType;
+            result.type = type;
+            reifiedTypes.set(id, result);
+        }
+        return result;
+    }
+
+    function getTypeOfReifiedType(subject: Type, isTypeNode = false, resolve = true, tagName?: string) {
         const ns = getGlobalTypeNamespaceSymbol();
         if (!ns) {
             return unknownType; // TODO
+        }
+
+        if (!resolve) {
+            return createReifiedType(subject);
         }
 
         function getMemberType(name: string) {
@@ -48932,29 +49032,89 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             return getDeclaredTypeOfSymbol(sym!);
         }
 
+        function getReifiedIntrinsicType(name: string) {
+            if (tagName !== undefined && tagName !== 'intrinsic') {
+                return neverType;
+            }
+
+            const sym = ns!.exports!.get(name as __String);
+
+            return getTypeForVariableLikeDeclaration(sym!.valueDeclaration! as VariableDeclaration, false, CheckMode.Normal) || errorType;
+        }
+
+        switch (subject) {
+            case stringType:
+                return getReifiedIntrinsicType('string');
+            case numberType:
+                return getReifiedIntrinsicType('number');
+            case booleanType:
+                return getReifiedIntrinsicType('boolean');
+            case esSymbolType:
+                return getReifiedIntrinsicType('symbol');
+            case bigintType:
+                return getReifiedIntrinsicType('bigint');
+            case nonPrimitiveType:
+                return getReifiedIntrinsicType('object');
+            case anyType:
+                return getReifiedIntrinsicType('any');
+            case neverType:
+                return getReifiedIntrinsicType('never');
+            case unknownType:
+                return getReifiedIntrinsicType('unknown');
+            case voidType:
+                return getReifiedIntrinsicType('Void');
+        }
+
         if (isErrorType(subject)) {
             return unknownType;
         }
         else if (subject.flags & TypeFlags.Instantiable) {
-            return getMemberType('Parameterized');
+            if (!isTypeNode) {
+                if (subject.flags & TypeFlags.Reified) {
+                    return getAnyReifiedType();
+                }
+                if (tagName !== undefined && tagName !== 'typeFunction') {
+                    return neverType;
+                }
+                return getMemberType('TypeFunction');
+            }
+            return getDeclaredTypeOfTypeAlias(ns);
         }
         else if (subject.flags & TypeFlags.Union) {
+            if (tagName !== undefined && tagName !== 'union') {
+                return neverType;
+            }
             return createTypeReference(getMemberType('Union') as GenericType, [getDeclaredTypeOfTypeAlias(ns)])
         }
         else if (subject.flags & TypeFlags.Intersection) {
             const apparent = getReducedApparentType(subject);
             if (apparent === subject) {
+                if (tagName !== undefined && tagName !== 'object') {
+                    return neverType;
+                }
                 return getMemberType('Object');
             }
-            return getTypeOfReifiedType(apparent);
+            return getTypeOfReifiedType(apparent, isTypeNode, resolve, tagName);
+        }
+        else if (subject.flags & TypeFlags.TemplateLiteral) {
+            if (tagName !== undefined && tagName !== 'template') {
+                return neverType;
+            }
+            return getMemberType('Template');
         }
         else if (subject.flags & TypeFlags.Any) {
+            if (subject === wildcardType) {
+                return getAnyReifiedType();
+            }
             return getMemberType('Intrinsic');
         }
         else if (isTypeAssignableToKind(subject, TypeFlags.Void | TypeFlags.Never)) {
             return getMemberType('Intrinsic');
         }
         else if (isTypeAssignableToKind(subject, TypeFlags.Literal | TypeFlags.UniqueESSymbol | TypeFlags.Undefined | TypeFlags.Null)) {
+            if (tagName !== undefined && tagName !== 'literal') {
+                return neverType;
+            }
             return subject;
         }
         else if (isTypeAssignableToKind(subject, TypeFlags.BooleanLike)) {
@@ -48970,17 +49130,29 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             return getMemberType('Intrinsic');
         }
         else if (isTupleType(subject)) {
+            if (tagName !== undefined && tagName !== 'tuple') {
+                return neverType;
+            }
             return getMemberType('Tuple');
         }
         else if (isTypeAssignableToKind(subject, TypeFlags.ESSymbolLike)) {
             return getMemberType('Intrinsic');
         }
         else if (isFunctionType(subject)) {
+            if (tagName !== undefined && tagName !== 'function') {
+                return neverType;
+            }
             return getMemberType('Function');
         }
         else if (isArrayType(subject)) {
-            return getMemberType('Array');
+            if (tagName !== undefined && tagName !== 'array') {
+                return neverType;
+            }
+            return getMemberType('ArrayType');
         } else if (isObjectLiteralType(subject) || isTypeAssignableToKind(subject, TypeFlags.Object)) {
+            if (tagName !== undefined && tagName !== 'object') {
+                return neverType;
+            }
             return getMemberType('Object');
         }
 
@@ -49006,7 +49178,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return factory.createNamedTupleMember(undefined, x.name, undefined, factory.createTypeReferenceNode('any'));
             }));
             return createTypeReference(
-                getMemberType('Parameterized') as GenericType,
+                getMemberType('TypeFunction') as GenericType,
                 [tuple, ref],
             )
         }
@@ -49018,7 +49190,15 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
 
         const subject = getTypeFromTypeNode(node.subject);
-        return getTypeOfReifiedType(subject);
+        return getTypeOfReifiedType(subject, false, false);
+    }
+
+    function getAnyReifiedType() {
+        const ns = getGlobalTypeNamespaceSymbol();
+        if (!ns) {
+            return unknownType; // TODO
+        }
+        return getDeclaredTypeOfTypeAlias(ns);
     }
 
     function hasExportedMembers(moduleSymbol: Symbol) {

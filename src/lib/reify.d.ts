@@ -1,11 +1,11 @@
 declare namespace type {
-    // this is named redundantly to reduce cognitive load
-    interface ArrayType<T extends type = type> {
-        readonly element: T
+    interface Array<T extends type = type> extends globalThis.Array<T> {
+        readonly type: T
+        readonly maxLength: number
         readonly readonly?: boolean
     }
 
-    class ArrayType {}
+    class Array {}
 
     interface TupleElement {
         readonly name?: string
@@ -14,23 +14,23 @@ declare namespace type {
         readonly optional?: boolean
     }
 
-    interface Tuple {
+    // TODO: this can be narrowed e.g. type.Tuple & [reify 1, reify 2]
+    // the finite case would need to re-use whatever the checker is doing for `[1,2,3] as const`
+    interface Tuple extends globalThis.Array<type> {
+        readonly maxLength: number
         readonly elements: TupleElement[]
         readonly readonly?: boolean
     }
 
     class Tuple {}
 
-    // checks if `t` is a Tuple, and if so, will try to convert it into an array of element types
-    // any rest type will stop the conversion
-    function getSimpleTuple(t: type): type[] | undefined
-
     interface ObjectProperty<T extends type = type> {
         readonly type: T
         readonly docs?: string
         readonly readonly?: boolean
         readonly optional?: boolean
-        readonly source?: Object // only present if this property was inherited
+        readonly source?: type.Object // only present if this property was inherited
+        readonly tags?: any[]
     }
 
     interface ObjectIndexSignature {
@@ -40,46 +40,61 @@ declare namespace type {
         readonly readonly?: boolean
         readonly optional?: boolean
         readonly docs?: string
-        readonly source?: Object
+        readonly source?: type.Object
+        readonly tags?: any[]
     }
 
     interface ObjectCallSignature {
         readonly type: type.Function | type.TypeFunction
         readonly newable?: boolean
         readonly docs?: string
-        readonly source?: Object
+        readonly source?: type.Object
+        readonly tags?: any[]
     }
 
     type ObjectSignature = ObjectIndexSignature | ObjectCallSignature
 
     interface Object {
-        readonly [name: string | number | symbol]: type
+        readonly [name: PropertyKey]: type
     }
 
     class Object {}
 
-    function getDocs(t: type): string | undefined
-    function getProperty(t: Object, p: string | number | symbol): ObjectProperty | undefined
-    function getProperties(t: Object): Record<string | number | symbol, ObjectProperty>
-    function getCallSignatures(t: Object): ObjectCallSignature[] | undefined
-    function getIndexSignatures(t: Object): ObjectIndexSignature[] | undefined
+    // Only relevant when a type has no object representation 
+    //  -> type.getBase(reify string & {}) === reify string
+    function getBase(t: type.Object): type | undefined
+    function getProperties<T extends type.Object>(t: T): Record<keyof T, ObjectProperty>
+    function getCallSignatures(t: type.Object): ObjectCallSignature[] | undefined
+    function getIndexSignatures(t: type.Object): ObjectIndexSignature[] | undefined
 
-    // getBase
+    function getTags(t: type): any[] | undefined
+    function getPropertyTags<T extends type.Object>(t: T): Record<keyof T, any[]>
+
+    // Returns the type with all tags removed recursively, without mutation. 
+    function normalize<T extends type>(t: T): T
+
+    function findClass(t: type.Object): { name: string, type: type, value?: any } | undefined
 
     interface Function {
-        readonly params: (TupleElement & { name: string })[]
-        readonly returns: type
+        readonly params: Tuple & { elements: (TupleElement & { name: string; tags?: any[] })[] }
+        readonly returns?: type // only present for non-void return types
+        readonly returnsTags?: any[]
         readonly newable?: boolean
         readonly this?: type
+        // if true, `returns` contains the awaited type
+        // reify (() => Promise<number>)
+        //  -> { params: [], returns: reify number, async: true }
+        readonly async?: boolean
     }
 
     class Function {}
 
     // Unions are readonly but we do not want to annotate it as such
-    interface Union<T extends type = type> extends Set<T> {}
+    interface Union<T extends type = type> extends Set<T>, Omit<T[], 'keys' | 'entries' | 'forEach'> {}
     class Union<T extends type = type> extends Set<T> {}
 
-    // `foo${string}bar` -> { strings: ['foo', 'bar'], types: [type.string] }
+    // `foo${string}bar` 
+    //  -> { strings: ['foo', 'bar'], types: [type.string] }
     interface Template {
         readonly strings: string[]
         readonly types: type[]
@@ -103,7 +118,6 @@ declare namespace type {
     const any: unique symbol
     const never: unique symbol
     const unknown: unique symbol
-    const Void: unique symbol
 
     type Intrinsic = 
         | typeof string
@@ -115,9 +129,8 @@ declare namespace type {
         | typeof any
         | typeof never
         | typeof unknown
-        | typeof Void
 
-    function isArrayType(t: type): t is ArrayType
+    function isArrayType(t: type): t is Array
     function isTuple(t: type): t is Tuple
     function isObject(t: type): t is Object
     function isFunction(t: type): t is Function
@@ -136,9 +149,9 @@ declare namespace type {
         | symbol
         | bigint
 
-    // the checker uses this to narrow a tagged type
-    interface Tags {
-        array: ArrayType
+    // the checker uses this to narrow a type
+    interface Kinds {
+        array: Array
         tuple: Tuple
         object: Object
         function: Function
@@ -150,11 +163,13 @@ declare namespace type {
         // enum ?
     }
 
-    function tag(t: type): keyof Tags
+    function kind(t: type): keyof Kinds
+
+    function annotateProps<T>(t: (reify T) & type.Object, tags: { [P in keyof T]+?: any }): void
 }
 
 type type =
-    | type.ArrayType
+    | type.Array
     | type.Tuple
     | type.Object
     | type.Function

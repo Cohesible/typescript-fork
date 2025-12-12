@@ -140,6 +140,7 @@ import {
     isExportAssignment,
     isExportDeclaration,
     isExportModifier,
+    IsExpression,
     isExpressionWithTypeArguments,
     isExternalModuleReference,
     isFunctionTypeNode,
@@ -788,6 +789,10 @@ const forEachChildTable: ForEachChildTable = {
             visitNode(cbNode, node.right);
     },
     [SyntaxKind.AsExpression]: function forEachChildInAsExpression<T>(node: AsExpression, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+        return visitNode(cbNode, node.expression) ||
+            visitNode(cbNode, node.type);
+    },
+    [SyntaxKind.IsExpression]: function forEachChildInIsExpression<T>(node: IsExpression, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNode(cbNode, node.expression) ||
             visitNode(cbNode, node.type);
     },
@@ -5658,7 +5663,7 @@ namespace Parser {
                 break;
             }
 
-            if (token() === SyntaxKind.AsKeyword || token() === SyntaxKind.SatisfiesKeyword) {
+            if (token() === SyntaxKind.AsKeyword || token() === SyntaxKind.SatisfiesKeyword || token() === SyntaxKind.IsKeyword) {
                 // Make sure we *do* perform ASI for constructs like this:
                 //    var x = foo
                 //    as (Bar)
@@ -5670,7 +5675,8 @@ namespace Parser {
                 else {
                     const keywordKind = token();
                     nextToken();
-                    leftOperand = keywordKind === SyntaxKind.SatisfiesKeyword ? makeSatisfiesExpression(leftOperand, parseType()) :
+                    leftOperand = keywordKind === SyntaxKind.IsKeyword ? makeIsExpression(leftOperand, parseType()) :
+                        keywordKind === SyntaxKind.SatisfiesKeyword ? makeSatisfiesExpression(leftOperand, parseType()) :
                         makeAsExpression(leftOperand, parseType());
                 }
             }
@@ -5700,6 +5706,10 @@ namespace Parser {
 
     function makeAsExpression(left: Expression, right: TypeNode): AsExpression {
         return finishNode(factory.createAsExpression(left, right), left.pos);
+    }
+
+    function makeIsExpression(left: Expression, right: TypeNode): IsExpression {
+        return finishNode(factory.createIsExpression(left, right), left.pos);
     }
 
     function parsePrefixUnaryExpression() {

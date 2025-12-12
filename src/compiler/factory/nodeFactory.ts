@@ -460,6 +460,7 @@ import {
     WithStatement,
     YieldExpression,
     ReifyExpression,
+    IsExpression,
 } from "../_namespaces/ts.js";
 
 let nextAutoGenerateId = 0;
@@ -696,6 +697,8 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         updateExpressionWithTypeArguments,
         createAsExpression,
         updateAsExpression,
+        createIsExpression,
+        updateIsExpression,
         createNonNullExpression,
         updateNonNullExpression,
         createSatisfiesExpression,
@@ -3737,6 +3740,25 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         return node.expression !== expression
                 || node.type !== type
             ? update(createAsExpression(expression, type), node)
+            : node;
+    }
+
+    // @api
+    function createIsExpression(expression: Expression, type: TypeNode) {
+        const node = createBaseNode<IsExpression>(SyntaxKind.IsExpression);
+        node.expression = expression;
+        node.type = type;
+        node.transformFlags |= propagateChildFlags(node.expression) |
+            propagateChildFlags(node.type) |
+            TransformFlags.ContainsTypeScript;
+        return node;
+    }
+
+    // @api
+    function updateIsExpression(node: IsExpression, expression: Expression, type: TypeNode) {
+        return node.expression !== expression
+                || node.type !== type
+            ? update(createIsExpression(expression, type), node)
             : node;
     }
 

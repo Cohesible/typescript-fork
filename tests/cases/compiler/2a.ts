@@ -3,7 +3,7 @@
 // @target: es2016
 
 function f<T>(t: reify T): T {
-    switch (type.tag(t)) {
+    switch (type.kind(t)) {
         case "array":
             t
             break
@@ -16,6 +16,30 @@ function f<T>(t: reify T): T {
 }
 
 const y = f(reify { x: number })
+
+async function foo() {
+    return 2
+}
+
+async function bar() {
+    const p = foo() as Promise<number>
+    const y = 1 + await p
+    return y
+}
+
+function bar2() {
+    const p = foo()
+}
+
+async function z() {
+    const q = bar()
+    const q2 = bar() as async
+}
+
+let arr: number[] | number
+if (arr is number[]) {
+    const x = arr[0]
+}
 
 // if ((reify { x: number}).x === reify number) {
 

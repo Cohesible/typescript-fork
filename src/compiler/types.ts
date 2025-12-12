@@ -308,6 +308,7 @@ export const enum SyntaxKind {
     SyntheticExpression,
     SatisfiesExpression,
     ReifyExpression,
+    IsExpression,
 
     // Misc
     TemplateSpan,
@@ -1130,6 +1131,7 @@ export type HasChildren =
     | ClassExpression
     | ExpressionWithTypeArguments
     | AsExpression
+    | IsExpression
     | NonNullExpression
     | SatisfiesExpression
     | ReifyExpression
@@ -3146,6 +3148,12 @@ export type CallLikeExpression =
 
 export interface AsExpression extends Expression {
     readonly kind: SyntaxKind.AsExpression;
+    readonly expression: Expression;
+    readonly type: TypeNode;
+}
+
+export interface IsExpression extends Expression {
+    readonly kind: SyntaxKind.IsExpression;
     readonly expression: Expression;
     readonly type: TypeNode;
 }
@@ -9019,6 +9027,8 @@ export interface NodeFactory {
     updateExpressionWithTypeArguments(node: ExpressionWithTypeArguments, expression: Expression, typeArguments: readonly TypeNode[] | undefined): ExpressionWithTypeArguments;
     createAsExpression(expression: Expression, type: TypeNode): AsExpression;
     updateAsExpression(node: AsExpression, expression: Expression, type: TypeNode): AsExpression;
+    createIsExpression(expression: Expression, type: TypeNode): IsExpression;
+    updateIsExpression(node: IsExpression, expression: Expression, type: TypeNode): IsExpression;
     createNonNullExpression(expression: Expression): NonNullExpression;
     updateNonNullExpression(node: NonNullExpression, expression: Expression): NonNullExpression;
     createNonNullChain(expression: Expression): NonNullChain;

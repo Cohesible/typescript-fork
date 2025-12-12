@@ -160,6 +160,7 @@ import {
     isExportDeclaration,
     isExportsIdentifier,
     isExportSpecifier,
+    IsExpression,
     isExpression,
     isExpressionOfOptionalChainRoot,
     isExternalModule,
@@ -1259,8 +1260,9 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                     return false;
                 }
                 // fallthrough
+            case SyntaxKind.IsExpression:
             case SyntaxKind.NonNullExpression:
-                return isNarrowingExpression((expr as ParenthesizedExpression | NonNullExpression).expression);
+                return isNarrowingExpression((expr as ParenthesizedExpression | NonNullExpression | IsExpression).expression);
             case SyntaxKind.BinaryExpression:
                 return isNarrowingBinaryExpression(expr as BinaryExpression);
             case SyntaxKind.PrefixUnaryExpression:

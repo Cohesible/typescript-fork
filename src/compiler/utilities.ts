@@ -3585,6 +3585,7 @@ export function isExpressionNode(node: Node): boolean {
         case SyntaxKind.CallExpression:
         case SyntaxKind.NewExpression:
         case SyntaxKind.TaggedTemplateExpression:
+        case SyntaxKind.IsExpression:
         case SyntaxKind.AsExpression:
         case SyntaxKind.TypeAssertionExpression:
         case SyntaxKind.SatisfiesExpression:
@@ -3675,6 +3676,7 @@ export function isInExpressionContext(node: Node): boolean {
             const forInOrOfStatement = parent as ForInOrOfStatement;
             return (forInOrOfStatement.initializer === node && forInOrOfStatement.initializer.kind !== SyntaxKind.VariableDeclarationList) ||
                 forInOrOfStatement.expression === node;
+        case SyntaxKind.IsExpression:
         case SyntaxKind.TypeAssertionExpression:
         case SyntaxKind.AsExpression:
             return node === (parent as AssertionExpression).expression;
@@ -5888,6 +5890,7 @@ export function getOperatorPrecedence(nodeKind: SyntaxKind, operatorKind: Syntax
         case SyntaxKind.MetaProperty:
             return OperatorPrecedence.Member;
 
+        case SyntaxKind.IsExpression:
         case SyntaxKind.AsExpression:
         case SyntaxKind.SatisfiesExpression:
             return OperatorPrecedence.Relational;
@@ -5949,6 +5952,7 @@ export function getBinaryOperatorPrecedence(kind: SyntaxKind): OperatorPrecedenc
         case SyntaxKind.InstanceOfKeyword:
         case SyntaxKind.InKeyword:
         case SyntaxKind.AsKeyword:
+        case SyntaxKind.IsKeyword:
         case SyntaxKind.SatisfiesKeyword:
             return OperatorPrecedence.Relational;
         case SyntaxKind.LessThanLessThanToken:
@@ -8370,6 +8374,7 @@ export function getLeftmostExpression(node: Expression, stopAtCallExpressions: b
                     return node;
                 }
                 // falls through
+            case SyntaxKind.IsExpression:
             case SyntaxKind.AsExpression:
             case SyntaxKind.ElementAccessExpression:
             case SyntaxKind.PropertyAccessExpression:

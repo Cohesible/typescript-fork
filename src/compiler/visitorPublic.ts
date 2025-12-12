@@ -1235,6 +1235,14 @@ const visitEachChildTable: VisitEachChildTable = {
         );
     },
 
+    [SyntaxKind.IsExpression]: function visitEachChildOfIsExpression(node, visitor, context, _nodesVisitor, nodeVisitor, _tokenVisitor) {
+        return context.factory.updateIsExpression(
+            node,
+            Debug.checkDefined(nodeVisitor(node.expression, visitor, isExpression)),
+            Debug.checkDefined(nodeVisitor(node.type, visitor, isTypeNode)),
+        );
+    },
+
     [SyntaxKind.SatisfiesExpression]: function visitEachChildOfSatisfiesExpression(node, visitor, context, _nodesVisitor, nodeVisitor, _tokenVisitor) {
         return context.factory.updateSatisfiesExpression(
             node,

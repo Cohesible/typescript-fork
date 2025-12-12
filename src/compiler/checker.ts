@@ -1141,6 +1141,8 @@ import {
     CatchClause,
     ReifyExpression,
     ReifiedType,
+    IsExpression,
+    isConstOrAsyncTypeReference,
 } from "./_namespaces/ts.js";
 import * as moduleSpecifiers from "./_namespaces/ts.moduleSpecifiers.js";
 import * as performance from "./_namespaces/ts.performance.js";
@@ -17342,7 +17344,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         const links = getNodeLinks(node);
         if (!links.resolvedType) {
             // handle LS queries on the `const` in `x as const` by resolving to the type of `x`
-            if (isConstTypeReference(node) && isAssertionExpression(node.parent)) {
+            if (isConstOrAsyncTypeReference(node) && isAssertionExpression(node.parent)) {
                 links.resolvedSymbol = unknownSymbol;
                 return links.resolvedType = checkExpressionCached(node.parent.expression);
             }
@@ -29290,8 +29292,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     const args = (expr as CallExpression).arguments
                     if (args.length === 1) {
                         const target = getSymbolAtLocation((expr as CallExpression).expression)
-                        if (target?.escapedName === 'tag' && target.parent === getGlobalTypeNamespaceSymbol() && isMatchingReference(reference, args[0])) {
-                            type = narrowTypeBySwitchOnTypeTag(type, flow.node);
+                        if (target?.escapedName === 'kind' && target.parent === getGlobalTypeNamespaceSymbol() && isMatchingReference(reference, args[0])) {
+                            type = narrowTypeBySwitchOnTypeKind(type, flow.node);
                         }
                     }
                 }
@@ -29790,19 +29792,19 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             return narrowTypeByLiteralExpression(type, literal, assumeTrue);
         }
 
-        function narrowTypeBySwitchOnTypeTag(type: Type, { switchStatement, clauseStart, clauseEnd }: FlowSwitchClauseData): Type {
-            function getTypeFromTag(tagName: string) {
+        function narrowTypeBySwitchOnTypeKind(type: Type, { switchStatement, clauseStart, clauseEnd }: FlowSwitchClauseData): Type {
+            function getTypeFromKind(kindName: string) {
                 const ns = getGlobalTypeNamespaceSymbol()!;
-                const tags = ns.exports!.get('Tags' as any)!;
-                const member = tags.members!.get(tagName as any);
+                const kinds = ns.exports!.get('Kinds' as any)!;
+                const member = kinds.members!.get(kindName as any);
 
                 return member ? getTypeOfSymbol(member) : undefined;
             }
 
-            function narrowTypeByTypeTagName(type: Type, tagName: string) {
-                const memberType = getTypeFromTag(tagName);
+            function narrowTypeByTypeKindName(type: Type, kindName: string) {
+                const memberType = getTypeFromKind(kindName);
                 if (type.flags & TypeFlags.Reified) {
-                    type = getTypeOfReifiedType((type as ReifiedType).type, true, true, tagName);
+                    type = getTypeOfReifiedType((type as ReifiedType).type, true, true, kindName);
                     if (type === neverType) {
                         return neverType;
                     }
@@ -29829,7 +29831,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     if (!(i < clauseStart || i >= clauseEnd)) continue;
                     const witness = witnesses[i];
                     if (witness === undefined) continue;
-                    const t = getTypeFromTag(witness);
+                    const t = getTypeFromKind(witness);
                     if (t !== undefined) {
                         set.add(t);
                     }
@@ -29844,7 +29846,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             }
             // In the non-default cause we create a union of the type narrowed by each of the listed cases.
             const clauseWitnesses = witnesses.slice(clauseStart, clauseEnd);
-            return getUnionType(map(clauseWitnesses, text => text ? narrowTypeByTypeTagName(type, text) : neverType));
+            return getUnionType(map(clauseWitnesses, text => text ? narrowTypeByTypeKindName(type, text) : neverType));
         }
 
         function narrowTypeByLiteralExpression(type: Type, literal: LiteralExpression, assumeTrue: boolean) {
@@ -30234,6 +30236,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     return narrowTypeByTruthiness(type, expr, assumeTrue);
                 case SyntaxKind.CallExpression:
                     return narrowTypeByCallExpression(type, expr as CallExpression, assumeTrue);
+                case SyntaxKind.IsExpression:
+                    return narrowTypeByIs(type, expr as IsExpression, assumeTrue);
                 case SyntaxKind.ParenthesizedExpression:
                 case SyntaxKind.NonNullExpression:
                 case SyntaxKind.SatisfiesExpression:
@@ -30245,6 +30249,30 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                         return narrowType(type, (expr as PrefixUnaryExpression).operand, !assumeTrue);
                     }
                     break;
+            }
+            return type;
+        }
+
+        function narrowTypeByIs(type: Type, expr: IsExpression, assumeTrue: boolean): Type {
+            // if (!isOrContainsMatchingReference(expr.expression, reference)) {
+            //     return type
+            // }
+            const predicateType = getTypeFromTypeNode(expr.type)
+            if (isMatchingReference(reference, expr.expression)) {
+                return getNarrowedType(type, predicateType, assumeTrue, /*checkDerived*/ false);
+            }
+            if (
+                strictNullChecks && optionalChainContainsReference(expr.expression, reference) &&
+                (
+                    assumeTrue && !(hasTypeFacts(predicateType, TypeFacts.EQUndefined)) ||
+                    !assumeTrue && everyType(predicateType, isNullableType)
+                )
+            ) {
+                type = getAdjustedTypeWithFacts(type, TypeFacts.NEUndefinedOrNull);
+            }
+            const access = getDiscriminantPropertyAccess(expr.expression, type);
+            if (access) {
+                return narrowTypeByDiscriminant(type, access, t => getNarrowedType(t, predicateType, assumeTrue, /*checkDerived*/ false));
             }
             return type;
         }
@@ -32847,7 +32875,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return getContextualTypeForDecorator(parent as Decorator);
             case SyntaxKind.TypeAssertionExpression:
             case SyntaxKind.AsExpression:
-                return isConstTypeReference((parent as AssertionExpression).type) ? getContextualType(parent as AssertionExpression, contextFlags) : getTypeFromTypeNode((parent as AssertionExpression).type);
+                return isConstOrAsyncTypeReference((parent as AssertionExpression).type) ? getContextualType(parent as AssertionExpression, contextFlags) : getTypeFromTypeNode((parent as AssertionExpression).type);
             case SyntaxKind.BinaryExpression:
                 return getContextualTypeForBinaryOperand(node, contextFlags);
             case SyntaxKind.PropertyAssignment:
@@ -37854,6 +37882,39 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
     }
 
+    function maybeAutoAwait(node: CallExpression, returnType: Type): Type {
+        if (node.flags & NodeFlags.AwaitContext) {
+            // TODO(auto await): check destination type?
+            // TODO(auto await): check unions, check PromiseLike/Thenable
+            if (node.parent.kind !== SyntaxKind.AwaitExpression && isReferenceToType(returnType, getGlobalPromiseType(/*reportErrors*/ false))) {
+                if (node.parent.kind === SyntaxKind.AsExpression) {
+                    const targetTypeNode = (node.parent as AsExpression).type;
+                    const isAsyncCast = isTypeReferenceNode(targetTypeNode) && isIdentifier(targetTypeNode.typeName) && targetTypeNode.typeName.escapedText === "async" && !targetTypeNode.typeArguments;
+                    if (!isAsyncCast) {
+                        const t = getTypeOfNode(targetTypeNode);
+                        if (!isReferenceToType(t, getGlobalPromiseType(/*reportErrors*/ false))) {
+                            returnType = getTypeArguments(returnType as GenericType)[0] || anyType;
+                        }
+                    }
+                // } else if (node.parent.kind === SyntaxKind.PropertyAccessExpression && (node.parent as PropertyAccessExpression).expression === node) {
+                //     let shouldAwait = true
+                //     if (node.parent.parent.kind === SyntaxKind.CallExpression && (node.parent.parent as CallExpression).expression === node.parent) {
+                //         const member = (node.parent as PropertyAccessExpression).name
+                //         if (member.kind === SyntaxKind.Identifier && ((member as Identifier).escapedText === "then" || (member as Identifier).escapedText === "catch" || (member as Identifier).escapedText === "finally")) {
+                //             shouldAwait = false
+                //         }
+                //     }
+                //     if (shouldAwait) {
+                //         returnType = getTypeArguments(returnType as GenericType)[0] || anyType;
+                //     }
+                } else {
+                    returnType = getTypeArguments(returnType as GenericType)[0] || anyType;
+                }
+            }
+        }
+        return returnType;
+    }
+
     /**
      * Syntactically and semantically checks a call or new expression.
      * @param node The call/new expression to be checked.
@@ -37900,7 +37961,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             return resolveExternalModuleTypeByLiteral(node.arguments![0] as StringLiteral);
         }
 
-        const returnType = getReturnTypeOfSignature(signature);
+        const returnType = maybeAutoAwait(node as CallExpression, getReturnTypeOfSignature(signature));
+
         // Treat any call to the global 'Symbol' function that is part of a const variable or readonly property
         // as a fresh unique symbol literal type.
         if (returnType.flags & TypeFlags.ESSymbolLike && isSymbolOrSymbolForCall(node)) {
@@ -38123,6 +38185,15 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return checkAssertionWorker(node, checkMode);
     }
 
+    function checkIsExpression(node: IsExpression, checkMode: CheckMode | undefined) {
+        const exprType = checkExpression(node.expression, checkMode);
+        const links = getNodeLinks(node);
+        links.assertionExpressionType = exprType;
+        checkSourceElement(node.type);
+        checkNodeDeferred(node);
+        return getTypeFromTypeNode(node.type);
+    }
+
     function isValidConstAssertionArgument(node: Node): boolean {
         switch (node.kind) {
             case SyntaxKind.StringLiteral:
@@ -38154,11 +38225,19 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     function checkAssertionWorker(node: JSDocTypeAssertion | AssertionExpression, checkMode: CheckMode | undefined) {
         const { type, expression } = getAssertionTypeAndExpression(node);
         const exprType = checkExpression(expression, checkMode);
-        if (isConstTypeReference(type)) {
-            if (!isValidConstAssertionArgument(expression)) {
-                error(expression, Diagnostics.A_const_assertions_can_only_be_applied_to_references_to_enum_members_or_string_number_boolean_array_or_object_literals);
+        if (isTypeReferenceNode(type) && isIdentifier(type.typeName)) {
+            if (type.typeName.escapedText === "const" && !type.typeArguments) {
+                if (!isValidConstAssertionArgument(expression)) {
+                    error(expression, Diagnostics.A_const_assertions_can_only_be_applied_to_references_to_enum_members_or_string_number_boolean_array_or_object_literals);
+                }
+                return getRegularTypeOfLiteralType(exprType);
             }
-            return getRegularTypeOfLiteralType(exprType);
+            if (type.typeName.escapedText === "async" && !type.typeArguments) {
+                // if (!isValidConstAssertionArgument(expression)) {
+                //     error(expression, Diagnostics.A_const_assertions_can_only_be_applied_to_references_to_enum_members_or_string_number_boolean_array_or_object_literals);
+                // }
+                return exprType;
+            }
         }
         const links = getNodeLinks(node);
         links.assertionExpressionType = exprType;
@@ -38167,10 +38246,11 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return getTypeFromTypeNode(type);
     }
 
-    function getAssertionTypeAndExpression(node: JSDocTypeAssertion | AssertionExpression) {
+    function getAssertionTypeAndExpression(node: JSDocTypeAssertion | AssertionExpression | IsExpression) {
         let type: TypeNode;
         let expression: Expression;
         switch (node.kind) {
+            case SyntaxKind.IsExpression:
             case SyntaxKind.AsExpression:
             case SyntaxKind.TypeAssertionExpression:
                 type = node.type;
@@ -38185,7 +38265,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return { type, expression };
     }
 
-    function checkAssertionDeferred(node: JSDocTypeAssertion | AssertionExpression) {
+    function checkAssertionDeferred(node: JSDocTypeAssertion | AssertionExpression | IsExpression) {
         const { type } = getAssertionTypeAndExpression(node);
         const errNode = isParenthesizedExpression(node) ? type : node;
         const links = getNodeLinks(node);
@@ -41774,20 +41854,30 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             }
         }
         expr = skipParentheses(node);
+
+        // Optimize for the common case of a call to a function with a single non-generic call
+        // signature where we can just fetch the return type without checking the arguments.
+        if (isCallExpression(expr)) {
+            if (expr.expression.kind !== SyntaxKind.SuperKeyword && !isRequireCall(expr, /*requireStringLiteralLikeArgument*/ true) && !isSymbolOrSymbolForCall(expr) && !isImportCall(expr)) {
+                const returnType = isCallChain(expr) ? getReturnTypeOfSingleNonGenericSignatureOfCallChain(expr) :
+                    getReturnTypeOfSingleNonGenericCallSignature(checkNonNullExpression(expr.expression));
+                return returnType ? maybeAutoAwait(node as CallExpression, returnType) : returnType;
+            }
+            return undefined;
+        }
+
         if (isAwaitExpression(expr)) {
+            // FIXME(auto await): we should get the return type directly for call expressions
             const type = getQuickTypeOfExpression(expr.expression);
             return type ? getAwaitedType(type) : undefined;
         }
-        // Optimize for the common case of a call to a function with a single non-generic call
-        // signature where we can just fetch the return type without checking the arguments.
-        if (isCallExpression(expr) && expr.expression.kind !== SyntaxKind.SuperKeyword && !isRequireCall(expr, /*requireStringLiteralLikeArgument*/ true) && !isSymbolOrSymbolForCall(expr) && !isImportCall(expr)) {
-            return isCallChain(expr) ? getReturnTypeOfSingleNonGenericSignatureOfCallChain(expr) :
-                getReturnTypeOfSingleNonGenericCallSignature(checkNonNullExpression(expr.expression));
-        }
-        else if (isAssertionExpression(expr) && !isConstTypeReference(expr.type)) {
+        else if (isAssertionExpression(expr) && !isConstOrAsyncTypeReference(expr.type)) {
             return getTypeFromTypeNode((expr as TypeAssertion).type);
         }
         else if (isLiteralExpression(node) || isBooleanLiteral(node)) {
+            return checkExpression(node);
+        }
+        else if (node.kind === SyntaxKind.IsExpression) {
             return checkExpression(node);
         }
         return undefined;
@@ -41954,6 +42044,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             case SyntaxKind.TypeAssertionExpression:
             case SyntaxKind.AsExpression:
                 return checkAssertion(node as AssertionExpression, checkMode);
+            case SyntaxKind.IsExpression:
+                return checkIsExpression(node as IsExpression, checkMode);
             case SyntaxKind.NonNullExpression:
                 return checkNonNullAssertion(node as NonNullExpression);
             case SyntaxKind.ExpressionWithTypeArguments:
@@ -49016,7 +49108,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return result;
     }
 
-    function getTypeOfReifiedType(subject: Type, isTypeNode = false, resolve = true, tagName?: string) {
+    function getTypeOfReifiedType(subject: Type, isTypeNode = false, resolve = true, kindName?: string) {
         const ns = getGlobalTypeNamespaceSymbol();
         if (!ns) {
             return unknownType; // TODO
@@ -49033,7 +49125,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
 
         function getReifiedIntrinsicType(name: string) {
-            if (tagName !== undefined && tagName !== 'intrinsic') {
+            if (kindName !== undefined && kindName !== 'intrinsic') {
                 return neverType;
             }
 
@@ -49062,7 +49154,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             case unknownType:
                 return getReifiedIntrinsicType('unknown');
             case voidType:
-                return getReifiedIntrinsicType('Void');
+                if (kindName !== undefined && kindName !== 'intrinsic') {
+                    return neverType;
+                }
+                return undefinedType; //getReifiedIntrinsicType('Void');
         }
 
         if (isErrorType(subject)) {
@@ -49073,7 +49168,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 if (subject.flags & TypeFlags.Reified) {
                     return getAnyReifiedType();
                 }
-                if (tagName !== undefined && tagName !== 'typeFunction') {
+                if (kindName !== undefined && kindName !== 'typeFunction') {
                     return neverType;
                 }
                 return getMemberType('TypeFunction');
@@ -49081,7 +49176,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             return getDeclaredTypeOfTypeAlias(ns);
         }
         else if (subject.flags & TypeFlags.Union) {
-            if (tagName !== undefined && tagName !== 'union') {
+            if (kindName !== undefined && kindName !== 'union') {
                 return neverType;
             }
             return createTypeReference(getMemberType('Union') as GenericType, [getDeclaredTypeOfTypeAlias(ns)])
@@ -49089,15 +49184,15 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         else if (subject.flags & TypeFlags.Intersection) {
             const apparent = getReducedApparentType(subject);
             if (apparent === subject) {
-                if (tagName !== undefined && tagName !== 'object') {
+                if (kindName !== undefined && kindName !== 'object') {
                     return neverType;
                 }
                 return getMemberType('Object');
             }
-            return getTypeOfReifiedType(apparent, isTypeNode, resolve, tagName);
+            return getTypeOfReifiedType(apparent, isTypeNode, resolve, kindName);
         }
         else if (subject.flags & TypeFlags.TemplateLiteral) {
-            if (tagName !== undefined && tagName !== 'template') {
+            if (kindName !== undefined && kindName !== 'template') {
                 return neverType;
             }
             return getMemberType('Template');
@@ -49112,7 +49207,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             return getMemberType('Intrinsic');
         }
         else if (isTypeAssignableToKind(subject, TypeFlags.Literal | TypeFlags.UniqueESSymbol | TypeFlags.Undefined | TypeFlags.Null)) {
-            if (tagName !== undefined && tagName !== 'literal') {
+            if (kindName !== undefined && kindName !== 'literal') {
                 return neverType;
             }
             return subject;
@@ -49130,7 +49225,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             return getMemberType('Intrinsic');
         }
         else if (isTupleType(subject)) {
-            if (tagName !== undefined && tagName !== 'tuple') {
+            if (kindName !== undefined && kindName !== 'tuple') {
                 return neverType;
             }
             return getMemberType('Tuple');
@@ -49139,18 +49234,18 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             return getMemberType('Intrinsic');
         }
         else if (isFunctionType(subject)) {
-            if (tagName !== undefined && tagName !== 'function') {
+            if (kindName !== undefined && kindName !== 'function') {
                 return neverType;
             }
             return getMemberType('Function');
         }
         else if (isArrayType(subject)) {
-            if (tagName !== undefined && tagName !== 'array') {
+            if (kindName !== undefined && kindName !== 'array') {
                 return neverType;
             }
-            return getMemberType('ArrayType');
+            return getMemberType('Array');
         } else if (isObjectLiteralType(subject) || isTypeAssignableToKind(subject, TypeFlags.Object)) {
-            if (tagName !== undefined && tagName !== 'object') {
+            if (kindName !== undefined && kindName !== 'object') {
                 return neverType;
             }
             return getMemberType('Object');
@@ -49650,9 +49745,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 checkJsxElementDeferred(node as JsxElement);
                 break;
             case SyntaxKind.TypeAssertionExpression:
+            case SyntaxKind.IsExpression:
             case SyntaxKind.AsExpression:
             case SyntaxKind.ParenthesizedExpression:
-                checkAssertionDeferred(node as AssertionExpression | JSDocTypeAssertion);
+                checkAssertionDeferred(node as AssertionExpression | JSDocTypeAssertion | IsExpression);
                 break;
             case SyntaxKind.VoidExpression:
                 checkExpression((node as VoidExpression).expression);

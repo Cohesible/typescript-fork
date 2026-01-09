@@ -5518,6 +5518,10 @@ export function isPushOrUnshiftIdentifier(node: Identifier): boolean {
     return node.escapedText === "push" || node.escapedText === "unshift";
 }
 
+export function isPopOrShiftIdentifier(node: Identifier): boolean {
+    return node.escapedText === "pop" || node.escapedText === "shift";
+}
+
 /**
  * This function returns true if the this node's root declaration is a parameter.
  * For example, passing a `ParameterDeclaration` will return true, as will passing a

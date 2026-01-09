@@ -214,6 +214,7 @@ import {
     isPropertyAccessExpression,
     isPropertyNameLiteral,
     isPrototypeAccess,
+    isPopOrShiftIdentifier,
     isPushOrUnshiftIdentifier,
     isRequireCall,
     isShorthandPropertyAssignment,
@@ -1347,6 +1348,12 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                 return isNarrowingExpression(expr.right);
             case SyntaxKind.CommaToken:
                 return isNarrowingExpression(expr.right);
+            case SyntaxKind.LessThanToken:
+            case SyntaxKind.LessThanEqualsToken:
+            case SyntaxKind.GreaterThanToken:
+            case SyntaxKind.GreaterThanEqualsToken:
+                // Support narrowing for comparisons like arr.length > 0
+                return containsNarrowableReference(expr.left) || containsNarrowableReference(expr.right);
         }
         return false;
     }
@@ -2309,8 +2316,14 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
         }
         if (node.expression.kind === SyntaxKind.PropertyAccessExpression) {
             const propertyAccess = node.expression as PropertyAccessExpression;
-            if (isIdentifier(propertyAccess.name) && isNarrowableOperand(propertyAccess.expression) && isPushOrUnshiftIdentifier(propertyAccess.name)) {
-                currentFlow = createFlowMutation(FlowFlags.ArrayMutation, currentFlow, node);
+            if (isIdentifier(propertyAccess.name) && isNarrowableOperand(propertyAccess.expression)) {
+                if (isPushOrUnshiftIdentifier(propertyAccess.name)) {
+                    currentFlow = createFlowMutation(FlowFlags.ArrayMutation, currentFlow, node);
+                }
+                else if (isPopOrShiftIdentifier(propertyAccess.name)) {
+                    // pop() and shift() can make a NonEmptyArray become empty, so create a mutation
+                    currentFlow = createFlowMutation(FlowFlags.ArrayMutation, currentFlow, node);
+                }
             }
         }
     }

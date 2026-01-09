@@ -8,10 +8,8 @@ function f<T>(t: reify T): T {
     switch (type.kind(t)) {
         case "array":
             t
-            break
         case "object":
             const z = t['a']
-            break
     }
 
     return {} as any
@@ -101,9 +99,41 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
     const arr = [1]
     if (arr.length > 0) {
         const v = arr.pop() + 1
+        // After pop, arr should be T[] again, not NonEmptyArray
+        const w = arr.pop()  // Should be number | undefined
     }
 }
 
+// Map narrowing
+{
+    const map = new Map<string, number>();
+    map.set('a', 1);
+
+    if (map.has('a')) {
+        const val = map.get('a');   // Should be `number`, not `number | undefined`
+        const val2 = val + 1;       // Should not error
+    }
+
+    // Without has() -> `number | undefined`
+    const val3 = map.get('a');
+
+    if (map.has('a')) {
+        const val4 = map.get('b');  // Different key -> `number | undefined`
+    }
+}
+
+// declare function fail(): never;
+// declare const a: string | null;
+// a || fail();
+// a.charAt(0); // Object is possibly 'null'. ts(2531)
+
+// 2) Narrowing in Unreachable Code Fails
+
+{
+    // TODO: should not be reduced to `string`
+    // need a new intrinsic `string` that is created if it appears with a union of string literals
+    type C = 'black' | 'red' | 'green' | 'yellow' | 'blue' | string
+}
 
 // if ((reify { x: number}).x === reify number) {
 

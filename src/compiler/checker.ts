@@ -719,6 +719,7 @@ import {
     isPropertyName,
     isPropertyNameLiteral,
     isPropertySignature,
+    isPopOrShiftIdentifier,
     isPrototypeAccess,
     isPrototypePropertyAssignment,
     isPushOrUnshiftIdentifier,
@@ -2252,6 +2253,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     var globalNewableFunctionType: ObjectType;
     var globalArrayType: GenericType;
     var globalReadonlyArrayType: GenericType;
+    var globalNonEmptyArrayType: GenericType;
     var globalStringType: ObjectType;
     var globalNumberType: ObjectType;
     var globalBooleanType: ObjectType;
@@ -29219,15 +29221,44 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             return undefined;
         }
 
+        function widenNonEmptyArrayType(type: Type): Type {
+            // Convert NonEmptyArray<T> back to T[]
+            return mapType(type, t => {
+                if (getObjectFlags(t) & ObjectFlags.Reference) {
+                    const typeRef = t as TypeReference;
+                    if (typeRef.target === globalNonEmptyArrayType && typeRef.resolvedTypeArguments) {
+                        // Convert NonEmptyArray<T> to T[]
+                        return createArrayType(typeRef.resolvedTypeArguments[0]);
+                    }
+                }
+                return t;
+            });
+        }
+
         function getTypeAtFlowArrayMutation(flow: FlowArrayMutation): FlowType | undefined {
-            if (declaredType === autoType || declaredType === autoArrayType) {
-                const node = flow.node;
-                const expr = node.kind === SyntaxKind.CallExpression ?
-                    (node.expression as PropertyAccessExpression).expression :
-                    (node.left as ElementAccessExpression).expression;
-                if (isMatchingReference(reference, getReferenceCandidate(expr))) {
-                    const flowType = getTypeAtFlowNode(flow.antecedent);
-                    const type = getTypeFromFlowType(flowType);
+            const node = flow.node;
+            const expr = node.kind === SyntaxKind.CallExpression ?
+                (node.expression as PropertyAccessExpression).expression :
+                (node.left as ElementAccessExpression).expression;
+
+            if (isMatchingReference(reference, getReferenceCandidate(expr))) {
+                const flowType = getTypeAtFlowNode(flow.antecedent);
+                const type = getTypeFromFlowType(flowType);
+
+                // Handle pop() and shift() calls that invalidate NonEmptyArray narrowing
+                if (node.kind === SyntaxKind.CallExpression) {
+                    const call = node as CallExpression;
+                    if (call.expression.kind === SyntaxKind.PropertyAccessExpression) {
+                        const propAccess = call.expression as PropertyAccessExpression;
+                        if (isIdentifier(propAccess.name) && isPopOrShiftIdentifier(propAccess.name)) {
+                            // If the type is NonEmptyArray<T>, narrow it back to T[]
+                            return createFlowType(widenNonEmptyArrayType(type), isIncomplete(flowType));
+                        }
+                    }
+                }
+
+                // Handle evolving arrays
+                if (declaredType === autoType || declaredType === autoArrayType) {
                     if (getObjectFlags(type) & ObjectFlags.EvolvingArray) {
                         let evolvedType = type as EvolvingArrayType;
                         if (node.kind === SyntaxKind.CallExpression) {
@@ -29244,8 +29275,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                         }
                         return evolvedType === type ? flowType : createFlowType(evolvedType, isIncomplete(flowType));
                     }
-                    return flowType;
                 }
+
+                return flowType;
             }
             return undefined;
         }
@@ -29690,6 +29722,11 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                         }
                     }
                     break;
+                case SyntaxKind.LessThanToken:
+                case SyntaxKind.LessThanEqualsToken:
+                case SyntaxKind.GreaterThanToken:
+                case SyntaxKind.GreaterThanEqualsToken:
+                    return narrowTypeByComparison(type, expr, assumeTrue);
                 case SyntaxKind.CommaToken:
                     return narrowType(type, expr.right, assumeTrue);
                 // Ordinarily we won't see && and || expressions in control flow analysis because the Binder breaks those
@@ -29705,6 +29742,62 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                         narrowType(narrowType(type, expr.left, /*assumeTrue*/ false), expr.right, /*assumeTrue*/ false);
             }
             return type;
+        }
+
+        function narrowTypeByComparison(type: Type, expr: BinaryExpression, assumeTrue: boolean): Type {
+            const operator = expr.operatorToken.kind;
+            const left = getReferenceCandidate(expr.left);
+            const right = getReferenceCandidate(expr.right);
+
+            // Check if we're comparing arr.length with a number
+            if (isPropertyAccessExpression(left) && isIdentifier(left.name) && left.name.escapedText === "length") {
+                const target = getReferenceCandidate(left.expression);
+                if (isMatchingReference(reference, target) && isNumericLiteral(right)) {
+                    return narrowTypeByArrayLength(type, operator, Number(right.text), assumeTrue);
+                }
+            }
+
+            // Check the reverse: number > arr.length
+            if (isPropertyAccessExpression(right) && isIdentifier(right.name) && right.name.escapedText === "length") {
+                const target = getReferenceCandidate(right.expression);
+                if (isMatchingReference(reference, target) && isNumericLiteral(left)) {
+                    // Flip the operator for reverse comparison
+                    const flippedOperator =
+                        operator === SyntaxKind.GreaterThanToken ? SyntaxKind.LessThanToken :
+                        operator === SyntaxKind.GreaterThanEqualsToken ? SyntaxKind.LessThanEqualsToken :
+                        operator === SyntaxKind.LessThanToken ? SyntaxKind.GreaterThanToken :
+                        SyntaxKind.GreaterThanEqualsToken;
+                    return narrowTypeByArrayLength(type, flippedOperator, Number(left.text), assumeTrue);
+                }
+            }
+
+            return type;
+        }
+
+        function narrowTypeByArrayLength(type: Type, operator: SyntaxKind, compareValue: number, assumeTrue: boolean): Type {
+            // We only narrow when we can determine the array is non-empty
+            // arr.length > 0 (assumeTrue) or arr.length >= 1 (assumeTrue)
+            const isNonEmptyCheck =
+                (operator === SyntaxKind.GreaterThanToken && compareValue === 0 && assumeTrue) ||
+                (operator === SyntaxKind.GreaterThanEqualsToken && compareValue === 1 && assumeTrue) ||
+                (operator === SyntaxKind.LessThanEqualsToken && compareValue === 0 && !assumeTrue) ||
+                (operator === SyntaxKind.LessThanToken && compareValue === 1 && !assumeTrue);
+
+            if (!isNonEmptyCheck) {
+                return type;
+            }
+
+            // Narrow array types to NonEmptyArray<T>
+            return mapType(type, t => {
+                if (isArrayType(t) || isTupleType(t)) {
+                    const elementType = getIndexTypeOfType(t, numberType);
+                    if (elementType && globalNonEmptyArrayType) {
+                        // Create NonEmptyArray<T> type reference
+                        return createTypeFromGenericGlobalType(globalNonEmptyArrayType, [elementType]);
+                    }
+                }
+                return t;
+            });
         }
 
         function narrowTypeByPrivateIdentifierInInExpression(type: Type, expr: BinaryExpression, assumeTrue: boolean): Type {
@@ -37929,6 +38022,111 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
      * @param node The call/new expression to be checked.
      * @returns On success, the expression's signature's return type. On failure, anyType.
      */
+    function narrowMapGetReturnType(callExpression: CallExpression, returnType: Type): Type {
+        // Check if this is a call to Map.get(key)
+        if (!isPropertyAccessExpression(callExpression.expression)) {
+            return returnType;
+        }
+
+        const propertyAccess = callExpression.expression;
+        if (!isIdentifier(propertyAccess.name) || propertyAccess.name.escapedText !== "get") {
+            return returnType;
+        }
+
+        // Check if there's exactly one argument (the key)
+        if (callExpression.arguments.length !== 1) {
+            return returnType;
+        }
+
+        const mapReference = propertyAccess.expression;
+        const keyArg = callExpression.arguments[0];
+
+        // Check if the return type is V | undefined (typical for Map.get)
+        if (!(returnType.flags & TypeFlags.Union)) {
+            return returnType;
+        }
+
+        // Walk back through control flow to find map.has(key) checks
+        if (hasMatchingMapHasCheck(mapReference, keyArg)) {
+            // Remove undefined from the union type
+            return getNonNullableType(returnType);
+        }
+
+        return returnType;
+    }
+
+    function hasMatchingMapHasCheck(mapReference: Expression, keyArg: Expression): boolean {
+        // Walk through the control flow to find a map.has(key) check
+        const flow = (mapReference as any).flowNode || (mapReference.parent as any)?.flowNode;
+        return flow ? hasMapHasCheckInFlow(flow, mapReference, keyArg) : false;
+    }
+
+    function hasMapHasCheckInFlow(flow: FlowNode | undefined, mapReference: Expression, keyArg: Expression): boolean {
+        if (!flow) {
+            return false;
+        }
+
+        const flags = flow.flags;
+        if (flags & FlowFlags.TrueCondition) {
+            const condition = (flow as FlowCondition).node;
+            if (isMapHasCall(condition, mapReference, keyArg)) {
+                return true;
+            }
+            // Continue walking back through the true branch
+            return hasMapHasCheckInFlow((flow as FlowCondition).antecedent, mapReference, keyArg);
+        }
+
+        if (flags & (FlowFlags.Assignment | FlowFlags.ArrayMutation)) {
+            return hasMapHasCheckInFlow((flow as FlowAssignment | FlowArrayMutation).antecedent, mapReference, keyArg);
+        }
+
+        // Don't walk through general Condition nodes or BranchLabels - those represent
+        // control flow joins where the condition may not have been true
+        return false;
+    }
+
+    function isMapHasCall(expr: Expression, mapReference: Expression, keyArg: Expression): boolean {
+        if (!isCallExpression(expr)) {
+            return false;
+        }
+
+        if (!isPropertyAccessExpression(expr.expression)) {
+            return false;
+        }
+
+        const propAccess = expr.expression;
+        if (!isIdentifier(propAccess.name) || propAccess.name.escapedText !== "has") {
+            return false;
+        }
+
+        // Check if it's the same map
+        if (!isMatchingReference(mapReference, propAccess.expression)) {
+            return false;
+        }
+
+        // Check if it's the same key
+        if (expr.arguments.length !== 1) {
+            return false;
+        }
+
+        return areExpressionsEqual(keyArg, expr.arguments[0]);
+    }
+
+    function areExpressionsEqual(expr1: Expression, expr2: Expression): boolean {
+        // Simple equality check for literals
+        if (isStringLiteralLike(expr1) && isStringLiteralLike(expr2)) {
+            return expr1.text === expr2.text;
+        }
+        if (isNumericLiteral(expr1) && isNumericLiteral(expr2)) {
+            return expr1.text === expr2.text;
+        }
+        // For identifiers, check if they refer to the same symbol
+        if (isIdentifier(expr1) && isIdentifier(expr2)) {
+            return getResolvedSymbol(expr1) === getResolvedSymbol(expr2);
+        }
+        return false;
+    }
+
     function checkCallExpression(node: CallExpression | NewExpression, checkMode?: CheckMode): Type {
         checkGrammarTypeArguments(node, node.typeArguments);
 
@@ -37970,7 +38168,12 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             return resolveExternalModuleTypeByLiteral(node.arguments![0] as StringLiteral);
         }
 
-        const returnType = maybeAutoAwait(node as CallExpression, getReturnTypeOfSignature(signature));
+        let returnType = maybeAutoAwait(node as CallExpression, getReturnTypeOfSignature(signature));
+
+        // Narrow Map.get() return type if there was a prior Map.has() check
+        if (node.kind === SyntaxKind.CallExpression && !node.questionDotToken) {
+            returnType = narrowMapGetReturnType(node as CallExpression, returnType);
+        }
 
         // Treat any call to the global 'Symbol' function that is part of a const variable or readonly property
         // as a fresh unique symbol literal type.
@@ -41879,9 +42082,13 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         // signature where we can just fetch the return type without checking the arguments.
         if (isCallExpression(expr)) {
             if (expr.expression.kind !== SyntaxKind.SuperKeyword && !isRequireCall(expr, /*requireStringLiteralLikeArgument*/ true) && !isSymbolOrSymbolForCall(expr) && !isImportCall(expr)) {
-                const returnType = isCallChain(expr) ? getReturnTypeOfSingleNonGenericSignatureOfCallChain(expr) :
+                let returnType = isCallChain(expr) ? getReturnTypeOfSingleNonGenericSignatureOfCallChain(expr) :
                     getReturnTypeOfSingleNonGenericCallSignature(checkNonNullExpression(expr.expression));
-                return returnType ? maybeAutoAwait(node as CallExpression, returnType) : returnType;
+                if (returnType) {
+                    returnType = narrowMapGetReturnType(expr, returnType);
+                    returnType = maybeAutoAwait(node as CallExpression, returnType);
+                }
+                return returnType;
             }
             return undefined;
         }
@@ -51956,6 +52163,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
         globalReadonlyArrayType = getGlobalTypeOrUndefined("ReadonlyArray" as __String, /*arity*/ 1) as GenericType || globalArrayType;
         anyReadonlyArrayType = globalReadonlyArrayType ? createTypeFromGenericGlobalType(globalReadonlyArrayType, [anyType]) : anyArrayType;
+        globalNonEmptyArrayType = getGlobalTypeOrUndefined("NonEmptyArray" as __String, /*arity*/ 1) as GenericType || globalArrayType;
         globalThisType = getGlobalTypeOrUndefined("ThisType" as __String, /*arity*/ 1) as GenericType;
 
         if (augmentations) {

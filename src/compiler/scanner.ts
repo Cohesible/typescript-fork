@@ -158,6 +158,7 @@ export const textToKeywordObj: MapLike<KeywordSyntaxKind> = {
     enum: SyntaxKind.EnumKeyword,
     export: SyntaxKind.ExportKeyword,
     extends: SyntaxKind.ExtendsKeyword,
+    fallthrough: SyntaxKind.FallthroughKeyword,
     false: SyntaxKind.FalseKeyword,
     finally: SyntaxKind.FinallyKeyword,
     for: SyntaxKind.ForKeyword,
@@ -1899,61 +1900,39 @@ export function createScanner(
             }
 
             const ch = codePointUnchecked(pos);
-            if (pos === 0) {
-                // Special handling for shebang
-                if (ch === CharacterCodes.hash && isShebangTrivia(text, pos)) {
-                    pos = scanShebangTrivia(text, pos);
-                    if (skipTrivia) {
-                        continue;
-                    }
-                    else {
-                        return token = SyntaxKind.ShebangTrivia;
-                    }
-                }
-            }
-
             switch (ch) {
                 case CharacterCodes.lineFeed:
                 case CharacterCodes.carriageReturn:
                     tokenFlags |= TokenFlags.PrecedingLineBreak;
-                    if (skipTrivia) {
+                    if (ch === CharacterCodes.carriageReturn && pos + 1 < end && charCodeUnchecked(pos + 1) === CharacterCodes.lineFeed) {
+                        // consume both CR and LF
+                        pos += 2;
+                    }
+                    else {
                         pos++;
+                    }
+                    if (skipTrivia) {
+                        while (pos < end) {
+                            const ch = charCodeUnchecked(pos);
+                            if (ch !== CharacterCodes.space && ch !== CharacterCodes.tab) break;
+                            pos++;
+                        }
                         continue;
                     }
                     else {
-                        if (ch === CharacterCodes.carriageReturn && pos + 1 < end && charCodeUnchecked(pos + 1) === CharacterCodes.lineFeed) {
-                            // consume both CR and LF
-                            pos += 2;
-                        }
-                        else {
-                            pos++;
-                        }
                         return token = SyntaxKind.NewLineTrivia;
                     }
                 case CharacterCodes.tab:
                 case CharacterCodes.verticalTab:
                 case CharacterCodes.formFeed:
                 case CharacterCodes.space:
-                case CharacterCodes.nonBreakingSpace:
-                case CharacterCodes.ogham:
-                case CharacterCodes.enQuad:
-                case CharacterCodes.emQuad:
-                case CharacterCodes.enSpace:
-                case CharacterCodes.emSpace:
-                case CharacterCodes.threePerEmSpace:
-                case CharacterCodes.fourPerEmSpace:
-                case CharacterCodes.sixPerEmSpace:
-                case CharacterCodes.figureSpace:
-                case CharacterCodes.punctuationSpace:
-                case CharacterCodes.thinSpace:
-                case CharacterCodes.hairSpace:
-                case CharacterCodes.zeroWidthSpace:
-                case CharacterCodes.narrowNoBreakSpace:
-                case CharacterCodes.mathematicalSpace:
-                case CharacterCodes.ideographicSpace:
-                case CharacterCodes.byteOrderMark:
                     if (skipTrivia) {
                         pos++;
+                        while (pos < end) {
+                            const ch = charCodeUnchecked(pos);
+                            if (ch !== CharacterCodes.space && ch !== CharacterCodes.tab) break;
+                            pos++;
+                        }
                         continue;
                     }
                     else {
@@ -2323,7 +2302,20 @@ export function createScanner(
                     pos++;
                     return token = SyntaxKind.Unknown;
                 case CharacterCodes.hash:
-                    if (pos !== 0 && text[pos + 1] === "!") {
+                    if (text[pos + 1] === "!") {
+                        if (pos === 0) {
+                            // Special handling for shebang
+                            if (isShebangTrivia(text, pos)) {
+                                pos = scanShebangTrivia(text, pos);
+                                if (skipTrivia) {
+                                    continue;
+                                }
+                                else {
+                                    return token = SyntaxKind.ShebangTrivia;
+                                }
+                            }
+                        }
+
                         error(Diagnostics.can_only_be_used_at_the_start_of_a_file, pos, 2);
                         pos++;
                         return token = SyntaxKind.Unknown;
@@ -2362,14 +2354,52 @@ export function createScanner(
                         error(Diagnostics.Invalid_character, pos++, charSize(ch));
                     }
                     return token = SyntaxKind.PrivateIdentifier;
-                case CharacterCodes.replacementCharacter:
-                    error(Diagnostics.File_appears_to_be_binary, 0, 0);
-                    pos = end;
-                    return token = SyntaxKind.NonTextFileMarkerTrivia;
                 default:
                     const identifierKind = scanIdentifier(ch, languageVersion);
-                    if (identifierKind) {
-                        return token = identifierKind;
+                    if (identifierKind !== undefined) {
+                        return token;
+                    }
+                    else if (ch > 127) {
+                        switch (ch) {
+                            case CharacterCodes.nonBreakingSpace:
+                            case CharacterCodes.ogham:
+                            case CharacterCodes.enQuad:
+                            case CharacterCodes.emQuad:
+                            case CharacterCodes.enSpace:
+                            case CharacterCodes.emSpace:
+                            case CharacterCodes.threePerEmSpace:
+                            case CharacterCodes.fourPerEmSpace:
+                            case CharacterCodes.sixPerEmSpace:
+                            case CharacterCodes.figureSpace:
+                            case CharacterCodes.punctuationSpace:
+                            case CharacterCodes.thinSpace:
+                            case CharacterCodes.hairSpace:
+                            case CharacterCodes.zeroWidthSpace:
+                            case CharacterCodes.narrowNoBreakSpace:
+                            case CharacterCodes.mathematicalSpace:
+                            case CharacterCodes.ideographicSpace:
+                            case CharacterCodes.byteOrderMark:
+                                if (skipTrivia) {
+                                    pos++;
+                                    while (pos < end) {
+                                        const ch = codePointUnchecked(pos);
+                                        if (ch !== CharacterCodes.space && ch !== CharacterCodes.tab) break;
+                                        pos++;
+                                    }
+                                    continue;
+                                }
+                                else {
+                                    while (pos < end && isWhiteSpaceSingleLine(charCodeUnchecked(pos))) {
+                                        pos++;
+                                    }
+                                    return token = SyntaxKind.WhitespaceTrivia;
+                                }
+
+                            case CharacterCodes.replacementCharacter:
+                                error(Diagnostics.File_appears_to_be_binary, 0, 0);
+                                pos = end;
+                                return token = SyntaxKind.NonTextFileMarkerTrivia;
+                        }
                     }
                     else if (isWhiteSpaceSingleLine(ch)) {
                         pos += charSize(ch);
@@ -2396,7 +2426,7 @@ export function createScanner(
                 return false;
         }
 
-        if (scriptKind !== ScriptKind.TS && scriptKind !== ScriptKind.TSX) {
+        if (scriptKind !== ScriptKind.TS && scriptKind !== ScriptKind.TSX && scriptKind !== ScriptKind.Syn) {
             // If outside of TS, we need JSDoc to get any type info.
             return true;
         }
@@ -2426,8 +2456,10 @@ export function createScanner(
     function scanIdentifier(startCharacter: number, languageVersion: ScriptTarget) {
         let ch = startCharacter;
         if (isIdentifierStart(ch, languageVersion)) {
-            pos += charSize(ch);
-            while (pos < end && isIdentifierPart(ch = codePointUnchecked(pos), languageVersion)) pos += charSize(ch);
+            pos += charSizeUnchecked(ch);
+            while (pos < end && isIdentifierPart(ch = codePointUnchecked(pos), languageVersion)) {
+                pos += charSizeUnchecked(ch);
+            }
             tokenValue = text.substring(tokenStart, pos);
             if (ch === CharacterCodes.backslash) {
                 tokenValue += scanIdentifierParts();
@@ -4043,6 +4075,13 @@ function charSize(ch: number) {
     }
     if (ch === CharacterCodes.EOF) {
         return 0;
+    }
+    return 1;
+}
+
+function charSizeUnchecked(ch: number) {
+    if (ch >= 0x10000) {
+        return 2;
     }
     return 1;
 }

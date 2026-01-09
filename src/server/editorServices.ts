@@ -505,6 +505,8 @@ export function convertScriptKindName(scriptKindName: protocol.ScriptKindName): 
             return ScriptKind.TS;
         case "TSX":
             return ScriptKind.TSX;
+        case "Syn":
+            return ScriptKind.Syn;
         default:
             return ScriptKind.Unknown;
     }

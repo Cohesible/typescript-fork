@@ -66,6 +66,7 @@ import {
     ExportSpecifier,
     Expression,
     ExpressionStatement,
+    FallthroughStatement,
     findAncestor,
     FlowArrayMutation,
     FlowAssignment,
@@ -282,6 +283,7 @@ import {
     QualifiedName,
     removeFileExtension,
     ReturnStatement,
+    ScriptKind,
     ScriptTarget,
     SetAccessorDeclaration,
     setParent,
@@ -549,6 +551,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
     var inReturnPosition: boolean;
     var hasFlowEffects: boolean;
     var inDefer = false;
+    var fallthroughFlowNodes: FlowNode[] | undefined;
 
     // state used for emit helpers
     var emitFlags: NodeFlags;
@@ -1152,6 +1155,9 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             case SyntaxKind.TryStatement:
                 bindTryStatement(node as TryStatement);
                 break;
+            case SyntaxKind.FallthroughStatement:
+                bindFallthroughStatement(node as FallthroughStatement);
+                break;
             case SyntaxKind.DeferStatement:
                 bindDeferStatement(node as DeferStatement);
                 break;
@@ -1743,25 +1749,16 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
         }
     }
 
+    function bindFallthroughStatement(node: FallthroughStatement) {
+        fallthroughFlowNodes!.push(currentFlow);
+        currentFlow = unreachableFlow;
+        hasFlowEffects = true;
+    }
+
     function bindDeferStatement(node: DeferStatement) {
         inDefer = true;
         bind(node.statement);
         inDefer = false;
-
-        // Debug.log('????')
-        // if (node.statement.kind === SyntaxKind.CatchClause) {
-        //     const saveReturnTarget = currentReturnTarget;
-        //     const saveExceptionTarget = currentExceptionTarget;
-        //     const exceptionLabel = createBranchLabel();
-        //     addAntecedent(exceptionLabel, currentFlow);
-        //     currentExceptionTarget = exceptionLabel;
-        //     bind(node.statement);
-            
-        //     //addAntecedent(saveReturnTarget, currentFlow); 
-        //     currentExceptionTarget = saveExceptionTarget;
-        // } else {
-        //     bind(node.statement);
-        // }
     }
 
     function bindSwitchStatement(node: SwitchStatement): void {
@@ -1769,6 +1766,8 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
         bind(node.expression);
         const saveBreakTarget = currentBreakTarget;
         const savePreSwitchCaseFlow = preSwitchCaseFlow;
+        const saveFallthroughFlowNodes = fallthroughFlowNodes;
+        fallthroughFlowNodes = [];
         currentBreakTarget = postSwitchLabel;
         preSwitchCaseFlow = currentFlow;
         bind(node.caseBlock);
@@ -1784,6 +1783,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
         currentBreakTarget = saveBreakTarget;
         preSwitchCaseFlow = savePreSwitchCaseFlow;
         currentFlow = finishFlowLabel(postSwitchLabel);
+        fallthroughFlowNodes = saveFallthroughFlowNodes;
     }
 
     function bindCaseBlock(node: CaseBlock): void {
@@ -1803,6 +1803,12 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             const preCaseLabel = createBranchLabel();
             addAntecedent(preCaseLabel, isNarrowingSwitch ? createFlowSwitchClause(preSwitchCaseFlow!, node.parent, clauseStart, i + 1) : preSwitchCaseFlow!);
             addAntecedent(preCaseLabel, fallthroughFlow);
+            if (fallthroughFlowNodes!.length) {
+                for (const n of fallthroughFlowNodes!) {
+                    addAntecedent(preCaseLabel, n);
+                }
+                fallthroughFlowNodes!.length = 0;
+            }
             currentFlow = finishFlowLabel(preCaseLabel);
             const clause = clauses[i];
             bind(clause);
@@ -1819,6 +1825,12 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
         bind(node.expression);
         currentFlow = saveCurrentFlow;
         bindEach(node.statements);
+        // Implicit break for Syn
+        if (file.scriptKind === ScriptKind.Syn && !(currentFlow.flags & FlowFlags.Unreachable) && node.statements.length) {
+            addAntecedent(currentBreakTarget!, currentFlow);
+            currentFlow = unreachableFlow;
+            hasFlowEffects = true;
+        }
     }
 
     function bindExpressionStatement(node: ExpressionStatement): void {

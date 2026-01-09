@@ -200,6 +200,7 @@ export function countEachFileTypes(infos: ScriptInfo[], includeSizes = false): F
                 result.jsx += 1;
                 result.jsxSize! += fileSize;
                 break;
+            case ScriptKind.Syn:
             case ScriptKind.TS:
                 if (isDeclarationFileName(info.fileName)) {
                     result.dts += 1;

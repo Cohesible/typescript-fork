@@ -11812,7 +11812,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         if (isVariableDeclaration(declaration) && (declaration.parent.parent.kind === SyntaxKind.IfStatement || declaration.parent.parent.kind === SyntaxKind.WhileStatement)) {
             if (declaration.initializer) {
                 const type = widenTypeInferredFromInitializer(declaration, checkDeclarationInitializer(declaration, checkMode));
-                return getAdjustedTypeWithFacts(type, TypeFacts.Truthy);
+                return getAdjustedTypeWithFacts(type, TypeFacts.NEUndefinedOrNull);
             }
         }
 
@@ -29141,6 +29141,15 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 }
                 const t = isInCompoundLikeAssignment(node) ? getBaseTypeOfLiteralType(declaredType) : declaredType;
                 if (t.flags & TypeFlags.Union) {
+                    if (node.kind === SyntaxKind.VariableDeclaration && (node as VariableDeclaration).type) {
+                        return t;
+                    }
+                    if (node.kind === SyntaxKind.BindingElement) {
+                        const p = findAncestor(node, x => isVariableDeclaration(x) || isExpression(x))
+                        if (p?.kind === SyntaxKind.VariableDeclaration && (p as VariableDeclaration).type) {
+                            return t;
+                        }
+                    }
                     return getAssignmentReducedType(t as UnionType, getInitialOrAssignedType(flow));
                 }
                 return t;
@@ -39316,6 +39325,16 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return createAnonymousType(symbol, members, emptyArray, emptyArray, emptyArray);
     }
 
+    function isTruthyExp(expr: Expression) {
+        return (
+            expr.kind === SyntaxKind.PrefixUnaryExpression && 
+            (expr as PrefixUnaryExpression).operator === SyntaxKind.ExclamationToken &&
+            (expr as PrefixUnaryExpression).operand.kind === SyntaxKind.PrefixUnaryExpression &&
+            ((expr as PrefixUnaryExpression).operand as PrefixUnaryExpression).operator === SyntaxKind.ExclamationToken &&
+            ((expr as PrefixUnaryExpression).operand as PrefixUnaryExpression).operand.kind === SyntaxKind.Identifier
+        );
+    }
+
     function getReturnTypeFromBody(func: FunctionLikeDeclaration, checkMode?: CheckMode): Type {
         if (!func.body) {
             return errorType;
@@ -39650,6 +39669,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
         const trueType = getFlowTypeOfReference(param.name, initType, initType, func, trueCondition);
         if (trueType === initType) return undefined;
+        if (isTruthyExp(expr)) return trueType;
 
         // "x is T" means that x is T if and only if it returns true. If it returns false then x is not T.
         // This means that if the function is called with an argument of type trueType, there can't be anything left in the `else` branch. It must reduce to `never`.
@@ -45377,6 +45397,18 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         checkExpression(node.expression);
     }
 
+    function checkNonNullishCondition(node: Expression) {
+        const type = checkExpression(node);
+        const checked = getAdjustedTypeWithFacts(type, TypeFacts.NEUndefinedOrNull);
+        if (type === checked) {
+            error(
+                node,
+                Diagnostics.This_expression_is_never_nullish,
+            );
+        }
+        return type;
+    }
+
     function checkIfStatement(node: IfStatement) {
         // Grammar checking
         checkGrammarStatementInAmbientContext(node);
@@ -45386,8 +45418,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 error(node.thenStatement, Diagnostics.The_body_of_an_if_statement_cannot_be_the_empty_statement);
             } else {
                 checkGrammarVariableDeclarationList(node.expression);
-                const type = checkTruthinessExpression(decl.initializer);
-                checkTestingKnownTruthyCallableOrAwaitableOrEnumMemberType(decl.initializer, type, node.thenStatement);
+                const type = checkNonNullishCondition(decl.initializer);
+                checkTestingKnownNonNullableCallableOrAwaitableOrEnumMemberType(decl.initializer, type, node.thenStatement);
             }
         } else {
             const type = checkTruthinessExpression(node.expression);
@@ -45401,6 +45433,66 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
 
         checkSourceElement(node.elseStatement);
+    }
+
+    function checkTestingKnownNonNullableCallableOrAwaitableOrEnumMemberType(condExpr: Expression, condType: Type, body?: Statement | Expression) {
+        if (!strictNullChecks) return;
+        bothHelper(condExpr, body);
+
+        function bothHelper(condExpr: Expression, body: Expression | Statement | undefined) {
+            condExpr = skipParentheses(condExpr);
+
+            helper(condExpr, body);
+
+            while (isBinaryExpression(condExpr) && (condExpr.operatorToken.kind === SyntaxKind.BarBarToken || condExpr.operatorToken.kind === SyntaxKind.QuestionQuestionToken)) {
+                condExpr = skipParentheses(condExpr.left);
+                helper(condExpr, body);
+            }
+        }
+
+        function helper(condExpr: Expression, body: Expression | Statement | undefined) {
+            const location = isLogicalOrCoalescingBinaryExpression(condExpr) ? skipParentheses(condExpr.right) : condExpr;
+            if (isModuleExportsAccessExpression(location)) {
+                return;
+            }
+            if (isLogicalOrCoalescingBinaryExpression(location)) {
+                bothHelper(location, body);
+                return;
+            }
+            const type = location === condExpr ? condType : checkExpression(location);
+            const isPropertyExpressionCast = isPropertyAccessExpression(location) && isTypeAssertion(location.expression);
+            if (!hasTypeFacts(type, TypeFacts.NEUndefinedOrNull) || isPropertyExpressionCast) return;
+
+            const callSignatures = getSignaturesOfType(type, SignatureKind.Call);
+            const isPromise = !!getAwaitedTypeOfPromise(type);
+            if (callSignatures.length === 0 && !isPromise) {
+                return;
+            }
+
+            const testedNode = isIdentifier(location) ? location
+                : isPropertyAccessExpression(location) ? location.name
+                : undefined;
+            const testedSymbol = testedNode && getSymbolAtLocation(testedNode);
+            if (!testedSymbol && !isPromise) {
+                return;
+            }
+
+            const isUsed = testedSymbol && isBinaryExpression(condExpr.parent) && isSymbolUsedInBinaryExpressionChain(condExpr.parent, testedSymbol)
+                || testedSymbol && body && isSymbolUsedInConditionBody(condExpr, body, testedNode, testedSymbol);
+            if (!isUsed) {
+                if (isPromise) {
+                    errorAndMaybeSuggestAwait(
+                        location,
+                        /*maybeMissingAwait*/ true,
+                        Diagnostics.This_condition_will_always_return_true_since_this_0_is_always_defined,
+                        getTypeNameForErrorDisplay(type),
+                    );
+                }
+                else {
+                    error(location, Diagnostics.This_condition_will_always_return_true_since_this_function_is_always_defined_Did_you_mean_to_call_it_instead);
+                }
+            }
+        }
     }
 
     function checkTestingKnownTruthyCallableOrAwaitableOrEnumMemberType(condExpr: Expression, condType: Type, body?: Statement | Expression) {
@@ -45550,8 +45642,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 error(node.expression, Diagnostics.The_body_of_an_if_statement_cannot_be_the_empty_statement);
             } else {
                 checkGrammarVariableDeclarationList(node.expression);
-                const type = checkTruthinessExpression(decl.initializer);
-               //  checkTestingKnownTruthyCallableOrAwaitableOrEnumMemberType(decl.initializer, type, node.thenStatement);
+                const type = getAdjustedTypeWithFacts(checkExpression(decl.initializer), TypeFacts.NEUndefinedOrNull);
+                // TODO: detect infinite loops (no break/return)
+                checkTestingKnownNonNullableCallableOrAwaitableOrEnumMemberType(decl.initializer, type);
             }
         } else {
             checkTruthinessExpression(node.expression);
@@ -46162,6 +46255,11 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 else {
                     return iterationTypes;
                 }
+            }
+            if (type.flags & TypeFlags.Object) {
+                const t = getIndexedAccessType(type, stringType);
+                const yieldType = createArrayType(createTupleType([stringType, t]));
+                return createIterationTypes(yieldType);
             }
         }
 

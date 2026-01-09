@@ -1681,7 +1681,7 @@ export interface OpenRequestArgs extends FileRequestArgs {
     fileContent?: string;
     /**
      * Used to specify the script kind of the file explicitly. It could be one of the following:
-     *      "TS", "JS", "TSX", "JSX"
+     *      "TS", "JS", "TSX", "JSX", "Syn"
      */
     scriptKindName?: ScriptKindName;
     /**
@@ -1691,7 +1691,7 @@ export interface OpenRequestArgs extends FileRequestArgs {
     projectRootPath?: string;
 }
 
-export type ScriptKindName = "TS" | "JS" | "TSX" | "JSX";
+export type ScriptKindName = "TS" | "JS" | "TSX" | "JSX" | "Syn";
 
 /**
  * Open request; value of command field is "open". Notify the

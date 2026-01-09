@@ -461,6 +461,7 @@ import {
     YieldExpression,
     ReifyExpression,
     IsExpression,
+    FallthroughStatement,
 } from "../_namespaces/ts.js";
 
 let nextAutoGenerateId = 0;
@@ -748,6 +749,8 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         createTryStatement,
         updateTryStatement,
         createDebuggerStatement,
+        createFallthroughStatement,
+        updateFallthroughStatement,
         createDeferStatement,
         updateDeferStatement,
         createVariableDeclaration,
@@ -1332,24 +1335,17 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     }
 
     // @api
-    function createIdentifier(text: string, originalKeywordKind?: SyntaxKind, hasExtendedUnicodeEscape?: boolean): Identifier {
-        if (originalKeywordKind === undefined && text) {
-            originalKeywordKind = stringToToken(text);
-        }
-        if (originalKeywordKind === SyntaxKind.Identifier) {
-            originalKeywordKind = undefined;
-        }
-
+    function createIdentifier(text: string): Identifier {
         const node = createBaseIdentifier(escapeLeadingUnderscores(text));
-        if (hasExtendedUnicodeEscape) node.flags |= NodeFlags.IdentifierHasExtendedUnicodeEscape;
+        // if (hasExtendedUnicodeEscape) node.flags |= NodeFlags.IdentifierHasExtendedUnicodeEscape;
 
-        // NOTE: we do not include transform flags of typeArguments in an identifier as they do not contribute to transformations
-        if (node.escapedText === "await") {
-            node.transformFlags |= TransformFlags.ContainsPossibleTopLevelAwait;
-        }
-        if (node.flags & NodeFlags.IdentifierHasExtendedUnicodeEscape) {
-            node.transformFlags |= TransformFlags.ContainsES2015;
-        }
+        // // NOTE: we do not include transform flags of typeArguments in an identifier as they do not contribute to transformations
+        // if (node.escapedText === "await") {
+        //     node.transformFlags |= TransformFlags.ContainsPossibleTopLevelAwait;
+        // }
+        // if (node.flags & NodeFlags.IdentifierHasExtendedUnicodeEscape) {
+        //     node.transformFlags |= TransformFlags.ContainsES2015;
+        // }
 
         return node;
     }
@@ -4289,6 +4285,22 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         node.jsDoc = undefined; // initialized by parser (JsDocContainer)
         node.flowNode = undefined; // initialized by binder (FlowContainer)
         return node;
+    }
+
+    // @api
+    function createFallthroughStatement() {
+        const node = createBaseNode<FallthroughStatement>(SyntaxKind.FallthroughStatement);
+        node.jsDoc = undefined; // initialized by parser (JsDocContainer)
+        node.flowNode = undefined; // initialized by binder (FlowContainer)
+        return node;
+    }
+
+    // @api
+    function updateFallthroughStatement(node: FallthroughStatement, type: TypeNode) {
+        return node;
+        // return node.statement !== statement
+        //     ? update(createFallthroughStatement(statement), node)
+        //     : node;
     }
 
     // @api

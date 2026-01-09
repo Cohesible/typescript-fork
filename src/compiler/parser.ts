@@ -1397,7 +1397,7 @@ export function parseJsonText(fileName: string, sourceText: string): JsonSourceF
 
 // See also `isExternalOrCommonJsModule` in utilities.ts
 export function isExternalModule(file: SourceFile): boolean {
-    return file.externalModuleIndicator !== undefined;
+    return file.scriptKind === ScriptKind.Syn || file.externalModuleIndicator !== undefined;
 }
 
 // Produces a new SourceFile for the 'newText' provided. The 'textChangeRange' parameter
@@ -2638,7 +2638,7 @@ namespace Parser {
         }
 
         const pos = getNodePos();
-        const result = kind === SyntaxKind.Identifier ? factoryCreateIdentifier("", /*originalKeywordKind*/ undefined) :
+        const result = kind === SyntaxKind.Identifier ? factoryCreateIdentifier("") :
             isTemplateLiteralKind(kind) ? factory.createTemplateLiteralLikeNode(kind, "", "", /*templateFlags*/ undefined) :
             kind === SyntaxKind.NumericLiteral ? factoryCreateNumericLiteral("", /*numericLiteralFlags*/ undefined) :
             kind === SyntaxKind.StringLiteral ? factoryCreateStringLiteral("", /*isSingleQuote*/ undefined) :
@@ -2662,12 +2662,10 @@ namespace Parser {
         if (isIdentifier) {
             identifierCount++;
             const pos = scanner.hasPrecedingJSDocLeadingAsterisks() ? scanner.getTokenStart() : getNodePos();
-            // Store original token kind if it is not just an Identifier so we can report appropriate error later in type checker
-            const originalKeywordKind = token();
             const text = internIdentifier(scanner.getTokenValue());
-            const hasExtendedUnicodeEscape = scanner.hasExtendedUnicodeEscape();
+            // const hasExtendedUnicodeEscape = scanner.hasExtendedUnicodeEscape();
             nextTokenWithoutCheck();
-            return finishNode(factoryCreateIdentifier(text, originalKeywordKind, hasExtendedUnicodeEscape), pos);
+            return finishNode(factoryCreateIdentifier(text), pos);
         }
 
         if (token() === SyntaxKind.PrivateIdentifier) {
@@ -7011,7 +7009,17 @@ namespace Parser {
                 initializer = parseVariableDeclarationList(/*inForStatementInitializer*/ true);
             }
             else {
-                initializer = disallowInAnd(parseExpression);
+                if (scriptKind === ScriptKind.Syn) {
+                    const savedDisallowIn = inDisallowInContext();
+                    setDisallowInContext(true);
+
+                    const declarations = parseDelimitedList(ParsingContext.VariableDeclarations, parseVariableDeclaration);
+                    setDisallowInContext(savedDisallowIn);
+
+                    initializer = finishNode(factoryCreateVariableDeclarationList(declarations, NodeFlags.Const), pos);
+                } else {
+                    initializer = disallowInAnd(parseExpression);
+                }
             }
         }
 
@@ -7077,13 +7085,32 @@ namespace Parser {
         return withJSDoc(finishNode(factory.createWithStatement(expression, statement), pos), hasJSDoc);
     }
 
+    function maybeReparseSwitchClause(statements: NodeArray<Statement>) {
+        if (scriptKind !== ScriptKind.Syn) {
+            return statements;
+        }
+
+        // Empty clauses are implicit fallthrough
+        if (statements.length === 0) {
+            return statements;
+        }
+
+        if (statements.length === 1 && statements[0].kind === SyntaxKind.Block) {
+            return statements;
+        }
+
+        return factory.createNodeArray([factory.createBlock(statements)]);
+    }
+
     function parseCaseClause(): CaseClause {
         const pos = getNodePos();
         const hasJSDoc = hasPrecedingJSDocComment();
         parseExpected(SyntaxKind.CaseKeyword);
         const expression = allowInAnd(parseExpression);
         parseExpected(SyntaxKind.ColonToken);
-        const statements = parseList(ParsingContext.SwitchClauseStatements, parseStatement);
+        const statements = maybeReparseSwitchClause(
+            parseList(ParsingContext.SwitchClauseStatements, parseStatement)
+        );
         return withJSDoc(finishNode(factory.createCaseClause(expression, statements), pos), hasJSDoc);
     }
 
@@ -7091,7 +7118,9 @@ namespace Parser {
         const pos = getNodePos();
         parseExpected(SyntaxKind.DefaultKeyword);
         parseExpected(SyntaxKind.ColonToken);
-        const statements = parseList(ParsingContext.SwitchClauseStatements, parseStatement);
+        const statements = maybeReparseSwitchClause(
+            parseList(ParsingContext.SwitchClauseStatements, parseStatement)
+        );
         return finishNode(factory.createDefaultClause(statements), pos);
     }
 
@@ -7188,15 +7217,17 @@ namespace Parser {
         return withJSDoc(finishNode(factory.createDebuggerStatement(), pos), hasJSDoc);
     }
 
+    function parseFallthroughStatement(): Statement {
+        const pos = getNodePos();
+        parseExpected(SyntaxKind.FallthroughKeyword);
+        parseSemicolon();
+        return finishNode(factory.createFallthroughStatement(), pos);
+    }
+
     function parseDeferStatement(): Statement {
         const pos = getNodePos();
 
         switch (lookAhead(nextToken)) {
-            // `defer catch`
-            // case SyntaxKind.CatchKeyword:
-            //     nextToken()
-            //     return finishNode(factory.createDeferStatement(parseCatchClause() as any), pos);
-
             // statements
             case SyntaxKind.IfKeyword:
             case SyntaxKind.WhileKeyword:
@@ -7389,6 +7420,7 @@ namespace Parser {
             case SyntaxKind.SwitchKeyword:
             case SyntaxKind.ThrowKeyword:
             case SyntaxKind.TryKeyword:
+            case SyntaxKind.FallthroughKeyword:
             case SyntaxKind.DebuggerKeyword:
             // 'catch' and 'finally' do not actually indicate that the code is part of a statement,
             // however, we say they are here so that we may gracefully parse them and error later.
@@ -7538,6 +7570,13 @@ namespace Parser {
                 return parseDeferStatement();
             case SyntaxKind.AtToken:
                 return parseDeclaration();
+            case SyntaxKind.FallthroughKeyword:
+                if (scriptKind === ScriptKind.Syn) {
+                    if (parsingContext & (1 << ParsingContext.SwitchClauseStatements)) {
+                        return parseFallthroughStatement();
+                    }
+                }
+                // falls through
             case SyntaxKind.AsyncKeyword:
             case SyntaxKind.InterfaceKeyword:
             case SyntaxKind.TypeKeyword:
@@ -10013,9 +10052,8 @@ namespace Parser {
                 identifierCount++;
                 const start = scanner.getTokenStart();
                 const end = scanner.getTokenEnd();
-                const originalKeywordKind = token();
                 const text = internIdentifier(scanner.getTokenValue());
-                const result = finishNode(factoryCreateIdentifier(text, originalKeywordKind), start, end);
+                const result = finishNode(factoryCreateIdentifier(text), start, end);
                 nextTokenJSDoc();
                 return result;
             }

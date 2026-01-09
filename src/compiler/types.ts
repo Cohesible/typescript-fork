@@ -223,7 +223,8 @@ export const enum SyntaxKind {
     BigIntKeyword,
     OverrideKeyword,
     OfKeyword,
-    DeferKeyword, 
+    DeferKeyword,
+    FallthroughKeyword,
     ReifyKeyword, // LastKeyword and LastToken and LastContextualKeyword
 
     // Parse tree nodes
@@ -333,6 +334,7 @@ export const enum SyntaxKind {
     ThrowStatement,
     TryStatement,
     DebuggerStatement,
+    FallthroughStatement,
     DeferStatement,
     VariableDeclaration,
     VariableDeclarationList,
@@ -611,6 +613,7 @@ export type KeywordSyntaxKind =
     | SyntaxKind.EnumKeyword
     | SyntaxKind.ExportKeyword
     | SyntaxKind.ExtendsKeyword
+    | SyntaxKind.FallthroughKeyword
     | SyntaxKind.FalseKeyword
     | SyntaxKind.FinallyKeyword
     | SyntaxKind.ForKeyword
@@ -3464,6 +3467,10 @@ export interface ForOfStatement extends IterationStatement, LocalsContainer, Flo
     readonly awaitModifier?: AwaitKeyword;
     readonly initializer: ForInitializer;
     readonly expression: Expression;
+}
+
+export interface FallthroughStatement extends Statement, FlowContainer {
+    readonly kind: SyntaxKind.FallthroughStatement;
 }
 
 export interface BreakStatement extends Statement, FlowContainer {
@@ -7679,12 +7686,12 @@ export const enum ScriptKind {
     TSX = 4,
     External = 5,
     JSON = 6,
+    Syn = 7,
     /**
      * Used on extensions that doesn't define the ScriptKind but the content defines it.
      * Deferred extensions are going to be included in all project contexts.
      */
-    Deferred = 7,
-    Synapse = 8,
+    Deferred = 8,
 }
 
 // NOTE: We must reevaluate the target for upcoming features when each successive TC39 edition is ratified in
@@ -8772,7 +8779,6 @@ export interface NodeFactory {
     //
 
     createIdentifier(text: string): Identifier;
-    /** @internal */ createIdentifier(text: string, originalKeywordKind?: SyntaxKind, hasExtendedUnicodeEscape?: boolean): Identifier; // eslint-disable-line @typescript-eslint/unified-signatures
 
     /**
      * Create a unique temporary variable.
@@ -9088,6 +9094,8 @@ export interface NodeFactory {
     createTryStatement(tryBlock: Block, catchClause: CatchClause | undefined, finallyBlock: Block | undefined): TryStatement;
     updateTryStatement(node: TryStatement, tryBlock: Block, catchClause: CatchClause | undefined, finallyBlock: Block | undefined): TryStatement;
     createDebuggerStatement(): DebuggerStatement;
+    createFallthroughStatement(): FallthroughStatement;
+    updateFallthroughStatement(node: FallthroughStatement, type: TypeNode): FallthroughStatement;
     createDeferStatement(statement: Statement): DeferStatement;
     updateDeferStatement(node: DeferStatement, statement: Statement): DeferStatement;
     createVariableDeclaration(name: string | BindingName, exclamationToken?: ExclamationToken, type?: TypeNode, initializer?: Expression): VariableDeclaration;

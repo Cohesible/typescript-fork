@@ -2118,6 +2118,8 @@ export function isEffectiveStrictModeSourceFile(node: SourceFile, compilerOption
         case ScriptKind.JSX:
         case ScriptKind.TSX:
             break;
+        case ScriptKind.Syn:
+            return true;
         default:
             return false;
     }
@@ -9895,12 +9897,13 @@ export function getScriptKindFromFileName(fileName: string): ScriptKind {
         case Extension.Ts:
         case Extension.Cts:
         case Extension.Mts:
-        case Extension.Syn:
             return ScriptKind.TS;
         case Extension.Tsx:
             return ScriptKind.TSX;
         case Extension.Json:
             return ScriptKind.JSON;
+        case Extension.Syn:
+            return ScriptKind.Syn;
         default:
             return ScriptKind.Unknown;
     }
@@ -10373,6 +10376,7 @@ function skipTypeCheckingWorker(
 export function canIncludeBindAndCheckDiagnostics(sourceFile: SourceFile, options: CompilerOptions): boolean {
     if (!!sourceFile.checkJsDirective && sourceFile.checkJsDirective.enabled === false) return false;
     if (
+        sourceFile.scriptKind === ScriptKind.Syn ||
         sourceFile.scriptKind === ScriptKind.TS ||
         sourceFile.scriptKind === ScriptKind.TSX ||
         sourceFile.scriptKind === ScriptKind.External

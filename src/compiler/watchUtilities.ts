@@ -652,6 +652,7 @@ export function isIgnoredFileFromWildCardWatching({
             case ScriptKind.TSX:
             case ScriptKind.Deferred:
             case ScriptKind.External:
+            case ScriptKind.Syn:
                 return true;
             case ScriptKind.JS:
             case ScriptKind.JSX:

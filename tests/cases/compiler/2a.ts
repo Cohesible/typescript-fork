@@ -133,7 +133,134 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
     // TODO: should not be reduced to `string`
     // need a new intrinsic `string` that is created if it appears with a union of string literals
     type C = 'black' | 'red' | 'green' | 'yellow' | 'blue' | string
+    type X1 = C extends string ? true : false
+    type X2 = C extends 'black' ? true : false
+    type X3 = C extends 'banana' ? true : false
+    const x: C = ''
+    const y1: string = x
+    const y2: C = x
+
+    type X4 = C extends infer U extends string ? U : never
+
+    type A<T> = T extends infer U extends 'black' ? U : never
+    type X5 = A<C>
+
+    let c: C
+    c = 'black'
+    if (c === 'red') {} // should error here
+    c = 'red' // OK, because we use the original binding type
 }
+
+// {
+//     interface Emitter {
+//         emit(event: 'event_1'): void;
+//         emit(event: 'event_2'): void;
+//         emit(event: 'event_3'): void;
+//         emit(event: 'event_4'): void;
+//     }
+
+//     type EventName = Parameters<Emitter["emit"]>[0]
+//     // is -> type EventName = "event_4"
+//     // wanted -> type EventName = "event_1" | "event_2" | "event_3" | "event_4"
+//     const a: EventName = "event_4";
+//     const b: EventName = "event_1";
+// }
+
+// {
+//     declare function x(v: number | string): true & asserts v is string
+// }
+
+{
+    // Explicit annotation
+    function isString(val: any): asserts val is string {
+        if (typeof val !== "string") throw "Nope"
+    }
+
+    // Inferred assertion signature!
+    function isString2(val: any) {
+        if (typeof val !== "string") throw "Nope"
+    }
+
+    const x: string | number = "3";
+    isString(x);
+    x.toLowerCase() // should work - x is now string
+
+    const y: string | number = "test";
+    isString2(y);
+    y.toLowerCase() // should also work - inferred asserts!
+
+    // Using 'is' expression instead of typeof
+    const isString3 = (val: any) => {
+        if (!(val is string)) throw "Nope"
+    }
+
+    const z: string | number = "hello";
+    isString3(z);
+    z.toLowerCase() // should also work with 'is' expression!
+}
+
+{
+    // Fall back on default type parameter when inference does not yield a more suitable type #16229
+    class O<T=any> {
+        constructor(public array: T[]) { }
+    }
+
+    declare class B<T> {
+        put(v: T): void
+        get(): T
+    }
+    type C<T> = T extends (infer U | string) ? B<U> : never
+    type E = (string | number)
+    type D = C<E>
+
+    type F<T extends number> = T
+    type F2 = F<string | number>
+    type F3<T> = T extends number ? true : false
+    type F4 = F3<string | number>
+    type F5<T> = { x: T }
+    type F6 = F5<string | number>
+
+    declare let val: B<number> | B<string>;
+    declare let val2: number | string;
+    declare function f<T>(x: B<T>, v: T): T;
+    f(val, val2);
+}
+
+{
+    // satisfies postfix on function declarations
+    type Bar = (a: number) => number
+    function bar(a) {
+        return a // should be a number
+    } satisfies Bar
+}
+
+{
+    // Support ReadonlyArray.includes as a type guard #31018
+}
+
+{
+    // optional chaining does not work for unknown #35799
+    // const prop: unknown = { key : { value: "Hello World" } };
+
+    // const helloworld = prop?.key?.value;
+}
+
+// {
+//     function test<T extends {accepted: boolean}>(cb: (value: T) => void) {
+//     return (data: Omit<T, 'accepted'>) => cb({...data, accepted: true});
+//     }
+// }
+
+// Allow tsconfig to be a module, not only json #25271
+// "paths": { "foo/*": ["*"] }
+
+
+// Treat JSON types more literally #26552
+
+// When importing a JSON file, strings and numbers are typed as string and number rather than the string or number literals in the file.
+// Also, array literals are imported as T[] instead of [T1, T2, T3] tuples.
+
+// Since the JSON is almost an object literal, I believe it makes more sense to type it more specifically.
 
 // if ((reify { x: number}).x === reify number) {
 

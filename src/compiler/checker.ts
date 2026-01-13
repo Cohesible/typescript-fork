@@ -16419,7 +16419,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                         createTypePredicateFromTypePredicateNode(type, signature) :
                         jsdocPredicate || noTypePredicate;
                 }
-                else if (signature.declaration && isFunctionLikeDeclaration(signature.declaration) && (!signature.resolvedReturnType || signature.resolvedReturnType.flags & TypeFlags.Boolean) && getParameterCount(signature) > 0) {
+                else if (signature.declaration && isFunctionLikeDeclaration(signature.declaration) && (!signature.resolvedReturnType || signature.resolvedReturnType.flags & (TypeFlags.Boolean | TypeFlags.Void)) && getParameterCount(signature) > 0) {
                     const { declaration } = signature;
                     signature.resolvedTypePredicate = noTypePredicate; // avoid infinite loop
                     signature.resolvedTypePredicate = getTypePredicateFromBody(declaration) || noTypePredicate;
@@ -18183,7 +18183,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             i--;
             const t = types[i];
             const flags = t.flags;
-            const remove = flags & (TypeFlags.StringLiteral | TypeFlags.TemplateLiteral | TypeFlags.StringMapping) && includes & TypeFlags.String ||
+            // Don't remove string literals when string is in the union - keep them for better autocomplete
+            const remove = /* flags & (TypeFlags.StringLiteral | TypeFlags.TemplateLiteral | TypeFlags.StringMapping) && includes & TypeFlags.String || */
                 flags & TypeFlags.NumberLiteral && includes & TypeFlags.Number ||
                 flags & TypeFlags.BigIntLiteral && includes & TypeFlags.BigInt ||
                 flags & TypeFlags.UniqueESSymbol && includes & TypeFlags.ESSymbol ||
@@ -28106,7 +28107,30 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function getAssignmentReducedTypeWorker(declaredType: UnionType, assignedType: Type) {
-        const filteredType = filterType(declaredType, t => typeMaybeAssignableTo(assignedType, t));
+        let filteredType = filterType(declaredType, t => typeMaybeAssignableTo(assignedType, t));
+
+        // If the assigned type is a string literal and the filtered type contains both
+        // the literal and the string primitive, prefer just the literal
+        if (assignedType.flags & TypeFlags.StringLiteral && filteredType.flags & TypeFlags.Union) {
+            const unionTypes = (filteredType as UnionType).types;
+            const hasStringPrimitive = unionTypes.some(t => t.flags & TypeFlags.String && !(t.flags & TypeFlags.StringLiteral));
+
+            // Check for matching literal, accounting for fresh vs regular types
+            const assignedLiteral = assignedType as StringLiteralType;
+            const regularAssignedType = isFreshLiteralType(assignedLiteral) ? assignedLiteral.regularType : assignedLiteral;
+            const hasMatchingLiteral = unionTypes.some(t => {
+                if (!(t.flags & TypeFlags.StringLiteral)) return false;
+                const tLiteral = t as StringLiteralType;
+                const regularT = isFreshLiteralType(tLiteral) ? tLiteral.regularType : tLiteral;
+                return regularT === regularAssignedType;
+            });
+
+            if (hasStringPrimitive && hasMatchingLiteral) {
+                // Remove the string primitive type, keeping only literals
+                filteredType = filterType(filteredType, t => !(t.flags & TypeFlags.String) || !!(t.flags & TypeFlags.StringLiteral));
+            }
+        }
+
         // Ensure that we narrow to fresh types if the assignment is a fresh boolean literal type.
         const reducedType = assignedType.flags & TypeFlags.BooleanLiteral && isFreshLiteralType(assignedType) ? mapType(filteredType, getFreshTypeOfLiteralType) : filteredType;
         // Our crude heuristic produces an invalid result in some cases: see GH#26130.
@@ -28721,6 +28745,15 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     if (expressionType) {
                         const use = statement.awaitModifier ? IterationUse.ForAwaitOf : IterationUse.ForOf;
                         return checkIteratedTypeOrElementType(use, expressionType, undefinedType, /*errorNode*/ undefined);
+                    }
+                }
+                // Allow inferred assertion signatures (both explicit and inferred should work)
+                const symbolType = getTypeOfSymbol(symbol);
+                const signatures = getSignaturesOfType(symbolType, SignatureKind.Call);
+                if (signatures.length === 1) {
+                    const predicate = getTypePredicateOfSignature(signatures[0]);
+                    if (predicate && (predicate.kind === TypePredicateKind.AssertsIdentifier || predicate.kind === TypePredicateKind.AssertsThis)) {
+                        return symbolType;
                     }
                 }
                 if (diagnostic) {
@@ -39841,7 +39874,17 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 if (singleReturn || !returnStatement.expression) return true;
                 singleReturn = returnStatement.expression;
             });
-            if (bailedEarly || !singleReturn || functionHasImplicitReturn(func)) return undefined;
+            // Check for "throw on narrowing" pattern (no returns)
+            // Note: functionHasImplicitReturn is true when there's a reachable end point
+            // For throw-only functions, this might still be true if not all paths throw
+            if (!bailedEarly && !singleReturn && func.body && func.body.kind === SyntaxKind.Block) {
+                const predicate = checkIfThrowsOnNarrowingFailure(func, func.body as Block);
+                if (predicate) return predicate;
+            }
+
+            if (bailedEarly || !singleReturn || functionHasImplicitReturn(func)) {
+                return undefined;
+            }
         }
         return checkIfExpressionRefinesAnyParameter(func, singleReturn);
     }
@@ -39879,6 +39922,69 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         const falseCondition = createFlowNode(FlowFlags.FalseCondition, expr, antecedent);
         const falseSubtype = getReducedType(getFlowTypeOfReference(param.name, initType, trueType, func, falseCondition));
         return falseSubtype.flags & TypeFlags.Never ? trueType : undefined;
+    }
+
+    /**
+     * Check if a function body contains an if statement that throws when a type guard fails.
+     * Pattern: if (condition) throw ... or if (!condition) throw ...
+     * This infers an "asserts" predicate for the parameter that gets narrowed.
+     */
+    function checkIfThrowsOnNarrowingFailure(func: FunctionLikeDeclaration, body: Block): TypePredicate | undefined {
+        // Look for a single if statement at the top level
+        if (body.statements.length !== 1) return undefined;
+        const stmt = body.statements[0];
+        if (!isIfStatement(stmt)) return undefined;
+
+        // Check if one branch throws and the other is empty or doesn't exist
+        const thenThrows = statementMightBeThrow(stmt.thenStatement);
+        const elseThrows = stmt.elseStatement && statementMightBeThrow(stmt.elseStatement);
+
+        // We want exactly one branch to throw
+        if (thenThrows === elseThrows) return undefined;
+
+        // Determine which condition leads to the throw
+        // If then throws, the condition is the failing case (so we negate it for the assertion)
+        // If else throws (or doesn't exist and then doesn't throw), the condition is the passing case
+        const conditionForAssertion = thenThrows ? stmt.expression : stmt.expression;
+        const shouldNegate = thenThrows;
+
+        // Check if this condition narrows any parameter
+        return forEach(func.parameters, (param, i) => {
+            const initType = getTypeOfSymbol(param.symbol);
+            if (!isIdentifier(param.name) || isSymbolAssigned(param.symbol) || isRestParameter(param)) {
+                return;
+            }
+
+            // Get the narrowed type when the condition is true
+            const antecedent = canHaveFlowNode(conditionForAssertion) && conditionForAssertion.flowNode ||
+                createFlowNode(FlowFlags.Start, /*node*/ undefined, /*antecedent*/ undefined);
+            const trueCondition = createFlowNode(FlowFlags.TrueCondition, conditionForAssertion, antecedent);
+            const falseCondition = createFlowNode(FlowFlags.FalseCondition, conditionForAssertion, antecedent);
+
+            // If then throws, we want the false condition (the negation)
+            // If else throws, we want the true condition
+            const assertedCondition = shouldNegate ? falseCondition : trueCondition;
+            const assertedType = getFlowTypeOfReference(param.name, initType, initType, func, assertedCondition);
+
+            if (assertedType !== initType && assertedType !== neverType) {
+                // Create an asserts predicate
+                return createTypePredicate(
+                    TypePredicateKind.AssertsIdentifier,
+                    unescapeLeadingUnderscores(param.name.escapedText),
+                    i,
+                    assertedType
+                );
+            }
+        });
+    }
+
+    function statementMightBeThrow(stmt: Statement): boolean {
+        if (stmt.kind === SyntaxKind.ThrowStatement) return true;
+        if (isBlock(stmt)) {
+            // Check if all code paths throw
+            return stmt.statements.length > 0 && stmt.statements.every(s => statementMightBeThrow(s));
+        }
+        return false;
     }
 
     /**

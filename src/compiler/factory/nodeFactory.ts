@@ -4377,6 +4377,7 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         parameters: readonly ParameterDeclaration[],
         type: TypeNode | undefined,
         body: Block | undefined,
+        satisfiesType?: TypeNode | undefined,
     ) {
         const node = createBaseDeclaration<FunctionDeclaration>(SyntaxKind.FunctionDeclaration);
         node.modifiers = asNodeArray(modifiers);
@@ -4386,6 +4387,7 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         node.parameters = createNodeArray(parameters);
         node.type = type;
         node.body = body;
+        (node as Mutable<FunctionDeclaration>).satisfiesType = satisfiesType;
 
         if (!node.body || modifiersToFlags(node.modifiers) & ModifierFlags.Ambient) {
             node.transformFlags = TransformFlags.ContainsTypeScript;
@@ -4402,11 +4404,12 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
                 propagateChildrenFlags(node.parameters) |
                 propagateChildFlags(node.type) |
                 (propagateChildFlags(node.body) & ~TransformFlags.ContainsPossibleTopLevelAwait) |
+                propagateChildFlags(node.satisfiesType) |
                 (isAsyncGenerator ? TransformFlags.ContainsES2018 :
                     isAsync ? TransformFlags.ContainsES2017 :
                     isGenerator ? TransformFlags.ContainsGenerator :
                     TransformFlags.None) |
-                (node.typeParameters || node.type ? TransformFlags.ContainsTypeScript : TransformFlags.None) |
+                (node.typeParameters || node.type || node.satisfiesType ? TransformFlags.ContainsTypeScript : TransformFlags.None) |
                 TransformFlags.ContainsHoistedDeclarationOrCompletion;
         }
 
@@ -4429,6 +4432,7 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         parameters: readonly ParameterDeclaration[],
         type: TypeNode | undefined,
         body: Block | undefined,
+        satisfiesType?: TypeNode | undefined,
     ) {
         return node.modifiers !== modifiers
                 || node.asteriskToken !== asteriskToken
@@ -4437,7 +4441,8 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
                 || node.parameters !== parameters
                 || node.type !== type
                 || node.body !== body
-            ? finishUpdateFunctionDeclaration(createFunctionDeclaration(modifiers, asteriskToken, name, typeParameters, parameters, type, body), node)
+                || node.satisfiesType !== satisfiesType
+            ? finishUpdateFunctionDeclaration(createFunctionDeclaration(modifiers, asteriskToken, name, typeParameters, parameters, type, body, satisfiesType), node)
             : node;
     }
 

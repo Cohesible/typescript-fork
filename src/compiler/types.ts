@@ -2099,6 +2099,7 @@ export interface FunctionDeclaration extends FunctionLikeDeclarationBase, Declar
     readonly modifiers?: NodeArray<ModifierLike>;
     readonly name?: Identifier;
     readonly body?: FunctionBody;
+    readonly satisfiesType?: TypeNode;
 }
 
 export interface MethodSignature extends SignatureDeclarationBase, TypeElement, LocalsContainer {
@@ -5582,7 +5583,7 @@ export const enum NodeBuilderFlags {
     MultilineObjectLiterals                 = 1 << 10,  // Always write object literals across multiple lines
     WriteClassExpressionAsTypeLiteral       = 1 << 11,  // Write class {} as { new(): {} } - used for mixin declaration emit
     UseTypeOfFunction                       = 1 << 12,  // Build using typeof instead of function type literal
-    OmitParameterModifiers                  = 1 << 13,  // Omit modifiers on parameters
+    OmitParameterModifiers                  = 1 << 13,  // Omit modifiers on parameters, implies inclusion of simple initializers
     UseAliasDefinedOutsideCurrentScope      = 1 << 14,  // Allow non-visible aliases
     UseSingleQuotesForStringLiteralType     = 1 << 28,  // Use single quotes for string literal type
     NoTypeReduction                         = 1 << 29,  // Don't call getReducedType
@@ -9102,8 +9103,8 @@ export interface NodeFactory {
     updateVariableDeclaration(node: VariableDeclaration, name: BindingName, exclamationToken: ExclamationToken | undefined, type: TypeNode | undefined, initializer: Expression | undefined): VariableDeclaration;
     createVariableDeclarationList(declarations: readonly VariableDeclaration[], flags?: NodeFlags): VariableDeclarationList;
     updateVariableDeclarationList(node: VariableDeclarationList, declarations: readonly VariableDeclaration[]): VariableDeclarationList;
-    createFunctionDeclaration(modifiers: readonly ModifierLike[] | undefined, asteriskToken: AsteriskToken | undefined, name: string | Identifier | undefined, typeParameters: readonly TypeParameterDeclaration[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode | undefined, body: Block | undefined): FunctionDeclaration;
-    updateFunctionDeclaration(node: FunctionDeclaration, modifiers: readonly ModifierLike[] | undefined, asteriskToken: AsteriskToken | undefined, name: Identifier | undefined, typeParameters: readonly TypeParameterDeclaration[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode | undefined, body: Block | undefined): FunctionDeclaration;
+    createFunctionDeclaration(modifiers: readonly ModifierLike[] | undefined, asteriskToken: AsteriskToken | undefined, name: string | Identifier | undefined, typeParameters: readonly TypeParameterDeclaration[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode | undefined, body: Block | undefined, satisfiesType?: TypeNode | undefined): FunctionDeclaration;
+    updateFunctionDeclaration(node: FunctionDeclaration, modifiers: readonly ModifierLike[] | undefined, asteriskToken: AsteriskToken | undefined, name: Identifier | undefined, typeParameters: readonly TypeParameterDeclaration[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode | undefined, body: Block | undefined, satisfiesType?: TypeNode | undefined): FunctionDeclaration;
     createClassDeclaration(modifiers: readonly ModifierLike[] | undefined, name: string | Identifier | undefined, typeParameters: readonly TypeParameterDeclaration[] | undefined, heritageClauses: readonly HeritageClause[] | undefined, members: readonly ClassElement[]): ClassDeclaration;
     updateClassDeclaration(node: ClassDeclaration, modifiers: readonly ModifierLike[] | undefined, name: Identifier | undefined, typeParameters: readonly TypeParameterDeclaration[] | undefined, heritageClauses: readonly HeritageClause[] | undefined, members: readonly ClassElement[]): ClassDeclaration;
     createInterfaceDeclaration(modifiers: readonly ModifierLike[] | undefined, name: string | Identifier, typeParameters: readonly TypeParameterDeclaration[] | undefined, heritageClauses: readonly HeritageClause[] | undefined, members: readonly TypeElement[]): InterfaceDeclaration;

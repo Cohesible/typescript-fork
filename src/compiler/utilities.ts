@@ -2585,7 +2585,7 @@ export function isGlobalSourceFile(node: Node): boolean {
 
 /** @internal */
 export function isExternalOrCommonJsModule(file: SourceFile): boolean {
-    return (file.externalModuleIndicator || file.commonJsModuleIndicator) !== undefined;
+    return (file.externalModuleIndicator || file.commonJsModuleIndicator) !== undefined || file.scriptKind === ScriptKind.Syn;
 }
 
 /** @internal */
@@ -8887,7 +8887,7 @@ function messageTextEqualityComparer(m1: string | DiagnosticMessageChain, m2: st
 /** @internal */
 export function getLanguageVariant(scriptKind: ScriptKind): LanguageVariant {
     // .tsx and .jsx files are treated as jsx language variant.
-    return scriptKind === ScriptKind.TSX || scriptKind === ScriptKind.JSX || scriptKind === ScriptKind.JS || scriptKind === ScriptKind.JSON ? LanguageVariant.JSX : LanguageVariant.Standard;
+    return scriptKind === ScriptKind.TSX || scriptKind === ScriptKind.JSX || scriptKind === ScriptKind.JS || scriptKind === ScriptKind.JSON || scriptKind === ScriptKind.Syn ? LanguageVariant.JSX : LanguageVariant.Standard;
 }
 
 /**

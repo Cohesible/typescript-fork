@@ -640,7 +640,8 @@ const forEachChildTable: ForEachChildTable = {
             visitNodes(cbNode, cbNodes, node.typeParameters) ||
             visitNodes(cbNode, cbNodes, node.parameters) ||
             visitNode(cbNode, node.type) ||
-            visitNode(cbNode, node.body);
+            visitNode(cbNode, node.body) ||
+            visitNode(cbNode, node.satisfiesType);
     },
     [SyntaxKind.FunctionExpression]: function forEachChildInFunctionExpression<T>(node: FunctionExpression, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNodes(cbNode, cbNodes, node.modifiers) ||
@@ -1818,6 +1819,9 @@ namespace Parser {
         if (isDeclarationFile) {
             contextFlags |= NodeFlags.Ambient;
         }
+        else if (scriptKind === ScriptKind.Syn) {
+            contextFlags |= NodeFlags.AwaitContext;
+        }
 
         sourceFlags = contextFlags;
 
@@ -2005,7 +2009,7 @@ namespace Parser {
         setFields(sourceFile);
 
         // If we parsed this as an external module, it may contain top-level await
-        if (!isDeclarationFile && isExternalModule(sourceFile) && sourceFile.transformFlags & TransformFlags.ContainsPossibleTopLevelAwait) {
+        if (!isDeclarationFile && isExternalModule(sourceFile) && scriptKind !== ScriptKind.Syn && sourceFile.transformFlags & TransformFlags.ContainsPossibleTopLevelAwait) {
             const oldSourceFile = sourceFile;
             sourceFile = reparseTopLevelAwait(sourceFile);
             if (oldSourceFile !== sourceFile) setFields(sourceFile);
@@ -7099,7 +7103,8 @@ namespace Parser {
             return statements;
         }
 
-        return factory.createNodeArray([factory.createBlock(statements)]);
+        const block = finishNode(factory.createBlock(statements), statements.pos);
+        return createNodeArray([block], block.pos);
     }
 
     function parseCaseClause(): CaseClause {
@@ -7883,8 +7888,9 @@ namespace Parser {
         const parameters = parseParameters(isGenerator | isAsync);
         const type = parseReturnType(SyntaxKind.ColonToken, /*isType*/ false);
         const body = parseFunctionBlockOrSemicolon(isGenerator | isAsync, Diagnostics.or_expected);
+        const satisfiesType = scriptKind === ScriptKind.Syn && parseOptional(SyntaxKind.SatisfiesKeyword) ? parseType() : undefined;
         setAwaitContext(savedAwaitContext);
-        const node = factory.createFunctionDeclaration(modifiers, asteriskToken, name, typeParameters, parameters, type, body);
+        const node = factory.createFunctionDeclaration(modifiers, asteriskToken, name, typeParameters, parameters, type, body, satisfiesType);
         return withJSDoc(finishNode(node, pos), hasJSDoc);
     }
 

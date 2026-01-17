@@ -21,6 +21,11 @@ async function foo() {
     return 2
 }
 
+// auto TLA -> number
+const tla = foo()
+// as const should not crash
+const cc = foo() as const
+
 async function bar() {
     const p = foo() as Promise<number>
     const y = 1 + await p
@@ -47,6 +52,10 @@ for (const [k, v] of o) {}
 const o2 = { *[Symbol.iterator]() { } }
 for (const x of o2) {}
 
+{
+    const m = new Map()
+    if (const x = m.get('a')) {} // should not error
+}
 
 // non-nullish CFA
 function nullishCheck(x: number, y: number | undefined | null) {
@@ -96,6 +105,12 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 }
 
 {
+    type X = 'a' | 'b'
+    let q: X = 'a'
+    if (q === 'b') {} // error
+}
+
+{
     const arr = [1]
     if (arr.length > 0) {
         const v = arr.pop() + 1
@@ -130,8 +145,6 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 // 2) Narrowing in Unreachable Code Fails
 
 {
-    // TODO: should not be reduced to `string`
-    // need a new intrinsic `string` that is created if it appears with a union of string literals
     type C = 'black' | 'red' | 'green' | 'yellow' | 'blue' | string
     type X1 = C extends string ? true : false
     type X2 = C extends 'black' ? true : false
@@ -204,7 +217,6 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
     class O<T=any> {
         constructor(public array: T[]) { }
     }
-
     declare class B<T> {
         put(v: T): void
         get(): T
@@ -232,10 +244,128 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
     function bar(a) {
         return a // should be a number
     } satisfies Bar
+
+    type Bar2 = (a: number, ...rest: number[]) => number
+    function bar2(a, ...arr) {
+        return arr[1] + a // should be a number
+    } satisfies Bar2
+
+    function bar3({ a }) {
+        return a // should be a number
+    } satisfies (arg: { a: number }) => number
 }
 
 {
+    // JSX should parse
+    const y = <div></div>
+}
+
+{
+    // This expression is not callable. Not all constituents of type '(() => T) | (T & Function)' are callable. Type 'T & Function' has no call signatures.(2349)
+    type Initializer<T> = T | (() => T)
+    function correct<T>(arg: Initializer<T>) {
+        return typeof arg === 'function' ? arg() : arg // FIXME: should not error
+    }
+}
+
+{
+    // treat objects as having null prototype by default
+    // likewise, using an object as a string should be flagged if the
+    // object does not have an explicit `toString` method
+    const o = {} as object
+    o.toString // checker error, `toString` isn't known to the checker
+
+    ;`${o}` // error
+
+    const o2 = {} as { toString(): string }
+    ;`${o2}` // OK
+}
+
+{
+    const o: { n: number } | undefined = { n: 1 }
+    // should all be OK, we will support optional chaining for assignments
+    o?.n = 1 
+    o?.n++
+    const exp1 = o?.n === 10        // boolean | undefined
+
+    const o2: { n: number } | undefined = { n: 1 }
+    const exp2 = o?.n === o2?.n     // boolean | undefined
+    // --> short circuit whole thing if o or o2 is nullish
+
+    const exp3 = o2?.n > 10         // boolean | undefined
+
+    // note: we are _not_ implementing chaining for prefix unary
+    // --> it did not feel quite right
+
+    // 1 in obj?.foo;  // TypeError
+    // for (bar of obj?.foo);  // TypeError
+    // bar instanceof obj?.foo;  // TypeError
+}
+
+{
+    // Request: Class Decorator Mutation #4881
+    
+}
+
+{
+    // conditional type should use union of signatures for overloads 
+    // if the supertype is a bare fn literal
+}
+
+
+// TODO: unnamed fn params `type F = ({ a: number }) => number`
+// let a?: number
+
+// TODO:
+// This code should compile due to narrowing on x:
+// const o = {foo: 1, bar: 2} as const;
+// const x: string = 'foo';
+// if (x in o) {
+//     const y: "foo" | "bar" = x; // OK
+// }
+
+{
     // Support ReadonlyArray.includes as a type guard #31018
+}
+
+{
+    // Deprioritise properties of the form { prop?: never } in completions #62024
+}
+
+{
+    // Allow narrowing of unions discriminated by numeric literals using > < etc #61770
+    // FIXME: rt should be `number`
+    function example1(...args: [number] | []) {
+        if (args.length > 0) {
+            return args[0];
+        }
+    }
+}
+
+{
+    // #16665: "Include Default Parameter Values in Signature Help".
+}
+
+// Add a Mutable type (opposite of Readonly) to lib.d.ts #24509
+// https://github.com/microsoft/TypeScript/issues/24509
+
+// The possibility of using the readonly keyword for an entire interface has been suggested in A cheaper, easier to implement middle ground could be #21152.
+// --> // mutable
+
+// class GenericClass<T> {
+//   type SpecializedArray = Array<{ val: T }>;
+
+//   func1(arr: SpecializedArray): SpecializedArray {
+//     ..  
+//   }
+
+//   func2(arr: SpecializedArray): SpecializedArray {
+//     ...
+//   }
+// }
+
+{
+    // Type guard should infer the type of parent object when applied on a property #42384
 }
 
 {
@@ -262,8 +392,5 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 
 // Since the JSON is almost an object literal, I believe it makes more sense to type it more specifically.
 
-// if ((reify { x: number}).x === reify number) {
-
-// }
 
 // /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a

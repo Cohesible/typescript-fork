@@ -3341,7 +3341,7 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
         const openParenPos = emitTokenWithComment(SyntaxKind.SwitchKeyword, node.pos, writeKeyword, node);
         writeSpace();
         emitTokenWithComment(SyntaxKind.OpenParenToken, openParenPos, writePunctuation, node);
-        emitExpression(node.expression);
+        emitExpression(node.expression as any);
         emitTokenWithComment(SyntaxKind.CloseParenToken, node.expression.end, writePunctuation, node);
         writeSpace();
         emit(node.caseBlock);

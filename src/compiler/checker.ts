@@ -29361,7 +29361,17 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
 
         function getTypeAtSwitchClause(flow: FlowSwitchClause): FlowType {
-            const expr = skipParentheses(flow.node.switchStatement.expression);
+            const switchExpr = flow.node.switchStatement.expression;
+            if (isVariableDeclarationList(switchExpr)) {
+                const flowType = getTypeAtFlowNode(flow.antecedent);
+                let type = getTypeFromFlowType(flowType);
+                const expr = switchExpr.declarations[0]?.name;
+                if (isMatchingReference(reference, expr)) {
+                    type = narrowTypeBySwitchOnDiscriminant(type, flow.node);
+                }
+                return createFlowType(type, isIncomplete(flowType));
+            }
+            const expr = skipParentheses(switchExpr);
             const flowType = getTypeAtFlowNode(flow.antecedent);
             let type = getTypeFromFlowType(flowType);
             if (isMatchingReference(reference, expr)) {
@@ -29827,6 +29837,18 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 }
             }
 
+            // In Syn, optional chains short-circuit comparison expressions.
+            // If we're in the true branch, the chain didn't short-circuit, so narrow to non-nullish.
+            const file = getSourceFileOfNode(expr);
+            if (file && file.scriptKind === ScriptKind.Syn && strictNullChecks) {
+                if (optionalChainContainsReference(left, reference)) {
+                    return assumeTrue ? getAdjustedTypeWithFacts(type, TypeFacts.NEUndefinedOrNull) : type;
+                }
+                else if (optionalChainContainsReference(right, reference)) {
+                    return assumeTrue ? getAdjustedTypeWithFacts(type, TypeFacts.NEUndefinedOrNull) : type;
+                }
+            }
+
             return type;
         }
 
@@ -29875,6 +29897,12 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
 
         function narrowTypeByOptionalChainContainment(type: Type, operator: SyntaxKind, value: Expression, assumeTrue: boolean): Type {
+            const file = getSourceFileOfNode(value);
+            if (file && file.scriptKind === ScriptKind.Syn) {
+                // In Syn, if the comparison is truthy, the optional chain didn't short-circuit
+                return assumeTrue ? getAdjustedTypeWithFacts(type, TypeFacts.NEUndefinedOrNull) : type;
+            }
+
             // We are in a branch of obj?.foo === value (or any one of the other equality operators). We narrow obj as follows:
             // When operator is === and type of value excludes undefined, null and undefined is removed from type of obj in true branch.
             // When operator is !== and type of value excludes undefined, null and undefined is removed from type of obj in false branch.
@@ -39797,12 +39825,19 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function computeExhaustiveSwitchStatement(node: SwitchStatement): boolean {
-        if (node.expression.kind === SyntaxKind.TypeOfExpression) {
+        // For VariableDeclarationList, use the initializer of the first declaration
+        const switchExpr = isVariableDeclarationList(node.expression)
+            ? node.expression.declarations[0]?.initializer
+            : node.expression;
+        if (!switchExpr) {
+            return false;
+        }
+        if (switchExpr.kind === SyntaxKind.TypeOfExpression) {
             const witnesses = getSwitchClauseTypeOfWitnesses(node);
             if (!witnesses) {
                 return false;
             }
-            const operandConstraint = getBaseConstraintOrType(checkExpressionCached((node.expression as TypeOfExpression).expression));
+            const operandConstraint = getBaseConstraintOrType(checkExpressionCached((switchExpr as TypeOfExpression).expression));
             // Get the not-equal flags for all handled cases.
             const notEqualFacts = getNotEqualFactsFromTypeofSwitch(0, 0, witnesses);
             if (operandConstraint.flags & TypeFlags.AnyOrUnknown) {
@@ -39812,7 +39847,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             // A missing not-equal flag indicates that the type wasn't handled by some case.
             return !someType(operandConstraint, t => getTypeFacts(t, notEqualFacts) === notEqualFacts);
         }
-        const type = getBaseConstraintOrType(checkExpressionCached(node.expression));
+        const type = getBaseConstraintOrType(checkExpressionCached(switchExpr));
         if (!isLiteralType(type)) {
             return false;
         }
@@ -41404,6 +41439,14 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                             !leftAssignableToNumber && !rightAssignableToNumber && areTypesComparable(left, right);
                     });
                 }
+                // (Syn) optional chaining propagates into comparison expressions
+                // Skip the conversion in some truthy contexts as an optimization
+                if (errorNode?.kind !== SyntaxKind.IfStatement) {
+                    const file = getSourceFileOfNode(left);
+                    if (file && file.scriptKind === ScriptKind.Syn && (isOptionalChain(left) || isOptionalChain(right))) {
+                        return getOptionalType(booleanType);
+                    }
+                }
                 return booleanType;
             case SyntaxKind.EqualsEqualsToken:
             case SyntaxKind.ExclamationEqualsToken:
@@ -41423,6 +41466,13 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     }
                     checkNaNEquality(errorNode, operator, left, right);
                     reportOperatorErrorUnless((left, right) => isTypeEqualityComparableTo(left, right) || isTypeEqualityComparableTo(right, left));
+                }
+                // (Syn) optional chaining propagates into equality expressions
+                if (errorNode?.kind !== SyntaxKind.IfStatement) {
+                    const file = getSourceFileOfNode(left);
+                    if (file && file.scriptKind === ScriptKind.Syn && (isOptionalChain(left) || isOptionalChain(right))) {
+                        return getOptionalType(booleanType);
+                    }
                 }
                 return booleanType;
             case SyntaxKind.InstanceOfKeyword:
@@ -47193,7 +47243,20 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         let firstDefaultClause: CaseOrDefaultClause;
         let hasDuplicateDefaultClause = false;
 
-        const expressionType = checkExpression(node.expression);
+        let expressionType: Type;
+        if (isVariableDeclarationList(node.expression)) {
+            const decl = node.expression.declarations[0];
+            if (decl?.initializer) {
+                checkGrammarVariableDeclarationList(node.expression);
+                expressionType = checkExpression(decl.initializer);
+            }
+            else {
+                expressionType = errorType;
+            }
+        }
+        else {
+            expressionType = checkExpression(node.expression);
+        }
 
         forEach(node.caseBlock.clauses, clause => {
             // Grammar check for duplicate default clauses, skip if we already report duplicate default clause

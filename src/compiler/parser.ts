@@ -6944,18 +6944,13 @@ namespace Parser {
         parseExpected(SyntaxKind.IfKeyword);
         const openParenPosition = scanner.getTokenStart();
         const openParenParsed = parseExpected(SyntaxKind.OpenParenToken);
-        if (token() == SyntaxKind.ConstKeyword || token() == SyntaxKind.LetKeyword) {
-            const expression = parseVariableDeclarationList(false);
-            parseExpectedMatchingBrackets(SyntaxKind.OpenParenToken, SyntaxKind.CloseParenToken, openParenParsed, openParenPosition);
-            const thenStatement = parseStatement();
-            const elseStatement = parseOptional(SyntaxKind.ElseKeyword) ? parseStatement() : undefined;
-            return withJSDoc(finishNode(factoryCreateIfStatement(expression as any, thenStatement, elseStatement), pos), hasJSDoc);
-        }
-        const expression = allowInAnd(parseExpression);
+        const expression = scriptKind === ScriptKind.Syn && (token() == SyntaxKind.ConstKeyword || token() == SyntaxKind.LetKeyword)
+            ? parseVariableDeclarationList(false)
+            : allowInAnd(parseExpression);
         parseExpectedMatchingBrackets(SyntaxKind.OpenParenToken, SyntaxKind.CloseParenToken, openParenParsed, openParenPosition);
         const thenStatement = parseStatement();
         const elseStatement = parseOptional(SyntaxKind.ElseKeyword) ? parseStatement() : undefined;
-        return withJSDoc(finishNode(factoryCreateIfStatement(expression, thenStatement, elseStatement), pos), hasJSDoc);
+        return withJSDoc(finishNode(factoryCreateIfStatement(expression as Expression, thenStatement, elseStatement), pos), hasJSDoc);
     }
 
     function parseDoStatement(): DoStatement {
@@ -6983,16 +6978,12 @@ namespace Parser {
         parseExpected(SyntaxKind.WhileKeyword);
         const openParenPosition = scanner.getTokenStart();
         const openParenParsed = parseExpected(SyntaxKind.OpenParenToken);
-        if (token() == SyntaxKind.ConstKeyword || token() == SyntaxKind.LetKeyword) {
-            const expression = parseVariableDeclarationList(false);
-            parseExpectedMatchingBrackets(SyntaxKind.OpenParenToken, SyntaxKind.CloseParenToken, openParenParsed, openParenPosition);
-            const statement = parseStatement();
-            return withJSDoc(finishNode(factoryCreateWhileStatement(expression as any, statement), pos), hasJSDoc);
-        }
-        const expression = allowInAnd(parseExpression);
+        const expression = scriptKind === ScriptKind.Syn && (token() == SyntaxKind.ConstKeyword || token() == SyntaxKind.LetKeyword)
+            ? parseVariableDeclarationList(false)
+            : allowInAnd(parseExpression);
         parseExpectedMatchingBrackets(SyntaxKind.OpenParenToken, SyntaxKind.CloseParenToken, openParenParsed, openParenPosition);
         const statement = parseStatement();
-        return withJSDoc(finishNode(factoryCreateWhileStatement(expression, statement), pos), hasJSDoc);
+        return withJSDoc(finishNode(factoryCreateWhileStatement(expression as Expression, statement), pos), hasJSDoc);
     }
 
     function parseForOrForInOrForOfStatement(): Statement {
@@ -7146,10 +7137,13 @@ namespace Parser {
         const hasJSDoc = hasPrecedingJSDocComment();
         parseExpected(SyntaxKind.SwitchKeyword);
         parseExpected(SyntaxKind.OpenParenToken);
-        const expression = allowInAnd(parseExpression);
+        // Syn: switch (const v = expr) { ... }
+        const expression = scriptKind === ScriptKind.Syn && (token() === SyntaxKind.ConstKeyword || token() === SyntaxKind.LetKeyword)
+            ? parseVariableDeclarationList(false)
+            : allowInAnd(parseExpression);
         parseExpected(SyntaxKind.CloseParenToken);
         const caseBlock = parseCaseBlock();
-        return withJSDoc(finishNode(factory.createSwitchStatement(expression, caseBlock), pos), hasJSDoc);
+        return withJSDoc(finishNode(factory.createSwitchStatement(expression as Expression, caseBlock), pos), hasJSDoc);
     }
 
     function parseThrowStatement(): ThrowStatement {

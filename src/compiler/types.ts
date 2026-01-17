@@ -3499,9 +3499,9 @@ export interface WithStatement extends Statement, FlowContainer {
     readonly statement: Statement;
 }
 
-export interface SwitchStatement extends Statement, FlowContainer {
+export interface SwitchStatement extends Statement, FlowContainer, LocalsContainer {
     readonly kind: SyntaxKind.SwitchStatement;
-    readonly expression: Expression;
+    readonly expression: Expression | VariableDeclarationList;
     readonly caseBlock: CaseBlock;
     possiblyExhaustive?: boolean; // initialized by binding
 }

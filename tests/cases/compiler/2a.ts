@@ -292,7 +292,14 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
     const exp2 = o?.n === o2?.n     // boolean | undefined
     // --> short circuit whole thing if o or o2 is nullish
 
+    // should not error
     const exp3 = o2?.n > 10         // boolean | undefined
+
+    if (o2?.n !== 0) {
+        o2 // should narrow to be non-nullish
+    }
+
+    // const o3: { n: number | undefined } | undefined = { n: 1 }
 
     // note: we are _not_ implementing chaining for prefix unary
     // --> it did not feel quite right
@@ -300,6 +307,14 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
     // 1 in obj?.foo;  // TypeError
     // for (bar of obj?.foo);  // TypeError
     // bar instanceof obj?.foo;  // TypeError
+}
+
+{
+    const f = (): 1 | 2 => 1
+    switch (const v = f()) {
+        case 1: console.log('got 1', v)
+        case 2: console.log('got 2', v)
+    }
 }
 
 {

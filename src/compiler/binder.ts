@@ -1795,7 +1795,9 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
 
     function bindCaseBlock(node: CaseBlock): void {
         const clauses = node.clauses;
-        const isNarrowingSwitch = node.parent.expression.kind === SyntaxKind.TrueKeyword || isNarrowingExpression(node.parent.expression);
+        const switchExpr = node.parent.expression;
+        const isNarrowingSwitch = switchExpr.kind === SyntaxKind.TrueKeyword ||
+            switchExpr.kind === SyntaxKind.VariableDeclarationList || isNarrowingExpression(switchExpr);
         let fallthroughFlow: FlowNode = unreachableFlow;
 
         for (let i = 0; i < clauses.length; i++) {
@@ -4046,6 +4048,7 @@ export function getContainerFlags(node: Node): ContainerFlags {
 
         case SyntaxKind.IfStatement:
         case SyntaxKind.WhileStatement:
+        case SyntaxKind.SwitchStatement:
 
         case SyntaxKind.CatchClause:
         case SyntaxKind.ForStatement:

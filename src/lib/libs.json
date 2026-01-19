@@ -92,6 +92,7 @@
         "decorators",
         "decorators.legacy",
         "reify",
+        "jsx",
         // Default libraries
         "es5.full",
         "es2015.full",

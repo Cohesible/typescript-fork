@@ -379,6 +379,7 @@ export const enum SyntaxKind {
 
     // Clauses
     CaseClause,
+    CaseIsClause,
     DefaultClause,
     HeritageClause,
     CatchClause,
@@ -1196,6 +1197,7 @@ export type HasChildren =
     | JsxExpression
     | JsxNamespacedName
     | CaseClause
+    | CaseIsClause
     | DefaultClause
     | HeritageClause
     | CatchClause
@@ -1215,6 +1217,7 @@ export type HasJSDoc =
     | BreakStatement
     | CallSignatureDeclaration
     | CaseClause
+    | CaseIsClause
     | ClassLikeDeclaration
     | ClassStaticBlockDeclaration
     | ConstructorDeclaration
@@ -3520,6 +3523,14 @@ export interface CaseClause extends Node, JSDocContainer {
     /** @internal */ fallthroughFlowNode?: FlowNode;
 }
 
+export interface CaseIsClause extends Node, JSDocContainer {
+    readonly kind: SyntaxKind.CaseIsClause;
+    readonly parent: CaseBlock;
+    readonly type: TypeNode;
+    readonly statements: NodeArray<Statement>;
+    /** @internal */ fallthroughFlowNode?: FlowNode;
+}
+
 export interface DefaultClause extends Node {
     readonly kind: SyntaxKind.DefaultClause;
     readonly parent: CaseBlock;
@@ -3529,6 +3540,7 @@ export interface DefaultClause extends Node {
 
 export type CaseOrDefaultClause =
     | CaseClause
+    | CaseIsClause
     | DefaultClause;
 
 export interface LabeledStatement extends Statement, FlowContainer {
@@ -9291,6 +9303,8 @@ export interface NodeFactory {
 
     createCaseClause(expression: Expression, statements: readonly Statement[]): CaseClause;
     updateCaseClause(node: CaseClause, expression: Expression, statements: readonly Statement[]): CaseClause;
+    createCaseIsClause(type: TypeNode, statements: readonly Statement[]): CaseIsClause;
+    updateCaseIsClause(node: CaseIsClause, type: TypeNode, statements: readonly Statement[]): CaseIsClause;
     createDefaultClause(statements: readonly Statement[]): DefaultClause;
     updateDefaultClause(node: DefaultClause, statements: readonly Statement[]): DefaultClause;
     createHeritageClause(token: HeritageClause["token"], types: readonly ExpressionWithTypeArguments[]): HeritageClause;

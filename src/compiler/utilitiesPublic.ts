@@ -2513,6 +2513,7 @@ export function isJsxCallLike(node: Node): node is JsxCallLike {
 export function isCaseOrDefaultClause(node: Node): node is CaseOrDefaultClause {
     const kind = node.kind;
     return kind === SyntaxKind.CaseClause
+        || kind === SyntaxKind.CaseIsClause
         || kind === SyntaxKind.DefaultClause;
 }
 

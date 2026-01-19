@@ -4,6 +4,8 @@
 // @target: es2017
 
 // @filename: main.syn
+/// <reference lib="jsx" />
+
 function f<T>(t: reify T): T {
     switch (type.kind(t)) {
         case "array":
@@ -137,12 +139,14 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
     }
 }
 
-// declare function fail(): never;
-// declare const a: string | null;
-// a || fail();
-// a.charAt(0); // Object is possibly 'null'. ts(2531)
-
-// 2) Narrowing in Unreachable Code Fails
+{
+    // TODO
+    // declare function fail(): never;
+    // declare const a: string | null;
+    // a || fail();
+    // a.charAt(0); // Object is possibly 'null'. ts(2531)
+    // 2) Narrowing in Unreachable Code Fails
+}
 
 {
     type C = 'black' | 'red' | 'green' | 'yellow' | 'blue' | string
@@ -213,7 +217,7 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 }
 
 {
-    // Fall back on default type parameter when inference does not yield a more suitable type #16229
+    // #16229
     class O<T=any> {
         constructor(public array: T[]) { }
     }
@@ -257,6 +261,7 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 
 {
     // JSX should parse
+    // TODO: auto include `jsx` lib if project includes JSX 
     const y = <div></div>
 }
 
@@ -314,6 +319,41 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
     switch (const v = f()) {
         case 1: console.log('got 1', v)
         case 2: console.log('got 2', v)
+    }
+
+    const x: string | number = 1
+    switch (x) {
+        case is string:
+            console.log('got string', x)
+        case is number:
+            console.log('got number', x)
+    }
+
+    const x2: unknown = {}
+    switch (x2) {
+        case is { y: number }:
+            console.log('y', x2.y)
+        case is 1:
+        case is 2:
+            fallthrough
+        case is 3:
+            x2 // 1 | 2 | 3
+    }
+
+    const x3: string | 10 = 10
+    switch (x3) {
+        case 10: console.log(x3)
+        case is string: console.log(x3)
+    }
+}
+
+{
+    type F = { x: number } | { y: string }
+        function x(f: F) {
+        if (f is { x: number }) {
+            return f.x
+        }
+        return f.y
     }
 }
 

@@ -1740,6 +1740,14 @@ const visitEachChildTable: VisitEachChildTable = {
         );
     },
 
+    [SyntaxKind.CaseIsClause]: function visitEachChildOfCaseIsClause(node, visitor, context, nodesVisitor, nodeVisitor, _tokenVisitor) {
+        return context.factory.updateCaseIsClause(
+            node,
+            Debug.checkDefined(nodeVisitor(node.type, visitor, isTypeNode)),
+            nodesVisitor(node.statements, visitor, isStatement),
+        );
+    },
+
     [SyntaxKind.DefaultClause]: function visitEachChildOfDefaultClause(node, visitor, context, nodesVisitor, _nodeVisitor, _tokenVisitor) {
         return context.factory.updateDefaultClause(
             node,

@@ -23,6 +23,7 @@ import {
     CallSignatureDeclaration,
     CaseBlock,
     CaseClause,
+    CaseIsClause,
     CaseKeyword,
     CatchClause,
     ClassDeclaration,
@@ -976,6 +977,10 @@ export function isJsxNamespacedName(node: Node): node is JsxNamespacedName {
 
 export function isCaseClause(node: Node): node is CaseClause {
     return node.kind === SyntaxKind.CaseClause;
+}
+
+export function isCaseIsClause(node: Node): node is CaseIsClause {
+    return node.kind === SyntaxKind.CaseIsClause;
 }
 
 export function isDefaultClause(node: Node): node is DefaultClause {

@@ -462,6 +462,7 @@ import {
     ReifyExpression,
     IsExpression,
     FallthroughStatement,
+    CaseIsClause,
 } from "../_namespaces/ts.js";
 
 let nextAutoGenerateId = 0;
@@ -999,6 +1000,8 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         updateJsxNamespacedName,
         createCaseClause,
         updateCaseClause,
+        createCaseIsClause,
+        updateCaseIsClause,
         createDefaultClause,
         updateDefaultClause,
         createHeritageClause,
@@ -5925,6 +5928,27 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         return node.expression !== expression
                 || node.statements !== statements
             ? update(createCaseClause(expression, statements), node)
+            : node;
+    }
+
+    // @api
+    function createCaseIsClause(type: TypeNode, statements: readonly Statement[]) {
+        const node = createBaseNode<CaseIsClause>(SyntaxKind.CaseIsClause);
+        node.type = type;
+        node.statements = createNodeArray(statements);
+        node.transformFlags |= propagateChildFlags(node.type) |
+            propagateChildrenFlags(node.statements) |
+            TransformFlags.ContainsTypeScript;
+
+        node.jsDoc = undefined; // initialized by parser (JsDocContainer)
+        return node;
+    }
+
+    // @api
+    function updateCaseIsClause(node: CaseIsClause, type: TypeNode, statements: readonly Statement[]) {
+        return node.type !== type
+                || node.statements !== statements
+            ? update(createCaseIsClause(type, statements), node)
             : node;
     }
 

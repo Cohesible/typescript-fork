@@ -30,6 +30,7 @@ import {
     canHaveModifiers,
     CaseBlock,
     CaseClause,
+    CaseIsClause,
     CaseOrDefaultClause,
     CatchClause,
     CharacterCodes,
@@ -883,6 +884,10 @@ const forEachChildTable: ForEachChildTable = {
     },
     [SyntaxKind.CaseClause]: function forEachChildInCaseClause<T>(node: CaseClause, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNode(cbNode, node.expression) ||
+            visitNodes(cbNode, cbNodes, node.statements);
+    },
+    [SyntaxKind.CaseIsClause]: function forEachChildInCaseIsClause<T>(node: CaseIsClause, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+        return visitNode(cbNode, node.type) ||
             visitNodes(cbNode, cbNodes, node.statements);
     },
     [SyntaxKind.DefaultClause]: function forEachChildInDefaultClause<T>(node: DefaultClause, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
@@ -3325,6 +3330,7 @@ namespace Parser {
         if (node) {
             switch (node.kind) {
                 case SyntaxKind.CaseClause:
+                case SyntaxKind.CaseIsClause:
                 case SyntaxKind.DefaultClause:
                     return true;
             }
@@ -7098,10 +7104,19 @@ namespace Parser {
         return createNodeArray([block], block.pos);
     }
 
-    function parseCaseClause(): CaseClause {
+    function parseCaseClause(): CaseClause | CaseIsClause {
         const pos = getNodePos();
         const hasJSDoc = hasPrecedingJSDocComment();
         parseExpected(SyntaxKind.CaseKeyword);
+        if (scriptKind === ScriptKind.Syn && token() === SyntaxKind.IsKeyword) {
+            nextToken();
+            const type = parseType();
+            parseExpected(SyntaxKind.ColonToken);
+            const statements = maybeReparseSwitchClause(
+                parseList(ParsingContext.SwitchClauseStatements, parseStatement)
+            );
+            return withJSDoc(finishNode(factory.createCaseIsClause(type, statements), pos), hasJSDoc);
+        }
         const expression = allowInAnd(parseExpression);
         parseExpected(SyntaxKind.ColonToken);
         const statements = maybeReparseSwitchClause(

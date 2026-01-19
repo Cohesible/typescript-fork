@@ -3980,72 +3980,73 @@ declare namespace ts {
         JsxExpression = 301,
         JsxNamespacedName = 302,
         CaseClause = 303,
-        DefaultClause = 304,
-        HeritageClause = 305,
-        CatchClause = 306,
-        ImportAttributes = 307,
-        ImportAttribute = 308,
-        /** @deprecated */ AssertClause = 307,
-        /** @deprecated */ AssertEntry = 308,
-        /** @deprecated */ ImportTypeAssertionContainer = 309,
-        PropertyAssignment = 310,
-        ShorthandPropertyAssignment = 311,
-        SpreadAssignment = 312,
-        EnumMember = 313,
-        SourceFile = 314,
-        Bundle = 315,
-        JSDocTypeExpression = 316,
-        JSDocNameReference = 317,
-        JSDocMemberName = 318,
-        JSDocAllType = 319,
-        JSDocUnknownType = 320,
-        JSDocNullableType = 321,
-        JSDocNonNullableType = 322,
-        JSDocOptionalType = 323,
-        JSDocFunctionType = 324,
-        JSDocVariadicType = 325,
-        JSDocNamepathType = 326,
-        JSDoc = 327,
+        CaseIsClause = 304,
+        DefaultClause = 305,
+        HeritageClause = 306,
+        CatchClause = 307,
+        ImportAttributes = 308,
+        ImportAttribute = 309,
+        /** @deprecated */ AssertClause = 308,
+        /** @deprecated */ AssertEntry = 309,
+        /** @deprecated */ ImportTypeAssertionContainer = 310,
+        PropertyAssignment = 311,
+        ShorthandPropertyAssignment = 312,
+        SpreadAssignment = 313,
+        EnumMember = 314,
+        SourceFile = 315,
+        Bundle = 316,
+        JSDocTypeExpression = 317,
+        JSDocNameReference = 318,
+        JSDocMemberName = 319,
+        JSDocAllType = 320,
+        JSDocUnknownType = 321,
+        JSDocNullableType = 322,
+        JSDocNonNullableType = 323,
+        JSDocOptionalType = 324,
+        JSDocFunctionType = 325,
+        JSDocVariadicType = 326,
+        JSDocNamepathType = 327,
+        JSDoc = 328,
         /** @deprecated Use SyntaxKind.JSDoc */
-        JSDocComment = 327,
-        JSDocText = 328,
-        JSDocTypeLiteral = 329,
-        JSDocSignature = 330,
-        JSDocLink = 331,
-        JSDocLinkCode = 332,
-        JSDocLinkPlain = 333,
-        JSDocTag = 334,
-        JSDocAugmentsTag = 335,
-        JSDocImplementsTag = 336,
-        JSDocAuthorTag = 337,
-        JSDocDeprecatedTag = 338,
-        JSDocClassTag = 339,
-        JSDocPublicTag = 340,
-        JSDocPrivateTag = 341,
-        JSDocProtectedTag = 342,
-        JSDocReadonlyTag = 343,
-        JSDocOverrideTag = 344,
-        JSDocCallbackTag = 345,
-        JSDocOverloadTag = 346,
-        JSDocEnumTag = 347,
-        JSDocParameterTag = 348,
-        JSDocReturnTag = 349,
-        JSDocThisTag = 350,
-        JSDocTypeTag = 351,
-        JSDocTemplateTag = 352,
-        JSDocTypedefTag = 353,
-        JSDocSeeTag = 354,
-        JSDocPropertyTag = 355,
-        JSDocThrowsTag = 356,
-        JSDocSatisfiesTag = 357,
-        JSDocImportTag = 358,
-        SyntaxList = 359,
-        NotEmittedStatement = 360,
-        NotEmittedTypeElement = 361,
-        PartiallyEmittedExpression = 362,
-        CommaListExpression = 363,
-        SyntheticReferenceExpression = 364,
-        Count = 365,
+        JSDocComment = 328,
+        JSDocText = 329,
+        JSDocTypeLiteral = 330,
+        JSDocSignature = 331,
+        JSDocLink = 332,
+        JSDocLinkCode = 333,
+        JSDocLinkPlain = 334,
+        JSDocTag = 335,
+        JSDocAugmentsTag = 336,
+        JSDocImplementsTag = 337,
+        JSDocAuthorTag = 338,
+        JSDocDeprecatedTag = 339,
+        JSDocClassTag = 340,
+        JSDocPublicTag = 341,
+        JSDocPrivateTag = 342,
+        JSDocProtectedTag = 343,
+        JSDocReadonlyTag = 344,
+        JSDocOverrideTag = 345,
+        JSDocCallbackTag = 346,
+        JSDocOverloadTag = 347,
+        JSDocEnumTag = 348,
+        JSDocParameterTag = 349,
+        JSDocReturnTag = 350,
+        JSDocThisTag = 351,
+        JSDocTypeTag = 352,
+        JSDocTemplateTag = 353,
+        JSDocTypedefTag = 354,
+        JSDocSeeTag = 355,
+        JSDocPropertyTag = 356,
+        JSDocThrowsTag = 357,
+        JSDocSatisfiesTag = 358,
+        JSDocImportTag = 359,
+        SyntaxList = 360,
+        NotEmittedStatement = 361,
+        NotEmittedTypeElement = 362,
+        PartiallyEmittedExpression = 363,
+        CommaListExpression = 364,
+        SyntheticReferenceExpression = 365,
+        Count = 366,
         FirstAssignment = 64,
         LastAssignment = 79,
         FirstCompoundAssignment = 65,
@@ -4073,10 +4074,10 @@ declare namespace ts {
         FirstStatement = 248,
         LastStatement = 264,
         FirstNode = 169,
-        FirstJSDocNode = 316,
-        LastJSDocNode = 358,
-        FirstJSDocTagNode = 334,
-        LastJSDocTagNode = 358,
+        FirstJSDocNode = 317,
+        LastJSDocNode = 359,
+        FirstJSDocTagNode = 335,
+        LastJSDocTagNode = 359,
     }
     type TriviaSyntaxKind = SyntaxKind.SingleLineCommentTrivia | SyntaxKind.MultiLineCommentTrivia | SyntaxKind.NewLineTrivia | SyntaxKind.WhitespaceTrivia | SyntaxKind.ShebangTrivia | SyntaxKind.ConflictMarkerTrivia;
     type LiteralSyntaxKind = SyntaxKind.NumericLiteral | SyntaxKind.BigIntLiteral | SyntaxKind.StringLiteral | SyntaxKind.JsxText | SyntaxKind.JsxTextAllWhiteSpaces | SyntaxKind.RegularExpressionLiteral | SyntaxKind.NoSubstitutionTemplateLiteral;
@@ -4345,6 +4346,7 @@ declare namespace ts {
         | BreakStatement
         | CallSignatureDeclaration
         | CaseClause
+        | CaseIsClause
         | ClassLikeDeclaration
         | ClassStaticBlockDeclaration
         | ConstructorDeclaration
@@ -5387,9 +5389,9 @@ declare namespace ts {
         readonly expression: Expression;
         readonly statement: Statement;
     }
-    interface SwitchStatement extends Statement, FlowContainer {
+    interface SwitchStatement extends Statement, FlowContainer, LocalsContainer {
         readonly kind: SyntaxKind.SwitchStatement;
-        readonly expression: Expression;
+        readonly expression: Expression | VariableDeclarationList;
         readonly caseBlock: CaseBlock;
         possiblyExhaustive?: boolean;
     }
@@ -5404,12 +5406,18 @@ declare namespace ts {
         readonly expression: Expression;
         readonly statements: NodeArray<Statement>;
     }
+    interface CaseIsClause extends Node, JSDocContainer {
+        readonly kind: SyntaxKind.CaseIsClause;
+        readonly parent: CaseBlock;
+        readonly type: TypeNode;
+        readonly statements: NodeArray<Statement>;
+    }
     interface DefaultClause extends Node {
         readonly kind: SyntaxKind.DefaultClause;
         readonly parent: CaseBlock;
         readonly statements: NodeArray<Statement>;
     }
-    type CaseOrDefaultClause = CaseClause | DefaultClause;
+    type CaseOrDefaultClause = CaseClause | CaseIsClause | DefaultClause;
     interface LabeledStatement extends Statement, FlowContainer {
         readonly kind: SyntaxKind.LabeledStatement;
         readonly label: Identifier;
@@ -7925,6 +7933,8 @@ declare namespace ts {
         updateJsxNamespacedName(node: JsxNamespacedName, namespace: Identifier, name: Identifier): JsxNamespacedName;
         createCaseClause(expression: Expression, statements: readonly Statement[]): CaseClause;
         updateCaseClause(node: CaseClause, expression: Expression, statements: readonly Statement[]): CaseClause;
+        createCaseIsClause(type: TypeNode, statements: readonly Statement[]): CaseIsClause;
+        updateCaseIsClause(node: CaseIsClause, type: TypeNode, statements: readonly Statement[]): CaseIsClause;
         createDefaultClause(statements: readonly Statement[]): DefaultClause;
         updateDefaultClause(node: DefaultClause, statements: readonly Statement[]): DefaultClause;
         createHeritageClause(token: HeritageClause["token"], types: readonly ExpressionWithTypeArguments[]): HeritageClause;
@@ -9158,6 +9168,7 @@ declare namespace ts {
     function isJsxExpression(node: Node): node is JsxExpression;
     function isJsxNamespacedName(node: Node): node is JsxNamespacedName;
     function isCaseClause(node: Node): node is CaseClause;
+    function isCaseIsClause(node: Node): node is CaseIsClause;
     function isDefaultClause(node: Node): node is DefaultClause;
     function isHeritageClause(node: Node): node is HeritageClause;
     function isCatchClause(node: Node): node is CatchClause;

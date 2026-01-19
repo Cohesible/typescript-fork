@@ -325,6 +325,7 @@ import {
     VariableDeclaration,
     WhileStatement,
     WithStatement,
+    CaseIsClause,
 } from "./_namespaces/ts.js";
 import * as performance from "./_namespaces/ts.performance.js";
 
@@ -1171,6 +1172,9 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             case SyntaxKind.CaseClause:
                 bindCaseClause(node as CaseClause);
                 break;
+            case SyntaxKind.CaseIsClause:
+                bindCaseIsClause(node as CaseIsClause);
+                break;
             case SyntaxKind.ExpressionStatement:
                 bindExpressionStatement(node as ExpressionStatement);
                 break;
@@ -1836,6 +1840,16 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
         bindEach(node.statements);
         // Implicit break for Syn
         if (file.scriptKind === ScriptKind.Syn && !(currentFlow.flags & FlowFlags.Unreachable) && node.statements.length) {
+            addAntecedent(currentBreakTarget!, currentFlow);
+            currentFlow = unreachableFlow;
+            hasFlowEffects = true;
+        }
+    }
+
+    function bindCaseIsClause(node: CaseIsClause): void {
+        bind(node.type);
+        bindEach(node.statements);
+        if (!(currentFlow.flags & FlowFlags.Unreachable) && node.statements.length) {
             addAntecedent(currentBreakTarget!, currentFlow);
             currentFlow = unreachableFlow;
             hasFlowEffects = true;

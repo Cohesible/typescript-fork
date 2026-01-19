@@ -13,6 +13,7 @@ import {
     CallExpression,
     canHaveModifiers,
     CaseClause,
+    CaseOrDefaultClause,
     cast,
     CatchClause,
     CharacterCodes,
@@ -144,6 +145,7 @@ import {
     isBreakOrContinueStatement,
     isCallExpression,
     isCallOrNewExpression,
+    isCaseClause,
     isClassDeclaration,
     isClassExpression,
     isClassStaticBlockDeclaration,
@@ -4094,13 +4096,13 @@ export interface CaseClauseTracker {
 }
 
 /** @internal */
-export function newCaseClauseTracker(checker: TypeChecker, clauses: readonly (CaseClause | DefaultClause)[]): CaseClauseTracker {
+export function newCaseClauseTracker(checker: TypeChecker, clauses: readonly CaseOrDefaultClause[]): CaseClauseTracker {
     const existingStrings = new Set<string>();
     const existingNumbers = new Set<number>();
     const existingBigInts = new Set<string>();
 
     for (const clause of clauses) {
-        if (!isDefaultClause(clause)) {
+        if (isCaseClause(clause)) {
             const expression = skipParentheses(clause.expression);
             if (isLiteralExpression(expression)) {
                 switch (expression.kind) {

@@ -253,6 +253,7 @@ const libEntries: [string, string][] = [
     ["decorators", "lib.decorators.d.ts"],
     ["decorators.legacy", "lib.decorators.legacy.d.ts"],
     ["reify", "lib.reify.d.ts"],
+    ["jsx", "lib.jsx.d.ts"],
 ];
 
 /**

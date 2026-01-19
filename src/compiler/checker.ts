@@ -28477,9 +28477,12 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             getReferenceRoot(parent) : node;
     }
 
-    function getTypeOfSwitchClause(clause: CaseClause | DefaultClause) {
+    function getTypeOfSwitchClause(clause: CaseOrDefaultClause) {
         if (clause.kind === SyntaxKind.CaseClause) {
             return getRegularTypeOfLiteralType(getTypeOfExpression(clause.expression));
+        }
+        if (clause.kind === SyntaxKind.CaseIsClause) {
+            return getTypeFromTypeNode(clause.type);
         }
         return neverType;
     }
@@ -29362,12 +29365,15 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
         function getTypeAtSwitchClause(flow: FlowSwitchClause): FlowType {
             const switchExpr = flow.node.switchStatement.expression;
+            const hasCaseIsClause = some(flow.node.switchStatement.caseBlock.clauses, clause => clause.kind === SyntaxKind.CaseIsClause);
             if (isVariableDeclarationList(switchExpr)) {
                 const flowType = getTypeAtFlowNode(flow.antecedent);
                 let type = getTypeFromFlowType(flowType);
                 const expr = switchExpr.declarations[0]?.name;
                 if (isMatchingReference(reference, expr)) {
-                    type = narrowTypeBySwitchOnDiscriminant(type, flow.node);
+                    type = hasCaseIsClause 
+                        ? narrowTypeBySwitchOnCaseIs(type, flow.node)
+                        : narrowTypeBySwitchOnDiscriminant(type, flow.node);
                 }
                 return createFlowType(type, isIncomplete(flowType));
             }
@@ -29375,7 +29381,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             const flowType = getTypeAtFlowNode(flow.antecedent);
             let type = getTypeFromFlowType(flowType);
             if (isMatchingReference(reference, expr)) {
-                type = narrowTypeBySwitchOnDiscriminant(type, flow.node);
+                type = hasCaseIsClause 
+                    ? narrowTypeBySwitchOnCaseIs(type, flow.node)
+                    : narrowTypeBySwitchOnDiscriminant(type, flow.node);
             }
             else if (expr.kind === SyntaxKind.TypeOfExpression && isMatchingReference(reference, (expr as TypeOfExpression).expression)) {
                 type = narrowTypeBySwitchOnTypeOf(type, flow.node);
@@ -30173,6 +30181,47 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             // Now, narrow based on the cases in this set.
             const clauses = switchStatement.caseBlock.clauses.slice(clauseStart, clauseEnd);
             return getUnionType(map(clauses, clause => clause.kind === SyntaxKind.CaseClause ? narrowType(type, clause.expression, /*assumeTrue*/ true) : neverType));
+        }
+
+        function narrowTypeBySwitchOnCaseIs(type: Type, { switchStatement, clauseStart, clauseEnd }: FlowSwitchClauseData): Type {
+            const clauses = switchStatement.caseBlock.clauses;
+            // const defaultIndex = findIndex(clauses, clause => clause.kind === SyntaxKind.DefaultClause);
+
+            let defaultIndex = -1;
+            for (let i = 0; i < clauseStart; i++) {
+                const clause = clauses[i];
+                if (clause.kind === SyntaxKind.DefaultClause) {
+                    defaultIndex = i;
+                    continue;
+                }
+                const caseType = getTypeOfSwitchClause(clause);
+                type = filterType(type, t => !isTypeAssignableTo(t, caseType));
+            }
+
+            const hasDefaultClause = clauseStart === clauseEnd || (defaultIndex >= clauseStart && defaultIndex < clauseEnd);
+            if (hasDefaultClause) {
+                for (let i = clauseEnd; i < clauses.length; i++) {
+                    const clause = clauses[i];
+                    if (clause.kind === SyntaxKind.CaseIsClause) {
+                        const caseType = getTypeFromTypeNode(clause.type);
+                        type = filterType(type, t => !isTypeAssignableTo(t, caseType));
+                    }
+                }
+                return type;
+            }
+
+            const clauseTypes: Type[] = [];
+            for (let i = clauseStart; i < clauseEnd; i++) {
+                const clause = clauses[i];
+                clauseTypes.push(getTypeOfSwitchClause(clause));
+            }
+
+            if (clauseTypes.length === 0) {
+                return type;
+            }
+
+            const caseType = getUnionType(clauseTypes);
+            return getNarrowedType(type, caseType, /*assumeTrue*/ true, /*checkDerived*/ false);
         }
 
         function isMatchingConstructorReference(expr: Expression) {
@@ -47272,6 +47321,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
             if (clause.kind === SyntaxKind.CaseClause) {
                 addLazyDiagnostic(createLazyCaseClauseDiagnostics(clause));
+            }
+            if (clause.kind === SyntaxKind.CaseIsClause) {
+                checkSourceElement(clause.type);
             }
             forEach(clause.statements, checkSourceElement);
             if (compilerOptions.noFallthroughCasesInSwitch && clause.fallthroughFlowNode && isReachableFlowNode(clause.fallthroughFlowNode)) {

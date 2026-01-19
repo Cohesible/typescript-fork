@@ -6,9 +6,11 @@ import {
     BindingElement,
     Block,
     Bundle,
+    CaseIsClause,
     CaseOrDefaultClause,
     chainBundle,
     ClassDeclaration,
+    DefaultClause,
     Debug,
     EmitFlags,
     ExportAssignment,
@@ -36,6 +38,7 @@ import {
     isPrologueDirective,
     isSourceFile,
     isStatement,
+    isTypeNode,
     isVariableDeclarationList,
     isVariableStatement,
     ModifierFlags,
@@ -348,9 +351,16 @@ export function transformESNext(context: TransformationContext): (x: SourceFile 
                     transformUsingDeclarations(node.statements, /*start*/ 0, node.statements.length, envBinding, /*topLevelStatements*/ undefined),
                 );
             }
+            else if (node.kind === SyntaxKind.CaseIsClause) {
+                return factory.updateCaseIsClause(
+                    node as CaseIsClause,
+                    visitNode((node as CaseIsClause).type, visitor, isTypeNode),
+                    transformUsingDeclarations(node.statements, /*start*/ 0, node.statements.length, envBinding, /*topLevelStatements*/ undefined),
+                );
+            }
             else {
                 return factory.updateDefaultClause(
-                    node,
+                    node as DefaultClause,
                     transformUsingDeclarations(node.statements, /*start*/ 0, node.statements.length, envBinding, /*topLevelStatements*/ undefined),
                 );
             }

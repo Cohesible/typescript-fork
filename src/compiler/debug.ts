@@ -1111,6 +1111,9 @@ m2: ${(this.mapper2 as unknown as DebugTypeMapper).__debugToString().split("\n")
                     if (isDefaultClause(clause)) {
                         clauses.push("default");
                     }
+                    else if (clause.kind === SyntaxKind.CaseIsClause) {
+                        clauses.push(`is ${getNodeText(clause.type)}`);
+                    }
                     else {
                         clauses.push(getNodeText(clause.expression));
                     }

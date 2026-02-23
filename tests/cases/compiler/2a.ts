@@ -7,7 +7,7 @@
 /// <reference lib="jsx" />
 
 function f<T>(t: reify T): T {
-    switch (type.kind(t)) {
+    switch (Type.kind(t)) {
         case "array":
             t
         case "object":
@@ -41,6 +41,8 @@ function bar2() {
 async function z() {
     const q = bar()
     const q2 = bar() as async
+    // should stay as a Promise
+    const p = new Promise<void>(r => r())
 }
 
 let arr!: number[] | number
@@ -355,6 +357,15 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
         }
         return f.y
     }
+}
+
+{
+    try {} catch (e) {}
+    try {} catch (e: Error) {}
+}
+
+{
+    const x = <A>(x: A) => x
 }
 
 {

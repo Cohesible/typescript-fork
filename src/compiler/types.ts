@@ -225,6 +225,7 @@ export const enum SyntaxKind {
     OfKeyword,
     DeferKeyword,
     FallthroughKeyword,
+    UpdateKeyword,
     ReifyKeyword, // LastKeyword and LastToken and LastContextualKeyword
 
     // Parse tree nodes
@@ -293,6 +294,7 @@ export const enum SyntaxKind {
     TypeOfExpression,
     VoidExpression,
     AwaitExpression,
+    UpdateExpressionExpression,
     PrefixUnaryExpression,
     PostfixUnaryExpression,
     BinaryExpression,
@@ -667,6 +669,7 @@ export type KeywordSyntaxKind =
     | SyntaxKind.UndefinedKeyword
     | SyntaxKind.UniqueKeyword
     | SyntaxKind.UnknownKeyword
+    | SyntaxKind.UpdateKeyword
     | SyntaxKind.UsingKeyword
     | SyntaxKind.VarKeyword
     | SyntaxKind.VoidKeyword

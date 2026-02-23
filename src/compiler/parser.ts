@@ -5371,6 +5371,25 @@ namespace Parser {
 
             // JSX overrides
             if (languageVariant === LanguageVariant.JSX) {
+                if (scriptKind === ScriptKind.Syn) {
+                    // <T>( with no new line for the open parens = arrow function
+                    const ident = scanner.getTokenText();
+                    if (ident.length === 1 && ident[0] >= 'A' && ident[0] <= 'Z') {
+                        const isArrowFunctionInJsx = lookAhead(() => {
+                            if (
+                                nextToken() === SyntaxKind.GreaterThanToken && 
+                                nextToken() === SyntaxKind.OpenParenToken
+                            ) {
+                                return !scanner.hasPrecedingLineBreak();
+                            }
+                            return false;
+                        });
+                        if (isArrowFunctionInJsx) {
+                            return Tristate.True;
+                        }
+                    }
+                }
+
                 const isArrowFunctionInJsx = lookAhead(() => {
                     parseOptional(SyntaxKind.ConstKeyword);
                     const third = nextToken();

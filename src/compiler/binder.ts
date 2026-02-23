@@ -162,7 +162,6 @@ import {
     isExportsIdentifier,
     isExportSpecifier,
     IsExpression,
-    isExpression,
     isExpressionOfOptionalChainRoot,
     isExternalModule,
     isExternalOrCommonJsModule,
@@ -1356,7 +1355,6 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             case SyntaxKind.LessThanEqualsToken:
             case SyntaxKind.GreaterThanToken:
             case SyntaxKind.GreaterThanEqualsToken:
-                // Support narrowing for comparisons like arr.length > 0
                 return containsNarrowableReference(expr.left) || containsNarrowableReference(expr.right);
         }
         return false;
@@ -1618,7 +1616,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
         if (node.expression.kind !== SyntaxKind.VariableDeclarationList) {
             bindCondition(node.expression, thenLabel, elseLabel);
         } else {
-            bind(node.expression);
+            bind(node.expression); // doWithConditionalBranches(bind, node.expression, thenLabel, elseLabel);
             const decl = (node.expression as any).declarations[0];
             const initializer = decl?.initializer
             if (initializer) {
@@ -2969,8 +2967,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                 }
                 // falls through
             case SyntaxKind.ThisKeyword:
-                // TODO: Why use `isExpression` here? both Identifier and ThisKeyword are expressions.
-                if (currentFlow && (isExpression(node) || parent.kind === SyntaxKind.ShorthandPropertyAssignment)) {
+                if (currentFlow) {
                     (node as Identifier | ThisExpression).flowNode = currentFlow;
                 }
                 // TODO: a `ThisExpression` is not an Identifier, this cast is unsound

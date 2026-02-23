@@ -11850,6 +11850,12 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         // Use type from type annotation if one is present
         const declaredType = tryGetTypeFromEffectiveTypeNode(declaration);
         if (isCatchClauseVariableDeclarationOrBindingElement(declaration)) {
+            if (getSourceFileOfNode(declaration)?.scriptKind == ScriptKind.Syn) {
+                if (declaredType) {
+                    return declaredType;
+                }
+                return getGlobalType("Error" as __String, 0, false) || anyType;
+            }
             if (declaredType) {
                 // If the catch clause is explicitly annotated with any or unknown, accept it, otherwise error.
                 return isTypeAny(declaredType) || declaredType === unknownType ? declaredType : errorType;
@@ -17702,7 +17708,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function getGlobalTypeNamespaceSymbol(): Symbol | undefined {
-        return deferredGlobalTypeNamespaceSymbol ||= getGlobalTypeSymbol("type" as __String, /*reportErrors*/ false);
+        return deferredGlobalTypeNamespaceSymbol ||= getGlobalTypeSymbol("Type" as __String, /*reportErrors*/ false);
     }
 
     /**
@@ -30185,7 +30191,6 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
         function narrowTypeBySwitchOnCaseIs(type: Type, { switchStatement, clauseStart, clauseEnd }: FlowSwitchClauseData): Type {
             const clauses = switchStatement.caseBlock.clauses;
-            // const defaultIndex = findIndex(clauses, clause => clause.kind === SyntaxKind.DefaultClause);
 
             let defaultIndex = -1;
             for (let i = 0; i < clauseStart; i++) {
@@ -34642,9 +34647,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
     function checkJsxPreconditions(errorNode: Node) {
         // Preconditions for using JSX
-        if ((compilerOptions.jsx || JsxEmit.None) === JsxEmit.None) {
-            error(errorNode, Diagnostics.Cannot_use_JSX_unless_the_jsx_flag_is_provided);
-        }
+        // if ((compilerOptions.jsx || JsxEmit.None) === JsxEmit.None) {
+        //     error(errorNode, Diagnostics.Cannot_use_JSX_unless_the_jsx_flag_is_provided);
+        // }
 
         if (getJsxElementTypeAt(errorNode) === undefined) {
             if (noImplicitAny) {
@@ -38317,11 +38322,15 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             return resolveExternalModuleTypeByLiteral(node.arguments![0] as StringLiteral);
         }
 
-        let returnType = maybeAutoAwait(node as CallExpression, getReturnTypeOfSignature(signature));
+        let returnType = getReturnTypeOfSignature(signature);
+
+        if (node.kind === SyntaxKind.CallExpression) {
+            returnType = maybeAutoAwait(node, returnType);
+        }
 
         // Narrow Map.get() return type if there was a prior Map.has() check
         if (node.kind === SyntaxKind.CallExpression && !node.questionDotToken) {
-            returnType = narrowMapGetReturnType(node as CallExpression, returnType);
+            returnType = narrowMapGetReturnType(node, returnType);
         }
 
         // Treat any call to the global 'Symbol' function that is part of a const variable or readonly property
@@ -47324,6 +47333,12 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             }
             if (clause.kind === SyntaxKind.CaseIsClause) {
                 checkSourceElement(clause.type);
+                addLazyDiagnostic(() => {
+                    const caseType = getTypeFromTypeNode(clause.type);
+                    if (!isTypeEqualityComparableTo(expressionType, caseType)) {
+                        checkTypeComparableTo(caseType, expressionType, clause.type, /*headMessage*/ undefined);
+                    }
+                });
             }
             forEach(clause.statements, checkSourceElement);
             if (compilerOptions.noFallthroughCasesInSwitch && clause.fallthroughFlowNode && isReachableFlowNode(clause.fallthroughFlowNode)) {
@@ -47390,7 +47405,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             if (typeNode) {
                 const type = getTypeFromTypeNode(typeNode);
                 if (type && !(type.flags & TypeFlags.AnyOrUnknown)) {
-                    grammarErrorOnFirstToken(typeNode, Diagnostics.Catch_clause_variable_type_annotation_must_be_any_or_unknown_if_specified);
+                    if (getSourceFileOfNode(catchClause)?.scriptKind !== ScriptKind.Syn) {
+                        grammarErrorOnFirstToken(typeNode, Diagnostics.Catch_clause_variable_type_annotation_must_be_any_or_unknown_if_specified);
+                    }
                 }
             }
             else if (declaration.initializer) {

@@ -2787,7 +2787,13 @@ export function createLanguageService(
         const element = token.kind === SyntaxKind.GreaterThanToken && isJsxOpeningElement(token.parent) ? token.parent.parent
             : isJsxText(token) && isJsxElement(token.parent) ? token.parent : undefined;
         if (element && isUnclosedTag(element)) {
-            return { newText: `</${element.openingElement.tagName.getText(sourceFile)}>` };
+            const ref = element.openingElement.tagName.getText(sourceFile);
+            if (ref.length === 1 && ref[0] >= 'A' && ref[0] <= 'Z') {
+                if (element.parent?.kind !== SyntaxKind.JsxElement && element.parent?.kind !== SyntaxKind.JsxExpression && element.parent?.kind !== SyntaxKind.JsxFragment) {
+                    return undefined;
+                }
+            }
+            return { newText: `</${ref}>` };
         }
         const fragment = token.kind === SyntaxKind.GreaterThanToken && isJsxOpeningFragment(token.parent) ? token.parent.parent
             : isJsxText(token) && isJsxFragment(token.parent) ? token.parent : undefined;

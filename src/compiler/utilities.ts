@@ -9369,7 +9369,7 @@ export function getJSXImplicitImportBase(compilerOptions: CompilerOptions, file?
             compilerOptions.jsxImportSource ||
             jsxImportSourcePragma ||
             jsxRuntimePragma?.arguments.factory === "automatic" ?
-        jsxImportSourcePragma?.arguments.factory || compilerOptions.jsxImportSource || "react" :
+        jsxImportSourcePragma?.arguments.factory || compilerOptions.jsxImportSource || (file?.scriptKind !== ScriptKind.Syn ? "react" : undefined) :
         undefined;
 }
 

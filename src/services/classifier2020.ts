@@ -142,12 +142,11 @@ function collectTokens(program: Program, sourceFile: SourceFile, span: TextSpan,
         const prevInJSXElement = inJSXElement;
         if (isJsxElement(node) || isJsxSelfClosingElement(node)) {
             inJSXElement = true;
-        }
-        if (isJsxExpression(node)) {
+        } else if (isJsxExpression(node)) {
             inJSXElement = false;
         }
 
-        if (isIdentifier(node) && !inJSXElement && !inImportClause(node) && !isInfinityOrNaNString(node.escapedText)) {
+        if (isIdentifier(node) && !inJSXElement && !inImportClause(node) && !isInfinityOrNaNString(node.escapedText) && node.escapedText !== 'async') {
             let symbol = typeChecker.getSymbolAtLocation(node);
             if (symbol) {
                 if (symbol.flags & SymbolFlags.Alias) {

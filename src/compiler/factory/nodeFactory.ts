@@ -461,6 +461,7 @@ import {
     YieldExpression,
     ReifyExpression,
     IsExpression,
+    UpdateExpressionExpression,
     FallthroughStatement,
     CaseIsClause,
 } from "../_namespaces/ts.js";
@@ -707,6 +708,8 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         updateSatisfiesExpression,
         createReifyExpression,
         updateReifyExpression,
+        createUpdateExpressionExpression,
+        updateUpdateExpressionExpression,
         createNonNullChain,
         updateNonNullChain,
         createMetaProperty,
@@ -3369,6 +3372,21 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     function updateAwaitExpression(node: AwaitExpression, expression: Expression) {
         return node.expression !== expression
             ? update(createAwaitExpression(expression), node)
+            : node;
+    }
+
+    // @api
+    function createUpdateExpressionExpression(expression: Expression) {
+        const node = createBaseNode<UpdateExpressionExpression>(SyntaxKind.UpdateExpressionExpression);
+        node.expression = parenthesizerRules().parenthesizeOperandOfPrefixUnary(expression);
+        node.transformFlags |= propagateChildFlags(node.expression) | TransformFlags.ContainsTypeScript;
+        return node;
+    }
+
+    // @api
+    function updateUpdateExpressionExpression(node: UpdateExpressionExpression, expression: Expression) {
+        return node.expression !== expression
+            ? update(createUpdateExpressionExpression(expression), node)
             : node;
     }
 

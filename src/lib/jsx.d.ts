@@ -56,6 +56,9 @@ declare namespace JSX {
 	type Child = Element | string | number | boolean | null | undefined;
 	type Children = Child | Child[];
 
+	type Element = globalThis.Element;
+	type Fragment = Child[];
+
 	// ============================================
 	// CSS Properties
 	// ============================================
@@ -87,48 +90,48 @@ declare namespace JSX {
 		readonly currentTarget: Target;
 	};
 
-	type EventHandler<E extends TargetedEvent> = {
-		bivarianceHack(event: E): void;
+	type EventHandler<T extends EventTarget, E extends Event> = {
+		bivarianceHack(this: T, event: TargetedEvent<T, E>): void;
 	}['bivarianceHack'];
 
 	type AnimationEventHandler<Target extends EventTarget> =
-		EventHandler<TargetedEvent<Target, AnimationEvent>>;
+		EventHandler<Target, AnimationEvent>;
 	type ClipboardEventHandler<Target extends EventTarget> =
-		EventHandler<TargetedEvent<Target, ClipboardEvent>>;
+		EventHandler<Target, ClipboardEvent>;
 	type CommandEventHandler<Target extends EventTarget> =
-		EventHandler<TargetedEvent<Target, CommandEvent>>;
+		EventHandler<Target, CommandEvent>;
 	type CompositionEventHandler<Target extends EventTarget> =
-		EventHandler<TargetedEvent<Target, CompositionEvent>>;
+		EventHandler<Target, CompositionEvent>;
 	type DragEventHandler<Target extends EventTarget> =
-		EventHandler<TargetedEvent<Target, DragEvent>>;
+		EventHandler<Target, DragEvent>;
 	type ToggleEventHandler<Target extends EventTarget> =
-		EventHandler<TargetedEvent<Target, ToggleEvent>>;
+		EventHandler<Target, ToggleEvent>;
 	type FocusEventHandler<Target extends EventTarget> =
-		EventHandler<TargetedEvent<Target, FocusEvent>>;
+		EventHandler<Target, FocusEvent>;
 	type GenericEventHandler<Target extends EventTarget> =
-		EventHandler<TargetedEvent<Target, Event>>;
+		EventHandler<Target, Event>;
 	type InputEventHandler<Target extends EventTarget> =
-		EventHandler<TargetedEvent<Target, InputEvent>>;
+		EventHandler<Target, InputEvent>;
 	type KeyboardEventHandler<Target extends EventTarget> =
-		EventHandler<TargetedEvent<Target, KeyboardEvent>>;
+		EventHandler<Target, KeyboardEvent>;
 	type MouseEventHandler<Target extends EventTarget> =
-		EventHandler<TargetedEvent<Target, MouseEvent>>;
+		EventHandler<Target, MouseEvent>;
 	type PointerEventHandler<Target extends EventTarget> =
-		EventHandler<TargetedEvent<Target, PointerEvent>>;
+		EventHandler<Target, PointerEvent>;
 	type SnapEventHandler<Target extends EventTarget> =
-		EventHandler<TargetedEvent<Target, SnapEvent>>;
+		EventHandler<Target, SnapEvent>;
 	type SubmitEventHandler<Target extends EventTarget> =
-		EventHandler<TargetedEvent<Target, SubmitEvent>>;
+		EventHandler<Target, SubmitEvent>;
 	type TouchEventHandler<Target extends EventTarget> =
-		EventHandler<TargetedEvent<Target, TouchEvent>>;
+		EventHandler<Target, TouchEvent>;
 	type TransitionEventHandler<Target extends EventTarget> =
-		EventHandler<TargetedEvent<Target, TransitionEvent>>;
+		EventHandler<Target, TransitionEvent>;
 	type UIEventHandler<Target extends EventTarget> =
-		EventHandler<TargetedEvent<Target, UIEvent>>;
+		EventHandler<Target, UIEvent>;
 	type WheelEventHandler<Target extends EventTarget> =
-		EventHandler<TargetedEvent<Target, WheelEvent>>;
+		EventHandler<Target, WheelEvent>;
 	type PictureInPictureEventHandler<Target extends EventTarget> =
-		EventHandler<TargetedEvent<Target, PictureInPictureEvent>>;
+		EventHandler<Target, PictureInPictureEvent>;
 
 	// ============================================
 	// DOM Attributes (Event Handlers)

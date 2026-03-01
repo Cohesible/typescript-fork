@@ -4,7 +4,6 @@
 // @target: es2017
 
 // @filename: main.syn
-/// <reference lib="jsx" />
 
 function f<T>(t: reify T): T {
     switch (Type.kind(t)) {
@@ -458,5 +457,10 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 
 // Since the JSON is almost an object literal, I believe it makes more sense to type it more specifically.
 
+// update expression
+declare const el: Element;
+const d = <div onClick={function () {
+    this
+}}></div>
 
 // /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a

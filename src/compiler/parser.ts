@@ -325,6 +325,7 @@ import {
     ReadonlyKeyword,
     ReadonlyPragmaMap,
     ReifyExpression,
+    UpdateExpressionExpression,
     ResolutionMode,
     RestTypeNode,
     ReturnStatement,
@@ -806,6 +807,9 @@ const forEachChildTable: ForEachChildTable = {
     },
     [SyntaxKind.ReifyExpression]: function forEachChildInReifyExpression<T>(node: ReifyExpression, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNodes(cbNode, cbNodes, node.typeParameters) || visitNode(cbNode, node.subject);
+    },
+    [SyntaxKind.UpdateExpressionExpression]: function forEachChildInUpdateExpressionExpression<T>(node: UpdateExpressionExpression, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+        return visitNode(cbNode, node.expression);
     },
     [SyntaxKind.MetaProperty]: function forEachChildInMetaProperty<T>(node: MetaProperty, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNode(cbNode, node.name);
@@ -1523,6 +1527,7 @@ namespace Parser {
     var languageVersion: ScriptTarget;
     var scriptKind: ScriptKind;
     var languageVariant: LanguageVariant;
+    var synFileContainsJsx: boolean;
     var parseDiagnostics: DiagnosticWithDetachedLocation[];
     var jsDocDiagnostics: DiagnosticWithDetachedLocation[];
     var syntaxCursor: IncrementalParser.SyntaxCursor | undefined;
@@ -1772,6 +1777,7 @@ namespace Parser {
         nodeCount = 0;
         sourceFlags = 0;
         topLevel = true;
+        synFileContainsJsx = false;
 
         switch (scriptKind) {
             case ScriptKind.JS:
@@ -1850,6 +1856,9 @@ namespace Parser {
         sourceFile.identifiers = identifiers;
         sourceFile.parseDiagnostics = attachFileToDiagnostics(parseDiagnostics, sourceFile);
         sourceFile.jsDocParsingMode = jsDocParsingMode;
+        if (synFileContainsJsx) {
+            sourceFile.containsJsx = true;
+        }
         if (jsDocDiagnostics) {
             sourceFile.jsDocDiagnostics = attachFileToDiagnostics(jsDocDiagnostics, sourceFile);
         }
@@ -5804,6 +5813,13 @@ namespace Parser {
         return finishNode(factory.createReifyExpression(subject, typeParameters), pos);
     }
 
+    function parseUpdateExpressionExpression() {
+        const pos = getNodePos();
+        nextToken(); // consume `update`
+        const expression = parseSimpleUnaryExpression();
+        return finishNode(factory.createUpdateExpressionExpression(expression), pos);
+    }
+
     /**
      * Parse ES7 exponential expression and await expression
      *
@@ -5892,6 +5908,8 @@ namespace Parser {
                 //  UnaryExpression (modified):
                 //      < type > UnaryExpression
                 return parseTypeAssertion();
+            case SyntaxKind.UpdateKeyword:
+                return parseUpdateExpressionExpression();
             case SyntaxKind.ReifyKeyword:
                 if (isReifyExpression()) {
                     return parseReifyExpression();
@@ -5930,6 +5948,7 @@ namespace Parser {
             case SyntaxKind.VoidKeyword:
             case SyntaxKind.AwaitKeyword:
             case SyntaxKind.ReifyKeyword:
+            case SyntaxKind.UpdateKeyword:
                 return false;
             case SyntaxKind.LessThanToken:
                 // If we are not in JSX context, we are parsing TypeAssertion which is an UnaryExpression
@@ -6128,6 +6147,9 @@ namespace Parser {
     }
 
     function parseJsxElementOrSelfClosingElementOrFragment(inExpressionContext: boolean, topInvalidNodePosition?: number, openingTag?: JsxOpeningElement | JsxOpeningFragment, mustBeUnary = false): JsxElement | JsxSelfClosingElement | JsxFragment {
+        if (scriptKind === ScriptKind.Syn) {
+            synFileContainsJsx = true;
+        }
         const pos = getNodePos();
         const opening = parseJsxOpeningOrSelfClosingElementOrOpeningFragment(inExpressionContext);
         let result: JsxElement | JsxSelfClosingElement | JsxFragment;

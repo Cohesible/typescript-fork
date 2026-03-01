@@ -1143,6 +1143,7 @@ import {
     ReifyExpression,
     ReifiedType,
     IsExpression,
+    UpdateExpressionExpression,
     isConstOrAsyncTypeReference,
 } from "./_namespaces/ts.js";
 import * as moduleSpecifiers from "./_namespaces/ts.moduleSpecifiers.js";
@@ -42545,6 +42546,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return checkAwaitExpression(node as AwaitExpression);
             case SyntaxKind.ReifyExpression:
                 return checkReifyExpression(node as ReifyExpression);
+            case SyntaxKind.UpdateExpressionExpression:
+                return checkUpdateExpressionExpression(node as UpdateExpressionExpression);
             case SyntaxKind.PrefixUnaryExpression:
                 return checkPrefixUnaryExpression(node as PrefixUnaryExpression);
             case SyntaxKind.PostfixUnaryExpression:
@@ -49888,6 +49891,15 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
         const subject = getTypeFromTypeNode(node.subject);
         return getTypeOfReifiedType(subject, false, false);
+    }
+
+    function checkUpdateExpressionExpression(node: UpdateExpressionExpression): Type {
+        const exprType = checkExpression(node.expression);
+        const elementType = getGlobalType("Element" as __String, 0, /*reportErrors*/ false);
+        if (elementType) {
+            checkTypeRelatedTo(exprType, elementType, assignableRelation, node.expression, Diagnostics.Argument_of_type_0_is_not_assignable_to_parameter_of_type_1);
+        }
+        return exprType;
     }
 
     function getAnyReifiedType() {

@@ -1824,6 +1824,13 @@ export function createProgram(_rootNamesOrOptions: readonly string[] | CreatePro
                     processRootFile(pathForLibFile(libFileName), /*isDefaultLib*/ true, /*ignoreNoDefaultLib*/ false, { kind: FileIncludeKind.LibFile, index });
                 });
             }
+
+            // For .syn files that contain JSX with no explicit lib or jsxImportSource,
+            // automatically include the built-in JSX lib.
+            if (!options.lib && !options.jsxImportSource &&
+                processingOtherFiles!.some(f => f.scriptKind === ScriptKind.Syn && f.containsJsx)) {
+                processRootFile(pathForLibFile("lib.jsx.d.ts"), /*isDefaultLib*/ true, /*ignoreNoDefaultLib*/ false, { kind: FileIncludeKind.LibFile });
+            }
         }
 
         files = toSorted(processingDefaultLibFiles, compareDefaultLibFiles).concat(processingOtherFiles);

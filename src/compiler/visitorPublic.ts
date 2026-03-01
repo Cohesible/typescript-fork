@@ -1257,6 +1257,12 @@ const visitEachChildTable: VisitEachChildTable = {
             Debug.checkDefined(nodeVisitor(node.subject, visitor, isTypeNode)),
         );
     },
+    [SyntaxKind.UpdateExpressionExpression]: function visitEachChildOfUpdateExpressionExpression(node, visitor, context, _nodesVisitor, nodeVisitor, _tokenVisitor) {
+        return context.factory.updateUpdateExpressionExpression(
+            node,
+            Debug.checkDefined(nodeVisitor(node.expression, visitor, isExpression)),
+        );
+    },
 
     [SyntaxKind.NonNullExpression]: function visitEachChildOfNonNullExpression(node, visitor, context, _nodesVisitor, nodeVisitor, _tokenVisitor) {
         return isOptionalChain(node) ?

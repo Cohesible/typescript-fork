@@ -1142,6 +1142,7 @@ export type HasChildren =
     | NonNullExpression
     | SatisfiesExpression
     | ReifyExpression
+    | UpdateExpressionExpression
     | MetaProperty
     | TemplateSpan
     | Block
@@ -2520,6 +2521,11 @@ export interface VoidExpression extends UnaryExpression {
 export interface AwaitExpression extends UnaryExpression {
     readonly kind: SyntaxKind.AwaitExpression;
     readonly expression: UnaryExpression;
+}
+
+export interface UpdateExpressionExpression extends UnaryExpression {
+    readonly kind: SyntaxKind.UpdateExpressionExpression;
+    readonly expression: Expression;
 }
 
 export interface YieldExpression extends Expression {
@@ -4505,6 +4511,7 @@ export interface SourceFile extends Declaration, LocalsContainer {
     /** @internal */ localJsxFragmentNamespace?: __String;
     /** @internal */ localJsxFactory?: EntityName;
     /** @internal */ localJsxFragmentFactory?: EntityName;
+    /** @internal */ containsJsx?: true;
 
     /** @internal */ endFlowNode?: FlowNode;
 
@@ -9061,6 +9068,8 @@ export interface NodeFactory {
     updateSatisfiesExpression(node: SatisfiesExpression, expression: Expression, type: TypeNode): SatisfiesExpression;
     createReifyExpression(subject: TypeNode, typeParameters?: readonly TypeParameterDeclaration[]): ReifyExpression;
     updateReifyExpression(node: ReifyExpression, subject: TypeNode, typeParameters?: readonly TypeParameterDeclaration[]): ReifyExpression;
+    createUpdateExpressionExpression(expression: Expression): UpdateExpressionExpression;
+    updateUpdateExpressionExpression(node: UpdateExpressionExpression, expression: Expression): UpdateExpressionExpression;
 
     //
     // Misc

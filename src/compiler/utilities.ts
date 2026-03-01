@@ -3611,6 +3611,7 @@ export function isExpressionNode(node: Node): boolean {
         case SyntaxKind.JsxFragment:
         case SyntaxKind.YieldExpression:
         case SyntaxKind.AwaitExpression:
+        case SyntaxKind.UpdateExpressionExpression:
             return true;
         case SyntaxKind.MetaProperty:
             // `import.defer` in `import.defer(...)` is not an expression

@@ -463,4 +463,11 @@ const d = <div onClick={function () {
     this
 }}></div>
 
+// shorthand_jsx_attribute
+const value = ''
+const d2 = <input {value}/>
+
 // /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a
+
+// ^(\s*)on(.*)\?:
+// $1on\L$2?:

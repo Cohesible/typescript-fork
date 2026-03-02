@@ -6397,7 +6397,13 @@ namespace Parser {
 
     function parseJsxAttribute(): JsxAttribute | JsxSpreadAttribute {
         if (token() === SyntaxKind.OpenBraceToken) {
-            return parseJsxSpreadAttribute();
+            if (scriptKind !== ScriptKind.Syn) {
+                return parseJsxSpreadAttribute();
+            }
+            if (lookAhead(() => nextToken() === SyntaxKind.DotDotDotToken)) {
+                return parseJsxSpreadAttribute();
+            }
+            return parseJsxShorthandAttribute();
         }
 
         const pos = getNodePos();
@@ -6439,6 +6445,19 @@ namespace Parser {
         const expression = parseExpression();
         parseExpected(SyntaxKind.CloseBraceToken);
         return finishNode(factory.createJsxSpreadAttribute(expression), pos);
+    }
+
+    function parseJsxShorthandAttribute(): JsxAttribute {
+        // desugars shorthand attributes directly in the parser
+        const pos = getNodePos();
+        parseExpected(SyntaxKind.OpenBraceToken);
+        const name = parseIdentifier();
+        parseExpected(SyntaxKind.CloseBraceToken);
+        const nameRef = factory.createIdentifier(idText(name));
+        setTextRange(nameRef, name);
+        const jsxExpr = factory.createJsxExpression(/*dotDotDotToken*/ undefined, nameRef);
+        setTextRange(jsxExpr, name);
+        return finishNode(factory.createJsxAttribute(name, jsxExpr), pos);
     }
 
     function parseJsxClosingElement(open: JsxOpeningElement, inExpressionContext: boolean): JsxClosingElement {

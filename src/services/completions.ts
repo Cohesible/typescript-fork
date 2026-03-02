@@ -3524,13 +3524,22 @@ function getCompletionData(
                     }
                     break;
 
+                case SyntaxKind.JsxSelfClosingElement:
+                    if (contextToken.kind !== SyntaxKind.GreaterThanToken) {
+                        isJsxIdentifierExpected = true;
+                        if (contextToken.kind === SyntaxKind.LessThanToken) {
+                            isRightOfOpenTag = true;
+                            location = contextToken;
+                        }
+                    }
+                    break;
+
                 case SyntaxKind.BinaryExpression:
                     if (!binaryExpressionMayBeOpenTag(parent as BinaryExpression)) {
                         break;
                     }
                 // falls through
 
-                case SyntaxKind.JsxSelfClosingElement:
                 case SyntaxKind.JsxElement:
                 case SyntaxKind.JsxOpeningElement:
                     isJsxIdentifierExpected = true;
@@ -4368,8 +4377,17 @@ function getCompletionData(
                 return location.parent.kind !== SyntaxKind.JsxOpeningElement;
             }
 
-            if (contextToken.parent.kind === SyntaxKind.JsxClosingElement || contextToken.parent.kind === SyntaxKind.JsxSelfClosingElement) {
-                return !!contextToken.parent.parent && contextToken.parent.parent.kind === SyntaxKind.JsxElement;
+            if (contextToken.parent.kind === SyntaxKind.JsxClosingElement) {
+                if (!!contextToken.parent.parent && !!contextToken.parent.parent.parent) {
+                    const grandparent = contextToken.parent.parent.parent
+                    return grandparent.kind === SyntaxKind.JsxElement || grandparent.kind === SyntaxKind.JsxFragment;
+                }
+                return false;
+            }
+
+            if (contextToken.parent.kind === SyntaxKind.JsxSelfClosingElement) {
+                const grandparent = contextToken.parent.parent
+                return !!grandparent && (grandparent.kind === SyntaxKind.JsxElement || grandparent.kind === SyntaxKind.JsxFragment);
             }
         }
         return false;

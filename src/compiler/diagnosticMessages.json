@@ -4007,6 +4007,10 @@
         "category": "Error",
         "code": 2881
     },
+    "This JSX tag's '{0}' prop expects type '{1}', but the child has array type '{2}'. Did you mean to spread it with '{...}'?": {
+        "category": "Error",
+        "code": 2882
+    },
 
     "Import declaration '{0}' is using private name '{1}'.": {
         "category": "Error",

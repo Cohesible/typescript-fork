@@ -457,6 +457,53 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 
 // Since the JSON is almost an object literal, I believe it makes more sense to type it more specifically.
 
+{
+    const elements: Element[] = []
+    function Foo(props: { children: Element[] }) {
+        return <div>{...props.children}</div>
+    }
+    const f = <Foo>{...elements}</Foo>
+    const y = <Foo>{elements}</Foo> // error
+    const x0 = <Foo></Foo> // no error
+    const x1 = <Foo><div/></Foo> // no error
+    const x2 = <Foo><div/><div/></Foo> // no error
+    const x3 = <Foo>a</Foo> // error
+    const x4 = <Foo/> // error (this is explictly no elements)
+
+    function Foo2(props: { children: [string, number] }) {
+        return <div></div>
+    }
+    const f2 = <Foo2>{'hi'}{...([1,2] as number[])}</Foo2> // error
+    const f3 = <Foo2>{'hi'}{...([1] as [number])}</Foo2> // no error
+
+    function FooOpt(props: { children?: Element[] }) {
+        return <div>{...(props.children ?? [])}</div>
+    }
+    {
+        const f = <FooOpt>{...elements}</FooOpt> // no error
+        const y = <FooOpt>{elements}</FooOpt> // error
+        const x0 = <FooOpt></FooOpt> // no error
+        const x1 = <FooOpt><div/></FooOpt> // no error
+        const x2 = <FooOpt><div/><div/></FooOpt> // no error
+        const x3 = <FooOpt>a</FooOpt> // error
+        const x4 = <FooOpt/> // no error
+    }
+
+    {
+        function F1(props: { v: string }) {
+            return <span>{props.v}</span>
+        }
+        function Main() {
+            const v = 'aaa'
+            return <F1 v={v}></F1> // no error
+        }
+    }
+
+    {
+        const x = <>aaa{1}</>
+    }
+}
+
 // update expression
 declare const el: Element;
 const d = <div onClick={function () {

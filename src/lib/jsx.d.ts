@@ -50,14 +50,21 @@ interface SnapEventInit extends EventInit {
 	snapTargetInline?: Element | null;
 }
 
+interface SymbolConstructor {
+    readonly update: unique symbol;
+}
+
 declare namespace JSX {
 	type Booleanish = boolean | 'true' | 'false';
 
-	type Child = Element | string | number | boolean | null | undefined;
-	type Children = Child | Child[];
+	type Child = Element | string | number | null | undefined;
+	type Children = Child[];
 
 	type Element = globalThis.Element;
-	type Fragment = Child[];
+
+	interface Updatable {
+		[Symbol.update]?(): void
+	}
 
 	// ============================================
 	// CSS Properties
@@ -1943,4 +1950,8 @@ declare namespace JSX {
 		video: VideoHTMLAttributes<HTMLVideoElement>;
 		wbr: HTMLAttributes<HTMLElement>;
 	}
+
+	type IntrinsicElementResults = HTMLElementTagNameMap
+		& Omit<SVGElementTagNameMap, keyof HTMLElementTagNameMap>
+		& Omit<MathMLElementTagNameMap, keyof HTMLElementTagNameMap | keyof SVGElementTagNameMap>;
 }

@@ -21768,7 +21768,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             }
             if (moreThanOneRealChildren) {
                 if (arrayLikeTargetParts !== neverType) {
-                    const realSource = createTupleType(checkJsxChildren(containingElement, CheckMode.Normal));
+                    const realSource = checkJsxChildren(containingElement, CheckMode.Normal);
                     const children = generateJsxChildren(containingElement, getInvalidTextualChildDiagnostic);
                     result = elaborateIterableOrArrayLikeTargetElementwise(children, realSource, arrayLikeTargetParts, relation, containingMessageChain, errorOutputContainer) || result;
                 }
@@ -21787,8 +21787,28 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 }
             }
             else {
-                if (nonArrayLikeTargetParts !== neverType) {
-                    const child = validChildren[0];
+                const child = validChildren[0];
+                // In Syn mode, if the single child is an array expression and the children type doesn't match,
+                // emit the spread suggestion diagnostic regardless of whether the target is array-like or not.
+                const isSynFile = getSourceFileOfNode(containingElement)?.scriptKind === ScriptKind.Syn;
+                const childExprType = isSynFile && child.kind === SyntaxKind.JsxExpression && (child as JsxExpression).expression
+                    ? checkExpression((child as JsxExpression).expression!)
+                    : undefined;
+                if (childExprType && isArrayLikeType(childExprType)
+                        && !isTypeRelatedTo(getIndexedAccessType(source, childrenNameType), childrenTargetType, relation)) {
+                    result = true;
+                    const diag = error(
+                        containingElement.openingElement.tagName,
+                        Diagnostics.This_JSX_tag_s_0_prop_expects_type_1_but_the_child_has_array_type_2_Did_you_mean_to_spread_it_with,
+                        childrenPropName,
+                        typeToString(childrenTargetType),
+                        typeToString(childExprType),
+                    );
+                    if (errorOutputContainer && errorOutputContainer.skipLogging) {
+                        (errorOutputContainer.errors || (errorOutputContainer.errors = [])).push(diag);
+                    }
+                }
+                else if (nonArrayLikeTargetParts !== neverType) {
                     const elem = getElaborationElementForJsxChild(child, childrenNameType, getInvalidTextualChildDiagnostic);
                     if (elem) {
                         result = elaborateElementwise(
@@ -21804,7 +21824,6 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     }
                 }
                 else if (!isTypeRelatedTo(getIndexedAccessType(source, childrenNameType), childrenTargetType, relation)) {
-                    // arity mismatch
                     result = true;
                     const diag = error(
                         containingElement.openingElement.tagName,
@@ -34065,7 +34084,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
     function checkJsxSelfClosingElement(node: JsxSelfClosingElement, _checkMode: CheckMode | undefined): Type {
         checkNodeDeferred(node);
-        return getJsxElementTypeAt(node) || anyType;
+        return getJsxIntrinsicElementResultType(node) ?? getJsxElementTypeAt(node) ?? anyType;
     }
 
     function checkJsxElementDeferred(node: JsxElement) {
@@ -34085,8 +34104,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
     function checkJsxElement(node: JsxElement, _checkMode: CheckMode | undefined): Type {
         checkNodeDeferred(node);
-
-        return getJsxElementTypeAt(node) || anyType;
+        return getJsxIntrinsicElementResultType(node) ?? getJsxElementTypeAt(node) ?? anyType;
     }
 
     function checkJsxFragment(node: JsxFragment): Type {
@@ -34107,7 +34125,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             );
         }
 
-        checkJsxChildren(node);
+        const childrenType = checkJsxChildren(node);
+        if (nodeSourceFile?.scriptKind === ScriptKind.Syn) {
+            return childrenType;
+        }
         const jsxElementType = getJsxElementTypeAt(node);
         return isErrorType(jsxElementType) ? anyType : jsxElementType;
     }
@@ -34222,11 +34243,14 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         // Handle children attribute
         const parent = openingLikeElement.parent;
         // We have to check that openingElement of the parent is the one we are visiting as this may not be true for selfClosingElement
+        const isJsxElementParent = isJsxElement(parent) && parent.openingElement === openingLikeElement || isJsxFragment(parent) && parent.openingFragment === openingLikeElement;
+        const isSynJsxElement = isJsxElementParent && getSourceFileOfNode(openingLikeElement)?.scriptKind === ScriptKind.Syn;
+        const semanticChildCount = isJsxElementParent ? getSemanticJsxChildren((parent as JsxElement | JsxFragment).children).length : 0;
         if (
-            (isJsxElement(parent) && parent.openingElement === openingLikeElement || isJsxFragment(parent) && parent.openingFragment === openingLikeElement) &&
-            getSemanticJsxChildren(parent.children).length > 0
+            isJsxElementParent &&
+            (semanticChildCount > 0 || isSynJsxElement)
         ) {
-            const childrenTypes: Type[] = checkJsxChildren(parent, checkMode);
+            const childrenType: Type = checkJsxChildren(parent as JsxElement | JsxFragment, checkMode);
 
             if (!hasSpreadAnyType && jsxChildrenPropertyName && jsxChildrenPropertyName !== "") {
                 // Error if there is a attribute named "children" explicitly specified and children element.
@@ -34238,11 +34262,29 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
                 const contextualType = isJsxOpeningElement(openingLikeElement) ? getApparentTypeOfContextualType(openingLikeElement.attributes, /*contextFlags*/ undefined) : undefined;
                 const childrenContextualType = contextualType && getTypeOfPropertyOfContextualType(contextualType, jsxChildrenPropertyName);
+                // For a Syn empty element (<Foo></Foo>), only synthesize children if the component declares a children prop.
+                // This prevents <F1></F1> (where F1 has no children prop) from getting a spurious error.
+                if (isSynJsxElement && semanticChildCount === 0 && !childrenContextualType) {
+                    // Component doesn't declare a children prop — skip synthesis entirely.
+                }
+                else {
                 // If there are children in the body of JSX element, create dummy attribute "children" with the union of children types so that it will pass the attribute checking process
                 const childrenPropSymbol = createSymbol(SymbolFlags.Property, jsxChildrenPropertyName);
-                childrenPropSymbol.links.type = childrenTypes.length === 1 ? childrenTypes[0] :
-                    childrenContextualType && someType(childrenContextualType, isTupleLikeType) ? createTupleType(childrenTypes) :
-                    createArrayType(getUnionType(childrenTypes));
+                if (isSynJsxElement) {
+                    // Syn: children type is already the correct tuple/array type from checkJsxChildren
+                    childrenPropSymbol.links.type = childrenType;
+                }
+                else if (semanticChildCount === 1) {
+                    // Non-Syn single child: extract the element type from the single-element tuple
+                    childrenPropSymbol.links.type = getTypeArguments(childrenType as TypeReference)[0];
+                }
+                else {
+                    // Non-Syn multiple children: tuple if contextual expects it, otherwise array of union
+                    const typeArgs = getTypeArguments(childrenType as TypeReference);
+                    childrenPropSymbol.links.type = childrenContextualType && someType(childrenContextualType, isTupleLikeType)
+                        ? childrenType
+                        : createArrayType(getUnionType(typeArgs));
+                }
                 // Fake up a property declaration for the children
                 childrenPropSymbol.valueDeclaration = factory.createPropertySignature(/*modifiers*/ undefined, unescapeLeadingUnderscores(jsxChildrenPropertyName), /*questionToken*/ undefined, /*type*/ undefined);
                 setParent(childrenPropSymbol.valueDeclaration, attributeParent);
@@ -34250,6 +34292,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 const childPropMap = createSymbolTable();
                 childPropMap.set(jsxChildrenPropertyName, childrenPropSymbol);
                 spread = getSpreadType(spread, createAnonymousType(attributesSymbol, childPropMap, emptyArray, emptyArray, emptyArray), attributesSymbol, objectFlags, /*readonly*/ false);
+                } // end else (component declares children)
             }
         }
 
@@ -34277,24 +34320,37 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return result;
     }
 
-    function checkJsxChildren(node: JsxElement | JsxFragment, checkMode?: CheckMode) {
-        const childrenTypes: Type[] = [];
+    function checkJsxChildren(node: JsxElement | JsxFragment, checkMode?: CheckMode): Type {
+        const elementTypes: Type[] = [];
+        const elementFlags: ElementFlags[] = [];
+        const isSynFile = getSourceFileOfNode(node)?.scriptKind === ScriptKind.Syn;
         for (const child of node.children) {
             // In React, JSX text that contains only whitespaces will be ignored so we don't want to type-check that
             // because then type of children property will have constituent of string type.
             if (child.kind === SyntaxKind.JsxText) {
                 if (!child.containsOnlyTriviaWhiteSpaces) {
-                    childrenTypes.push(stringType);
+                    elementTypes.push(stringType);
+                    elementFlags.push(ElementFlags.Required);
                 }
             }
             else if (child.kind === SyntaxKind.JsxExpression && !child.expression) {
                 continue; // empty jsx expressions don't *really* count as present children
             }
             else {
-                childrenTypes.push(checkExpressionForMutableLocation(child, checkMode));
+                const childType = checkExpressionForMutableLocation(child, checkMode);
+                if (isSynFile && child.kind === SyntaxKind.JsxExpression && child.dotDotDotToken) {
+                    // Syn JSX spread: Variadic element — same pattern as array literal spread (checker.ts:33668)
+                    // Normalization handles: concrete arrays → Rest, tuples → inline their elements
+                    elementTypes.push(childType);
+                    elementFlags.push(ElementFlags.Variadic);
+                }
+                else {
+                    elementTypes.push(childType);
+                    elementFlags.push(ElementFlags.Required);
+                }
             }
         }
-        return childrenTypes;
+        return createTupleType(elementTypes, elementFlags);
     }
 
     function checkSpreadPropOverrides(type: Type, props: SymbolTable, spread: SpreadAssignment | JsxSpreadAttribute) {
@@ -34487,6 +34543,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             // In these JsxEmit modes the children property is fixed to 'children'
             return "children" as __String;
         }
+        const decl = jsxNamespace.declarations?.[0]
+        if (decl && getSourceFileOfNode(decl)?.isDeclarationFile) {
+            return "children" as __String;
+        }
         return getNameFromJsxElementAttributesContainer(JsxNames.ElementChildrenAttributeNameContainer, jsxNamespace);
     }
 
@@ -34603,6 +34663,17 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
     function getJsxElementTypeAt(location: Node): Type {
         return getJsxType(JsxNames.Element, location);
+    }
+
+    function getJsxIntrinsicElementResultType(node: JsxSelfClosingElement | JsxElement): Type | undefined {
+        const tagName = isJsxSelfClosingElement(node) ? node.tagName : node.openingElement.tagName;
+        if (!isJsxIntrinsicTagName(tagName)) return undefined;
+        const intrinsicResultsType = getJsxType(JsxNames.IntrinsicElementResults, node);
+        if (isErrorType(intrinsicResultsType)) return undefined;
+        const propName = isJsxNamespacedName(tagName)
+            ? getEscapedTextOfJsxNamespacedName(tagName)
+            : tagName.escapedText;
+        return getTypeOfPropertyOfType(intrinsicResultsType, propName) || undefined;
     }
 
     function getJsxStatelessElementTypeAt(location: Node): Type | undefined {
@@ -34745,7 +34816,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         checkGrammarJsxExpression(node);
         if (node.expression) {
             const type = checkExpression(node.expression, checkMode);
-            if (node.dotDotDotToken && type !== anyType && !isArrayType(type)) {
+            if (node.dotDotDotToken && type !== anyType && !isArrayType(type) && !isTupleType(type)) {
                 error(node, Diagnostics.JSX_spread_child_must_be_an_array_type);
             }
             return type;
@@ -54667,6 +54738,7 @@ namespace JsxNames {
     export const IntrinsicAttributes = "IntrinsicAttributes" as __String;
     export const IntrinsicClassAttributes = "IntrinsicClassAttributes" as __String;
     export const LibraryManagedAttributes = "LibraryManagedAttributes" as __String;
+    export const IntrinsicElementResults = "IntrinsicElementResults" as __String;
 }
 
 namespace ReactNames {

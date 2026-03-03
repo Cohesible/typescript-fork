@@ -10350,6 +10350,7 @@ declare namespace ts {
     }
     interface JsxClosingTagInfo {
         readonly newText: string;
+        readonly selfClosing?: boolean;
     }
     interface LinkedEditingInfo {
         readonly ranges: TextSpan[];

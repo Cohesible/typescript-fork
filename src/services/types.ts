@@ -711,6 +711,7 @@ export interface LanguageService {
 
 export interface JsxClosingTagInfo {
     readonly newText: string;
+    readonly selfClosing?: boolean
 }
 
 export interface LinkedEditingInfo {

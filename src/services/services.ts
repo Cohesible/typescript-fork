@@ -2788,9 +2788,27 @@ export function createLanguageService(
             : isJsxText(token) && isJsxElement(token.parent) ? token.parent : undefined;
         if (element && isUnclosedTag(element)) {
             const ref = element.openingElement.tagName.getText(sourceFile);
-            if (ref.length === 1 && ref[0] >= 'A' && ref[0] <= 'Z') {
+            const isComponent = ref[0] >= 'A' && ref[0] <= 'Z';
+            if (ref.length === 1 && isComponent) {
                 if (element.parent?.kind !== SyntaxKind.JsxElement && element.parent?.kind !== SyntaxKind.JsxExpression && element.parent?.kind !== SyntaxKind.JsxFragment) {
                     return undefined;
+                }
+            }
+            if (sourceFile.scriptKind === ScriptKind.Syn && isComponent) {
+                const program = getProgram();
+                const semanticFile = program?.getSourceFile(fileName);
+                const tagNameNode = semanticFile && getTouchingPropertyName(semanticFile, element.openingElement.tagName.getStart(sourceFile));
+                const checker = program?.getTypeChecker();
+                const symbol = tagNameNode && checker?.getSymbolAtLocation(tagNameNode);
+                if (symbol && checker) {
+                    const callSigs = checker.getSignaturesOfType(checker.getTypeOfSymbol(symbol), SignatureKind.Call);
+                    if (callSigs.length > 0 && callSigs.every(sig => {
+                        const params = sig.getParameters();
+                        if (params.length === 0) return true;
+                        return !checker.getPropertyOfType(checker.getTypeOfSymbol(params[0]), "children");
+                    })) {
+                        return { newText: '', selfClosing: true };
+                    }
                 }
             }
             return { newText: `</${ref}>` };

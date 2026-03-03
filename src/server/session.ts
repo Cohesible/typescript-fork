@@ -1968,7 +1968,7 @@ export class Session<TMessage = string> implements EventSender {
         const { file, languageService } = this.getFileAndLanguageServiceForSyntacticOperation(args);
         const position = this.getPositionInFile(args, file);
         const tag = languageService.getJsxClosingTagAtPosition(file, position);
-        return tag === undefined ? undefined : { newText: tag.newText, caretOffset: 0 };
+        return tag === undefined ? undefined : { newText: tag.newText, caretOffset: 0, selfClosing: tag.selfClosing } as TextInsertion;
     }
 
     private getLinkedEditingRange(args: protocol.FileLocationRequestArgs): protocol.LinkedEditingRangesBody | undefined {

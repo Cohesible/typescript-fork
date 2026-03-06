@@ -51,6 +51,7 @@ import {
     isJsxChild,
     isJsxClosingElement,
     isJsxClosingFragment,
+    isJsxExpression,
     isJsxOpeningElement,
     isJsxOpeningFragment,
     isJsxTagNameExpression,
@@ -1696,6 +1697,14 @@ const visitEachChildTable: VisitEachChildTable = {
             node,
             Debug.checkDefined(nodeVisitor(node.namespace, visitor, isIdentifier)),
             Debug.checkDefined(nodeVisitor(node.name, visitor, isIdentifier)),
+        );
+    },
+
+    [SyntaxKind.JsxIfDirective]: function visitEachChildOfJsxIfDirective(node, visitor, context, nodesVisitor, nodeVisitor, _tokenVisitor) {
+        return context.factory.updateJsxIfDirective(
+            node,
+            Debug.checkDefined(nodeVisitor(node.condition, visitor, isJsxExpression)),
+            nodesVisitor(node.children, visitor, isJsxChild),
         );
     },
 

@@ -98,7 +98,7 @@ declare namespace JSX {
 	};
 
 	type EventHandler<T extends EventTarget, E extends Event> = {
-		bivarianceHack(this: T, event: TargetedEvent<T, E>): void;
+		bivarianceHack(event: TargetedEvent<T, E>): void;
 	}['bivarianceHack'];
 
 	type AnimationEventHandler<Target extends EventTarget> =

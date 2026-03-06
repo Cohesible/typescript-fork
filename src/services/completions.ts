@@ -4377,6 +4377,10 @@ function getCompletionData(
                 return location.parent.kind !== SyntaxKind.JsxOpeningElement;
             }
 
+            if (contextToken.parent.kind === SyntaxKind.JsxIfDirective) {
+                return location.parent.kind !== SyntaxKind.JsxIfDirective;
+            }
+
             if (contextToken.parent.kind === SyntaxKind.JsxClosingElement) {
                 if (!!contextToken.parent.parent && !!contextToken.parent.parent.parent) {
                     const grandparent = contextToken.parent.parent.parent

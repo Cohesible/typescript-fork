@@ -276,6 +276,7 @@ import {
     JsxElement,
     JsxExpression,
     JsxFragment,
+    JsxIfDirective,
     JsxNamespacedName,
     JsxOpeningElement,
     JsxOpeningFragment,
@@ -1001,6 +1002,8 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         updateJsxExpression,
         createJsxNamespacedName,
         updateJsxNamespacedName,
+        createJsxIfDirective,
+        updateJsxIfDirective,
         createCaseClause,
         updateCaseClause,
         createCaseIsClause,
@@ -5922,6 +5925,24 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         return node.namespace !== namespace
                 || node.name !== name
             ? update(createJsxNamespacedName(namespace, name), node)
+            : node;
+    }
+
+    // @api
+    function createJsxIfDirective(condition: JsxExpression, children: readonly JsxChild[]) {
+        const node = createBaseNode<JsxIfDirective>(SyntaxKind.JsxIfDirective);
+        node.condition = condition;
+        node.children = createNodeArray(children);
+        node.transformFlags |= propagateChildFlags(node.condition) |
+            propagateChildrenFlags(node.children) |
+            TransformFlags.ContainsJsx;
+        return node;
+    }
+
+    // @api
+    function updateJsxIfDirective(node: JsxIfDirective, condition: JsxExpression, children: readonly JsxChild[]) {
+        return node.condition !== condition || node.children !== children
+            ? update(createJsxIfDirective(condition, children), node)
             : node;
     }
 

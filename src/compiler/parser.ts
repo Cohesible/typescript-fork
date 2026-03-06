@@ -230,6 +230,7 @@ import {
     JsxElement,
     JsxExpression,
     JsxFragment,
+    JsxIfDirective,
     JsxNamespacedName,
     JsxOpeningElement,
     JsxOpeningFragment,
@@ -1061,6 +1062,10 @@ const forEachChildTable: ForEachChildTable = {
     [SyntaxKind.JsxNamespacedName]: function forEachChildInJsxNamespacedName<T>(node: JsxNamespacedName, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNode(cbNode, node.namespace) ||
             visitNode(cbNode, node.name);
+    },
+    [SyntaxKind.JsxIfDirective]: function forEachChildInJsxIfDirective<T>(node: JsxIfDirective, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+        return visitNode(cbNode, node.condition) ||
+            visitNodes(cbNode, cbNodes, node.children);
     },
     [SyntaxKind.OptionalType]: forEachChildInOptionalRestOrJSDocParameterModifier,
     [SyntaxKind.RestType]: forEachChildInOptionalRestOrJSDocParameterModifier,
@@ -5902,7 +5907,7 @@ namespace Parser {
                 // Just like in parseUpdateExpression, we need to avoid parsing type assertions when
                 // in JSX and we see an expression like "+ <foo> bar".
                 if (languageVariant === LanguageVariant.JSX) {
-                    return parseJsxElementOrSelfClosingElementOrFragment(/*inExpressionContext*/ true, /*topInvalidNodePosition*/ undefined, /*openingTag*/ undefined, /*mustBeUnary*/ true);
+                    return parseJsxNode(/*inExpressionContext*/ true, /*topInvalidNodePosition*/ undefined, /*openingTag*/ undefined, /*mustBeUnary*/ true);
                 }
                 // This is modified UnaryExpression grammar in TypeScript
                 //  UnaryExpression (modified):
@@ -5980,7 +5985,7 @@ namespace Parser {
         }
         else if (languageVariant === LanguageVariant.JSX && token() === SyntaxKind.LessThanToken && lookAhead(nextTokenIsIdentifierOrKeywordOrGreaterThan)) {
             // JSXElement is part of primaryExpression
-            return parseJsxElementOrSelfClosingElementOrFragment(/*inExpressionContext*/ true);
+            return parseJsxNode(/*inExpressionContext*/ true);
         }
 
         const expression = parseLeftHandSideExpressionOrHigher();
@@ -6146,6 +6151,16 @@ namespace Parser {
         return finishNode(factoryCreatePropertyAccessExpression(expression, parseRightSideOfDot(/*allowIdentifierNames*/ true, /*allowPrivateIdentifiers*/ true, /*allowUnicodeEscapeSequenceInIdentifierName*/ true)), pos);
     }
 
+    function parseJsxNode(inExpressionContext: boolean, topInvalidNodePosition?: number, openingTag?: JsxOpeningElement | JsxOpeningFragment, mustBeUnary?: boolean) {
+        if (scriptKind === ScriptKind.Syn) {
+            synFileContainsJsx = true;
+            if (lookAhead(() => nextToken() === SyntaxKind.PrivateIdentifier)) {
+                return parseJsxIfDirective(openingTag);
+            }
+        }
+        return parseJsxElementOrSelfClosingElementOrFragment(inExpressionContext, topInvalidNodePosition, openingTag, mustBeUnary);
+    }
+
     function parseJsxElementOrSelfClosingElementOrFragment(inExpressionContext: boolean, topInvalidNodePosition?: number, openingTag?: JsxOpeningElement | JsxOpeningFragment, mustBeUnary = false): JsxElement | JsxSelfClosingElement | JsxFragment {
         if (scriptKind === ScriptKind.Syn) {
             synFileContainsJsx = true;
@@ -6234,20 +6249,22 @@ namespace Parser {
         return finishNode(node, pos);
     }
 
-    function parseJsxChild(openingTag: JsxOpeningElement | JsxOpeningFragment, token: JsxTokenSyntaxKind): JsxChild | undefined {
+    function parseJsxChild(openingTag: JsxOpeningElement | JsxOpeningFragment | undefined, token: JsxTokenSyntaxKind): JsxChild | undefined {
         switch (token) {
             case SyntaxKind.EndOfFileToken:
-                // If we hit EOF, issue the error at the tag that lacks the closing element
-                // rather than at the end of the file (which is useless)
-                if (isJsxOpeningFragment(openingTag)) {
-                    parseErrorAtRange(openingTag, Diagnostics.JSX_fragment_has_no_corresponding_closing_tag);
-                }
-                else {
-                    // We want the error span to cover only 'Foo.Bar' in < Foo.Bar >
-                    // or to cover only 'Foo' in < Foo >
-                    const tag = openingTag.tagName;
-                    const start = Math.min(skipTrivia(sourceText, tag.pos), tag.end);
-                    parseErrorAt(start, tag.end, Diagnostics.JSX_element_0_has_no_corresponding_closing_tag, getTextOfNodeFromSourceText(sourceText, openingTag.tagName));
+                if (openingTag) {
+                    // If we hit EOF, issue the error at the tag that lacks the closing element
+                    // rather than at the end of the file (which is useless)
+                    if (isJsxOpeningFragment(openingTag)) {
+                        parseErrorAtRange(openingTag, Diagnostics.JSX_fragment_has_no_corresponding_closing_tag);
+                    }
+                    else {
+                        // We want the error span to cover only 'Foo.Bar' in < Foo.Bar >
+                        // or to cover only 'Foo' in < Foo >
+                        const tag = openingTag.tagName;
+                        const start = Math.min(skipTrivia(sourceText, tag.pos), tag.end);
+                        parseErrorAt(start, tag.end, Diagnostics.JSX_element_0_has_no_corresponding_closing_tag, getTextOfNodeFromSourceText(sourceText, openingTag.tagName));
+                    }
                 }
                 return undefined;
             case SyntaxKind.LessThanSlashToken:
@@ -6259,7 +6276,7 @@ namespace Parser {
             case SyntaxKind.OpenBraceToken:
                 return parseJsxExpression(/*inExpressionContext*/ false);
             case SyntaxKind.LessThanToken:
-                return parseJsxElementOrSelfClosingElementOrFragment(/*inExpressionContext*/ false, /*topInvalidNodePosition*/ undefined, openingTag);
+                return parseJsxNode(/*inExpressionContext*/ false, /*topInvalidNodePosition*/ undefined, openingTag);
             default:
                 return Debug.assertNever(token);
         }
@@ -6489,6 +6506,76 @@ namespace Parser {
             }
         }
         return finishNode(factory.createJsxJsxClosingFragment(), pos);
+    }
+
+    function parseJsxIfDirective(openingTag: JsxOpeningElement | JsxOpeningFragment | undefined): JsxIfDirective {
+        const pos = getNodePos();
+        parseExpected(SyntaxKind.LessThanToken);
+
+        const tagName = parsePrivateIdentifier();
+        const inExpressionContext = !openingTag;
+        if (!openingTag) {
+            // XXX: for error recovery
+            openingTag = {
+                kind: SyntaxKind.JsxOpeningElement,
+                tagName: tagName as any as Identifier,
+                pos,
+            } as JsxOpeningElement
+        }
+
+        let condition: JsxExpression;
+        const condPos = getNodePos();
+        if (token() === SyntaxKind.OpenBraceToken) {
+            nextToken(); // consume {
+            const innerExpr = token() !== SyntaxKind.CloseBraceToken
+                ? parseAssignmentExpressionOrHigher(/*allowReturnTypeInArrowFunction*/ false)
+                : undefined;
+            parseExpected(SyntaxKind.CloseBraceToken);
+            condition = finishNode(factory.createJsxExpression(/*dotDotDotToken*/ undefined, innerExpr), condPos);
+        }
+        else {
+            parseExpected(SyntaxKind.OpenBraceToken); // reports "'{' expected"
+            condition = finishNode(factory.createJsxExpression(/*dotDotDotToken*/ undefined, /*expression*/ undefined), condPos);
+        }
+        parseExpected(SyntaxKind.GreaterThanToken, /*diagnosticMessage*/ undefined, /*shouldAdvance*/ false);
+        scanJsxText(); // enter JSX text mode for children
+
+        const childrenList: JsxChild[] = [];
+        const childrenPos = getNodePos();
+        const saveParsingContext = parsingContext;
+        parsingContext |= 1 << ParsingContext.JsxChildren;
+        while (true) {
+            const child = parseJsxChild(openingTag, currentToken = scanner.reScanJsxToken());
+            if (!child) break;
+            childrenList.push(child);
+        }
+        parsingContext = saveParsingContext;
+
+        let hasError = false;
+        // Consume closing </>.
+        // currentToken is LessThanSlashToken if we saw </, or EndOfFileToken if unterminated.
+        // Use lookAhead to peek past </ without consuming it; if we don't see >, leave the
+        // LessThanSlashToken in place so the outer parseJsxChildren loop can handle it (e.g. </div>).
+        if (token() === SyntaxKind.LessThanSlashToken && lookAhead(() => {
+            nextToken(); // peek past </
+            return token() === SyntaxKind.GreaterThanToken;
+        })) {
+            nextToken(); // consume </
+            if (parseExpected(SyntaxKind.GreaterThanToken, /*diagnosticMessage*/ undefined, /*shouldAdvance*/ false)) {
+                if (inExpressionContext) {
+                    nextToken();
+                } else {
+                    scanJsxText();
+                }
+            }
+        }
+        else if (token() !== SyntaxKind.EndOfFileToken) {
+            hasError = true;
+            parseErrorAtCurrentToken(Diagnostics.Expected_corresponding_JSX_closing_tag_for_0, "#if");
+        }
+        const n = finishNode(factory.createJsxIfDirective(condition, createNodeArray(childrenList, childrenPos)), pos);
+        if (hasError) (n as Mutable<typeof n>).flags |= NodeFlags.ThisNodeHasError;
+        return n;
     }
 
     function parseTypeAssertion(): TypeAssertion {

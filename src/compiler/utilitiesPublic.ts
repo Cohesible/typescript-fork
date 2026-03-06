@@ -2480,7 +2480,8 @@ export function isJsxChild(node: Node): node is JsxChild {
         || kind === SyntaxKind.JsxExpression
         || kind === SyntaxKind.JsxSelfClosingElement
         || kind === SyntaxKind.JsxText
-        || kind === SyntaxKind.JsxFragment;
+        || kind === SyntaxKind.JsxFragment
+        || kind === SyntaxKind.JsxIfDirective;
 }
 
 export function isJsxAttributeLike(node: Node): node is JsxAttributeLike {

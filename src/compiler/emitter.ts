@@ -1884,6 +1884,9 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
                     return emitJSDocImportTag(node as JSDocImportTag);
                 // SyntaxKind.JSDocPropertyTag (see JSDocParameterTag, above)
 
+                case SyntaxKind.JsxIfDirective:
+                    return;
+
                 // Transformation nodes
                 case SyntaxKind.NotEmittedStatement:
                 case SyntaxKind.NotEmittedTypeElement:
@@ -1991,6 +1994,8 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
                     return emitJsxSelfClosingElement(node as JsxSelfClosingElement);
                 case SyntaxKind.JsxFragment:
                     return emitJsxFragment(node as JsxFragment);
+                case SyntaxKind.JsxIfDirective:
+                    return;
 
                 // Synthesized list
                 case SyntaxKind.SyntaxList:

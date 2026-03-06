@@ -129,6 +129,7 @@ import {
     idText,
     IfStatement,
     ImportClause,
+    JsxIfDirective,
     InternalSymbolName,
     isAliasableExpression,
     isAmbientModule,
@@ -325,6 +326,7 @@ import {
     WhileStatement,
     WithStatement,
     CaseIsClause,
+    JsxExpression,
 } from "./_namespaces/ts.js";
 import * as performance from "./_namespaces/ts.performance.js";
 
@@ -1140,6 +1142,9 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             case SyntaxKind.IfStatement:
                 bindIfStatement(node as IfStatement);
                 break;
+            case SyntaxKind.JsxIfDirective:
+                bindJsxIfDirective(node as JsxIfDirective);
+                break;
             case SyntaxKind.ThrowStatement:
                 if (inDefer) {
                     bind((node as ThrowStatement).expression);
@@ -1514,6 +1519,15 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
         }
     }
 
+    function bindJsxCondition(node: JsxExpression | undefined, trueTarget: FlowLabel, falseTarget: FlowLabel) {
+        doWithConditionalBranches(bind, node, trueTarget, falseTarget);
+        const exp = node?.expression
+        if (!exp || !isLogicalAssignmentExpression(exp) && !isLogicalExpression(exp) && !(isOptionalChain(exp) && isOutermostOptionalChain(exp))) {
+            addAntecedent(trueTarget, createFlowCondition(FlowFlags.TrueCondition, currentFlow, exp));
+            addAntecedent(falseTarget, createFlowCondition(FlowFlags.FalseCondition, currentFlow, exp));
+        }
+    }
+
     function bindIterativeStatement(node: Statement, breakTarget: FlowLabel, continueTarget: FlowLabel): void {
         const saveBreakTarget = currentBreakTarget;
         const saveContinueTarget = currentContinueTarget;
@@ -1631,6 +1645,24 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
         bind(node.elseStatement);
         addAntecedent(postIfLabel, currentFlow);
         currentFlow = finishFlowLabel(postIfLabel);
+    }
+
+    function bindJsxIfDirective(node: JsxIfDirective): void {
+        if (!node.condition.expression) {
+            bind(node.condition);
+            return bindEach(node.children);
+        }
+        const thenLabel = createBranchLabel();
+        const elseLabel = createBranchLabel();
+        const postLabel = createBranchLabel();
+        bindJsxCondition(node.condition, thenLabel, elseLabel);
+        currentFlow = finishFlowLabel(thenLabel);
+        bindEach(node.children);
+        addAntecedent(postLabel, currentFlow);
+        currentFlow = finishFlowLabel(elseLabel);
+        // TODO: else
+        addAntecedent(postLabel, currentFlow);
+        currentFlow = finishFlowLabel(postLabel);
     }
 
     function bindReturnOrThrow(node: ReturnStatement | ThrowStatement): void {

@@ -513,6 +513,24 @@ const d = <div onClick={function () {
 // shorthand_jsx_attribute
 const value = ''
 const d2 = <input {value}/>
+const d3 = <div>
+  <#if {true}>
+     <div></div>
+  </>
+</div>
+
+const cond = true
+const d4 = <div><#if {cond}></></div>
+
+{
+    // cfa should work inside <#if>
+    let v = undefined as { x: () => number } | undefined
+    const d = <div>
+        <#if {v}>
+          <div>{v.x()}</div>
+        </>
+    </div>
+}
 
 // /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a
 

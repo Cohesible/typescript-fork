@@ -131,6 +131,7 @@ import {
     JsxElement,
     JsxExpression,
     JsxFragment,
+    JsxIfDirective,
     JsxNamespacedName,
     JsxOpeningElement,
     JsxOpeningFragment,
@@ -971,6 +972,10 @@ export function isJsxExpression(node: Node): node is JsxExpression {
 
 export function isJsxNamespacedName(node: Node): node is JsxNamespacedName {
     return node.kind === SyntaxKind.JsxNamespacedName;
+}
+
+export function isJsxIfDirective(node: Node): node is JsxIfDirective {
+    return node.kind === SyntaxKind.JsxIfDirective;
 }
 
 // Clauses

@@ -838,6 +838,7 @@ import {
     JsxExpression,
     JsxFlags,
     JsxFragment,
+    JsxIfDirective,
     JsxNamespacedName,
     JsxOpeningElement,
     JsxOpeningFragment,
@@ -21728,6 +21729,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             case SyntaxKind.JsxFragment:
                 // child is of type JSX.Element
                 return { errorNode: child, innerExpression: child, nameType };
+            case SyntaxKind.JsxIfDirective:
+                return { errorNode: child, innerExpression: undefined, nameType };
             default:
                 return Debug.assertNever(child, "Found invalid jsx child");
         }
@@ -34107,6 +34110,11 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return getJsxIntrinsicElementResultType(node) ?? getJsxElementTypeAt(node) ?? anyType;
     }
 
+    function checkJsxIfDirective(node: JsxIfDirective, _checkMode: CheckMode | undefined): Type {
+        if (node.condition.expression) checkExpression(node.condition.expression);
+        return checkJsxChildren(node);
+    }
+
     function checkJsxFragment(node: JsxFragment): Type {
         checkJsxOpeningLikeElementOrOpeningFragment(node.openingFragment);
 
@@ -34320,7 +34328,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return result;
     }
 
-    function checkJsxChildren(node: JsxElement | JsxFragment, checkMode?: CheckMode): Type {
+    function checkJsxChildren(node: JsxElement | JsxFragment | JsxIfDirective, checkMode?: CheckMode): Type {
         const elementTypes: Type[] = [];
         const elementFlags: ElementFlags[] = [];
         const isSynFile = getSourceFileOfNode(node)?.scriptKind === ScriptKind.Syn;
@@ -34336,11 +34344,18 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             else if (child.kind === SyntaxKind.JsxExpression && !child.expression) {
                 continue; // empty jsx expressions don't *really* count as present children
             }
+            else if (child.kind === SyntaxKind.JsxIfDirective) {
+                if (child.condition.expression) checkExpression(child.condition.expression);
+                const ifBodyType = checkJsxChildren(child, checkMode);
+                elementTypes.push(getUnionType([ifBodyType, createTupleType([])]));
+                elementFlags.push(ElementFlags.Variadic);
+            } 
             else {
                 const childType = checkExpressionForMutableLocation(child, checkMode);
-                if (isSynFile && child.kind === SyntaxKind.JsxExpression && child.dotDotDotToken) {
-                    // Syn JSX spread: Variadic element — same pattern as array literal spread (checker.ts:33668)
-                    // Normalization handles: concrete arrays → Rest, tuples → inline their elements
+                if (isSynFile && (
+                    child.kind === SyntaxKind.JsxFragment ||
+                    (child.kind === SyntaxKind.JsxExpression && child.dotDotDotToken)
+                )) {
                     elementTypes.push(childType);
                     elementFlags.push(ElementFlags.Variadic);
                 }
@@ -42643,6 +42658,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return checkJsxSelfClosingElement(node as JsxSelfClosingElement, checkMode);
             case SyntaxKind.JsxFragment:
                 return checkJsxFragment(node as JsxFragment);
+            case SyntaxKind.JsxIfDirective:
+                return checkJsxIfDirective(node as unknown as JsxIfDirective, checkMode);
             case SyntaxKind.JsxAttributes:
                 return checkJsxAttributes(node as JsxAttributes, checkMode);
             case SyntaxKind.JsxOpeningElement:

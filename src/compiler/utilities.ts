@@ -398,6 +398,7 @@ import {
     JsxElement,
     JsxEmit,
     JsxFragment,
+    JsxIfDirective,
     JsxNamespacedName,
     JsxOpeningElement,
     JsxOpeningLikeElement,
@@ -10807,7 +10808,8 @@ export function getContainingNodeArray(node: Node): NodeArray<Node> | undefined 
                 (parent as CallExpression | NewExpression).arguments;
         case SyntaxKind.JsxElement:
         case SyntaxKind.JsxFragment:
-            return isJsxChild(node) ? (parent as JsxElement | JsxFragment).children : undefined;
+        case SyntaxKind.JsxIfDirective:
+            return isJsxChild(node) ? (parent as JsxElement | JsxFragment | JsxIfDirective).children : undefined;
         case SyntaxKind.JsxOpeningElement:
         case SyntaxKind.JsxSelfClosingElement:
             return isTypeNode(node) ? (parent as JsxOpeningElement | JsxSelfClosingElement).typeArguments : undefined;

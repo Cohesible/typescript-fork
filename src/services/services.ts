@@ -347,6 +347,8 @@ import {
     updateSourceFile,
     UserPreferences,
     VariableDeclaration,
+    JsxIfDirective,
+    isJsxIfDirective,
 } from "./_namespaces/ts.js";
 import * as NavigateTo from "./_namespaces/ts.NavigateTo.js";
 import * as NavigationBar from "./_namespaces/ts.NavigationBar.js";
@@ -2805,7 +2807,8 @@ export function createLanguageService(
                     if (callSigs.length > 0 && callSigs.every(sig => {
                         const params = sig.getParameters();
                         if (params.length === 0) return true;
-                        return !checker.getPropertyOfType(checker.getTypeOfSymbol(params[0]), "children");
+                        const propsType = checker.getTypeOfSymbol(params[0]);
+                        return !(propsType.flags & TypeFlags.Any) && !checker.getPropertyOfType(propsType, "children");
                     })) {
                         return { newText: '', selfClosing: true };
                     }
@@ -2813,9 +2816,16 @@ export function createLanguageService(
             }
             return { newText: `</${ref}>` };
         }
+        if (
+            token.kind === SyntaxKind.GreaterThanToken && 
+            isJsxIfDirective(token.parent) && 
+            isUnclosedDirectiveOrFragment(token.parent)
+        ) {
+            return { newText: "</>" };
+        }
         const fragment = token.kind === SyntaxKind.GreaterThanToken && isJsxOpeningFragment(token.parent) ? token.parent.parent
             : isJsxText(token) && isJsxFragment(token.parent) ? token.parent : undefined;
-        if (fragment && isUnclosedFragment(fragment)) {
+        if (fragment && isUnclosedDirectiveOrFragment(fragment)) {
             return { newText: "</>" };
         }
     }
@@ -3122,8 +3132,18 @@ export function createLanguageService(
             isJsxElement(parent) && tagNamesAreEquivalent(openingElement.tagName, parent.openingElement.tagName) && isUnclosedTag(parent);
     }
 
-    function isUnclosedFragment({ closingFragment, parent }: JsxFragment): boolean {
-        return !!(closingFragment.flags & NodeFlags.ThisNodeHasError) || (isJsxFragment(parent) && isUnclosedFragment(parent));
+    function isUnclosedDirectiveOrFragment(element: JsxIfDirective | JsxFragment): boolean {
+        if (element.kind === SyntaxKind.JsxFragment) {
+            if (!!(element.closingFragment.flags & NodeFlags.ThisNodeHasError)) return true;
+        } else {
+            if (!!(element.flags & NodeFlags.ThisNodeHasError)) return true;
+        }
+        if (element.parent) {
+            if (isJsxFragment(element.parent) || isJsxIfDirective(element.parent)) {
+                return isUnclosedDirectiveOrFragment(element.parent);
+            }
+        }
+        return false;
     }
 
     function getSpanOfEnclosingComment(fileName: string, position: number, onlyMultiLine: boolean): TextSpan | undefined {

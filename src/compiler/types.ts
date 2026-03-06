@@ -378,6 +378,7 @@ export const enum SyntaxKind {
     JsxSpreadAttribute,
     JsxExpression,
     JsxNamespacedName,
+    JsxIfDirective,
 
     // Clauses
     CaseClause,
@@ -1200,6 +1201,7 @@ export type HasChildren =
     | JsxSpreadAttribute
     | JsxExpression
     | JsxNamespacedName
+    | JsxIfDirective
     | CaseClause
     | CaseIsClause
     | DefaultClause
@@ -3296,6 +3298,12 @@ export interface JsxFragment extends PrimaryExpression {
     readonly closingFragment: JsxClosingFragment;
 }
 
+export interface JsxIfDirective extends PrimaryExpression {
+    readonly kind: SyntaxKind.JsxIfDirective;
+    readonly condition: JsxExpression;
+    readonly children: NodeArray<JsxChild>;
+}
+
 /// The opening element of a <>...</> JsxFragment
 export interface JsxOpeningFragment extends Expression {
     readonly kind: SyntaxKind.JsxOpeningFragment;
@@ -3353,7 +3361,8 @@ export type JsxChild =
     | JsxExpression
     | JsxElement
     | JsxSelfClosingElement
-    | JsxFragment;
+    | JsxFragment
+    | JsxIfDirective;
 
 export interface Statement extends Node, JSDocContainer {
     _statementBrand: any;
@@ -9308,6 +9317,8 @@ export interface NodeFactory {
     updateJsxExpression(node: JsxExpression, expression: Expression | undefined): JsxExpression;
     createJsxNamespacedName(namespace: Identifier, name: Identifier): JsxNamespacedName;
     updateJsxNamespacedName(node: JsxNamespacedName, namespace: Identifier, name: Identifier): JsxNamespacedName;
+    createJsxIfDirective(condition: JsxExpression, children: readonly JsxChild[]): JsxIfDirective;
+    updateJsxIfDirective(node: JsxIfDirective, condition: JsxExpression, children: readonly JsxChild[]): JsxIfDirective;
 
     //
     // Clauses

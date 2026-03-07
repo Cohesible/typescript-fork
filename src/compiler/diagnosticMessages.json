@@ -3623,6 +3623,18 @@
         "category": "Error",
         "code": 2773
     },
+    "Did you forget to use 'try'? The expression returns a fallible type.": {
+        "category": "Error",
+        "code": 2883
+    },
+    "'try' has no effect because the expression cannot be an 'Error'.": {
+        "category": "Error",
+        "code": 2884
+    },
+    "'try' will always throw because the expression always returns an 'Error'.": {
+        "category": "Error",
+        "code": 2885
+    },
     "This condition will always return true since this function is always defined. Did you mean to call it instead?": {
         "category": "Error",
         "code": 2774

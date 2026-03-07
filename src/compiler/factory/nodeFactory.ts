@@ -90,6 +90,7 @@ import {
     ExpressionStatement,
     ExpressionWithTypeArguments,
     ExternalModuleReference,
+    FallibleTypeNode,
     FalseLiteral,
     FileReference,
     findUseStrictPrologue,
@@ -449,6 +450,7 @@ import {
     TypePredicateNode,
     TypeQueryNode,
     TypeReferenceNode,
+    UnaryExpression,
     UnionOrIntersectionTypeNode,
     UnionTypeNode,
     VariableDeclaration,
@@ -461,6 +463,7 @@ import {
     WithStatement,
     YieldExpression,
     ReifyExpression,
+    TryExpression,
     IsExpression,
     UpdateExpressionExpression,
     FallthroughStatement,
@@ -621,6 +624,8 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         createThisTypeNode,
         createTypeOperatorNode,
         updateTypeOperatorNode,
+        createFallibleTypeNode,
+        updateFallibleTypeNode,
         createIndexedAccessTypeNode,
         updateIndexedAccessTypeNode,
         createMappedTypeNode,
@@ -709,6 +714,8 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         updateSatisfiesExpression,
         createReifyExpression,
         updateReifyExpression,
+        createTryExpression,
+        updateTryExpression,
         createUpdateExpressionExpression,
         updateUpdateExpressionExpression,
         createNonNullChain,
@@ -2725,6 +2732,21 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     }
 
     // @api
+    function createFallibleTypeNode(type: TypeNode): FallibleTypeNode {
+        const node = createBaseNode<FallibleTypeNode>(SyntaxKind.FallibleType);
+        node.type = parenthesizerRules().parenthesizeOperandOfTypeOperator(type);
+        node.transformFlags = TransformFlags.ContainsTypeScript;
+        return node;
+    }
+
+    // @api
+    function updateFallibleTypeNode(node: FallibleTypeNode, type: TypeNode) {
+        return node.type !== type
+            ? update(createFallibleTypeNode(type), node)
+            : node;
+    }
+
+    // @api
     function createIndexedAccessTypeNode(objectType: TypeNode, indexType: TypeNode) {
         const node = createBaseNode<IndexedAccessTypeNode>(SyntaxKind.IndexedAccessType);
         node.objectType = parenthesizerRules().parenthesizeNonArrayTypeOfPostfixType(objectType);
@@ -3375,6 +3397,21 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     function updateAwaitExpression(node: AwaitExpression, expression: Expression) {
         return node.expression !== expression
             ? update(createAwaitExpression(expression), node)
+            : node;
+    }
+
+    // @api
+    function createTryExpression(expression: UnaryExpression): TryExpression {
+        const node = createBaseNode<TryExpression>(SyntaxKind.TryExpression);
+        node.expression = expression;
+        node.transformFlags |= propagateChildFlags(node.expression) | TransformFlags.ContainsTypeScript;
+        return node;
+    }
+
+    // @api
+    function updateTryExpression(node: TryExpression, expression: UnaryExpression) {
+        return node.expression !== expression
+            ? update(createTryExpression(expression), node)
             : node;
     }
 

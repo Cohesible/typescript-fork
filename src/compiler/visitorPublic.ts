@@ -35,6 +35,7 @@ import {
     isExclamationToken,
     isExportSpecifier,
     isExpression,
+    isUnaryExpression,
     isExpressionWithTypeArguments,
     isForInitializer,
     isHeritageClause,
@@ -935,6 +936,12 @@ const visitEachChildTable: VisitEachChildTable = {
             Debug.checkDefined(nodeVisitor(node.type, visitor, isTypeNode)),
         );
     },
+    [SyntaxKind.FallibleType]: function visitEachChildOfFallibleType(node, visitor, context, _nodesVisitor, nodeVisitor, _tokenVisitor) {
+        return context.factory.updateFallibleTypeNode(
+            node,
+            Debug.checkDefined(nodeVisitor(node.type, visitor, isTypeNode)),
+        );
+    },
 
     [SyntaxKind.IndexedAccessType]: function visitEachChildOfIndexedAccessType(node, visitor, context, _nodesVisitor, nodeVisitor, _tokenVisitor) {
         return context.factory.updateIndexedAccessTypeNode(
@@ -1256,6 +1263,12 @@ const visitEachChildTable: VisitEachChildTable = {
         return context.factory.updateReifyExpression(
             node,
             Debug.checkDefined(nodeVisitor(node.subject, visitor, isTypeNode)),
+        );
+    },
+    [SyntaxKind.TryExpression]: function visitEachChildOfTryExpression(node, visitor, context, _nodesVisitor, nodeVisitor, _tokenVisitor) {
+        return context.factory.updateTryExpression(
+            node,
+            Debug.checkDefined(nodeVisitor(node.expression, visitor, isUnaryExpression)),
         );
     },
     [SyntaxKind.UpdateExpressionExpression]: function visitEachChildOfUpdateExpressionExpression(node, visitor, context, _nodesVisitor, nodeVisitor, _tokenVisitor) {

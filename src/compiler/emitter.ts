@@ -387,6 +387,7 @@ import {
     TaggedTemplateExpression,
     TemplateExpression,
     TemplateLiteralTypeNode,
+    FallibleTypeNode,
     TemplateLiteralTypeSpan,
     TemplateSpan,
     TextRange,
@@ -1654,6 +1655,8 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
                     return emitTemplateType(node as TemplateLiteralTypeNode);
                 case SyntaxKind.TemplateLiteralTypeSpan:
                     return emitTemplateTypeSpan(node as TemplateLiteralTypeSpan);
+                case SyntaxKind.FallibleType:
+                    return emitFallibleType(node as FallibleTypeNode);
                 case SyntaxKind.ImportType:
                     return emitImportTypeNode(node as ImportTypeNode);
 
@@ -2478,6 +2481,11 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
             parenthesizer.parenthesizeOperandOfReadonlyTypeOperator :
             parenthesizer.parenthesizeOperandOfTypeOperator;
         emit(node.type, parenthesizerRule);
+    }
+
+    function emitFallibleType(node: FallibleTypeNode) {
+        writePunctuation("!");
+        emit(node.type, parenthesizer.parenthesizeOperandOfTypeOperator);
     }
 
     function emitIndexedAccessType(node: IndexedAccessTypeNode) {

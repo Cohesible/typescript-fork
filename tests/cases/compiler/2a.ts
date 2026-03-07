@@ -532,6 +532,52 @@ const d4 = <div><#if {cond}></></div>
     </div>
 }
 
+// !T (FallibleType) and try expr
+{
+    class Err1 extends Error { override name = "Err1" as const }
+    class Err2 extends Error { override name = "Err2" as const }
+
+    function mayFail(): !string {
+        if (Math.random() > 0.5) return new Err1()
+        if (Math.random() > 0.3) return new Err2()
+        return 'hello'
+    }
+
+    // callers see the full error union
+    const x: string | Err1 | Err2 = mayFail()
+    // ReturnType should also capture errors
+    const y: ReturnType<typeof mayFail> = '' as typeof x
+    // try unwraps: throws error, returns string
+    const z: string = try mayFail()
+
+    // each of the following cases should report 'Did you forget `try`?' in addition to the normal issue
+    function test(_x: string): void {}
+    test(mayFail())
+    const z2: string = mayFail()
+
+    // no hint: target already accepts the full union
+    const z3: string | Err1 | Err2 = mayFail()
+
+    // hint: string is assignable to string | number after stripping errors
+    function test2(_x: string | number): void {}
+    test2(mayFail())
+
+    // no hint: string is not assignable to boolean — unrelated mismatch
+    const z4: boolean = mayFail()
+
+    // should have hint
+    function f(): string { return mayFail() }
+
+    // never error
+    const foo = () => ''
+    const z5 = try foo()
+
+    // always error
+    const foo2 = () => new Error()
+    const z6 = try foo2()  
+
+}
+
 // /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a
 
 // ^(\s*)on(.*)\?:

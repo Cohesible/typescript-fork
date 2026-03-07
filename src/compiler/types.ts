@@ -273,6 +273,7 @@ export const enum SyntaxKind {
     NamedTupleMember,
     TemplateLiteralType,
     TemplateLiteralTypeSpan,
+    FallibleType,
     ImportType,
     // Binding patterns
     ObjectBindingPattern,
@@ -312,6 +313,7 @@ export const enum SyntaxKind {
     SatisfiesExpression,
     ReifyExpression,
     IsExpression,
+    TryExpression,
 
     // Misc
     TemplateSpan,
@@ -735,6 +737,7 @@ export type TypeNodeSyntaxKind =
     | SyntaxKind.LiteralType
     | SyntaxKind.TemplateLiteralType
     | SyntaxKind.TemplateLiteralTypeSpan
+    | SyntaxKind.FallibleType
     | SyntaxKind.ImportType
     | SyntaxKind.ExpressionWithTypeArguments
     | SyntaxKind.JSDocTypeExpression
@@ -1111,6 +1114,7 @@ export type HasChildren =
     | LiteralTypeNode
     | TemplateLiteralTypeNode
     | TemplateLiteralTypeSpan
+    | FallibleTypeNode
     | ObjectBindingPattern
     | ArrayBindingPattern
     | BindingElement
@@ -1143,6 +1147,7 @@ export type HasChildren =
     | NonNullExpression
     | SatisfiesExpression
     | ReifyExpression
+    | TryExpression
     | UpdateExpressionExpression
     | MetaProperty
     | TemplateSpan
@@ -2358,6 +2363,11 @@ export interface UniqueTypeOperatorNode extends TypeOperatorNode {
     readonly operator: SyntaxKind.UniqueKeyword;
 }
 
+export interface FallibleTypeNode extends TypeNode {
+    readonly kind: SyntaxKind.FallibleType;
+    readonly type: TypeNode;
+}
+
 export interface IndexedAccessTypeNode extends TypeNode {
     readonly kind: SyntaxKind.IndexedAccessType;
     readonly objectType: TypeNode;
@@ -3192,6 +3202,11 @@ export interface ReifyExpression extends UnaryExpression {
     readonly kind: SyntaxKind.ReifyExpression;
     readonly subject: TypeNode;
     readonly typeParameters?: NodeArray<TypeParameterDeclaration>
+}
+
+export interface TryExpression extends UnaryExpression {
+    readonly kind: SyntaxKind.TryExpression;
+    readonly expression: UnaryExpression;
 }
 
 export type AssertionExpression =
@@ -8972,6 +8987,8 @@ export interface NodeFactory {
     createThisTypeNode(): ThisTypeNode;
     createTypeOperatorNode(operator: SyntaxKind.KeyOfKeyword | SyntaxKind.UniqueKeyword | SyntaxKind.ReadonlyKeyword | SyntaxKind.ReifyKeyword, type: TypeNode): TypeOperatorNode;
     updateTypeOperatorNode(node: TypeOperatorNode, type: TypeNode): TypeOperatorNode;
+    createFallibleTypeNode(type: TypeNode): FallibleTypeNode;
+    updateFallibleTypeNode(node: FallibleTypeNode, type: TypeNode): FallibleTypeNode;
     createIndexedAccessTypeNode(objectType: TypeNode, indexType: TypeNode): IndexedAccessTypeNode;
     updateIndexedAccessTypeNode(node: IndexedAccessTypeNode, objectType: TypeNode, indexType: TypeNode): IndexedAccessTypeNode;
     createMappedTypeNode(readonlyToken: ReadonlyKeyword | PlusToken | MinusToken | undefined, typeParameter: TypeParameterDeclaration, nameType: TypeNode | undefined, questionToken: QuestionToken | PlusToken | MinusToken | undefined, type: TypeNode | undefined, members: NodeArray<TypeElement> | undefined): MappedTypeNode;
@@ -9077,6 +9094,8 @@ export interface NodeFactory {
     updateSatisfiesExpression(node: SatisfiesExpression, expression: Expression, type: TypeNode): SatisfiesExpression;
     createReifyExpression(subject: TypeNode, typeParameters?: readonly TypeParameterDeclaration[]): ReifyExpression;
     updateReifyExpression(node: ReifyExpression, subject: TypeNode, typeParameters?: readonly TypeParameterDeclaration[]): ReifyExpression;
+    createTryExpression(expression: UnaryExpression): TryExpression;
+    updateTryExpression(node: TryExpression, expression: UnaryExpression): TryExpression;
     createUpdateExpressionExpression(expression: Expression): UpdateExpressionExpression;
     updateUpdateExpressionExpression(node: UpdateExpressionExpression, expression: Expression): UpdateExpressionExpression;
 
@@ -10565,6 +10584,7 @@ export interface UserPreferences {
     readonly includePackageJsonAutoImports?: "auto" | "on" | "off";
     readonly provideRefactorNotApplicableReason?: boolean;
     readonly jsxAttributeCompletionStyle?: "auto" | "braces" | "none";
+    readonly includeInlayAwaitPoints?: boolean;
     readonly includeInlayParameterNameHints?: "none" | "literals" | "all";
     readonly includeInlayParameterNameHintsWhenArgumentMatchesName?: boolean;
     readonly includeInlayFunctionParameterTypeHints?: boolean;

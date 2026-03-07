@@ -1144,6 +1144,8 @@ import {
     ReifyExpression,
     ReifiedType,
     IsExpression,
+    TryExpression,
+    FallibleTypeNode,
     UpdateExpressionExpression,
     isConstOrAsyncTypeReference,
 } from "./_namespaces/ts.js";
@@ -16484,6 +16486,21 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 signature.compositeSignatures ? instantiateType(getUnionOrIntersectionType(map(signature.compositeSignatures, getReturnTypeOfSignature), signature.compositeKind, UnionReduction.Subtype), signature.mapper) :
                 getReturnTypeFromAnnotation(signature.declaration!) ||
                 (nodeIsMissing((signature.declaration as FunctionLikeDeclaration).body) ? anyType : getReturnTypeFromBody(signature.declaration as FunctionLikeDeclaration));
+            // For !T annotations with a body: body inference gives "hello" | Err1 | Err2 — replace
+            // the non-Error parts with the declared T so callers see string | Err1 | Err2.
+            if (signature.declaration && !signature.target && !signature.compositeSignatures) {
+                const fallibleNode = getEffectiveReturnTypeNode(signature.declaration);
+                if (fallibleNode?.kind === SyntaxKind.FallibleType && (signature.declaration as FunctionLikeDeclaration).body) {
+                    const innerType = getTypeFromTypeNode((fallibleNode as FallibleTypeNode).type);
+                    const globalError = getGlobalType("Error" as __String, 0, /*reportErrors*/ false);
+                    if (globalError) {
+                        const errorParts = type.flags & TypeFlags.Union
+                            ? (type as UnionType).types.filter(t => isTypeAssignableTo(t, globalError))
+                            : isTypeAssignableTo(type, globalError) ? [type] : [];
+                        type = errorParts.length > 0 ? getUnionType([innerType, ...errorParts]) : innerType;
+                    }
+                }
+            }
             if (signature.flags & SignatureFlags.IsInnerCallChain) {
                 type = addOptionalTypeMarker(type);
             }
@@ -16529,6 +16546,15 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             return getTypeFromTypeNode((declaration.parameters[0] as ParameterDeclaration).type!); // TODO: GH#18217
         }
         if (typeNode) {
+            if (typeNode.kind === SyntaxKind.FallibleType) {
+                // For !T, use body inference when there's a body so callers see the full error union.
+                // For bodyless declarations (declare function), fall through to getTypeFromTypeNode
+                // which resolves !T to T | Error.
+                const body = (declaration as FunctionLikeDeclaration).body;
+                if (body) {
+                    return undefined;
+                }
+            }
             return getTypeFromTypeNode(typeNode);
         }
         if (declaration.kind === SyntaxKind.GetAccessor && hasBindableName(declaration)) {
@@ -19058,6 +19084,37 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return links.resolvedType;
     }
 
+    function getTypeFromFallibleTypeNode(node: FallibleTypeNode): Type {
+        const links = getNodeLinks(node);
+        if (!links.resolvedType) {
+            const innerType = getTypeFromTypeNode(node.type);
+            const globalError = getGlobalType("Error" as __String, 0, /*reportErrors*/ false);
+            links.resolvedType = globalError ? getUnionType([innerType, globalError]) : innerType;
+        }
+        return links.resolvedType;
+    }
+
+    /**
+     * Returns a "Did you forget 'try'?" related-info diagnostic when `source` is a
+     * fallible union (contains Error subtypes) and stripping those errors would make
+     * it assignable to `target`.
+     */
+    function getFallibleTryHint(source: Type, target: Type, errorNode: Node): Diagnostic | undefined {
+        const globalError = getGlobalType("Error" as __String, 0, /*reportErrors*/ false);
+        if (!globalError) return undefined;
+        // source must be a union that contains at least one Error subtype
+        if (!(source.flags & TypeFlags.Union)) return undefined;
+        const parts = (source as UnionType).types;
+        const errorParts = parts.filter(t => isTypeAssignableTo(t, globalError));
+        if (!errorParts.length) return undefined;
+        // stripping the errors must make the remaining type(s) assignable to target
+        const nonErrorParts = parts.filter(t => !isTypeAssignableTo(t, globalError));
+        if (!nonErrorParts.length) return undefined;
+        const strippedSource = nonErrorParts.length === 1 ? nonErrorParts[0] : getUnionType(nonErrorParts);
+        if (!isTypeAssignableTo(strippedSource, target)) return undefined;
+        return createDiagnosticForNode(errorNode, Diagnostics.Did_you_forget_to_use_try_The_expression_returns_a_fallible_type);
+    }
+
     function getTypeFromTemplateTypeNode(node: TemplateLiteralTypeNode) {
         const links = getNodeLinks(node);
         if (!links.resolvedType) {
@@ -20534,6 +20591,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return getTypeFromTypeLiteralOrFunctionOrConstructorTypeNode(node as TypeLiteralNode | FunctionOrConstructorTypeNode | JSDocTypeLiteral | JSDocFunctionType | JSDocSignature);
             case SyntaxKind.TypeOperator:
                 return getTypeFromTypeOperatorNode(node as TypeOperatorNode);
+            case SyntaxKind.FallibleType:
+                return getTypeFromFallibleTypeNode(node as FallibleTypeNode);
             case SyntaxKind.IndexedAccessType:
                 return getTypeFromIndexedAccessTypeNode(node as IndexedAccessTypeNode);
             case SyntaxKind.MappedType:
@@ -36616,6 +36675,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 if (!checkTypeRelatedToAndOptionallyElaborate(checkArgType, paramType, relation, reportErrors ? effectiveCheckArgumentNode : undefined, effectiveCheckArgumentNode, headMessage, containingMessageChain, errorOutputContainer)) {
                     Debug.assert(!reportErrors || !!errorOutputContainer.errors, "parameter should have errors when reporting errors");
                     maybeAddMissingAwaitInfo(arg, checkArgType, paramType);
+                    maybeAddMissingTryInfo(arg, checkArgType, paramType);
                     return errorOutputContainer.errors || emptyArray;
                 }
             }
@@ -36630,6 +36690,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             if (!checkTypeRelatedTo(spreadType, restType, relation, errorNode, headMessage, /*containingMessageChain*/ undefined, errorOutputContainer)) {
                 Debug.assert(!reportErrors || !!errorOutputContainer.errors, "rest parameter should have errors when reporting errors");
                 maybeAddMissingAwaitInfo(errorNode, spreadType, restType);
+                maybeAddMissingTryInfo(errorNode, spreadType, restType);
                 return errorOutputContainer.errors || emptyArray;
             }
         }
@@ -36645,6 +36706,13 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 if (awaitedTypeOfSource && isTypeRelatedTo(awaitedTypeOfSource, target, relation)) {
                     addRelatedInfo(errorOutputContainer.errors[0], createDiagnosticForNode(errorNode, Diagnostics.Did_you_forget_to_use_await));
                 }
+            }
+        }
+
+        function maybeAddMissingTryInfo(errorNode: Node | undefined, source: Type, target: Type) {
+            if (errorNode && reportErrors && errorOutputContainer.errors && errorOutputContainer.errors.length) {
+                const hint = getFallibleTryHint(source, target, errorNode);
+                if (hint) addRelatedInfo(errorOutputContainer.errors[0], hint);
             }
         }
     }
@@ -42632,6 +42700,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return checkAwaitExpression(node as AwaitExpression);
             case SyntaxKind.ReifyExpression:
                 return checkReifyExpression(node as ReifyExpression);
+            case SyntaxKind.TryExpression:
+                return checkTryExpression(node as TryExpression);
             case SyntaxKind.UpdateExpressionExpression:
                 return checkUpdateExpressionExpression(node as UpdateExpressionExpression);
             case SyntaxKind.PrefixUnaryExpression:
@@ -45838,7 +45908,14 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     !!symbol.exports?.size;
                 if (!isJSObjectLiteralInitializer && node.parent.parent.kind !== SyntaxKind.ForInStatement) {
                     const initializerType = checkExpressionCached(initializer);
-                    checkTypeAssignableToAndOptionallyElaborate(initializerType, type, node, initializer, /*headMessage*/ undefined);
+                    {
+                        const initErrContainer: ErrorOutputContainer = { errors: undefined, skipLogging: true };
+                        if (!checkTypeRelatedToAndOptionallyElaborate(initializerType, type, assignableRelation, node, initializer, /*headMessage*/ undefined, /*containingMessageChain*/ undefined, initErrContainer)) {
+                            const hint = getFallibleTryHint(initializerType, type, initializer);
+                            if (hint && initErrContainer.errors?.length) addRelatedInfo(initErrContainer.errors[0], hint);
+                            if (initErrContainer.errors) for (const err of initErrContainer.errors) diagnostics.add(err);
+                        }
+                    }
                     const blockScopeKind = getCombinedNodeFlagsCached(node) & NodeFlags.BlockScoped;
                     if (blockScopeKind === NodeFlags.AwaitUsing) {
                         const globalAsyncDisposableType = getGlobalAsyncDisposableType(/*reportErrors*/ true);
@@ -47364,7 +47441,16 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         const effectiveExpr = expr && getEffectiveCheckNode(expr); // The effective expression for diagnostics purposes.
         const errorNode = inReturnStatement && !inConditionalExpression ? node : effectiveExpr;
 
-        checkTypeAssignableToAndOptionallyElaborate(unwrappedExprType, unwrappedReturnType, errorNode, effectiveExpr);
+        {
+            const retErrContainer: ErrorOutputContainer = { errors: undefined, skipLogging: true };
+            if (!checkTypeRelatedToAndOptionallyElaborate(unwrappedExprType, unwrappedReturnType, assignableRelation, errorNode, effectiveExpr, /*headMessage*/ undefined, /*containingMessageChain*/ undefined, retErrContainer)) {
+                if (effectiveExpr) {
+                    const hint = getFallibleTryHint(unwrappedExprType, unwrappedReturnType, effectiveExpr);
+                    if (hint && retErrContainer.errors?.length) addRelatedInfo(retErrContainer.errors[0], hint);
+                }
+                if (retErrContainer.errors) for (const err of retErrContainer.errors) diagnostics.add(err);
+            }
+        }
     }
 
     function checkWithStatement(node: WithStatement) {
@@ -49979,6 +50065,28 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
         const subject = getTypeFromTypeNode(node.subject);
         return getTypeOfReifiedType(subject, false, false);
+    }
+
+    function checkTryExpression(node: TryExpression): Type {
+        const operandType = checkExpression(node.expression);
+        const globalError = getGlobalType("Error" as __String, 0, /*reportErrors*/ false);
+        if (!globalError) return operandType;
+
+        const parts = operandType.flags & TypeFlags.Union ? (operandType as UnionType).types : [operandType];
+        const errorParts = parts.filter(t => isTypeAssignableTo(t, globalError));
+        const nonErrorParts = parts.filter(t => !isTypeAssignableTo(t, globalError));
+
+        if (errorParts.length === 0) {
+            // No Error constituents — `try` has no effect.
+            error(node.expression, Diagnostics.try_has_no_effect_because_the_expression_cannot_be_an_Error);
+            return operandType;
+        }
+        if (nonErrorParts.length === 0) {
+            // All Error constituents — `try` always throws.
+            error(node.expression, Diagnostics.try_will_always_throw_because_the_expression_always_returns_an_Error);
+            return neverType;
+        }
+        return nonErrorParts.length === 1 ? nonErrorParts[0] : getUnionType(nonErrorParts);
     }
 
     function checkUpdateExpressionExpression(node: UpdateExpressionExpression): Type {

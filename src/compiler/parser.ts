@@ -326,6 +326,8 @@ import {
     ReadonlyKeyword,
     ReadonlyPragmaMap,
     ReifyExpression,
+    TryExpression,
+    FallibleTypeNode,
     UpdateExpressionExpression,
     ResolutionMode,
     RestTypeNode,
@@ -711,6 +713,9 @@ const forEachChildTable: ForEachChildTable = {
     },
     [SyntaxKind.ParenthesizedType]: forEachChildInParenthesizedTypeOrTypeOperator,
     [SyntaxKind.TypeOperator]: forEachChildInParenthesizedTypeOrTypeOperator,
+    [SyntaxKind.FallibleType]: function forEachChildInFallibleType<T>(node: FallibleTypeNode, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+        return visitNode(cbNode, node.type);
+    },
     [SyntaxKind.IndexedAccessType]: function forEachChildInIndexedAccessType<T>(node: IndexedAccessTypeNode, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNode(cbNode, node.objectType) ||
             visitNode(cbNode, node.indexType);
@@ -808,6 +813,9 @@ const forEachChildTable: ForEachChildTable = {
     },
     [SyntaxKind.ReifyExpression]: function forEachChildInReifyExpression<T>(node: ReifyExpression, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNodes(cbNode, cbNodes, node.typeParameters) || visitNode(cbNode, node.subject);
+    },
+    [SyntaxKind.TryExpression]: function forEachChildInTryExpression<T>(node: TryExpression, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+        return visitNode(cbNode, node.expression);
     },
     [SyntaxKind.UpdateExpressionExpression]: function forEachChildInUpdateExpressionExpression<T>(node: UpdateExpressionExpression, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNode(cbNode, node.expression);
@@ -4816,6 +4824,12 @@ namespace Parser {
         return finishNode(factory.createInferTypeNode(parseTypeParameterOfInferType()), pos);
     }
 
+    function parseFallibleType(): FallibleTypeNode {
+        const pos = getNodePos();
+        parseExpected(SyntaxKind.ExclamationToken);
+        return finishNode(factory.createFallibleTypeNode(parseTypeOperatorOrHigher()), pos);
+    }
+
     function parseTypeOperatorOrHigher(): TypeNode {
         const operator = token();
         switch (operator) {
@@ -4826,6 +4840,8 @@ namespace Parser {
                 return parseTypeOperator(operator);
             case SyntaxKind.InferKeyword:
                 return parseInferType();
+            case SyntaxKind.ExclamationToken:
+                return parseFallibleType();
         }
         return allowConditionalTypesAnd(parsePostfixTypeOrHigher);
     }
@@ -5825,6 +5841,12 @@ namespace Parser {
         return finishNode(factory.createUpdateExpressionExpression(expression), pos);
     }
 
+    function parseTryExpression(): TryExpression {
+        const pos = getNodePos();
+        nextToken(); // consume `try`
+        return finishNode(factory.createTryExpression(parseSimpleUnaryExpression()), pos);
+    }
+
     /**
      * Parse ES7 exponential expression and await expression
      *
@@ -5913,6 +5935,8 @@ namespace Parser {
                 //  UnaryExpression (modified):
                 //      < type > UnaryExpression
                 return parseTypeAssertion();
+            case SyntaxKind.TryKeyword:
+                return parseTryExpression();
             case SyntaxKind.UpdateKeyword:
                 return parseUpdateExpressionExpression();
             case SyntaxKind.ReifyKeyword:
@@ -5954,6 +5978,7 @@ namespace Parser {
             case SyntaxKind.AwaitKeyword:
             case SyntaxKind.ReifyKeyword:
             case SyntaxKind.UpdateKeyword:
+            case SyntaxKind.TryKeyword:
                 return false;
             case SyntaxKind.LessThanToken:
                 // If we are not in JSX context, we are parsing TypeAssertion which is an UnaryExpression

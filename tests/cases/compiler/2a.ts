@@ -506,8 +506,8 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 
 // update expression
 declare const el: Element;
-const d = <div onClick={function () {
-    this
+const d = <div onClick={() => {
+    try update el
 }}></div>
 
 // shorthand_jsx_attribute
@@ -531,6 +531,59 @@ const d4 = <div><#if {cond}></></div>
         </>
     </div>
 }
+
+{
+    // error, possibly null
+    update document.querySelector('.a')
+
+    if (const x = document.querySelector('.a')) {
+        // error, needs try or void
+        update x
+        // ok
+        try update x
+        // ok
+        void update x
+    }
+
+    {
+        let y = 0
+        const x = <div>{y}</div>
+        update x // ok
+    }
+
+    {
+        const x = <div>hi</div>
+        update x // error, `x` has no updatable expressions
+        try update x // error, `x` has no updatable expressions
+        void update x // error, `x` has no updatable expressions
+    }
+
+    { 
+        let y = 0
+        const x = <div><div>{y}</div></div>
+        update x // ok
+    }
+
+    { 
+        let y = 0
+        const x = <div><div id={y}></div></div>
+        update x // ok
+    }
+
+    { 
+        let y = 0
+        const x = <div id={y}></div>
+        update x // ok
+    }
+
+    {
+        // components can always be updated
+        function Comp() { return <div></div> }
+        const el = <Comp/>
+        update el // ok
+    }
+}
+
 
 // !T (FallibleType) and try expr
 {
@@ -576,6 +629,66 @@ const d4 = <div><#if {cond}></></div>
     const foo2 = () => new Error()
     const z6 = try foo2()  
 
+    function effect(cond = true): !void {
+        if (cond) return new Error()
+    }
+
+    // hint: unhandled fallible return type: void | Error
+    effect()
+
+    try effect() // ok
+
+    void effect() // ok
+
+    const z7 = effect() // ok
+
+    function wrapsEffect() {
+        return effect() // ok
+    }
+}
+
+// FIXME: `typeNodeMentionsPromise` in checker.ts is brittle
+{
+    async function getValue() { return 42 }
+    async function testAutoAwait() {
+        const v = getValue()  // number
+    }
+
+    declare function fetchNum(): Promise<number>
+    async function testDeclared() {
+        const n = fetchNum()  // number
+    }
+
+    declare function passThrough<T>(x: T): T
+    async function testPassThrough() {
+        const p: Promise<number> = Promise.resolve(1)
+        const r = passThrough(p)  // Promise<number>, not number
+    }
+
+    declare function memoize<T extends () => any>(fn: T): T
+    async function testMemoize() {
+        async function inner() { return 1 }
+        const m = memoize(inner)
+        const v = m()  // number
+    }
+}
+
+// .syn async return type elision
+{
+    async function elided(): number { return 1 }
+    async function testElided() {
+        const v = elided()  // number
+    }
+
+    async function explicit(): Promise<number> { return 1 }
+    async function testExplicit() {
+        const v = explicit()  // number
+    }
+
+    async function inferred() { return 1 }
+    async function testInferred() {
+        const v = inferred()  // number
+    }
 }
 
 // /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a

@@ -16272,9 +16272,31 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             ) {
                 flags |= SignatureFlags.Abstract;
             }
+            if (
+                isFunctionLike(declaration) && !!(getFunctionFlags(declaration) & FunctionFlags.Async) ||
+                returnTypeAnnotationMentionsPromise(declaration)
+            ) {
+                flags |= SignatureFlags.ReturnsPromise;
+            }
             links.resolvedSignature = createSignature(declaration, typeParameters, thisParameter, parameters, /*resolvedReturnType*/ undefined, /*resolvedTypePredicate*/ undefined, minArgumentCount, flags);
         }
         return links.resolvedSignature;
+    }
+
+    function returnTypeAnnotationMentionsPromise(declaration: SignatureDeclaration | JSDocSignature): boolean {
+        const returnTypeNode = getEffectiveReturnTypeNode(declaration as SignatureDeclaration);
+        return !!returnTypeNode && typeNodeMentionsPromise(returnTypeNode);
+    }
+
+    function typeNodeMentionsPromise(node: TypeNode): boolean {
+        if (isTypeReferenceNode(node)) {
+            const name = isIdentifier(node.typeName) ? node.typeName.escapedText : undefined;
+            return name === "Promise" || name === "PromiseLike";
+        }
+        if (node.kind === SyntaxKind.UnionType || node.kind === SyntaxKind.IntersectionType) {
+            return (node as UnionOrIntersectionTypeNode).types.some(typeNodeMentionsPromise);
+        }
+        return false;
     }
 
     /**
@@ -16554,6 +16576,16 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 if (body) {
                     return undefined;
                 }
+            }
+            // In .syn files, async functions annotate the caller-visible (unwrapped) return type.
+            // Wrap it in Promise<T> so the signature correctly reflects the runtime return.
+            if (
+                isFunctionLike(declaration) &&
+                !!(getFunctionFlags(declaration) & FunctionFlags.Async) &&
+                getSourceFileOfNode(declaration)?.scriptKind === ScriptKind.Syn &&
+                !typeNodeMentionsPromise(typeNode)
+            ) {
+                return createPromiseType(getTypeFromTypeNode(typeNode));
             }
             return getTypeFromTypeNode(typeNode);
         }
@@ -38292,11 +38324,14 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
     }
 
-    function maybeAutoAwait(node: CallExpression, returnType: Type): Type {
+    function maybeAutoAwait(node: CallExpression, returnType: Type, signature?: Signature): Type {
         if (node.flags & NodeFlags.AwaitContext) {
+            const shouldAwait = signature
+                ? !!(signature.flags & SignatureFlags.ReturnsPromise)
+                : isReferenceToType(returnType, getGlobalPromiseType(/*reportErrors*/ false));
             // TODO(auto await): check destination type?
             // TODO(auto await): check unions, check PromiseLike/Thenable
-            if (node.parent.kind !== SyntaxKind.AwaitExpression && isReferenceToType(returnType, getGlobalPromiseType(/*reportErrors*/ false))) {
+            if (node.parent.kind !== SyntaxKind.AwaitExpression && shouldAwait) {
                 if (node.parent.kind === SyntaxKind.AsExpression) {
                     const targetTypeNode = (node.parent as AsExpression).type;
                     const isTypeRef = isTypeReferenceNode(targetTypeNode) && isIdentifier(targetTypeNode.typeName);
@@ -38307,17 +38342,6 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                             returnType = getTypeArguments(returnType as GenericType)[0] || anyType;
                         }
                     }
-                // } else if (node.parent.kind === SyntaxKind.PropertyAccessExpression && (node.parent as PropertyAccessExpression).expression === node) {
-                //     let shouldAwait = true
-                //     if (node.parent.parent.kind === SyntaxKind.CallExpression && (node.parent.parent as CallExpression).expression === node.parent) {
-                //         const member = (node.parent as PropertyAccessExpression).name
-                //         if (member.kind === SyntaxKind.Identifier && ((member as Identifier).escapedText === "then" || (member as Identifier).escapedText === "catch" || (member as Identifier).escapedText === "finally")) {
-                //             shouldAwait = false
-                //         }
-                //     }
-                //     if (shouldAwait) {
-                //         returnType = getTypeArguments(returnType as GenericType)[0] || anyType;
-                //     }
                 } else {
                     returnType = getTypeArguments(returnType as GenericType)[0] || anyType;
                 }
@@ -38480,7 +38504,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         let returnType = getReturnTypeOfSignature(signature);
 
         if (node.kind === SyntaxKind.CallExpression) {
-            returnType = maybeAutoAwait(node, returnType);
+            returnType = maybeAutoAwait(node, returnType, signature);
         }
 
         // Narrow Map.get() return type if there was a prior Map.has() check
@@ -42493,11 +42517,19 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         // signature where we can just fetch the return type without checking the arguments.
         if (isCallExpression(expr)) {
             if (expr.expression.kind !== SyntaxKind.SuperKeyword && !isRequireCall(expr, /*requireStringLiteralLikeArgument*/ true) && !isSymbolOrSymbolForCall(expr) && !isImportCall(expr)) {
-                let returnType = isCallChain(expr) ? getReturnTypeOfSingleNonGenericSignatureOfCallChain(expr) :
-                    getReturnTypeOfSingleNonGenericCallSignature(checkNonNullExpression(expr.expression));
+                let quickSig: Signature | undefined;
+                let returnType: Type | undefined;
+                if (isCallChain(expr)) {
+                    returnType = getReturnTypeOfSingleNonGenericSignatureOfCallChain(expr);
+                }
+                else {
+                    const funcType = checkNonNullExpression(expr.expression);
+                    quickSig = getSingleCallSignature(funcType);
+                    returnType = quickSig && !quickSig.typeParameters ? getReturnTypeOfSignature(quickSig) : undefined;
+                }
                 if (returnType) {
                     returnType = narrowMapGetReturnType(expr, returnType);
-                    returnType = maybeAutoAwait(node as CallExpression, returnType);
+                    returnType = maybeAutoAwait(node as CallExpression, returnType, quickSig);
                 }
                 return returnType;
             }
@@ -44568,6 +44600,12 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         //      then<U>(...): Promise<U>;
         //  }
         //
+        if (
+            getSourceFileOfNode(node)?.scriptKind === ScriptKind.Syn &&
+            !typeNodeMentionsPromise(returnTypeNode)
+        ) {
+            return;
+        }
         const returnType = getTypeFromTypeNode(returnTypeNode);
         if (languageVersion >= ScriptTarget.ES2015) {
             if (isErrorType(returnType)) {
@@ -46041,7 +46079,24 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         // Grammar checking
         checkGrammarStatementInAmbientContext(node);
 
-        checkExpression(node.expression);
+        const exprType = checkExpression(node.expression);
+
+        // warn when a call produces a fallible type that is discarded
+        if (
+            getSourceFileOfNode(node)?.scriptKind === ScriptKind.Syn &&
+            exprType.flags & TypeFlags.Union
+        ) {
+            const globalError = getGlobalType("Error" as __String, 0, /*reportErrors*/ false);
+            if (globalError) {
+                const parts = (exprType as UnionType).types;
+                if (
+                    parts.some(t => isTypeAssignableTo(t, globalError)) &&
+                    parts.some(t => !isTypeAssignableTo(t, globalError))
+                ) {
+                    error(node.expression, Diagnostics.This_expression_returns_0_Use_try_to_throw_on_error_or_void_to_discard_the_result, typeToString(exprType));
+                }
+            }
+        }
     }
 
     function checkNonNullishCondition(node: Expression) {
@@ -50069,6 +50124,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
     function checkTryExpression(node: TryExpression): Type {
         const operandType = checkExpression(node.expression);
+        if (operandType === silentNeverType) return silentNeverType; // inner already errored; don't cascade
         const globalError = getGlobalType("Error" as __String, 0, /*reportErrors*/ false);
         if (!globalError) return operandType;
 
@@ -50091,11 +50147,79 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
     function checkUpdateExpressionExpression(node: UpdateExpressionExpression): Type {
         const exprType = checkExpression(node.expression);
-        const elementType = getGlobalType("Element" as __String, 0, /*reportErrors*/ false);
-        if (elementType) {
-            checkTypeRelatedTo(exprType, elementType, assignableRelation, node.expression, Diagnostics.Argument_of_type_0_is_not_assignable_to_parameter_of_type_1);
+
+        // Resolve Symbol.update property on the operand type
+        const updatePropName = getPropertyNameForKnownSymbolName("update");
+        const updateSym = getPropertyOfType(exprType, updatePropName);
+
+        if (!updateSym) {
+            // No Symbol.update in any union member (e.g. Element | null) — existing assignability error
+            const elementType = getGlobalType("Element" as __String, 0, /*reportErrors*/ false);
+            if (elementType) {
+                checkTypeRelatedTo(exprType, elementType, assignableRelation, node.expression,
+                    Diagnostics.Argument_of_type_0_is_not_assignable_to_parameter_of_type_1);
+            }
+            return exprType;
         }
+
+        // Static JSX analysis: trace identifier → const initializer → JSX literal
+        const jsxSource = getJsxSourceOfExpression(node.expression);
+        if (jsxSource !== undefined) {
+            if (!jsxHasDynamicContent(jsxSource)) {
+                // Static JSX — update is a no-op at runtime; emit error and propagate silently
+                error(node, Diagnostics.update_has_no_effect_Colon_this_element_contains_no_dynamic_expressions);
+                return silentNeverType;
+            }
+            // Dynamic JSX — definitely updatable; return element type directly
+            return exprType;
+        }
+
+        // General case: Symbol.update is optional → might fail at runtime
+        if (updateSym.flags & SymbolFlags.Optional) {
+            const typeErrorType = getGlobalType("TypeError" as __String, 0, /*reportErrors*/ false);
+            return typeErrorType ? getUnionType([exprType, typeErrorType]) : exprType;
+        }
+
         return exprType;
+    }
+
+    /** Trace an identifier to its JSX initializer if the symbol is a const variable. */
+    function getJsxSourceOfExpression(expr: Expression): JsxElement | JsxSelfClosingElement | JsxFragment | undefined {
+        if (!isIdentifier(expr)) return undefined;
+        const sym = getResolvedSymbol(expr);
+        if (!sym) return undefined;
+        const decl = sym.valueDeclaration;
+        if (!decl || !isVariableDeclaration(decl)) return undefined;
+        const init = decl.initializer;
+        if (!init) return undefined;
+        return isJsxElement(init) || isJsxSelfClosingElement(init) || isJsxFragment(init) ? init : undefined;
+    }
+
+    /** Returns true if the JSX node contains any dynamic expression (attributes or children, recursively). */
+    function jsxHasDynamicContent(node: JsxElement | JsxSelfClosingElement | JsxFragment): boolean {
+        // Component elements (uppercase or member-expression tag) manage their own state — always updatable.
+        const tagName = isJsxSelfClosingElement(node) ? node.tagName : isJsxElement(node) ? node.openingElement.tagName : undefined;
+        if (tagName && !isJsxIntrinsicTagName(tagName)) return true;
+
+        const attrs = isJsxSelfClosingElement(node) ? node.attributes
+            : isJsxElement(node) ? node.openingElement.attributes
+            : undefined;
+        if (attrs) {
+            for (const attr of attrs.properties) {
+                if (isJsxSpreadAttribute(attr)) return true;
+                if (isJsxAttribute(attr) && attr.initializer && attr.initializer.kind === SyntaxKind.JsxExpression) return true;
+            }
+        }
+        const children = (isJsxElement(node) || isJsxFragment(node)) ? node.children : undefined;
+        if (children) {
+            for (const child of children) {
+                if (child.kind === SyntaxKind.JsxExpression && (child as JsxExpression).expression) return true;
+                if (isJsxElement(child) || isJsxSelfClosingElement(child) || isJsxFragment(child)) {
+                    if (jsxHasDynamicContent(child as JsxElement | JsxSelfClosingElement | JsxFragment)) return true;
+                }
+            }
+        }
+        return false;
     }
 
     function getAnyReifiedType() {

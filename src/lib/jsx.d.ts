@@ -54,6 +54,14 @@ interface SymbolConstructor {
     readonly update: unique symbol;
 }
 
+interface Updatable {
+	[Symbol.update](): void
+}
+
+interface Element {
+	[Symbol.update]?(): void
+}
+
 declare namespace JSX {
 	type Booleanish = boolean | 'true' | 'false';
 
@@ -61,10 +69,6 @@ declare namespace JSX {
 	type Children = Child[];
 
 	type Element = globalThis.Element;
-
-	interface Updatable {
-		[Symbol.update]?(): void
-	}
 
 	// ============================================
 	// CSS Properties

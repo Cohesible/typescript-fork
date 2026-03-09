@@ -7745,6 +7745,9 @@ namespace Parser {
             case SyntaxKind.ThrowKeyword:
                 return parseThrowStatement();
             case SyntaxKind.TryKeyword:
+                if (scriptKind === ScriptKind.Syn && lookAhead(() => nextToken() !== SyntaxKind.OpenBraceToken)) {
+                    break;
+                }
             // Include 'catch' and 'finally' for error recovery.
             // falls through
             case SyntaxKind.CatchKeyword:

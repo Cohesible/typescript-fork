@@ -206,8 +206,11 @@ import {
     JsxAttributeLike,
     JsxCallLike,
     JsxChild,
+    JsxContainer,
+    JsxElement,
     JsxExpression,
     JsxOpeningLikeElement,
+    JsxSelfClosingElement,
     JsxTagNameExpression,
     KeywordSyntaxKind,
     LabeledStatement,
@@ -983,6 +986,12 @@ export function getNonAssignedNameOfDeclaration(declaration: Declaration | Expre
             const { expression } = declaration as ExportAssignment;
             return isIdentifier(expression) ? expression : undefined;
         }
+        case SyntaxKind.JsxElement:
+            return (declaration as JsxElement).openingElement?.name
+        case SyntaxKind.JsxSelfClosingElement:
+            return (declaration as JsxSelfClosingElement)?.name
+        case SyntaxKind.JsxOpeningElement:
+            return undefined;
         case SyntaxKind.ElementAccessExpression:
             const expr = declaration as ElementAccessExpression;
             if (isBindableStaticElementAccessExpression(expr)) {
@@ -2323,6 +2332,11 @@ export function canHaveLocals(node: Node): node is HasLocals {
         case SyntaxKind.SourceFile:
         case SyntaxKind.TypeAliasDeclaration:
             return true;
+        // the local symbol table is for the children, not attributes
+        case SyntaxKind.JsxElement:
+        case SyntaxKind.JsxFragment:
+        case SyntaxKind.JsxIfDirective:
+            return true;
         default:
             return false;
     }
@@ -2483,6 +2497,14 @@ export function isJsxChild(node: Node): node is JsxChild {
         || kind === SyntaxKind.JsxExpression
         || kind === SyntaxKind.JsxSelfClosingElement
         || kind === SyntaxKind.JsxText
+        || kind === SyntaxKind.JsxFragment
+        || kind === SyntaxKind.JsxIfDirective
+        || kind === SyntaxKind.JsxBlock;
+}
+
+export function isJsxContainer(node: Node): node is JsxContainer {
+    const kind = node.kind;
+    return kind === SyntaxKind.JsxElement
         || kind === SyntaxKind.JsxFragment
         || kind === SyntaxKind.JsxIfDirective;
 }

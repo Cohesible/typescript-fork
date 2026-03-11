@@ -86,6 +86,7 @@ export interface Scanner {
     /** @deprecated use {@link reScanTemplateToken}(false) */
     reScanTemplateHeadOrNoSubstitutionTemplate(): SyntaxKind;
     scanJsxIdentifier(): SyntaxKind;
+    scanJsxAttributeIdentifier(): SyntaxKind;
     scanJsxAttributeValue(): SyntaxKind;
     reScanJsxAttributeValue(): SyntaxKind;
     reScanJsxToken(allowMultilineJsxText?: boolean): JsxTokenSyntaxKind;
@@ -1087,6 +1088,7 @@ export function createScanner(
         reScanTemplateToken,
         reScanTemplateHeadOrNoSubstitutionTemplate,
         scanJsxIdentifier,
+        scanJsxAttributeIdentifier,
         scanJsxAttributeValue,
         reScanJsxAttributeValue,
         reScanJsxToken,
@@ -3811,6 +3813,31 @@ export function createScanner(
                 const ch = charCodeUnchecked(pos);
                 if (ch === CharacterCodes.minus) {
                     tokenValue += "-";
+                    pos++;
+                    continue;
+                }
+                const oldPos = pos;
+                tokenValue += scanIdentifierParts(); // reuse `scanIdentifierParts` so unicode escapes are handled
+                if (pos === oldPos) {
+                    break;
+                }
+            }
+            return getIdentifierToken();
+        }
+        return token;
+    }
+
+    function scanJsxAttributeIdentifier(): SyntaxKind {
+        if (tokenIsIdentifierOrKeyword(token) || token === SyntaxKind.AtToken || token === SyntaxKind.MinusToken) {
+            while (pos < end) {
+                const ch = charCodeUnchecked(pos);
+                if (ch === CharacterCodes.minus) {
+                    tokenValue += "-";
+                    pos++;
+                    continue;
+                }
+                if (ch === CharacterCodes.at) {
+                    tokenValue += "@";
                     pos++;
                     continue;
                 }

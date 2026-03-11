@@ -19,8 +19,10 @@ import {
     isImportClause,
     isImportSpecifier,
     isInfinityOrNaNString,
+    isJsxBlock,
     isJsxElement,
     isJsxExpression,
+    isJsxOpeningLikeElement,
     isJsxSelfClosingElement,
     isNamespaceImport,
     isPropertyAccessExpression,
@@ -122,6 +124,7 @@ function getSemanticTokens(program: Program, sourceFile: SourceFile, span: TextS
 function collectTokens(program: Program, sourceFile: SourceFile, span: TextSpan, collector: (node: Node, tokenType: number, tokenModifier: number) => void, cancellationToken: CancellationToken) {
     const typeChecker = program.getTypeChecker();
 
+    let inJSX = false;
     let inJSXElement = false;
 
     function visit(node: Node) {
@@ -139,16 +142,35 @@ function collectTokens(program: Program, sourceFile: SourceFile, span: TextSpan,
         if (!node || !textSpanIntersectsWith(span, node.pos, node.getFullWidth()) || node.getFullWidth() === 0) {
             return;
         }
-        const prevInJSXElement = inJSXElement;
+
         if (isJsxElement(node) || isJsxSelfClosingElement(node)) {
-            inJSXElement = true;
-        } else if (isJsxExpression(node)) {
+            const prevInJSXElement = inJSXElement;
+            const prevInJSX = inJSX;
+            inJSX = inJSXElement = true;
+            forEachChild(node, visit);
+            inJSX = prevInJSX;
+            inJSXElement = prevInJSXElement;
+            return;
+        }
+        
+        if (isJsxExpression(node) || isJsxBlock(node)) {
+            const prevInJSXElement = inJSXElement;
             inJSXElement = false;
+            forEachChild(node, visit);
+            inJSXElement = prevInJSXElement;
+            return;
+        }
+
+        if (inJSXElement && isIdentifier(node) && isJsxOpeningLikeElement(node.parent) && node.parent.name === node) {
+            return collector(node, TokenType.variable, (1 << TokenModifier.local) | (1 << TokenModifier.readonly));
         }
 
         if (isIdentifier(node) && !inJSXElement && !inImportClause(node) && !isInfinityOrNaNString(node.escapedText) && node.escapedText !== 'async') {
             let symbol = typeChecker.getSymbolAtLocation(node);
             if (symbol) {
+                if (inJSX && symbol.valueDeclaration && (symbol.valueDeclaration.kind === SyntaxKind.JsxElement || symbol.valueDeclaration.kind == SyntaxKind.JsxSelfClosingElement)) {
+                    return collector(node, TokenType.variable, (1 << TokenModifier.local) | (1 << TokenModifier.readonly));
+                }
                 if (symbol.flags & SymbolFlags.Alias) {
                     symbol = typeChecker.getAliasedSymbol(symbol);
                 }
@@ -200,10 +222,8 @@ function collectTokens(program: Program, sourceFile: SourceFile, span: TextSpan,
             }
         }
         forEachChild(node, visit);
-
-        inJSXElement = prevInJSXElement;
     }
-    visit(sourceFile);
+    forEachChild(sourceFile, visit);
 }
 
 function classifySymbol(symbol: Symbol, meaning: SemanticMeaning): TokenType | undefined {

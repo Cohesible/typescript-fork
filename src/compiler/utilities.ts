@@ -320,6 +320,7 @@ import {
     isJSDocTypeTag,
     isJsxChild,
     isJsxFragment,
+    isStatement,
     isJsxNamespacedName,
     isJsxOpeningLikeElement,
     isJsxText,
@@ -396,6 +397,7 @@ import {
     JsxAttributeName,
     JsxChild,
     JsxElement,
+    JsxBlock,
     JsxEmit,
     JsxFragment,
     JsxIfDirective,
@@ -603,6 +605,8 @@ import {
     WriteFileCallback,
     WriteFileCallbackData,
     YieldExpression,
+    isJsxOpeningElement,
+    isJsxSelfClosingElement,
 } from "./_namespaces/ts.js";
 
 /** @internal */
@@ -5003,10 +5007,14 @@ export function isNodeDescendantOf(node: Node, ancestor: Node | undefined): bool
     return false;
 }
 
+function isDeclarationLike(node: Node) {
+    return isDeclaration(node) || isJsxOpeningLikeElement(node);
+}
+
 // True if `name` is the name of a declaration node
 /** @internal */
 export function isDeclarationName(name: Node): boolean {
-    return !isSourceFile(name) && !isBindingPattern(name) && isDeclaration(name.parent) && name.parent.name === name;
+    return !isSourceFile(name) && !isBindingPattern(name) && isDeclarationLike(name.parent) && name.parent.name === name;
 }
 
 // See GH#16030
@@ -5027,6 +5035,12 @@ export function getDeclarationFromName(name: Node): Declaration | undefined {
                 const tag = parent.parent;
                 return isJSDocParameterTag(tag) && tag.name === parent ? tag : undefined;
             }
+            else if (isJsxOpeningElement(parent) && parent.name === name) {
+                return parent.parent as any as Declaration;
+            }
+            else if (isJsxSelfClosingElement(parent) && parent.name === name) {
+                return parent as any as Declaration;
+            }
             else {
                 const binExp = parent.parent;
                 return isBinaryExpression(binExp) &&
@@ -5041,6 +5055,18 @@ export function getDeclarationFromName(name: Node): Declaration | undefined {
         default:
             return undefined;
     }
+}
+
+/** @internal */
+export function getJsxElementNameContainer(node: Node): JsxElement | undefined {
+    return findAncestor(node, n => {
+        if (n.kind === SyntaxKind.JsxIfDirective) return true;
+        if (n.kind === SyntaxKind.JsxElement || n.kind === SyntaxKind.JsxFragment) {
+            const p2 = n.parent;
+            return !(p2.kind === SyntaxKind.JsxElement || p2.kind === SyntaxKind.JsxFragment || p2.kind === SyntaxKind.JsxIfDirective);
+        }
+        return false;
+    }) as any;
 }
 
 /** @internal */
@@ -10810,6 +10836,8 @@ export function getContainingNodeArray(node: Node): NodeArray<Node> | undefined 
         case SyntaxKind.JsxFragment:
         case SyntaxKind.JsxIfDirective:
             return isJsxChild(node) ? (parent as JsxElement | JsxFragment | JsxIfDirective).children : undefined;
+        case SyntaxKind.JsxBlock:
+            return isStatement(node) ? (parent as JsxBlock).statements : undefined;
         case SyntaxKind.JsxOpeningElement:
         case SyntaxKind.JsxSelfClosingElement:
             return isTypeNode(node) ? (parent as JsxOpeningElement | JsxSelfClosingElement).typeArguments : undefined;
@@ -11540,6 +11568,9 @@ export function createNameResolver({
                         useResult = lastLocation === location.trueType;
                     } else if (location.kind === SyntaxKind.IfStatement) {
                         useResult = lastLocation !== location.elseStatement;
+                    } else if ((location as Node).kind === SyntaxKind.JsxElement) {
+                        // JsxElement locals should not be visible to the opening element attributes
+                        useResult = lastLocation !== (location as Node as JsxElement).openingElement;
                     }
 
                     if (useResult) {

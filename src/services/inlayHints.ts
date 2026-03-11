@@ -104,11 +104,13 @@ import {
     Node,
     NodeArray,
     NodeBuilderFlags,
+    NodeFlags,
     ParameterDeclaration,
     parameterIsThisKeyword,
     PrefixUnaryExpression,
     PropertyDeclaration,
     QuotePreference,
+    ScriptKind,
     SignatureDeclarationBase,
     skipParentheses,
     some,
@@ -191,8 +193,17 @@ export function provideInlayHints(context: InlayHintsContext): InlayHint[] {
         else if (preferences.includeInlayEnumMemberValueHints && isEnumMember(node)) {
             visitEnumMember(node);
         }
-        else if (shouldShowParameterNameHints(preferences) && (isCallExpression(node) || isNewExpression(node))) {
-            visitCallOrNewExpression(node);
+        else if (isCallExpression(node) || isNewExpression(node)) {
+            const includeInlayAwaitPoints = (
+                !!preferences.includeInlayAwaitPoints &&
+                file.scriptKind === ScriptKind.Syn && 
+                node.kind === SyntaxKind.CallExpression &&
+                node.parent?.kind !== SyntaxKind.AwaitExpression &&
+                !!(node.flags & NodeFlags.AwaitContext)
+            );
+            if (shouldShowParameterNameHints(preferences) || includeInlayAwaitPoints) {
+                visitCallOrNewExpression(node, includeInlayAwaitPoints);
+            }
         }
         else {
             if (preferences.includeInlayFunctionParameterTypeHints && isFunctionLikeDeclaration(node) && hasContextSensitiveParameters(node)) {
@@ -292,14 +303,32 @@ export function provideInlayHints(context: InlayHintsContext): InlayHint[] {
         }
     }
 
-    function visitCallOrNewExpression(expr: CallExpression | NewExpression) {
+    function visitCallOrNewExpression(expr: CallExpression | NewExpression, includeInlayAwaitPoints: boolean) {
         const args = expr.arguments;
         if (!args || !args.length) {
-            return;
+            if (!includeInlayAwaitPoints) return;
         }
 
         const signature = checker.getResolvedSignature(expr);
         if (signature === undefined) return;
+
+        if (includeInlayAwaitPoints) {
+            const returnType = signature.getReturnType();
+            const expType = checker.getTypeAtLocation(expr);
+            if (expType !== returnType) {
+                const awaited = checker.getAwaitedType(returnType);
+                if (awaited === expType) {
+                    result.push({
+                        text: `await`,
+                        position: expr.getStart(),
+                        kind: InlayHintKind.Keyword,
+                        whitespaceAfter: true,
+                    });
+                }
+            }
+        }
+
+        if (!args?.length) return;
 
         let signatureParamPos = 0;
         for (const originalArg of args) {

@@ -691,6 +691,71 @@ const d4 = <div><#if {cond}></></div>
     }
 }
 
+// JsxBlock — scoped declarations inside JSX elements
+{
+    let shared = 0
+    const el = <div> 
+        {
+            let x = 1
+            const helper = () => x + shared
+        }
+        {x}
+    </div>
+
+    const multi = <div x={y}>
+        <div>
+            {
+                y += 1
+            }
+        </div>
+        <span>hi</span>
+        {
+            let y = 2
+        }
+        {
+            y += 1
+        }
+        {
+            const z = 1
+        }
+        <div>{y + z}</div>
+    </div>
+
+    console.log(y)
+
+    const multi2 = <div> 
+        {
+            let c = 0
+            function onClick() {
+                c += 1
+                update d10
+            }
+        } 
+        <div @d10>c: {c}</div>
+        <button {onClick}>Add</button>
+    </div>
+
+    const ifd = <div>
+        <#if {true}>
+            <div @d20></div>
+            {
+                console.log(@d20)
+            }
+        </>
+        {
+            console.log(d20)
+        }
+    </div>
+
+    // const multi3 = <div>
+    //     <div @foo></div>
+    //     {
+    //         update @foo
+    //     }
+    // </div>
+
+}
+
 // /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a
 
 // ^(\s*)on(.*)\?:

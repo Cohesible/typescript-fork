@@ -381,6 +381,7 @@ export const enum SyntaxKind {
     JsxExpression,
     JsxNamespacedName,
     JsxIfDirective,
+    JsxBlock,
 
     // Clauses
     CaseClause,
@@ -1207,6 +1208,7 @@ export type HasChildren =
     | JsxExpression
     | JsxNamespacedName
     | JsxIfDirective
+    | JsxBlock
     | CaseClause
     | CaseIsClause
     | DefaultClause
@@ -3294,6 +3296,7 @@ export interface JsxOpeningElement extends Expression {
     readonly parent: JsxElement;
     readonly tagName: JsxTagNameExpression;
     readonly typeArguments?: NodeArray<TypeNode>;
+    readonly name?: Identifier;
     readonly attributes: JsxAttributes;
 }
 
@@ -3302,6 +3305,7 @@ export interface JsxSelfClosingElement extends PrimaryExpression {
     readonly kind: SyntaxKind.JsxSelfClosingElement;
     readonly tagName: JsxTagNameExpression;
     readonly typeArguments?: NodeArray<TypeNode>;
+    readonly name?: Identifier;
     readonly attributes: JsxAttributes;
 }
 
@@ -3317,6 +3321,11 @@ export interface JsxIfDirective extends PrimaryExpression {
     readonly kind: SyntaxKind.JsxIfDirective;
     readonly condition: JsxExpression;
     readonly children: NodeArray<JsxChild>;
+}
+
+export interface JsxBlock extends Node {
+    readonly kind: SyntaxKind.JsxBlock;
+    readonly statements: NodeArray<Statement>;
 }
 
 /// The opening element of a <>...</> JsxFragment
@@ -3376,6 +3385,12 @@ export type JsxChild =
     | JsxExpression
     | JsxElement
     | JsxSelfClosingElement
+    | JsxFragment
+    | JsxIfDirective
+    | JsxBlock;
+
+export type JsxContainer =
+    | JsxElement
     | JsxFragment
     | JsxIfDirective;
 
@@ -9315,10 +9330,10 @@ export interface NodeFactory {
 
     createJsxElement(openingElement: JsxOpeningElement, children: readonly JsxChild[], closingElement: JsxClosingElement): JsxElement;
     updateJsxElement(node: JsxElement, openingElement: JsxOpeningElement, children: readonly JsxChild[], closingElement: JsxClosingElement): JsxElement;
-    createJsxSelfClosingElement(tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, attributes: JsxAttributes): JsxSelfClosingElement;
-    updateJsxSelfClosingElement(node: JsxSelfClosingElement, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, attributes: JsxAttributes): JsxSelfClosingElement;
-    createJsxOpeningElement(tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, attributes: JsxAttributes): JsxOpeningElement;
-    updateJsxOpeningElement(node: JsxOpeningElement, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, attributes: JsxAttributes): JsxOpeningElement;
+    createJsxSelfClosingElement(tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes): JsxSelfClosingElement;
+    updateJsxSelfClosingElement(node: JsxSelfClosingElement, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes): JsxSelfClosingElement;
+    createJsxOpeningElement(tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes): JsxOpeningElement;
+    updateJsxOpeningElement(node: JsxOpeningElement, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes): JsxOpeningElement;
     createJsxClosingElement(tagName: JsxTagNameExpression): JsxClosingElement;
     updateJsxClosingElement(node: JsxClosingElement, tagName: JsxTagNameExpression): JsxClosingElement;
     createJsxFragment(openingFragment: JsxOpeningFragment, children: readonly JsxChild[], closingFragment: JsxClosingFragment): JsxFragment;
@@ -9339,6 +9354,8 @@ export interface NodeFactory {
     updateJsxNamespacedName(node: JsxNamespacedName, namespace: Identifier, name: Identifier): JsxNamespacedName;
     createJsxIfDirective(condition: JsxExpression, children: readonly JsxChild[]): JsxIfDirective;
     updateJsxIfDirective(node: JsxIfDirective, condition: JsxExpression, children: readonly JsxChild[]): JsxIfDirective;
+    createJsxBlock(statements: readonly Statement[]): JsxBlock;
+    updateJsxBlock(node: JsxBlock, statements: readonly Statement[]): JsxBlock;
 
     //
     // Clauses

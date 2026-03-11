@@ -836,6 +836,7 @@ import {
     JsxElement,
     JsxEmit,
     JsxExpression,
+    JsxBlock,
     JsxFlags,
     JsxFragment,
     JsxIfDirective,
@@ -3605,7 +3606,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
         // Block-scoped variables cannot be used before their definition
         const declaration = result.declarations?.find(
-            d => isBlockOrCatchScoped(d) || isClassLike(d) || (d.kind === SyntaxKind.EnumDeclaration),
+            d => isBlockOrCatchScoped(d) || isClassLike(d) || (d.kind === SyntaxKind.EnumDeclaration) || (d.kind === SyntaxKind.JsxSelfClosingElement) || (d.kind === SyntaxKind.JsxElement)
         );
 
         if (declaration === undefined) return Debug.fail("checkResolvedBlockScopedVariable could not find block-scoped declaration");
@@ -5297,6 +5298,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function getSymbolOfDeclaration(node: Declaration): Symbol {
+        if (node.kind === SyntaxKind.JsxOpeningElement) {
+            return getSymbolOfDeclaration(node.parent as any);
+        }
         return getMergedSymbol(node.symbol && getLateBoundSymbol(node.symbol));
     }
 
@@ -12644,6 +12648,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
         else if (isEnumMember(declaration)) {
             type = getTypeOfEnumMember(symbol);
+        }
+        else if ((declaration as Node).kind === SyntaxKind.JsxElement || (declaration as Node).kind === SyntaxKind.JsxSelfClosingElement) {
+            type = getTypeOfJsxElementIdentifierDeclaration(declaration as any);
         }
         else {
             return Debug.fail("Unhandled declaration kind! " + Debug.formatSyntaxKind(declaration.kind) + " for " + Debug.formatSymbol(symbol));
@@ -21821,6 +21828,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 // child is of type JSX.Element
                 return { errorNode: child, innerExpression: child, nameType };
             case SyntaxKind.JsxIfDirective:
+            case SyntaxKind.JsxBlock:
                 return { errorNode: child, innerExpression: undefined, nameType };
             default:
                 return Debug.assertNever(child, "Found invalid jsx child");
@@ -31590,6 +31598,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         // or parameter. The flow container is the innermost function starting with which we analyze the control
         // flow graph to determine the control flow based type.
         const isParameter = getRootDeclaration(declaration).kind === SyntaxKind.Parameter;
+        const isJsxElement = (declaration as Node).kind === SyntaxKind.JsxElement || (declaration as Node).kind === SyntaxKind.JsxSelfClosingElement;
         const declarationContainer = getControlFlowContainer(declaration);
         let flowContainer = getControlFlowContainer(node);
         const isOuterVariable = flowContainer !== declarationContainer;
@@ -31617,7 +31626,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         // the entire control flow graph from the variable's declaration (i.e. when the flow container and
         // declaration container are the same).
         const isNeverInitialized = immediateDeclaration && isVariableDeclaration(immediateDeclaration) && !immediateDeclaration.initializer && !immediateDeclaration.exclamationToken && isMutableLocalVariableDeclaration(immediateDeclaration) && !isSymbolAssignedDefinitely(symbol);
-        const assumeInitialized = isParameter || isAlias ||
+        const assumeInitialized = isJsxElement || isParameter || isAlias ||
             (isOuterVariable && !isNeverInitialized) ||
             isSpreadDestructuringAssignmentTarget || isModuleExports || isSameScopedBindingElement(node, declaration) ||
             type !== autoType && type !== autoArrayType && (!strictNullChecks || (type.flags & (TypeFlags.AnyOrUnknown | TypeFlags.Void)) !== 0 ||
@@ -34206,6 +34215,14 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return checkJsxChildren(node);
     }
 
+    function checkJsxBlock(node: JsxBlock): void {
+        forEach(node.statements, checkSourceElement);
+    }
+
+    function getTypeOfJsxElementIdentifierDeclaration(node: JsxElement | JsxSelfClosingElement): Type {
+        return getJsxIntrinsicElementResultType(node) ?? getJsxElementTypeAt(node) ?? anyType;
+    }
+
     function checkJsxFragment(node: JsxFragment): Type {
         checkJsxOpeningLikeElementOrOpeningFragment(node.openingFragment);
 
@@ -34440,7 +34457,11 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 const ifBodyType = checkJsxChildren(child, checkMode);
                 elementTypes.push(getUnionType([ifBodyType, createTupleType([])]));
                 elementFlags.push(ElementFlags.Variadic);
-            } 
+            }
+            else if (child.kind === SyntaxKind.JsxBlock) {
+                checkJsxBlock(child as JsxBlock);
+                continue;
+            }
             else {
                 const childType = checkExpressionForMutableLocation(child, checkMode);
                 if (isSynFile && (
@@ -42762,6 +42783,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return checkJsxFragment(node as JsxFragment);
             case SyntaxKind.JsxIfDirective:
                 return checkJsxIfDirective(node as unknown as JsxIfDirective, checkMode);
+            case SyntaxKind.JsxBlock:
+                return voidType;
             case SyntaxKind.JsxAttributes:
                 return checkJsxAttributes(node as JsxAttributes, checkMode);
             case SyntaxKind.JsxOpeningElement:
@@ -50124,7 +50147,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
     function checkTryExpression(node: TryExpression): Type {
         const operandType = checkExpression(node.expression);
-        if (operandType === silentNeverType) return silentNeverType; // inner already errored; don't cascade
+        if (operandType === silentNeverType) return silentNeverType;
         const globalError = getGlobalType("Error" as __String, 0, /*reportErrors*/ false);
         if (!globalError) return operandType;
 
@@ -50133,12 +50156,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         const nonErrorParts = parts.filter(t => !isTypeAssignableTo(t, globalError));
 
         if (errorParts.length === 0) {
-            // No Error constituents — `try` has no effect.
             error(node.expression, Diagnostics.try_has_no_effect_because_the_expression_cannot_be_an_Error);
             return operandType;
         }
         if (nonErrorParts.length === 0) {
-            // All Error constituents — `try` always throws.
             error(node.expression, Diagnostics.try_will_always_throw_because_the_expression_always_returns_an_Error);
             return neverType;
         }
@@ -50148,13 +50169,11 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     function checkUpdateExpressionExpression(node: UpdateExpressionExpression): Type {
         const exprType = checkExpression(node.expression);
 
-        // Resolve Symbol.update property on the operand type
         const updatePropName = getPropertyNameForKnownSymbolName("update");
         const updateSym = getPropertyOfType(exprType, updatePropName);
 
         if (!updateSym) {
-            // No Symbol.update in any union member (e.g. Element | null) — existing assignability error
-            const elementType = getGlobalType("Element" as __String, 0, /*reportErrors*/ false);
+            const elementType = getGlobalType("Updatable" as __String, 0, /*reportErrors*/ false);
             if (elementType) {
                 checkTypeRelatedTo(exprType, elementType, assignableRelation, node.expression,
                     Diagnostics.Argument_of_type_0_is_not_assignable_to_parameter_of_type_1);
@@ -50162,28 +50181,23 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             return exprType;
         }
 
-        // Static JSX analysis: trace identifier → const initializer → JSX literal
-        const jsxSource = getJsxSourceOfExpression(node.expression);
-        if (jsxSource !== undefined) {
-            if (!jsxHasDynamicContent(jsxSource)) {
-                // Static JSX — update is a no-op at runtime; emit error and propagate silently
-                error(node, Diagnostics.update_has_no_effect_Colon_this_element_contains_no_dynamic_expressions);
-                return silentNeverType;
-            }
-            // Dynamic JSX — definitely updatable; return element type directly
-            return exprType;
-        }
+        // const jsxSource = getJsxSourceOfExpression(node.expression);
+        // if (jsxSource !== undefined) {
+        //     if (!jsxHasDynamicContent(jsxSource)) {
+        //         error(node, Diagnostics.update_has_no_effect_Colon_this_element_contains_no_dynamic_expressions);
+        //         return silentNeverType;
+        //     }
+        //     return exprType;
+        // }
 
-        // General case: Symbol.update is optional → might fail at runtime
-        if (updateSym.flags & SymbolFlags.Optional) {
-            const typeErrorType = getGlobalType("TypeError" as __String, 0, /*reportErrors*/ false);
-            return typeErrorType ? getUnionType([exprType, typeErrorType]) : exprType;
-        }
+        // if (updateSym.flags & SymbolFlags.Optional) {
+        //     const typeErrorType = getGlobalType("TypeError" as __String, 0, /*reportErrors*/ false);
+        //     return typeErrorType ? getUnionType([exprType, typeErrorType]) : exprType;
+        // }
 
         return exprType;
     }
 
-    /** Trace an identifier to its JSX initializer if the symbol is a const variable. */
     function getJsxSourceOfExpression(expr: Expression): JsxElement | JsxSelfClosingElement | JsxFragment | undefined {
         if (!isIdentifier(expr)) return undefined;
         const sym = getResolvedSymbol(expr);
@@ -50195,9 +50209,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return isJsxElement(init) || isJsxSelfClosingElement(init) || isJsxFragment(init) ? init : undefined;
     }
 
-    /** Returns true if the JSX node contains any dynamic expression (attributes or children, recursively). */
-    function jsxHasDynamicContent(node: JsxElement | JsxSelfClosingElement | JsxFragment): boolean {
-        // Component elements (uppercase or member-expression tag) manage their own state — always updatable.
+    function jsxHasDynamicContent(node: JsxElement | JsxSelfClosingElement | JsxFragment | JsxIfDirective): boolean {
         const tagName = isJsxSelfClosingElement(node) ? node.tagName : isJsxElement(node) ? node.openingElement.tagName : undefined;
         if (tagName && !isJsxIntrinsicTagName(tagName)) return true;
 
@@ -50210,11 +50222,12 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 if (isJsxAttribute(attr) && attr.initializer && attr.initializer.kind === SyntaxKind.JsxExpression) return true;
             }
         }
-        const children = (isJsxElement(node) || isJsxFragment(node)) ? node.children : undefined;
+        const children = (isJsxElement(node) || isJsxFragment(node) || node.kind === SyntaxKind.JsxIfDirective) ? node.children : undefined;
         if (children) {
             for (const child of children) {
+                if (child.kind === SyntaxKind.JsxBlock) return true;
                 if (child.kind === SyntaxKind.JsxExpression && (child as JsxExpression).expression) return true;
-                if (isJsxElement(child) || isJsxSelfClosingElement(child) || isJsxFragment(child)) {
+                if (isJsxElement(child) || isJsxSelfClosingElement(child) || isJsxFragment(child) || child.kind === SyntaxKind.JsxIfDirective) {
                     if (jsxHasDynamicContent(child as JsxElement | JsxSelfClosingElement | JsxFragment)) return true;
                 }
             }

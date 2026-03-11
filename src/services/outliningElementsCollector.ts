@@ -34,6 +34,7 @@ import {
     isTupleTypeNode,
     isVariableStatement,
     JsxAttributes,
+    JsxBlock,
     JsxElement,
     JsxFragment,
     JsxIfDirective,
@@ -294,6 +295,8 @@ function getOutliningSpanForNode(n: Node, sourceFile: SourceFile): OutliningSpan
             return spanForJSXFragment(n as JsxFragment);
         case SyntaxKind.JsxIfDirective:
             return spanForJsxIfDirective(n as JsxIfDirective);
+        case SyntaxKind.JsxBlock:
+            return spanForJsxBlock(n as JsxBlock);
         case SyntaxKind.JsxSelfClosingElement:
         case SyntaxKind.JsxOpeningElement:
             return spanForJSXAttributes((n as JsxOpeningLikeElement).attributes);
@@ -364,6 +367,11 @@ function getOutliningSpanForNode(n: Node, sourceFile: SourceFile): OutliningSpan
     function spanForJsxIfDirective(node: JsxIfDirective): OutliningSpan | undefined {
         const textSpan = createTextSpanFromBounds(node.getStart(sourceFile), node.getEnd());
         return createOutliningSpan(textSpan, OutliningSpanKind.Code, textSpan, /*autoCollapse*/ false, "<#if>...</#if>");
+    }
+
+    function spanForJsxBlock(node: JsxBlock): OutliningSpan | undefined {
+        const textSpan = createTextSpanFromBounds(node.getStart(sourceFile), node.getEnd());
+        return createOutliningSpan(textSpan, OutliningSpanKind.Code, textSpan, /*autoCollapse*/ false, "{ ... }");
     }
 
     function spanForJSXAttributes(node: JsxAttributes): OutliningSpan | undefined {

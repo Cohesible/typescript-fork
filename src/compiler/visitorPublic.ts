@@ -50,6 +50,7 @@ import {
     isJsxAttributeName,
     isJsxAttributes,
     isJsxChild,
+    JsxBlock,
     isJsxClosingElement,
     isJsxClosingFragment,
     isJsxExpression,
@@ -1685,6 +1686,7 @@ const visitEachChildTable: VisitEachChildTable = {
             node,
             Debug.checkDefined(nodeVisitor(node.tagName, visitor, isJsxTagNameExpression)),
             nodesVisitor(node.typeArguments, visitor, isTypeNode),
+            nodeVisitor(node.name, visitor, isIdentifier),
             Debug.checkDefined(nodeVisitor(node.attributes, visitor, isJsxAttributes)),
         );
     },
@@ -1694,6 +1696,7 @@ const visitEachChildTable: VisitEachChildTable = {
             node,
             Debug.checkDefined(nodeVisitor(node.tagName, visitor, isJsxTagNameExpression)),
             nodesVisitor(node.typeArguments, visitor, isTypeNode),
+            nodeVisitor(node.name, visitor, isIdentifier),
             Debug.checkDefined(nodeVisitor(node.attributes, visitor, isJsxAttributes)),
         );
     },
@@ -1718,6 +1721,12 @@ const visitEachChildTable: VisitEachChildTable = {
             node,
             Debug.checkDefined(nodeVisitor(node.condition, visitor, isJsxExpression)),
             nodesVisitor(node.children, visitor, isJsxChild),
+        );
+    },
+    [SyntaxKind.JsxBlock]: function visitEachChildOfJsxBlock(node, visitor, context, nodesVisitor, _nodeVisitor, _tokenVisitor) {
+        return context.factory.updateJsxBlock(
+            node as JsxBlock,
+            nodesVisitor((node as JsxBlock).statements, visitor, isStatement),
         );
     },
 

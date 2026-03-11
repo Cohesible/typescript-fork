@@ -228,6 +228,7 @@ import {
     JsxClosingElement,
     JsxClosingFragment,
     JsxElement,
+    JsxBlock,
     JsxExpression,
     JsxFragment,
     JsxIfDirective,
@@ -1075,6 +1076,9 @@ const forEachChildTable: ForEachChildTable = {
         return visitNode(cbNode, node.condition) ||
             visitNodes(cbNode, cbNodes, node.children);
     },
+    [SyntaxKind.JsxBlock]: function forEachChildInJsxBlock<T>(node: JsxBlock, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+        return visitNodes(cbNode, cbNodes, node.statements);
+    },
     [SyntaxKind.OptionalType]: forEachChildInOptionalRestOrJSDocParameterModifier,
     [SyntaxKind.RestType]: forEachChildInOptionalRestOrJSDocParameterModifier,
     [SyntaxKind.JSDocTypeExpression]: forEachChildInOptionalRestOrJSDocParameterModifier,
@@ -1227,6 +1231,7 @@ function forEachChildInImportOrExportSpecifier<T>(node: ImportSpecifier | Export
 function forEachChildInJsxOpeningOrSelfClosingElement<T>(node: JsxOpeningLikeElement, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
     return visitNode(cbNode, node.tagName) ||
         visitNodes(cbNode, cbNodes, node.typeArguments) ||
+        visitNode(cbNode, node.name) ||
         visitNode(cbNode, node.attributes);
 }
 
@@ -2972,7 +2977,7 @@ namespace Parser {
                 }
                 return tokenIsIdentifierOrKeyword(token());
             case ParsingContext.JsxAttributes:
-                return tokenIsIdentifierOrKeyword(token()) || token() === SyntaxKind.OpenBraceToken;
+                return tokenIsIdentifierOrKeyword(token()) || token() === SyntaxKind.OpenBraceToken || token() === SyntaxKind.MinusToken || token() === SyntaxKind.AtToken;
             case ParsingContext.JsxChildren:
                 return true;
             case ParsingContext.JSDocComment:
@@ -6299,12 +6304,28 @@ namespace Parser {
             case SyntaxKind.JsxTextAllWhiteSpaces:
                 return parseJsxText();
             case SyntaxKind.OpenBraceToken:
+                if (scriptKind === ScriptKind.Syn && lookAhead(() => {
+                    nextToken();
+                    return scanner.hasPrecedingLineBreak();
+                })) {
+                    return parseJsxBlock();
+                }
                 return parseJsxExpression(/*inExpressionContext*/ false);
             case SyntaxKind.LessThanToken:
                 return parseJsxNode(/*inExpressionContext*/ false, /*topInvalidNodePosition*/ undefined, openingTag);
             default:
                 return Debug.assertNever(token);
         }
+    }
+
+    function parseJsxBlock(): JsxBlock {
+        const pos = getNodePos();
+        parseExpected(SyntaxKind.OpenBraceToken);
+        const statements = parseList(ParsingContext.BlockStatements, parseStatement);
+        if (parseExpected(SyntaxKind.CloseBraceToken, /*diagnosticMessage*/ undefined, /*shouldAdvance*/ false)) {
+            scanJsxText();
+        }
+        return finishNode(factory.createJsxBlock(statements), pos);
     }
 
     function parseJsxChildren(openingTag: JsxOpeningElement | JsxOpeningFragment): NodeArray<JsxChild> {
@@ -6332,6 +6353,15 @@ namespace Parser {
         return createNodeArray(list, listPos);
     }
 
+    function parseJsxElementIdentifier(): Identifier | undefined {
+        if (!lookAhead(() => {
+            parseExpected(SyntaxKind.AtToken);
+            return token() === SyntaxKind.Identifier && scanner.getTokenFullStart() < scanner.getTokenStart();
+        })) return;
+        parseExpected(SyntaxKind.AtToken);
+        return parseIdentifier();
+    }
+
     function parseJsxAttributes(): JsxAttributes {
         const pos = getNodePos();
         return finishNode(factory.createJsxAttributes(parseList(ParsingContext.JsxAttributes, parseJsxAttribute)), pos);
@@ -6349,6 +6379,7 @@ namespace Parser {
         }
         const tagName = parseJsxElementName();
         const typeArguments = (contextFlags & NodeFlags.JavaScriptFile) === 0 ? tryParseTypeArguments() : undefined;
+        const identifier = token() === SyntaxKind.AtToken ? parseJsxElementIdentifier() : undefined;
         const attributes = parseJsxAttributes();
 
         let node: JsxOpeningLikeElement;
@@ -6358,7 +6389,7 @@ namespace Parser {
             // of regular scanning to avoid treating illegal characters (e.g. '#') as immediate
             // scanning errors
             scanJsxText();
-            node = factory.createJsxOpeningElement(tagName, typeArguments, attributes);
+            node = factory.createJsxOpeningElement(tagName, typeArguments, identifier, attributes);
         }
         else {
             parseExpected(SyntaxKind.SlashToken);
@@ -6371,7 +6402,7 @@ namespace Parser {
                     scanJsxText();
                 }
             }
-            node = factory.createJsxSelfClosingElement(tagName, typeArguments, attributes);
+            node = factory.createJsxSelfClosingElement(tagName, typeArguments, identifier, attributes);
         }
 
         return finishNode(node, pos);
@@ -6470,11 +6501,11 @@ namespace Parser {
 
     function parseJsxAttributeName() {
         const pos = getNodePos();
-        scanJsxIdentifier();
+        currentToken = scanner.scanJsxAttributeIdentifier();
 
         const attrName = parseIdentifierNameErrorOnUnicodeEscapeSequence();
         if (parseOptional(SyntaxKind.ColonToken)) {
-            scanJsxIdentifier();
+            currentToken = scanner.scanJsxAttributeIdentifier();
             return finishNode(factory.createJsxNamespacedName(attrName, parseIdentifierNameErrorOnUnicodeEscapeSequence()), pos);
         }
         return attrName;
@@ -6551,7 +6582,7 @@ namespace Parser {
         let condition: JsxExpression;
         const condPos = getNodePos();
         if (token() === SyntaxKind.OpenBraceToken) {
-            nextToken(); // consume {
+            nextToken();
             const innerExpr = token() !== SyntaxKind.CloseBraceToken
                 ? parseAssignmentExpressionOrHigher(/*allowReturnTypeInArrowFunction*/ false)
                 : undefined;
@@ -6559,11 +6590,11 @@ namespace Parser {
             condition = finishNode(factory.createJsxExpression(/*dotDotDotToken*/ undefined, innerExpr), condPos);
         }
         else {
-            parseExpected(SyntaxKind.OpenBraceToken); // reports "'{' expected"
+            parseExpected(SyntaxKind.OpenBraceToken);
             condition = finishNode(factory.createJsxExpression(/*dotDotDotToken*/ undefined, /*expression*/ undefined), condPos);
         }
         parseExpected(SyntaxKind.GreaterThanToken, /*diagnosticMessage*/ undefined, /*shouldAdvance*/ false);
-        scanJsxText(); // enter JSX text mode for children
+        scanJsxText();
 
         const childrenList: JsxChild[] = [];
         const childrenPos = getNodePos();
@@ -6577,15 +6608,11 @@ namespace Parser {
         parsingContext = saveParsingContext;
 
         let hasError = false;
-        // Consume closing </>.
-        // currentToken is LessThanSlashToken if we saw </, or EndOfFileToken if unterminated.
-        // Use lookAhead to peek past </ without consuming it; if we don't see >, leave the
-        // LessThanSlashToken in place so the outer parseJsxChildren loop can handle it (e.g. </div>).
         if (token() === SyntaxKind.LessThanSlashToken && lookAhead(() => {
-            nextToken(); // peek past </
+            nextToken();
             return token() === SyntaxKind.GreaterThanToken;
         })) {
-            nextToken(); // consume </
+            nextToken();
             if (parseExpected(SyntaxKind.GreaterThanToken, /*diagnosticMessage*/ undefined, /*shouldAdvance*/ false)) {
                 if (inExpressionContext) {
                     nextToken();

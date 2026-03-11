@@ -129,6 +129,7 @@ import {
     idText,
     IfStatement,
     ImportClause,
+    JsxBlock,
     JsxIfDirective,
     InternalSymbolName,
     isAliasableExpression,
@@ -327,6 +328,9 @@ import {
     WithStatement,
     CaseIsClause,
     JsxExpression,
+    JsxElement,
+    JsxSelfClosingElement,
+    getJsxElementNameContainer,
 } from "./_namespaces/ts.js";
 import * as performance from "./_namespaces/ts.performance.js";
 
@@ -1145,6 +1149,21 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             case SyntaxKind.JsxIfDirective:
                 bindJsxIfDirective(node as JsxIfDirective);
                 break;
+            case SyntaxKind.JsxBlock:
+                bindEach((node as JsxBlock).statements);
+                break;
+            case SyntaxKind.JsxElement:
+                bindEachChild(node);
+                if ((node as JsxElement).openingElement.name) {
+                    bindJsxElementIdentifier(node as JsxElement);
+                }
+                break;
+            case SyntaxKind.JsxSelfClosingElement:
+                bindEachChild(node);
+                if ((node as JsxSelfClosingElement).name) {
+                    bindJsxElementIdentifier(node as JsxSelfClosingElement);
+                }
+                break;
             case SyntaxKind.ThrowStatement:
                 if (inDefer) {
                     bind((node as ThrowStatement).expression);
@@ -1645,6 +1664,15 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
         bind(node.elseStatement);
         addAntecedent(postIfLabel, currentFlow);
         currentFlow = finishFlowLabel(postIfLabel);
+    }
+
+    function bindJsxElementIdentifier(p: JsxElement | JsxSelfClosingElement): void {
+        const rootContainer = (getJsxElementNameContainer(p) as Node ?? p) as HasLocals;
+        if (!rootContainer.locals) {
+            rootContainer.locals = createSymbolTable();
+            addToContainerChain(rootContainer);
+        }
+        declareSymbol(rootContainer.locals, /*parent*/ undefined, p as any,  SymbolFlags.BlockScopedVariable, SymbolFlags.BlockScopedVariableExcludes);
     }
 
     function bindJsxIfDirective(node: JsxIfDirective): void {
@@ -4088,6 +4116,11 @@ export function getContainerFlags(node: Node): ContainerFlags {
             return ContainerFlags.IsControlFlowContainer;
         case SyntaxKind.PropertyDeclaration:
             return (node as PropertyDeclaration).initializer ? ContainerFlags.IsControlFlowContainer : 0;
+
+        case SyntaxKind.JsxElement:
+        case SyntaxKind.JsxFragment:
+        case SyntaxKind.JsxIfDirective:
+            return ContainerFlags.IsBlockScopedContainer | ContainerFlags.HasLocals;
 
         case SyntaxKind.IfStatement:
         case SyntaxKind.WhileStatement:

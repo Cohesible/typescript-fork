@@ -1765,6 +1765,7 @@ export function transformTypeScript(context: TransformationContext): Transformer
             node,
             Debug.checkDefined(visitNode(node.tagName, visitor, isJsxTagNameExpression)),
             /*typeArguments*/ undefined,
+            node.name,
             Debug.checkDefined(visitNode(node.attributes, visitor, isJsxAttributes)),
         );
     }
@@ -1774,6 +1775,7 @@ export function transformTypeScript(context: TransformationContext): Transformer
             node,
             Debug.checkDefined(visitNode(node.tagName, visitor, isJsxTagNameExpression)),
             /*typeArguments*/ undefined,
+            node.name,
             Debug.checkDefined(visitNode(node.attributes, visitor, isJsxAttributes)),
         );
     }

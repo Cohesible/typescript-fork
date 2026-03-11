@@ -63,7 +63,9 @@ import {
     isImportMeta,
     isImportOrExportSpecifier,
     isJSDocOverrideTag,
+    isJsxElement,
     isJsxOpeningLikeElement,
+    isJsxSelfClosingElement,
     isJumpStatementTarget,
     isKnownSymbol,
     isModifier,
@@ -186,6 +188,10 @@ export function getDefinitionAtPosition(program: Program, sourceFile: SourceFile
 
     let { symbol, failedAliasResolution } = getSymbol(node, typeChecker, stopAtAlias);
     let fallbackNode = node;
+
+    if (symbol?.valueDeclaration && (isJsxElement(symbol.valueDeclaration) || isJsxSelfClosingElement(symbol.valueDeclaration))) {
+        return [createDefinitionInfo(symbol.valueDeclaration, typeChecker, symbol, node, /*unverified*/ false, failedAliasResolution)]
+    }
 
     if (searchOtherFilesOnly && failedAliasResolution) {
         // We couldn't resolve the specific import, try on the module specifier.

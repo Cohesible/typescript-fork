@@ -277,6 +277,7 @@ import {
     JsxElement,
     JsxExpression,
     JsxFragment,
+    JsxBlock,
     JsxIfDirective,
     JsxNamespacedName,
     JsxOpeningElement,
@@ -1011,6 +1012,8 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         updateJsxNamespacedName,
         createJsxIfDirective,
         updateJsxIfDirective,
+        createJsxBlock,
+        updateJsxBlock,
         createCaseClause,
         updateCaseClause,
         createCaseIsClause,
@@ -5759,13 +5762,15 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     }
 
     // @api
-    function createJsxSelfClosingElement(tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, attributes: JsxAttributes) {
+    function createJsxSelfClosingElement(tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes) {
         const node = createBaseNode<JsxSelfClosingElement>(SyntaxKind.JsxSelfClosingElement);
         node.tagName = tagName;
         node.typeArguments = asNodeArray(typeArguments);
+        node.name = identifier;
         node.attributes = attributes;
         node.transformFlags |= propagateChildFlags(node.tagName) |
             propagateChildrenFlags(node.typeArguments) |
+            propagateChildFlags(node.name) |
             propagateChildFlags(node.attributes) |
             TransformFlags.ContainsJsx;
         if (node.typeArguments) {
@@ -5775,22 +5780,25 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     }
 
     // @api
-    function updateJsxSelfClosingElement(node: JsxSelfClosingElement, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, attributes: JsxAttributes) {
+    function updateJsxSelfClosingElement(node: JsxSelfClosingElement, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes) {
         return node.tagName !== tagName
                 || node.typeArguments !== typeArguments
+                || node.name !== identifier
                 || node.attributes !== attributes
-            ? update(createJsxSelfClosingElement(tagName, typeArguments, attributes), node)
+            ? update(createJsxSelfClosingElement(tagName, typeArguments, identifier, attributes), node)
             : node;
     }
 
     // @api
-    function createJsxOpeningElement(tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, attributes: JsxAttributes) {
+    function createJsxOpeningElement(tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes) {
         const node = createBaseNode<JsxOpeningElement>(SyntaxKind.JsxOpeningElement);
         node.tagName = tagName;
         node.typeArguments = asNodeArray(typeArguments);
+        node.name = identifier;
         node.attributes = attributes;
         node.transformFlags |= propagateChildFlags(node.tagName) |
             propagateChildrenFlags(node.typeArguments) |
+            propagateChildFlags(node.name) |
             propagateChildFlags(node.attributes) |
             TransformFlags.ContainsJsx;
         if (typeArguments) {
@@ -5800,11 +5808,12 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     }
 
     // @api
-    function updateJsxOpeningElement(node: JsxOpeningElement, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, attributes: JsxAttributes) {
+    function updateJsxOpeningElement(node: JsxOpeningElement, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes) {
         return node.tagName !== tagName
                 || node.typeArguments !== typeArguments
+                || node.name !== identifier
                 || node.attributes !== attributes
-            ? update(createJsxOpeningElement(tagName, typeArguments, attributes), node)
+            ? update(createJsxOpeningElement(tagName, typeArguments, identifier, attributes), node)
             : node;
     }
 
@@ -5980,6 +5989,21 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     function updateJsxIfDirective(node: JsxIfDirective, condition: JsxExpression, children: readonly JsxChild[]) {
         return node.condition !== condition || node.children !== children
             ? update(createJsxIfDirective(condition, children), node)
+            : node;
+    }
+
+    // @api
+    function createJsxBlock(statements: readonly Statement[]) {
+        const node = createBaseNode<JsxBlock>(SyntaxKind.JsxBlock);
+        node.statements = createNodeArray(statements);
+        node.transformFlags |= propagateChildrenFlags(node.statements) | TransformFlags.ContainsJsx;
+        return node;
+    }
+
+    // @api
+    function updateJsxBlock(node: JsxBlock, statements: readonly Statement[]) {
+        return node.statements !== statements
+            ? update(createJsxBlock(statements), node)
             : node;
     }
 

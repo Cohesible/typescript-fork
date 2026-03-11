@@ -3639,10 +3639,6 @@
         "category": "Error",
         "code": 2886
     },
-    "'update' has no effect: this element contains no dynamic expressions.": {
-        "category": "Error",
-        "code": 2887
-    },
     "This condition will always return true since this function is always defined. Did you mean to call it instead?": {
         "category": "Error",
         "code": 2774

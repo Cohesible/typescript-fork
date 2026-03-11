@@ -423,6 +423,9 @@ export function getMeaningFromDeclaration(node: Node): SemanticMeaning {
         case SyntaxKind.ArrowFunction:
         case SyntaxKind.CatchClause:
         case SyntaxKind.JsxAttribute:
+        case SyntaxKind.JsxElement:
+        case SyntaxKind.JsxOpeningElement:
+        case SyntaxKind.JsxSelfClosingElement:
             return SemanticMeaning.Value;
 
         case SyntaxKind.TypeParameter:

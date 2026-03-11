@@ -74,6 +74,7 @@ import {
     getDeclarationFromName,
     getDeclarationOfKind,
     getEffectiveModifierFlags,
+    getJsxElementNameContainer,
     getLocalSymbolForExportDefault,
     getMeaningFromDeclaration,
     getMeaningFromLocation,
@@ -938,6 +939,8 @@ function declarationIsWriteAccess(decl: Declaration): boolean {
         case SyntaxKind.JSDocCallbackTag:
         case SyntaxKind.JSDocTypedefTag:
         case SyntaxKind.JsxAttribute:
+        case SyntaxKind.JsxElement:
+        case SyntaxKind.JsxSelfClosingElement:
         case SyntaxKind.ModuleDeclaration:
         case SyntaxKind.NamespaceExportDeclaration:
         case SyntaxKind.NamespaceImport:
@@ -1632,6 +1635,10 @@ export namespace Core {
         const { declarations, flags, parent, valueDeclaration } = symbol;
         if (valueDeclaration && (valueDeclaration.kind === SyntaxKind.FunctionExpression || valueDeclaration.kind === SyntaxKind.ClassExpression)) {
             return valueDeclaration;
+        }
+
+        if (valueDeclaration && (valueDeclaration.kind === SyntaxKind.JsxElement || valueDeclaration.kind === SyntaxKind.JsxSelfClosingElement)) {
+            return getJsxElementNameContainer(valueDeclaration);
         }
 
         if (!declarations) {

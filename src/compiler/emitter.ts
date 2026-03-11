@@ -1888,6 +1888,7 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
                 // SyntaxKind.JSDocPropertyTag (see JSDocParameterTag, above)
 
                 case SyntaxKind.JsxIfDirective:
+                case SyntaxKind.JsxBlock:
                     return;
 
                 // Transformation nodes
@@ -1998,6 +1999,7 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
                 case SyntaxKind.JsxFragment:
                     return emitJsxFragment(node as JsxFragment);
                 case SyntaxKind.JsxIfDirective:
+                case SyntaxKind.JsxBlock:
                     return;
 
                 // Synthesized list

@@ -349,6 +349,7 @@ import {
     VariableDeclaration,
     JsxIfDirective,
     isJsxIfDirective,
+    JsxOpeningElement,
 } from "./_namespaces/ts.js";
 import * as NavigateTo from "./_namespaces/ts.NavigateTo.js";
 import * as NavigationBar from "./_namespaces/ts.NavigationBar.js";
@@ -2437,7 +2438,7 @@ export function createLanguageService(
         const sourceFile = getValidSourceFile(fileName);
         const node = getAdjustedRenameLocation(getTouchingPropertyName(sourceFile, position));
         if (!Rename.nodeIsEligibleForRename(node)) return undefined;
-        if (isIdentifier(node) && (isJsxOpeningElement(node.parent) || isJsxClosingElement(node.parent)) && isIntrinsicJsxName(node.escapedText)) {
+        if (isIdentifier(node) && (isJsxOpeningElement(node.parent) || isJsxClosingElement(node.parent)) && isIntrinsicJsxName(node.escapedText) && (node.parent as JsxOpeningElement).name !== node) {
             const { openingElement, closingElement } = node.parent.parent;
             return [openingElement, closingElement].map((node): RenameLocation => {
                 const textSpan = createTextSpanFromNode(node.tagName, sourceFile);

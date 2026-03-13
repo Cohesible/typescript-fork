@@ -2336,6 +2336,7 @@ export function canHaveLocals(node: Node): node is HasLocals {
         case SyntaxKind.JsxElement:
         case SyntaxKind.JsxFragment:
         case SyntaxKind.JsxIfDirective:
+        case SyntaxKind.JsxElseDirective:
             return true;
         default:
             return false;
@@ -2506,7 +2507,8 @@ export function isJsxContainer(node: Node): node is JsxContainer {
     const kind = node.kind;
     return kind === SyntaxKind.JsxElement
         || kind === SyntaxKind.JsxFragment
-        || kind === SyntaxKind.JsxIfDirective;
+        || kind === SyntaxKind.JsxIfDirective
+        || kind === SyntaxKind.JsxElseDirective;
 }
 
 export function isJsxAttributeLike(node: Node): node is JsxAttributeLike {

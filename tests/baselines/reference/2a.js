@@ -1,10 +1,6 @@
-// @declaration: true
-// @emitDeclarationOnly: true
-// @strict: true
-// @target: es2017
+//// [tests/cases/compiler/2a.ts] ////
 
-// @filename: main.syn
-
+//// [main.syn]
 function f<T>(t: reify T): T {
     switch (Type.kind(t)) {
         case "array":
@@ -507,7 +503,7 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 // update expression
 declare const el: Element;
 const d = <div onClick={() => {
-    update el
+    try update el
 }}></div>
 
 // shorthand_jsx_attribute
@@ -537,8 +533,12 @@ const d4 = <div><#if {cond}></></div>
     update document.querySelector('.a')
 
     if (const x = document.querySelector('.a')) {
-        // ok
+        // error, needs try or void
         update x
+        // ok
+        try update x
+        // ok
+        void update x
     }
 
     {
@@ -550,6 +550,8 @@ const d4 = <div><#if {cond}></></div>
     {
         const x = <div>hi</div>
         update x // error, `x` has no updatable expressions
+        try update x // error, `x` has no updatable expressions
+        void update x // error, `x` has no updatable expressions
     }
 
     { 
@@ -575,14 +577,6 @@ const d4 = <div><#if {cond}></></div>
         function Comp() { return <div></div> }
         const el = <Comp/>
         update el // ok
-    }
-
-    {
-        let y = 0
-        const x1 = <div>{y}</div>
-        const x2 = <div>{y}</div>
-        update x1
-        update x1 // error: possibly redundant update, did you mean x2?
     }
 }
 
@@ -760,3 +754,8 @@ const d4 = <div><#if {cond}></></div>
 
 // ^(\s*)on(.*)\?:
 // $1on\L$2?:
+
+
+
+//// [main.d.ts]
+export {};

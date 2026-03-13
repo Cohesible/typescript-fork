@@ -347,9 +347,13 @@ import {
     updateSourceFile,
     UserPreferences,
     VariableDeclaration,
+    JsxElseDirective,
+    isJsxElseDirective,
     JsxIfDirective,
     isJsxIfDirective,
     JsxOpeningElement,
+    isJsxBlock,
+    JsxBlock,
 } from "./_namespaces/ts.js";
 import * as NavigateTo from "./_namespaces/ts.NavigateTo.js";
 import * as NavigationBar from "./_namespaces/ts.NavigationBar.js";
@@ -2818,8 +2822,8 @@ export function createLanguageService(
             return { newText: `</${ref}>` };
         }
         if (
-            token.kind === SyntaxKind.GreaterThanToken && 
-            isJsxIfDirective(token.parent) && 
+            token.kind === SyntaxKind.GreaterThanToken &&
+            (isJsxIfDirective(token.parent) || isJsxElseDirective(token.parent) || isJsxBlock(token.parent)) &&
             isUnclosedDirectiveOrFragment(token.parent)
         ) {
             return { newText: "</>" };
@@ -3133,14 +3137,14 @@ export function createLanguageService(
             isJsxElement(parent) && tagNamesAreEquivalent(openingElement.tagName, parent.openingElement.tagName) && isUnclosedTag(parent);
     }
 
-    function isUnclosedDirectiveOrFragment(element: JsxIfDirective | JsxFragment): boolean {
+    function isUnclosedDirectiveOrFragment(element: JsxIfDirective | JsxElseDirective | JsxFragment | JsxBlock): boolean {
         if (element.kind === SyntaxKind.JsxFragment) {
             if (!!(element.closingFragment.flags & NodeFlags.ThisNodeHasError)) return true;
         } else {
             if (!!(element.flags & NodeFlags.ThisNodeHasError)) return true;
         }
         if (element.parent) {
-            if (isJsxFragment(element.parent) || isJsxIfDirective(element.parent)) {
+            if (isJsxFragment(element.parent) || isJsxIfDirective(element.parent) || isJsxElseDirective(element.parent) || isJsxBlock(element.parent)) {
                 return isUnclosedDirectiveOrFragment(element.parent);
             }
         }
@@ -3602,7 +3606,7 @@ function getContainingObjectLiteralElementWorker(node: Node): ObjectLiteralEleme
 /** @internal */
 export type ObjectLiteralElementWithName = ObjectLiteralElement & { name: PropertyName; parent: ObjectLiteralExpression | JsxAttributes; };
 
-function getSymbolAtLocationForQuickInfo(node: Node, checker: TypeChecker): Symbol | undefined {
+export function getSymbolAtLocationForQuickInfo(node: Node, checker: TypeChecker): Symbol | undefined {
     const object = getContainingObjectLiteralElement(node);
     if (object) {
         const contextualType = checker.getContextualType(object.parent);

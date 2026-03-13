@@ -139,7 +139,6 @@ import {
     DeclarationWithTypeParameters,
     Decorator,
     deduplicate,
-    DefaultClause,
     defaultMaximumTruncationLength,
     DeferredTypeReference,
     DeleteExpression,
@@ -1149,6 +1148,8 @@ import {
     FallibleTypeNode,
     UpdateExpressionExpression,
     isConstOrAsyncTypeReference,
+    findJsxElseDirective,
+    JsxElseDirective,
 } from "./_namespaces/ts.js";
 import * as moduleSpecifiers from "./_namespaces/ts.moduleSpecifiers.js";
 import * as performance from "./_namespaces/ts.performance.js";
@@ -21825,9 +21826,15 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             case SyntaxKind.JsxElement:
             case SyntaxKind.JsxSelfClosingElement:
             case SyntaxKind.JsxFragment:
+                // spread elements are checked in checkJsxChildren
+                if (child.kind !== SyntaxKind.JsxFragment &&
+                        (isJsxSelfClosingElement(child) ? child.dotDotDotToken : child.openingElement.dotDotDotToken)) {
+                    return undefined;
+                }
                 // child is of type JSX.Element
                 return { errorNode: child, innerExpression: child, nameType };
             case SyntaxKind.JsxIfDirective:
+            case SyntaxKind.JsxElseDirective:
             case SyntaxKind.JsxBlock:
                 return { errorNode: child, innerExpression: undefined, nameType };
             default:
@@ -34211,8 +34218,18 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function checkJsxIfDirective(node: JsxIfDirective, _checkMode: CheckMode | undefined): Type {
-        if (node.condition.expression) checkExpression(node.condition.expression);
-        return checkJsxChildren(node);
+        const cond = node.condition.expression;
+        if (cond) checkExpression(cond);
+        const childrenType = checkJsxChildren(node);
+
+        const condType = cond ? getTypeOfExpression(cond) : anyType;
+        if (!(condType.flags & TypeFlags.Any) && isTypeAssignableTo(condType, trueType)) return childrenType;
+
+        const elseClause = findJsxElseDirective(node);
+        const elseType = elseClause ? checkJsxChildren(elseClause) : createTupleType([]);
+        if (!(condType.flags & TypeFlags.Any) && isTypeAssignableTo(condType, falseType)) return elseType;
+
+        return getUnionType([childrenType, elseType]);
     }
 
     function checkJsxBlock(node: JsxBlock): void {
@@ -34436,7 +34453,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return result;
     }
 
-    function checkJsxChildren(node: JsxElement | JsxFragment | JsxIfDirective, checkMode?: CheckMode): Type {
+    function checkJsxChildren(node: JsxElement | JsxFragment | JsxIfDirective | JsxElseDirective, checkMode?: CheckMode): Type {
         const elementTypes: Type[] = [];
         const elementFlags: ElementFlags[] = [];
         const isSynFile = getSourceFileOfNode(node)?.scriptKind === ScriptKind.Syn;
@@ -34455,16 +34472,65 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             else if (child.kind === SyntaxKind.JsxIfDirective) {
                 if (child.condition.expression) checkExpression(child.condition.expression);
                 const ifBodyType = checkJsxChildren(child, checkMode);
-                elementTypes.push(getUnionType([ifBodyType, createTupleType([])]));
+                const elseClause = findJsxElseDirective(child);
+                if (!elseClause) {
+                    elementTypes.push(getUnionType([ifBodyType, createTupleType([])]));
+                    elementFlags.push(ElementFlags.Variadic);
+                    continue;
+                }
+                const elseBodyType = checkJsxChildren(elseClause, checkMode);
+                elementTypes.push(getUnionType([ifBodyType, elseBodyType]));
                 elementFlags.push(ElementFlags.Variadic);
             }
             else if (child.kind === SyntaxKind.JsxBlock) {
                 checkJsxBlock(child as JsxBlock);
                 continue;
             }
+            else if (child.kind === SyntaxKind.JsxElseDirective) {
+                continue; // handled by parent
+            }
             else {
+                const isSpreadJsx = isSynFile && (
+                    (isJsxSelfClosingElement(child) && !!child.dotDotDotToken) ||
+                    (isJsxElement(child) && !!child.openingElement.dotDotDotToken)
+                );
                 const childType = checkExpressionForMutableLocation(child, checkMode);
-                if (isSynFile && (
+                if (isSpreadJsx) {
+                    // spread elements effectively spread the return type of the component
+                    const spreadChild = child as JsxSelfClosingElement | JsxElement;
+                    const spreadType = getJsxIntrinsicElementResultType(spreadChild) ?? (() => {
+                        const tagName = isJsxSelfClosingElement(spreadChild) ? spreadChild.tagName : spreadChild.openingElement.tagName;
+                        const tagType = isJsxNamespacedName(tagName) ? anyType : getTypeOfExpression(tagName);
+                        const sigs = getSignaturesOfType(tagType, SignatureKind.Call);
+                        return sigs.length > 0 ? getReturnTypeOfSignature(sigs[0]) : childType;
+                    })();
+
+                    const getSpreadElementTypes = (t: Type): readonly Type[] =>
+                        t.flags & TypeFlags.Union
+                            ? flatMap((t as UnionType).types, getSpreadElementTypes)
+                            : isTupleType(t) ? getTypeArguments(t)
+                            : [getTypeArguments(t as TypeReference)[0]]; // Array<T>
+
+                    let resolvedSpreadType = spreadType;
+                    if (!isSpreadableArrayLikeType(spreadType)) {
+                        error(child, Diagnostics.Spread_JSX_element_type_0_is_not_an_array_type, typeToString(spreadType));
+                        resolvedSpreadType = createArrayType(anyType);
+                    }
+                    else {
+                        const childConstraint = getJsxType(JsxNames.Child, child);
+                        if (!isErrorType(childConstraint)) {
+                            for (const elementType of getSpreadElementTypes(spreadType)) {
+                                if (!checkTypeAssignableTo(elementType, childConstraint, child)) {
+                                    resolvedSpreadType = createArrayType(anyType); // suppress cascading errors
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    elementTypes.push(resolvedSpreadType);
+                    elementFlags.push(ElementFlags.Variadic);
+                }
+                else if (isSynFile && (
                     child.kind === SyntaxKind.JsxFragment ||
                     (child.kind === SyntaxKind.JsxExpression && child.dotDotDotToken)
                 )) {
@@ -34728,8 +34794,20 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return anyType;
     }
 
+    function isSpreadableArrayLikeType(t: Type): boolean {
+        return !!(t.flags & TypeFlags.Union)
+            ? (t as UnionType).types.every(isSpreadableArrayLikeType)
+            : isArrayType(t) || isTupleType(t);
+    }
+
     function checkJsxReturnAssignableToAppropriateBound(refKind: JsxReferenceKind, elemInstanceType: Type, openingLikeElement: JsxOpeningLikeElement) {
         if (refKind === JsxReferenceKind.Function) {
+            // targeted hint for spread syntax
+            if (isSpreadableArrayLikeType(elemInstanceType)) {
+                const componentName = getTextOfNode(openingLikeElement.tagName);
+                error(openingLikeElement.tagName, Diagnostics._0_returns_1_and_cannot_be_used_as_a_single_JSX_element_Did_you_mean_0, componentName, typeToString(elemInstanceType));
+                return;
+            }
             const sfcReturnConstraint = getJsxStatelessElementTypeAt(openingLikeElement);
             if (sfcReturnConstraint) {
                 checkTypeRelatedTo(elemInstanceType, sfcReturnConstraint, assignableRelation, openingLikeElement.tagName, Diagnostics.Its_return_type_0_is_not_a_valid_JSX_element, generateInitialErrorChain);
@@ -34873,19 +34951,22 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
         if (isNodeOpeningLikeElement) {
             const jsxOpeningLikeNode = node;
-            const elementTypeConstraint = getJsxElementTypeTypeAt(jsxOpeningLikeNode);
-            if (elementTypeConstraint !== undefined) {
-                const tagName = jsxOpeningLikeNode.tagName;
-                const tagType = isJsxIntrinsicTagName(tagName)
-                    ? getStringLiteralType(intrinsicTagNameToString(tagName))
-                    : checkExpression(tagName);
-                checkTypeRelatedTo(tagType, elementTypeConstraint, assignableRelation, tagName, Diagnostics.Its_type_0_is_not_a_valid_JSX_element_type, () => {
-                    const componentName = getTextOfNode(tagName);
-                    return chainDiagnosticMessages(/*details*/ undefined, Diagnostics._0_cannot_be_used_as_a_JSX_component, componentName);
-                });
-            }
-            else {
-                checkJsxReturnAssignableToAppropriateBound(getJsxReferenceKind(jsxOpeningLikeNode), getReturnTypeOfSignature(sig), jsxOpeningLikeNode);
+            // `checkJsxChildren` handles checking spread
+            if (!jsxOpeningLikeNode.dotDotDotToken) {
+                const elementTypeConstraint = getJsxElementTypeTypeAt(jsxOpeningLikeNode);
+                if (elementTypeConstraint !== undefined) {
+                    const tagName = jsxOpeningLikeNode.tagName;
+                    const tagType = isJsxIntrinsicTagName(tagName)
+                        ? getStringLiteralType(intrinsicTagNameToString(tagName))
+                        : checkExpression(tagName);
+                    checkTypeRelatedTo(tagType, elementTypeConstraint, assignableRelation, tagName, Diagnostics.Its_type_0_is_not_a_valid_JSX_element_type, () => {
+                        const componentName = getTextOfNode(tagName);
+                        return chainDiagnosticMessages(/*details*/ undefined, Diagnostics._0_cannot_be_used_as_a_JSX_component, componentName);
+                    });
+                }
+                else {
+                    checkJsxReturnAssignableToAppropriateBound(getJsxReferenceKind(jsxOpeningLikeNode), getReturnTypeOfSignature(sig), jsxOpeningLikeNode);
+                }
             }
         }
     }
@@ -54997,6 +55078,7 @@ namespace JsxNames {
     export const ElementChildrenAttributeNameContainer = "ElementChildrenAttribute" as __String;
     export const Element = "Element" as __String;
     export const ElementType = "ElementType" as __String;
+    export const Child = "Child" as __String;
     export const IntrinsicAttributes = "IntrinsicAttributes" as __String;
     export const IntrinsicClassAttributes = "IntrinsicClassAttributes" as __String;
     export const LibraryManagedAttributes = "LibraryManagedAttributes" as __String;

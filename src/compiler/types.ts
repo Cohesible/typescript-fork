@@ -381,6 +381,7 @@ export const enum SyntaxKind {
     JsxExpression,
     JsxNamespacedName,
     JsxIfDirective,
+    JsxElseDirective,
     JsxBlock,
 
     // Clauses
@@ -1208,6 +1209,7 @@ export type HasChildren =
     | JsxExpression
     | JsxNamespacedName
     | JsxIfDirective
+    | JsxElseDirective
     | JsxBlock
     | CaseClause
     | CaseIsClause
@@ -3294,6 +3296,7 @@ export interface JsxNamespacedName extends Node {
 export interface JsxOpeningElement extends Expression {
     readonly kind: SyntaxKind.JsxOpeningElement;
     readonly parent: JsxElement;
+    readonly dotDotDotToken?: Token<SyntaxKind.DotDotDotToken>;
     readonly tagName: JsxTagNameExpression;
     readonly typeArguments?: NodeArray<TypeNode>;
     readonly name?: Identifier;
@@ -3303,6 +3306,7 @@ export interface JsxOpeningElement extends Expression {
 /// A JSX expression of the form <TagName attrs />
 export interface JsxSelfClosingElement extends PrimaryExpression {
     readonly kind: SyntaxKind.JsxSelfClosingElement;
+    readonly dotDotDotToken?: Token<SyntaxKind.DotDotDotToken>;
     readonly tagName: JsxTagNameExpression;
     readonly typeArguments?: NodeArray<TypeNode>;
     readonly name?: Identifier;
@@ -3323,7 +3327,13 @@ export interface JsxIfDirective extends PrimaryExpression {
     readonly children: NodeArray<JsxChild>;
 }
 
-export interface JsxBlock extends Node {
+export interface JsxElseDirective extends PrimaryExpression {
+    readonly kind: SyntaxKind.JsxElseDirective;
+    readonly children: NodeArray<JsxChild>;
+    /** @internal */ elseFlowNode?: FlowNode // used by the binder
+}
+
+export interface JsxBlock extends PrimaryExpression {
     readonly kind: SyntaxKind.JsxBlock;
     readonly statements: NodeArray<Statement>;
 }
@@ -3387,12 +3397,14 @@ export type JsxChild =
     | JsxSelfClosingElement
     | JsxFragment
     | JsxIfDirective
+    | JsxElseDirective
     | JsxBlock;
 
 export type JsxContainer =
     | JsxElement
     | JsxFragment
-    | JsxIfDirective;
+    | JsxIfDirective
+    | JsxElseDirective;
 
 export interface Statement extends Node, JSDocContainer {
     _statementBrand: any;
@@ -9330,10 +9342,10 @@ export interface NodeFactory {
 
     createJsxElement(openingElement: JsxOpeningElement, children: readonly JsxChild[], closingElement: JsxClosingElement): JsxElement;
     updateJsxElement(node: JsxElement, openingElement: JsxOpeningElement, children: readonly JsxChild[], closingElement: JsxClosingElement): JsxElement;
-    createJsxSelfClosingElement(tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes): JsxSelfClosingElement;
-    updateJsxSelfClosingElement(node: JsxSelfClosingElement, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes): JsxSelfClosingElement;
-    createJsxOpeningElement(tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes): JsxOpeningElement;
-    updateJsxOpeningElement(node: JsxOpeningElement, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes): JsxOpeningElement;
+    createJsxSelfClosingElement(dotDotDotToken: Token<SyntaxKind.DotDotDotToken> | undefined, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes): JsxSelfClosingElement;
+    updateJsxSelfClosingElement(node: JsxSelfClosingElement, dotDotDotToken: Token<SyntaxKind.DotDotDotToken> | undefined, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes): JsxSelfClosingElement;
+    createJsxOpeningElement(dotDotDotToken: Token<SyntaxKind.DotDotDotToken> | undefined, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes): JsxOpeningElement;
+    updateJsxOpeningElement(node: JsxOpeningElement, dotDotDotToken: Token<SyntaxKind.DotDotDotToken> | undefined, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes): JsxOpeningElement;
     createJsxClosingElement(tagName: JsxTagNameExpression): JsxClosingElement;
     updateJsxClosingElement(node: JsxClosingElement, tagName: JsxTagNameExpression): JsxClosingElement;
     createJsxFragment(openingFragment: JsxOpeningFragment, children: readonly JsxChild[], closingFragment: JsxClosingFragment): JsxFragment;
@@ -9354,6 +9366,8 @@ export interface NodeFactory {
     updateJsxNamespacedName(node: JsxNamespacedName, namespace: Identifier, name: Identifier): JsxNamespacedName;
     createJsxIfDirective(condition: JsxExpression, children: readonly JsxChild[]): JsxIfDirective;
     updateJsxIfDirective(node: JsxIfDirective, condition: JsxExpression, children: readonly JsxChild[]): JsxIfDirective;
+    createJsxElseDirective(children: readonly JsxChild[]): JsxElseDirective;
+    updateJsxElseDirective(node: JsxElseDirective, children: readonly JsxChild[]): JsxElseDirective;
     createJsxBlock(statements: readonly Statement[]): JsxBlock;
     updateJsxBlock(node: JsxBlock, statements: readonly Statement[]): JsxBlock;
 

@@ -20,23 +20,24 @@ import {
 
 const fixID = "wrapJsxInFragment";
 const errorCodes = [Diagnostics.JSX_expressions_must_have_one_parent_element.code];
-registerCodeFix({
-    errorCodes,
-    getCodeActions: function getCodeActionsToWrapJsxInFragment(context) {
-        const { sourceFile, span } = context;
-        const node = findNodeToFix(sourceFile, span.start);
-        if (!node) return undefined;
-        const changes = textChanges.ChangeTracker.with(context, t => doChange(t, sourceFile, node));
-        return [createCodeFixAction(fixID, changes, Diagnostics.Wrap_in_JSX_fragment, fixID, Diagnostics.Wrap_all_unparented_JSX_in_JSX_fragment)];
-    },
-    fixIds: [fixID],
-    getAllCodeActions: context =>
-        codeFixAll(context, errorCodes, (changes, diag) => {
-            const node = findNodeToFix(context.sourceFile, diag.start);
-            if (!node) return undefined;
-            doChange(changes, context.sourceFile, node);
-        }),
-});
+// FIXME: turn this back on
+// registerCodeFix({
+//     errorCodes,
+//     getCodeActions: function getCodeActionsToWrapJsxInFragment(context) {
+//         const { sourceFile, span } = context;
+//         const node = findNodeToFix(sourceFile, span.start);
+//         if (!node) return undefined;
+//         const changes = textChanges.ChangeTracker.with(context, t => doChange(t, sourceFile, node));
+//         return [createCodeFixAction(fixID, changes, Diagnostics.Wrap_in_JSX_fragment, fixID, Diagnostics.Wrap_all_unparented_JSX_in_JSX_fragment)];
+//     },
+//     fixIds: [fixID],
+//     getAllCodeActions: context =>
+//         codeFixAll(context, errorCodes, (changes, diag) => {
+//             const node = findNodeToFix(context.sourceFile, diag.start);
+//             if (!node) return undefined;
+//             doChange(changes, context.sourceFile, node);
+//         }),
+// });
 
 function findNodeToFix(sourceFile: SourceFile, pos: number): BinaryExpression | undefined {
     // The error always at 1st token that is "<" in "<a /><a />"

@@ -3013,6 +3013,18 @@
         "category": "Error",
         "code": 2609
     },
+    "Spread JSX element type '{0}' is not an array type.": {
+        "category": "Error",
+        "code": 95198
+    },
+    "Each element of a spread JSX component must be assignable to the JSX child type, but '{0}' is not assignable to '{1}'.": {
+        "category": "Error",
+        "code": 95199
+    },
+    "'{0}' returns '{1}' and cannot be used as a single JSX element. Did you mean '...{0}'?": {
+        "category": "Error",
+        "code": 95200
+    },
     "'{0}' is defined as an accessor in class '{1}', but is overridden here in '{2}' as an instance property.": {
         "category": "Error",
         "code": 2610

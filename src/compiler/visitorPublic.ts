@@ -53,6 +53,7 @@ import {
     JsxBlock,
     isJsxClosingElement,
     isJsxClosingFragment,
+    JsxElseDirective,
     isJsxExpression,
     isJsxOpeningElement,
     isJsxOpeningFragment,
@@ -1681,9 +1682,10 @@ const visitEachChildTable: VisitEachChildTable = {
         );
     },
 
-    [SyntaxKind.JsxSelfClosingElement]: function visitEachChildOfJsxSelfClosingElement(node, visitor, context, nodesVisitor, nodeVisitor, _tokenVisitor) {
+    [SyntaxKind.JsxSelfClosingElement]: function visitEachChildOfJsxSelfClosingElement(node, visitor, context, nodesVisitor, nodeVisitor, tokenVisitor) {
         return context.factory.updateJsxSelfClosingElement(
             node,
+            tokenVisitor ? nodeVisitor(node.dotDotDotToken, tokenVisitor, isDotDotDotToken) : node.dotDotDotToken,
             Debug.checkDefined(nodeVisitor(node.tagName, visitor, isJsxTagNameExpression)),
             nodesVisitor(node.typeArguments, visitor, isTypeNode),
             nodeVisitor(node.name, visitor, isIdentifier),
@@ -1691,9 +1693,10 @@ const visitEachChildTable: VisitEachChildTable = {
         );
     },
 
-    [SyntaxKind.JsxOpeningElement]: function visitEachChildOfJsxOpeningElement(node, visitor, context, nodesVisitor, nodeVisitor, _tokenVisitor) {
+    [SyntaxKind.JsxOpeningElement]: function visitEachChildOfJsxOpeningElement(node, visitor, context, nodesVisitor, nodeVisitor, tokenVisitor) {
         return context.factory.updateJsxOpeningElement(
             node,
+            tokenVisitor ? nodeVisitor(node.dotDotDotToken, tokenVisitor, isDotDotDotToken) : node.dotDotDotToken,
             Debug.checkDefined(nodeVisitor(node.tagName, visitor, isJsxTagNameExpression)),
             nodesVisitor(node.typeArguments, visitor, isTypeNode),
             nodeVisitor(node.name, visitor, isIdentifier),
@@ -1720,7 +1723,13 @@ const visitEachChildTable: VisitEachChildTable = {
         return context.factory.updateJsxIfDirective(
             node,
             Debug.checkDefined(nodeVisitor(node.condition, visitor, isJsxExpression)),
-            nodesVisitor(node.children, visitor, isJsxChild),
+            nodesVisitor(node.children, visitor, isJsxChild)
+        );
+    },
+    [SyntaxKind.JsxElseDirective]: function visitEachChildOfJsxElseDirective(node, visitor, context, nodesVisitor, _nodeVisitor, _tokenVisitor) {
+        return context.factory.updateJsxElseDirective(
+            node as JsxElseDirective,
+            nodesVisitor((node as JsxElseDirective).children, visitor, isJsxChild),
         );
     },
     [SyntaxKind.JsxBlock]: function visitEachChildOfJsxBlock(node, visitor, context, nodesVisitor, _nodeVisitor, _tokenVisitor) {

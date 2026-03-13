@@ -3984,75 +3984,76 @@ declare namespace ts {
         JsxExpression = 305,
         JsxNamespacedName = 306,
         JsxIfDirective = 307,
-        JsxBlock = 308,
-        CaseClause = 309,
-        CaseIsClause = 310,
-        DefaultClause = 311,
-        HeritageClause = 312,
-        CatchClause = 313,
-        ImportAttributes = 314,
-        ImportAttribute = 315,
-        /** @deprecated */ AssertClause = 314,
-        /** @deprecated */ AssertEntry = 315,
-        /** @deprecated */ ImportTypeAssertionContainer = 316,
-        PropertyAssignment = 317,
-        ShorthandPropertyAssignment = 318,
-        SpreadAssignment = 319,
-        EnumMember = 320,
-        SourceFile = 321,
-        Bundle = 322,
-        JSDocTypeExpression = 323,
-        JSDocNameReference = 324,
-        JSDocMemberName = 325,
-        JSDocAllType = 326,
-        JSDocUnknownType = 327,
-        JSDocNullableType = 328,
-        JSDocNonNullableType = 329,
-        JSDocOptionalType = 330,
-        JSDocFunctionType = 331,
-        JSDocVariadicType = 332,
-        JSDocNamepathType = 333,
-        JSDoc = 334,
+        JsxElseDirective = 308,
+        JsxBlock = 309,
+        CaseClause = 310,
+        CaseIsClause = 311,
+        DefaultClause = 312,
+        HeritageClause = 313,
+        CatchClause = 314,
+        ImportAttributes = 315,
+        ImportAttribute = 316,
+        /** @deprecated */ AssertClause = 315,
+        /** @deprecated */ AssertEntry = 316,
+        /** @deprecated */ ImportTypeAssertionContainer = 317,
+        PropertyAssignment = 318,
+        ShorthandPropertyAssignment = 319,
+        SpreadAssignment = 320,
+        EnumMember = 321,
+        SourceFile = 322,
+        Bundle = 323,
+        JSDocTypeExpression = 324,
+        JSDocNameReference = 325,
+        JSDocMemberName = 326,
+        JSDocAllType = 327,
+        JSDocUnknownType = 328,
+        JSDocNullableType = 329,
+        JSDocNonNullableType = 330,
+        JSDocOptionalType = 331,
+        JSDocFunctionType = 332,
+        JSDocVariadicType = 333,
+        JSDocNamepathType = 334,
+        JSDoc = 335,
         /** @deprecated Use SyntaxKind.JSDoc */
-        JSDocComment = 334,
-        JSDocText = 335,
-        JSDocTypeLiteral = 336,
-        JSDocSignature = 337,
-        JSDocLink = 338,
-        JSDocLinkCode = 339,
-        JSDocLinkPlain = 340,
-        JSDocTag = 341,
-        JSDocAugmentsTag = 342,
-        JSDocImplementsTag = 343,
-        JSDocAuthorTag = 344,
-        JSDocDeprecatedTag = 345,
-        JSDocClassTag = 346,
-        JSDocPublicTag = 347,
-        JSDocPrivateTag = 348,
-        JSDocProtectedTag = 349,
-        JSDocReadonlyTag = 350,
-        JSDocOverrideTag = 351,
-        JSDocCallbackTag = 352,
-        JSDocOverloadTag = 353,
-        JSDocEnumTag = 354,
-        JSDocParameterTag = 355,
-        JSDocReturnTag = 356,
-        JSDocThisTag = 357,
-        JSDocTypeTag = 358,
-        JSDocTemplateTag = 359,
-        JSDocTypedefTag = 360,
-        JSDocSeeTag = 361,
-        JSDocPropertyTag = 362,
-        JSDocThrowsTag = 363,
-        JSDocSatisfiesTag = 364,
-        JSDocImportTag = 365,
-        SyntaxList = 366,
-        NotEmittedStatement = 367,
-        NotEmittedTypeElement = 368,
-        PartiallyEmittedExpression = 369,
-        CommaListExpression = 370,
-        SyntheticReferenceExpression = 371,
-        Count = 372,
+        JSDocComment = 335,
+        JSDocText = 336,
+        JSDocTypeLiteral = 337,
+        JSDocSignature = 338,
+        JSDocLink = 339,
+        JSDocLinkCode = 340,
+        JSDocLinkPlain = 341,
+        JSDocTag = 342,
+        JSDocAugmentsTag = 343,
+        JSDocImplementsTag = 344,
+        JSDocAuthorTag = 345,
+        JSDocDeprecatedTag = 346,
+        JSDocClassTag = 347,
+        JSDocPublicTag = 348,
+        JSDocPrivateTag = 349,
+        JSDocProtectedTag = 350,
+        JSDocReadonlyTag = 351,
+        JSDocOverrideTag = 352,
+        JSDocCallbackTag = 353,
+        JSDocOverloadTag = 354,
+        JSDocEnumTag = 355,
+        JSDocParameterTag = 356,
+        JSDocReturnTag = 357,
+        JSDocThisTag = 358,
+        JSDocTypeTag = 359,
+        JSDocTemplateTag = 360,
+        JSDocTypedefTag = 361,
+        JSDocSeeTag = 362,
+        JSDocPropertyTag = 363,
+        JSDocThrowsTag = 364,
+        JSDocSatisfiesTag = 365,
+        JSDocImportTag = 366,
+        SyntaxList = 367,
+        NotEmittedStatement = 368,
+        NotEmittedTypeElement = 369,
+        PartiallyEmittedExpression = 370,
+        CommaListExpression = 371,
+        SyntheticReferenceExpression = 372,
+        Count = 373,
         FirstAssignment = 64,
         LastAssignment = 79,
         FirstCompoundAssignment = 65,
@@ -4080,10 +4081,10 @@ declare namespace ts {
         FirstStatement = 252,
         LastStatement = 268,
         FirstNode = 170,
-        FirstJSDocNode = 323,
-        LastJSDocNode = 365,
-        FirstJSDocTagNode = 341,
-        LastJSDocTagNode = 365,
+        FirstJSDocNode = 324,
+        LastJSDocNode = 366,
+        FirstJSDocTagNode = 342,
+        LastJSDocTagNode = 366,
     }
     type TriviaSyntaxKind = SyntaxKind.SingleLineCommentTrivia | SyntaxKind.MultiLineCommentTrivia | SyntaxKind.NewLineTrivia | SyntaxKind.WhitespaceTrivia | SyntaxKind.ShebangTrivia | SyntaxKind.ConflictMarkerTrivia;
     type LiteralSyntaxKind = SyntaxKind.NumericLiteral | SyntaxKind.BigIntLiteral | SyntaxKind.StringLiteral | SyntaxKind.JsxText | SyntaxKind.JsxTextAllWhiteSpaces | SyntaxKind.RegularExpressionLiteral | SyntaxKind.NoSubstitutionTemplateLiteral;
@@ -5277,7 +5278,11 @@ declare namespace ts {
         readonly condition: JsxExpression;
         readonly children: NodeArray<JsxChild>;
     }
-    interface JsxBlock extends Node {
+    interface JsxElseDirective extends PrimaryExpression {
+        readonly kind: SyntaxKind.JsxElseDirective;
+        readonly children: NodeArray<JsxChild>;
+    }
+    interface JsxBlock extends PrimaryExpression {
         readonly kind: SyntaxKind.JsxBlock;
         readonly statements: NodeArray<Statement>;
     }
@@ -5317,8 +5322,8 @@ declare namespace ts {
         readonly parent: JsxElement | JsxFragment;
         readonly containsOnlyTriviaWhiteSpaces: boolean;
     }
-    type JsxChild = JsxText | JsxExpression | JsxElement | JsxSelfClosingElement | JsxFragment | JsxIfDirective | JsxBlock;
-    type JsxContainer = JsxElement | JsxFragment | JsxIfDirective;
+    type JsxChild = JsxText | JsxExpression | JsxElement | JsxSelfClosingElement | JsxFragment | JsxIfDirective | JsxElseDirective | JsxBlock;
+    type JsxContainer = JsxElement | JsxFragment | JsxIfDirective | JsxElseDirective;
     interface Statement extends Node, JSDocContainer {
         _statementBrand: any;
     }
@@ -7970,6 +7975,8 @@ declare namespace ts {
         updateJsxNamespacedName(node: JsxNamespacedName, namespace: Identifier, name: Identifier): JsxNamespacedName;
         createJsxIfDirective(condition: JsxExpression, children: readonly JsxChild[]): JsxIfDirective;
         updateJsxIfDirective(node: JsxIfDirective, condition: JsxExpression, children: readonly JsxChild[]): JsxIfDirective;
+        createJsxElseDirective(children: readonly JsxChild[]): JsxElseDirective;
+        updateJsxElseDirective(node: JsxElseDirective, children: readonly JsxChild[]): JsxElseDirective;
         createJsxBlock(statements: readonly Statement[]): JsxBlock;
         updateJsxBlock(node: JsxBlock, statements: readonly Statement[]): JsxBlock;
         createCaseClause(expression: Expression, statements: readonly Statement[]): CaseClause;
@@ -8973,6 +8980,7 @@ declare namespace ts {
      * ```
      */
     function getJSDocCommentsAndTags(hostNode: Node): readonly (JSDoc | JSDocTag)[];
+    function findJsxElseDirective(node: JsxIfDirective): JsxElseDirective | undefined;
     function isPopOrShiftIdentifier(node: Identifier): boolean;
     /**
      * Create an external source map source file reference
@@ -9212,6 +9220,7 @@ declare namespace ts {
     function isJsxExpression(node: Node): node is JsxExpression;
     function isJsxNamespacedName(node: Node): node is JsxNamespacedName;
     function isJsxIfDirective(node: Node): node is JsxIfDirective;
+    function isJsxElseDirective(node: Node): node is JsxElseDirective;
     function isJsxBlock(node: Node): node is JsxBlock;
     function isCaseClause(node: Node): node is CaseClause;
     function isCaseIsClause(node: Node): node is CaseIsClause;
@@ -11520,6 +11529,7 @@ declare namespace ts {
     function createLanguageServiceSourceFile(fileName: string, scriptSnapshot: IScriptSnapshot, scriptTargetOrOptions: ScriptTarget | CreateSourceFileOptions, version: string, setNodeParents: boolean, scriptKind?: ScriptKind): SourceFile;
     function updateLanguageServiceSourceFile(sourceFile: SourceFile, scriptSnapshot: IScriptSnapshot, version: string, textChangeRange: TextChangeRange | undefined, aggressiveChecks?: boolean): SourceFile;
     function createLanguageService(host: LanguageServiceHost, documentRegistry?: DocumentRegistry, syntaxOnlyOrLanguageServiceMode?: boolean | LanguageServiceMode): LanguageService;
+    function getSymbolAtLocationForQuickInfo(node: Node, checker: TypeChecker): Symbol | undefined;
     /**
      * Get the path of the default library files (lib.d.ts) as distributed with the typescript
      * node package.

@@ -278,6 +278,7 @@ import {
     JsxExpression,
     JsxFragment,
     JsxBlock,
+    JsxElseDirective,
     JsxIfDirective,
     JsxNamespacedName,
     JsxOpeningElement,
@@ -1012,6 +1013,8 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         updateJsxNamespacedName,
         createJsxIfDirective,
         updateJsxIfDirective,
+        createJsxElseDirective,
+        updateJsxElseDirective,
         createJsxBlock,
         updateJsxBlock,
         createCaseClause,
@@ -5762,13 +5765,15 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     }
 
     // @api
-    function createJsxSelfClosingElement(tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes) {
+    function createJsxSelfClosingElement(dotDotDotToken: Token<SyntaxKind.DotDotDotToken> | undefined, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes) {
         const node = createBaseNode<JsxSelfClosingElement>(SyntaxKind.JsxSelfClosingElement);
+        node.dotDotDotToken = dotDotDotToken;
         node.tagName = tagName;
         node.typeArguments = asNodeArray(typeArguments);
         node.name = identifier;
         node.attributes = attributes;
-        node.transformFlags |= propagateChildFlags(node.tagName) |
+        node.transformFlags |= propagateChildFlags(node.dotDotDotToken) |
+            propagateChildFlags(node.tagName) |
             propagateChildrenFlags(node.typeArguments) |
             propagateChildFlags(node.name) |
             propagateChildFlags(node.attributes) |
@@ -5780,23 +5785,26 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     }
 
     // @api
-    function updateJsxSelfClosingElement(node: JsxSelfClosingElement, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes) {
-        return node.tagName !== tagName
+    function updateJsxSelfClosingElement(node: JsxSelfClosingElement, dotDotDotToken: Token<SyntaxKind.DotDotDotToken> | undefined, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes) {
+        return node.dotDotDotToken !== dotDotDotToken
+                || node.tagName !== tagName
                 || node.typeArguments !== typeArguments
                 || node.name !== identifier
                 || node.attributes !== attributes
-            ? update(createJsxSelfClosingElement(tagName, typeArguments, identifier, attributes), node)
+            ? update(createJsxSelfClosingElement(dotDotDotToken, tagName, typeArguments, identifier, attributes), node)
             : node;
     }
 
     // @api
-    function createJsxOpeningElement(tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes) {
+    function createJsxOpeningElement(dotDotDotToken: Token<SyntaxKind.DotDotDotToken> | undefined, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes) {
         const node = createBaseNode<JsxOpeningElement>(SyntaxKind.JsxOpeningElement);
+        node.dotDotDotToken = dotDotDotToken;
         node.tagName = tagName;
         node.typeArguments = asNodeArray(typeArguments);
         node.name = identifier;
         node.attributes = attributes;
-        node.transformFlags |= propagateChildFlags(node.tagName) |
+        node.transformFlags |= propagateChildFlags(node.dotDotDotToken) |
+            propagateChildFlags(node.tagName) |
             propagateChildrenFlags(node.typeArguments) |
             propagateChildFlags(node.name) |
             propagateChildFlags(node.attributes) |
@@ -5808,12 +5816,13 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     }
 
     // @api
-    function updateJsxOpeningElement(node: JsxOpeningElement, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes) {
-        return node.tagName !== tagName
+    function updateJsxOpeningElement(node: JsxOpeningElement, dotDotDotToken: Token<SyntaxKind.DotDotDotToken> | undefined, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes) {
+        return node.dotDotDotToken !== dotDotDotToken
+                || node.tagName !== tagName
                 || node.typeArguments !== typeArguments
                 || node.name !== identifier
                 || node.attributes !== attributes
-            ? update(createJsxOpeningElement(tagName, typeArguments, identifier, attributes), node)
+            ? update(createJsxOpeningElement(dotDotDotToken, tagName, typeArguments, identifier, attributes), node)
             : node;
     }
 
@@ -5975,7 +5984,7 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     }
 
     // @api
-    function createJsxIfDirective(condition: JsxExpression, children: readonly JsxChild[]) {
+    function createJsxIfDirective(condition: JsxExpression, children: readonly JsxChild[], elseClause?: JsxElseDirective) {
         const node = createBaseNode<JsxIfDirective>(SyntaxKind.JsxIfDirective);
         node.condition = condition;
         node.children = createNodeArray(children);
@@ -5986,9 +5995,24 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     }
 
     // @api
-    function updateJsxIfDirective(node: JsxIfDirective, condition: JsxExpression, children: readonly JsxChild[]) {
+    function updateJsxIfDirective(node: JsxIfDirective, condition: JsxExpression, children: readonly JsxChild[], elseClause?: JsxElseDirective) {
         return node.condition !== condition || node.children !== children
-            ? update(createJsxIfDirective(condition, children), node)
+            ? update(createJsxIfDirective(condition, children, elseClause), node)
+            : node;
+    }
+
+    // @api
+    function createJsxElseDirective(children: readonly JsxChild[]) {
+        const node = createBaseNode<JsxElseDirective>(SyntaxKind.JsxElseDirective);
+        node.children = createNodeArray(children);
+        node.transformFlags |= propagateChildrenFlags(node.children) | TransformFlags.ContainsJsx;
+        return node;
+    }
+
+    // @api
+    function updateJsxElseDirective(node: JsxElseDirective, children: readonly JsxChild[]) {
+        return node.children !== children
+            ? update(createJsxElseDirective(children), node)
             : node;
     }
 

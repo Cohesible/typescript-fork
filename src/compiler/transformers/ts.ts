@@ -1763,6 +1763,7 @@ export function transformTypeScript(context: TransformationContext): Transformer
     function visitJsxSelfClosingElement(node: JsxSelfClosingElement) {
         return factory.updateJsxSelfClosingElement(
             node,
+            node.dotDotDotToken,
             Debug.checkDefined(visitNode(node.tagName, visitor, isJsxTagNameExpression)),
             /*typeArguments*/ undefined,
             node.name,
@@ -1773,6 +1774,7 @@ export function transformTypeScript(context: TransformationContext): Transformer
     function visitJsxJsxOpeningElement(node: JsxOpeningElement) {
         return factory.updateJsxOpeningElement(
             node,
+            node.dotDotDotToken,
             Debug.checkDefined(visitNode(node.tagName, visitor, isJsxTagNameExpression)),
             /*typeArguments*/ undefined,
             node.name,

@@ -231,6 +231,7 @@ import {
     JsxBlock,
     JsxExpression,
     JsxFragment,
+    JsxElseDirective,
     JsxIfDirective,
     JsxNamespacedName,
     JsxOpeningElement,
@@ -1076,6 +1077,9 @@ const forEachChildTable: ForEachChildTable = {
         return visitNode(cbNode, node.condition) ||
             visitNodes(cbNode, cbNodes, node.children);
     },
+    [SyntaxKind.JsxElseDirective]: function forEachChildInJsxElseDirective<T>(node: JsxElseDirective, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+        return visitNodes(cbNode, cbNodes, node.children);
+    },
     [SyntaxKind.JsxBlock]: function forEachChildInJsxBlock<T>(node: JsxBlock, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNodes(cbNode, cbNodes, node.statements);
     },
@@ -1229,7 +1233,8 @@ function forEachChildInImportOrExportSpecifier<T>(node: ImportSpecifier | Export
 }
 
 function forEachChildInJsxOpeningOrSelfClosingElement<T>(node: JsxOpeningLikeElement, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
-    return visitNode(cbNode, node.tagName) ||
+    return visitNode(cbNode, node.dotDotDotToken) ||
+        visitNode(cbNode, node.tagName) ||
         visitNodes(cbNode, cbNodes, node.typeArguments) ||
         visitNode(cbNode, node.name) ||
         visitNode(cbNode, node.attributes);
@@ -2886,6 +2891,7 @@ namespace Parser {
         }
 
         switch (parsingContext) {
+            case ParsingContext.JsxBlockStatements:
             case ParsingContext.SourceElements:
             case ParsingContext.BlockStatements:
             case ParsingContext.SwitchClauseStatements:
@@ -3089,6 +3095,9 @@ namespace Parser {
                 return token() === SyntaxKind.OpenBraceToken || token() === SyntaxKind.CloseBraceToken;
             case ParsingContext.JsxAttributes:
                 return token() === SyntaxKind.GreaterThanToken || token() === SyntaxKind.SlashToken;
+            case ParsingContext.JsxBlockStatements:
+                if (token() === SyntaxKind.LessThanSlashToken) return true;
+                // falls through
             case ParsingContext.JsxChildren:
                 return token() === SyntaxKind.LessThanToken && lookAhead(nextTokenIsSlash);
             default:
@@ -3526,6 +3535,8 @@ namespace Parser {
                 return parseErrorAtCurrentToken(Diagnostics.Identifier_expected);
             case ParsingContext.JsxChildren:
                 return parseErrorAtCurrentToken(Diagnostics.Identifier_expected);
+            case ParsingContext.JsxBlockStatements:
+                return parseErrorAtCurrentToken(Diagnostics.Declaration_or_statement_expected);
             case ParsingContext.ImportAttributes:
                 return parseErrorAtCurrentToken(Diagnostics.Identifier_or_string_literal_expected);
             case ParsingContext.JSDocComment:
@@ -6185,7 +6196,7 @@ namespace Parser {
         if (scriptKind === ScriptKind.Syn) {
             synFileContainsJsx = true;
             if (lookAhead(() => nextToken() === SyntaxKind.PrivateIdentifier)) {
-                return parseJsxIfDirective(openingTag);
+                return parseJsxDirective(openingTag);
             }
         }
         return parseJsxElementOrSelfClosingElementOrFragment(inExpressionContext, topInvalidNodePosition, openingTag, mustBeUnary);
@@ -6329,13 +6340,14 @@ namespace Parser {
     }
 
     function parseJsxChildren(openingTag: JsxOpeningElement | JsxOpeningFragment): NodeArray<JsxChild> {
-        const list = [];
+        const list: JsxChild[] = [];
         const listPos = getNodePos();
         const saveParsingContext = parsingContext;
         parsingContext |= 1 << ParsingContext.JsxChildren;
 
         while (true) {
-            const child = parseJsxChild(openingTag, currentToken = scanner.reScanJsxToken());
+            const t = currentToken = scanner.reScanJsxToken();
+            const child = parseJsxChild(openingTag, t);
             if (!child) break;
             list.push(child);
             if (
@@ -6377,6 +6389,7 @@ namespace Parser {
             scanJsxText();
             return finishNode(factory.createJsxOpeningFragment(), pos);
         }
+        const dotDotDotToken = parseOptionalToken(SyntaxKind.DotDotDotToken);
         const tagName = parseJsxElementName();
         const typeArguments = (contextFlags & NodeFlags.JavaScriptFile) === 0 ? tryParseTypeArguments() : undefined;
         const identifier = token() === SyntaxKind.AtToken ? parseJsxElementIdentifier() : undefined;
@@ -6389,7 +6402,7 @@ namespace Parser {
             // of regular scanning to avoid treating illegal characters (e.g. '#') as immediate
             // scanning errors
             scanJsxText();
-            node = factory.createJsxOpeningElement(tagName, typeArguments, identifier, attributes);
+            node = factory.createJsxOpeningElement(dotDotDotToken, tagName, typeArguments, identifier, attributes);
         }
         else {
             parseExpected(SyntaxKind.SlashToken);
@@ -6402,7 +6415,7 @@ namespace Parser {
                     scanJsxText();
                 }
             }
-            node = factory.createJsxSelfClosingElement(tagName, typeArguments, identifier, attributes);
+            node = factory.createJsxSelfClosingElement(dotDotDotToken, tagName, typeArguments, identifier, attributes);
         }
 
         return finishNode(node, pos);
@@ -6564,11 +6577,38 @@ namespace Parser {
         return finishNode(factory.createJsxJsxClosingFragment(), pos);
     }
 
-    function parseJsxIfDirective(openingTag: JsxOpeningElement | JsxOpeningFragment | undefined): JsxIfDirective {
-        const pos = getNodePos();
-        parseExpected(SyntaxKind.LessThanToken);
+    function parseDirectiveEnd(tagName: PrivateIdentifier, inExpressionContext: boolean) {
+        const endPos = getNodePos();
+        let hasError = false;
+        if (token() === SyntaxKind.LessThanSlashToken && lookAhead(() => {
+            nextToken();
+            return token() === SyntaxKind.GreaterThanToken;
+        })) {
+            nextToken();
+            if (parseExpected(SyntaxKind.GreaterThanToken, /*diagnosticMessage*/ undefined, /*shouldAdvance*/ false)) {
+                if (inExpressionContext) {
+                    nextToken();
+                }
+                else {
+                    scanJsxText();
+                }
+            }
+        }
+        else if (token() !== SyntaxKind.EndOfFileToken) {
+            hasError = true;
+            parseErrorAtCurrentToken(Diagnostics.Expected_corresponding_JSX_closing_tag_for_0, tagName.escapedText as string);
+        }
+        return { endPos, hasError };
+    }
 
-        const tagName = parsePrivateIdentifier();
+    function parseJsxDirectiveBody(
+        pos: number,
+        tagName: PrivateIdentifier,
+        openingTag: JsxOpeningElement | JsxOpeningFragment | undefined
+    ) {
+        parseExpected(SyntaxKind.GreaterThanToken, /*diagnosticMessage*/ undefined, /*shouldAdvance*/ false);
+        scanJsxText();
+
         const inExpressionContext = !openingTag;
         if (!openingTag) {
             // XXX: for error recovery
@@ -6576,9 +6616,51 @@ namespace Parser {
                 kind: SyntaxKind.JsxOpeningElement,
                 tagName: tagName as any as Identifier,
                 pos,
-            } as JsxOpeningElement
+            } as JsxOpeningElement;
         }
 
+        const children = parseJsxChildren(openingTag);
+        const { endPos, hasError } = parseDirectiveEnd(tagName, inExpressionContext);
+
+        return { children, hasError, endPos };
+    }
+
+    function parseJsxDirective(openingTag: JsxOpeningElement | JsxOpeningFragment | undefined) {
+        const pos = getNodePos();
+        parseExpected(SyntaxKind.LessThanToken);
+        const name = scanner.getTokenValue();
+        const tagName = parsePrivateIdentifier();
+        switch (name) {
+            case '#if':
+                return finishJsxIfDirective(pos, tagName, openingTag);
+            case '#else': {
+                const { children, hasError } = parseJsxDirectiveBody(pos, tagName, openingTag);
+                const n = finishNode(factory.createJsxElseDirective(children), pos);
+                if (hasError) (n as Mutable<typeof n>).flags |= NodeFlags.ThisNodeHasError;
+                return n;
+            }
+            case '#block': {
+                const pos = getNodePos();
+                parseExpected(SyntaxKind.GreaterThanToken);
+                const statements = parseList(ParsingContext.JsxBlockStatements, parseStatement);
+                const { hasError } = parseDirectiveEnd(tagName, !openingTag);
+                const n = finishNode(factory.createJsxBlock(statements), pos);
+                if (hasError) (n as Mutable<typeof n>).flags |= NodeFlags.ThisNodeHasError;
+                return n;
+            }
+        }
+        // error node
+        const open = finishNode(factory.createJsxOpeningElement(undefined, factory.createIdentifier(name), undefined, undefined, factory.createJsxAttributes([])), pos);
+        const { children, endPos } = parseJsxDirectiveBody(pos, tagName, openingTag);
+        const close = finishNode(factory.createJsxClosingElement(factory.createIdentifier("")), endPos);
+        return factory.createJsxElement(open, children, close);
+    }
+
+    function finishJsxIfDirective(
+        pos: number,
+        tagName: PrivateIdentifier,
+        openingTag: JsxOpeningElement | JsxOpeningFragment | undefined,
+    ) {
         let condition: JsxExpression;
         const condPos = getNodePos();
         if (token() === SyntaxKind.OpenBraceToken) {
@@ -6593,39 +6675,9 @@ namespace Parser {
             parseExpected(SyntaxKind.OpenBraceToken);
             condition = finishNode(factory.createJsxExpression(/*dotDotDotToken*/ undefined, /*expression*/ undefined), condPos);
         }
-        parseExpected(SyntaxKind.GreaterThanToken, /*diagnosticMessage*/ undefined, /*shouldAdvance*/ false);
-        scanJsxText();
 
-        const childrenList: JsxChild[] = [];
-        const childrenPos = getNodePos();
-        const saveParsingContext = parsingContext;
-        parsingContext |= 1 << ParsingContext.JsxChildren;
-        while (true) {
-            const child = parseJsxChild(openingTag, currentToken = scanner.reScanJsxToken());
-            if (!child) break;
-            childrenList.push(child);
-        }
-        parsingContext = saveParsingContext;
-
-        let hasError = false;
-        if (token() === SyntaxKind.LessThanSlashToken && lookAhead(() => {
-            nextToken();
-            return token() === SyntaxKind.GreaterThanToken;
-        })) {
-            nextToken();
-            if (parseExpected(SyntaxKind.GreaterThanToken, /*diagnosticMessage*/ undefined, /*shouldAdvance*/ false)) {
-                if (inExpressionContext) {
-                    nextToken();
-                } else {
-                    scanJsxText();
-                }
-            }
-        }
-        else if (token() !== SyntaxKind.EndOfFileToken) {
-            hasError = true;
-            parseErrorAtCurrentToken(Diagnostics.Expected_corresponding_JSX_closing_tag_for_0, "#if");
-        }
-        const n = finishNode(factory.createJsxIfDirective(condition, createNodeArray(childrenList, childrenPos)), pos);
+        const { children, hasError } = parseJsxDirectiveBody(pos, tagName, openingTag);
+        const n = finishNode(factory.createJsxIfDirective(condition, children), pos);
         if (hasError) (n as Mutable<typeof n>).flags |= NodeFlags.ThisNodeHasError;
         return n;
     }
@@ -9122,6 +9174,7 @@ namespace Parser {
         ObjectLiteralMembers,      // Members in object literal
         JsxAttributes,             // Attributes in jsx element
         JsxChildren,               // Things between opening and closing JSX tags
+        JsxBlockStatements,
         ArrayLiteralMembers,       // Members in array literal
         Parameters,                // Parameters in parameter list
         JSDocParameters,           // JSDoc parameters in parameter list of JSDoc function type

@@ -62,11 +62,41 @@ interface Element {
 	[Symbol.update]?(): void
 }
 
+declare class Wire<T> {
+  	constructor(initial: T);
+	constructor(...args: T extends undefined ? [] : [T]);
+	/**
+	 * Immediately calls everything connected to the Wire with `value`.
+	 * 
+	 * Listeners are executed in insertion order.
+	 * 
+	 * Reentrant `set` calls stop execution of the prior call.
+	 */
+	set(value: T): void
+	/**
+	 * Weakly subscribes to the Wire. 
+	 * 
+	 * `cb` is immediately executed with the current Wire state if the Wire is not in a transient state. 
+	 * Otherwise, `cb` will be called after all other listeners.
+	 * 
+	 * The returned function unsubscribes `cb` from the Wire. Holding the diposer keeps the attachment alive.
+	 */
+	listen(cb: (value: T) => void): () => void
+	/**
+	 * Creates a new Wire connected to this one via a transform function.
+	 */
+	convert<U>(fn: (value: T) => U): Wire<U>
+}
+
 declare namespace JSX {
 	type Booleanish = boolean | 'true' | 'false';
 
-	type Child = Element | string | number | null | undefined;
+	type Child = ChildNode | string | number;
 	type Children = Child[];
+
+	interface ComponentNode<T extends () => ChildNode = () => ChildNode> extends ChildNode, Updatable {
+		readonly root: ReturnType<T>
+	}
 
 	type Element = globalThis.Element;
 
@@ -86,7 +116,6 @@ declare namespace JSX {
 	};
 
 	interface CSSProperties extends DOMCSSProperties {
-		cssText?: string | null;
 		[key: string]: string | number | null | undefined;
 	}
 
@@ -220,6 +249,8 @@ declare namespace JSX {
 
 		// MouseEvents
 		onClick?: MouseEventHandler<Target>;
+		'on:click'?: MouseEventHandler<Target>;
+
 		onContextMenu?: MouseEventHandler<Target>;
 		onDblClick?: MouseEventHandler<Target>;
 		onDrag?: DragEventHandler<Target>;

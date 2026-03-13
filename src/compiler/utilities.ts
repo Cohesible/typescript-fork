@@ -399,6 +399,7 @@ import {
     JsxElement,
     JsxBlock,
     JsxEmit,
+    JsxElseDirective,
     JsxFragment,
     JsxIfDirective,
     JsxNamespacedName,
@@ -5058,15 +5059,51 @@ export function getDeclarationFromName(name: Node): Declaration | undefined {
 }
 
 /** @internal */
-export function getJsxElementNameContainer(node: Node): JsxElement | undefined {
-    return findAncestor(node, n => {
-        if (n.kind === SyntaxKind.JsxIfDirective) return true;
-        if (n.kind === SyntaxKind.JsxElement || n.kind === SyntaxKind.JsxFragment) {
-            const p2 = n.parent;
-            return !(p2.kind === SyntaxKind.JsxElement || p2.kind === SyntaxKind.JsxFragment || p2.kind === SyntaxKind.JsxIfDirective);
+export function getJsxElementNameContainer(node: Node): Node | undefined {
+    let n = node;
+    let el: Node | undefined;
+    while (true) {
+        switch (n.kind) {
+            case SyntaxKind.JsxExpression:
+                return el;
+            case SyntaxKind.JsxElement:
+            case SyntaxKind.JsxFragment:
+            case SyntaxKind.JsxSelfClosingElement:
+                el = n
+                break;
+            case SyntaxKind.JsxIfDirective:
+            case SyntaxKind.JsxElseDirective:
+            case SyntaxKind.SourceFile:
+            case SyntaxKind.MethodDeclaration:
+            case SyntaxKind.MethodSignature:
+            case SyntaxKind.FunctionDeclaration:
+            case SyntaxKind.FunctionExpression:
+            case SyntaxKind.GetAccessor:
+            case SyntaxKind.SetAccessor:
+            case SyntaxKind.ClassDeclaration:
+            case SyntaxKind.InterfaceDeclaration:
+            case SyntaxKind.EnumDeclaration:
+            case SyntaxKind.ModuleDeclaration:
+                return el === node ? n : el;
         }
-        return false;
-    }) as any;
+        n = n.parent;
+    }
+}
+
+export function findJsxElseDirective(node: JsxIfDirective): JsxElseDirective | undefined {
+    if (node.parent.kind === SyntaxKind.JsxElement || node.parent.kind === SyntaxKind.JsxIfDirective || node.parent.kind === SyntaxKind.JsxElseDirective) {
+        const children = (node.parent as JsxIfDirective).children;
+        const index = children.indexOf(node)
+        if (index === -1) return
+        let pos = index+1;
+        while (children[pos]?.kind === SyntaxKind.JsxText && (children[pos] as any).containsOnlyTriviaWhiteSpaces) {
+            pos++;
+            continue;
+        }
+        if (children[pos]?.kind === SyntaxKind.JsxElseDirective) {
+            return children[pos] as JsxElseDirective;
+        }
+    }
 }
 
 /** @internal */
@@ -10835,7 +10872,8 @@ export function getContainingNodeArray(node: Node): NodeArray<Node> | undefined 
         case SyntaxKind.JsxElement:
         case SyntaxKind.JsxFragment:
         case SyntaxKind.JsxIfDirective:
-            return isJsxChild(node) ? (parent as JsxElement | JsxFragment | JsxIfDirective).children : undefined;
+        case SyntaxKind.JsxElseDirective:
+            return isJsxChild(node) ? (parent as JsxElement | JsxFragment | JsxIfDirective | JsxElseDirective).children : undefined;
         case SyntaxKind.JsxBlock:
             return isStatement(node) ? (parent as JsxBlock).statements : undefined;
         case SyntaxKind.JsxOpeningElement:

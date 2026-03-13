@@ -11,6 +11,7 @@ import {
     getCombinedModifierFlags,
     getCombinedNodeFlags,
     getMeaningFromLocation,
+    getSymbolAtLocationForQuickInfo,
     isBindingElement,
     isCallExpression,
     isCatchClause,
@@ -19,6 +20,7 @@ import {
     isImportClause,
     isImportSpecifier,
     isInfinityOrNaNString,
+    isJsxAttribute,
     isJsxBlock,
     isJsxElement,
     isJsxExpression,
@@ -161,8 +163,40 @@ function collectTokens(program: Program, sourceFile: SourceFile, span: TextSpan,
             return;
         }
 
-        if (inJSXElement && isIdentifier(node) && isJsxOpeningLikeElement(node.parent) && node.parent.name === node) {
-            return collector(node, TokenType.variable, (1 << TokenModifier.local) | (1 << TokenModifier.readonly));
+        if (inJSXElement && isIdentifier(node)) {
+            if (isJsxOpeningLikeElement(node.parent)) {
+                if (node.parent.name === node) {
+                    return collector(node, TokenType.variable, (1 << TokenModifier.local) | (1 << TokenModifier.readonly));
+                }
+            } else if (isJsxAttribute(node.parent) && node.parent.name === node) {
+                let symbol = getSymbolAtLocationForQuickInfo(node, typeChecker);
+                if (symbol) {
+                    if (symbol.flags & SymbolFlags.Alias) {
+                        symbol = typeChecker.getAliasedSymbol(symbol);
+                    }
+                    let typeIdx = classifySymbol(symbol, SemanticMeaning.Value);
+                    if (typeIdx !== undefined) {
+                        typeIdx = reclassifyByType(typeChecker, node, typeIdx);
+                        collector(node, typeIdx, 0);
+                    }
+                }
+                return;
+            }
+
+        }
+        if (inJSXElement && node.kind === SyntaxKind.JsxNamespacedName) {
+            let symbol = getSymbolAtLocationForQuickInfo(node, typeChecker);
+            if (symbol) {
+                if (symbol.flags & SymbolFlags.Alias) {
+                    symbol = typeChecker.getAliasedSymbol(symbol);
+                }
+                let typeIdx = classifySymbol(symbol, SemanticMeaning.Value);
+                if (typeIdx !== undefined) {
+                    typeIdx = reclassifyByType(typeChecker, node, typeIdx);
+                    collector(node, typeIdx, 0);
+                }
+            }
+            return;
         }
 
         if (isIdentifier(node) && !inJSXElement && !inImportClause(node) && !isInfinityOrNaNString(node.escapedText) && node.escapedText !== 'async') {
@@ -331,4 +365,5 @@ const tokenFromDeclarationMapping = new Map<SyntaxKind, TokenType>([
     [SyntaxKind.TypeParameter, TokenType.typeParameter],
     [SyntaxKind.PropertyAssignment, TokenType.property],
     [SyntaxKind.ShorthandPropertyAssignment, TokenType.property],
+    [SyntaxKind.JsxNamespacedName, TokenType.property],
 ]);

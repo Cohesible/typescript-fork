@@ -1,0 +1,3072 @@
+//// [tests/cases/compiler/2a.ts] ////
+
+=== Performance Stats ===
+Type Count: 1,000 -> 2,500
+
+=== main.syn ===
+function f<T>(t: reify T): T {
+>f : <T>(t: reify T) => T
+>  : ^ ^^ ^^       ^^^^^ 
+>t : reify T
+>  : ^^^^^^^
+
+    switch (Type.kind(t)) {
+>Type.kind(t) : keyof Type.Kinds
+>             : ^^^^^^^^^^^^^^^^
+>Type.kind : (t: Type) => keyof Type.Kinds
+>          : ^ ^^    ^^^^^      ^^^^^^^^^^
+>Type : typeof Type
+>     : ^^^^^^^^^^^
+>kind : (t: Type) => keyof Type.Kinds
+>     : ^ ^^    ^^^^^      ^^^^^^^^^^
+>t : reify T
+>  : ^^^^^^^
+
+        case "array":
+>"array" : "array"
+>        : ^^^^^^^
+
+            t
+>t : Type.Array<Type>
+>  : ^^^^^^^^^^^^^^^^
+
+        case "object":
+>"object" : "object"
+>         : ^^^^^^^^
+
+            const z = t['a']
+>z : Type
+>  : ^^^^
+>t['a'] : Type
+>       : ^^^^
+>t : Type.Object
+>  : ^^^^^^^^^^^
+>'a' : "a"
+>    : ^^^
+    }
+
+    return {} as any
+>{} as any : any
+>          : ^^^
+>{} : {}
+>   : ^^
+}
+
+const y = f(reify { x: number })
+>y : { x: number; }
+>  : ^^^^^      ^^^
+>f(reify { x: number }) : { x: number; }
+>                       : ^^^^^      ^^^
+>f : <T>(t: reify T) => T
+>  : ^ ^^ ^^       ^^^^^ 
+>x : number
+>  : ^^^^^^
+
+async function foo() {
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+    return 2
+>2 : 2
+>  : ^
+}
+
+// auto TLA -> number
+const tla = foo()
+>tla : number
+>    : ^^^^^^
+>foo() : number
+>      : ^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+// as const should not crash
+const cc = foo() as const
+>cc : Promise<number>
+>   : ^^^^^^^^^^^^^^^
+>foo() as const : Promise<number>
+>               : ^^^^^^^^^^^^^^^
+>foo() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+async function bar() {
+>bar : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+    const p = foo() as Promise<number>
+>p : Promise<number>
+>  : ^^^^^^^^^^^^^^^
+>foo() as Promise<number> : Promise<number>
+>                         : ^^^^^^^^^^^^^^^
+>foo() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+    const y = 1 + await p
+>y : number
+>  : ^^^^^^
+>1 + await p : number
+>            : ^^^^^^
+>1 : 1
+>  : ^
+>await p : number
+>        : ^^^^^^
+>p : Promise<number>
+>  : ^^^^^^^^^^^^^^^
+
+    return y
+>y : number
+>  : ^^^^^^
+}
+
+function bar2() {
+>bar2 : () => void
+>     : ^^^^^^^^^^
+
+    const p = foo()
+>p : Promise<number>
+>  : ^^^^^^^^^^^^^^^
+>foo() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+}
+
+async function z() {
+>z : () => Promise<void>
+>  : ^^^^^^^^^^^^^^^^^^^
+
+    const q = bar()
+>q : number
+>  : ^^^^^^
+>bar() : number
+>      : ^^^^^^
+>bar : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+    const q2 = bar() as async
+>q2 : Promise<number>
+>   : ^^^^^^^^^^^^^^^
+>bar() as async : Promise<number>
+>               : ^^^^^^^^^^^^^^^
+>bar() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>bar : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+    // should stay as a Promise
+    const p = new Promise<void>(r => r())
+>p : Promise<void>
+>  : ^^^^^^^^^^^^^
+>new Promise<void>(r => r()) : Promise<void>
+>                            : ^^^^^^^^^^^^^
+>Promise : PromiseConstructor
+>        : ^^^^^^^^^^^^^^^^^^
+>r => r() : (r: (value: void | PromiseLike<void>) => void) => void
+>         : ^ ^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^^^^^^^
+>r : (value: void | PromiseLike<void>) => void
+>  : ^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    
+>r() : void
+>    : ^^^^
+>r : (value: void | PromiseLike<void>) => void
+>  : ^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    
+}
+
+let arr!: number[] | number
+>arr : number | number[]
+>    : ^^^^^^^^^^^^^^^^^
+
+if (arr is number[]) {
+>arr is number[] : number[]
+>                : ^^^^^^^^
+>arr : number | number[]
+>    : ^^^^^^^^^^^^^^^^^
+
+    const x = arr[0]
+>x : number
+>  : ^^^^^^
+>arr[0] : number
+>       : ^^^^^^
+>arr : number[]
+>    : ^^^^^^^^
+>0 : 0
+>  : ^
+}
+
+const o = {} as Record<string, string | number>
+>o : Record<string, string | number>
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>{} as Record<string, string | number> : Record<string, string | number>
+>                                      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>{} : {}
+>   : ^^
+
+for (const [k, v] of o) {}
+>k : [string, string | number]
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^
+>v : [string, string | number]
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^
+>o : Record<string, string | number>
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+const o2 = { *[Symbol.iterator]() { } }
+>o2 : { [Symbol.iterator](): Generator<never, void, unknown>; }
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>{ *[Symbol.iterator]() { } } : { [Symbol.iterator](): Generator<never, void, unknown>; }
+>                             : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>[Symbol.iterator] : () => Generator<never, void, unknown>
+>                  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>Symbol.iterator : unique symbol
+>                : ^^^^^^^^^^^^^
+>Symbol : SymbolConstructor
+>       : ^^^^^^^^^^^^^^^^^
+>iterator : unique symbol
+>         : ^^^^^^^^^^^^^
+
+for (const x of o2) {}
+>x : never
+>  : ^^^^^
+>o2 : { [Symbol.iterator](): Generator<never, void, unknown>; }
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+{
+    const m = new Map()
+>m : Map<any, any>
+>  : ^^^^^^^^^^^^^
+>new Map() : Map<any, any>
+>          : ^^^^^^^^^^^^^
+>Map : MapConstructor
+>    : ^^^^^^^^^^^^^^
+
+    if (const x = m.get('a')) {} // should not error
+>x : any
+>  : ^^^
+>m.get('a') : any
+>           : ^^^
+>m.get : (key: any) => any
+>      : ^   ^^^^^^^^^^^^^
+>m : Map<any, any>
+>  : ^^^^^^^^^^^^^
+>get : (key: any) => any
+>    : ^   ^^^^^^^^^^^^^
+>'a' : "a"
+>    : ^^^
+}
+
+// non-nullish CFA
+function nullishCheck(x: number, y: number | undefined | null) {
+>nullishCheck : (x: number, y: number | undefined | null) => void
+>             : ^ ^^      ^^ ^^                         ^^^^^^^^^
+>x : number
+>  : ^^^^^^
+>y : number | null | undefined
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    if (const z = x) {
+>z : number
+>  : ^^^^^^
+>x : number
+>  : ^^^^^^
+
+        // this is always true
+    } else {
+        // unreachable
+    }
+
+    if (const z = y) {
+>z : number
+>  : ^^^^^^
+>y : number | null | undefined
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    } else {
+        // reachable, y should be `undefined | null`
+    }
+}
+
+function l() {
+>l : () => number
+>  : ^^^^^^^^^^^^
+
+    return 1
+>1 : 1
+>  : ^
+}
+
+while (const n = l()) {}
+>n : number
+>  : ^^^^^^
+>l() : number
+>    : ^^^^^^
+>l : () => number
+>  : ^^^^^^^^^^^^
+
+for (const x of [1,2,3]) {}
+>x : number
+>  : ^^^^^^
+>[1,2,3] : number[]
+>        : ^^^^^^^^
+>1 : 1
+>  : ^
+>2 : 2
+>  : ^
+>3 : 3
+>  : ^
+
+const x = 1 as number
+>x : number
+>  : ^^^^^^
+>1 as number : number
+>            : ^^^^^^
+>1 : 1
+>  : ^
+
+switch (x) {
+>x : number
+>  : ^^^^^^
+
+    case 0:
+>0 : 0
+>  : ^
+
+    case 1:
+>1 : 1
+>  : ^
+
+        const x2 = 1 // should not error
+>x2 : 1
+>   : ^
+>1 : 1
+>  : ^
+
+        if (x === 0) {
+>x === 0 : boolean
+>        : ^^^^^^^
+>x : 0 | 1
+>  : ^^^^^
+>0 : 0
+>  : ^
+
+            console.log('got 0')
+>console.log('got 0') : void
+>                     : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>'got 0' : "got 0"
+>        : ^^^^^^^
+
+            fallthrough
+        }
+        console.log('got 1')
+>console.log('got 1') : void
+>                     : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>'got 1' : "got 1"
+>        : ^^^^^^^
+
+    case 2:
+>2 : 2
+>  : ^
+
+        const x2 = 2
+>x2 : 2
+>   : ^
+>2 : 2
+>  : ^
+
+        const y = x // 0 | 2
+>y : 0 | 2
+>  : ^^^^^
+>x : 0 | 2
+>  : ^^^^^
+}
+
+const arr2 = [1, undefined, 2].filter(x => !!x)
+>arr2 : number[]
+>     : ^^^^^^^^
+>[1, undefined, 2].filter(x => !!x) : number[]
+>                                   : ^^^^^^^^
+>[1, undefined, 2].filter : { <S extends number | undefined>(predicate: (value: number | undefined, index: number, array: (number | undefined)[]) => value is S, thisArg?: any): S[]; (predicate: (value: number | undefined, index: number, array: (number | undefined)[]) => unknown, thisArg?: any): (number | undefined)[]; }
+>                         : ^^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^         ^^^     ^^^^^^^^^^^^^^^^^^^^^^     ^^      ^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^       ^^^   ^^^^^^^^^         ^^^     ^^^^^^^^^^^^^^^^^^^^^^     ^^      ^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^       ^^       ^^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>[1, undefined, 2] : (number | undefined)[]
+>                  : ^^^^^^^^^^^^^^^^^^^^^^
+>1 : 1
+>  : ^
+>undefined : undefined
+>          : ^^^^^^^^^
+>2 : 2
+>  : ^
+>filter : { <S extends number | undefined>(predicate: (value: number | undefined, index: number, array: (number | undefined)[]) => value is S, thisArg?: any): S[]; (predicate: (value: number | undefined, index: number, array: (number | undefined)[]) => unknown, thisArg?: any): (number | undefined)[]; }
+>       : ^^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^         ^^^     ^^^^^^^^^^^^^^^^^^^^^^     ^^      ^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^       ^^^   ^^^^^^^^^         ^^^     ^^^^^^^^^^^^^^^^^^^^^^     ^^      ^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^       ^^       ^^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x => !!x : (x: number | undefined) => x is number
+>         : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x : number | undefined
+>  : ^^^^^^^^^^^^^^^^^^
+>!!x : boolean
+>    : ^^^^^^^
+>!x : boolean
+>   : ^^^^^^^
+>x : number | undefined
+>  : ^^^^^^^^^^^^^^^^^^
+
+{
+    type X = 'a' | 'b'
+>X : "a" | "b"
+>  : ^^^^^^^^^
+
+    const q: X = 'a'
+>q : "a" | "b"
+>  : ^^^^^^^^^
+>'a' : "a"
+>    : ^^^
+
+    if (q === 'b') {}
+>q === 'b' : boolean
+>          : ^^^^^^^
+>q : "a" | "b"
+>  : ^^^^^^^^^
+>'b' : "b"
+>    : ^^^
+
+    const { a }: { a: X } = { a: 'a' }
+>a : "a" | "b"
+>  : ^^^^^^^^^
+>a : "a" | "b"
+>  : ^^^^^^^^^
+>{ a: 'a' } : { a: "a"; }
+>           : ^^^^^^^^^^^
+>a : "a"
+>  : ^^^
+>'a' : "a"
+>    : ^^^
+
+    if (a === 'b') {}
+>a === 'b' : boolean
+>          : ^^^^^^^
+>a : "a" | "b"
+>  : ^^^^^^^^^
+>'b' : "b"
+>    : ^^^
+}
+
+{
+    type X = 'a' | 'b'
+>X : "a" | "b"
+>  : ^^^^^^^^^
+
+    let q: X = 'a'
+>q : "a" | "b"
+>  : ^^^^^^^^^
+>'a' : "a"
+>    : ^^^
+
+    if (q === 'b') {} // error
+>q === 'b' : boolean
+>          : ^^^^^^^
+>q : "a"
+>  : ^^^
+>'b' : "b"
+>    : ^^^
+}
+
+{
+    const arr = [1]
+>arr : number[]
+>    : ^^^^^^^^
+>[1] : number[]
+>    : ^^^^^^^^
+>1 : 1
+>  : ^
+
+    if (arr.length > 0) {
+>arr.length > 0 : boolean
+>               : ^^^^^^^
+>arr.length : number
+>           : ^^^^^^
+>arr : number[]
+>    : ^^^^^^^^
+>length : number
+>       : ^^^^^^
+>0 : 0
+>  : ^
+
+        const v = arr.pop() + 1
+>v : number
+>  : ^^^^^^
+>arr.pop() + 1 : number
+>              : ^^^^^^
+>arr.pop() : number
+>          : ^^^^^^
+>arr.pop : () => number
+>        : ^^^^^^^^^^^^
+>arr : NonEmptyArray<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+>pop : () => number
+>    : ^^^^^^^^^^^^
+>1 : 1
+>  : ^
+
+        // After pop, arr should be T[] again, not NonEmptyArray
+        const w = arr.pop()  // Should be number | undefined
+>w : number | undefined
+>  : ^^^^^^^^^^^^^^^^^^
+>arr.pop() : number | undefined
+>          : ^^^^^^^^^^^^^^^^^^
+>arr.pop : () => number | undefined
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^
+>arr : number[]
+>    : ^^^^^^^^
+>pop : () => number | undefined
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^
+    }
+}
+
+// Map narrowing
+{
+    const map = new Map<string, number>();
+>map : Map<string, number>
+>    : ^^^^^^^^^^^^^^^^^^^
+>new Map<string, number>() : Map<string, number>
+>                          : ^^^^^^^^^^^^^^^^^^^
+>Map : MapConstructor
+>    : ^^^^^^^^^^^^^^
+
+    map.set('a', 1);
+>map.set('a', 1) : Map<string, number>
+>                : ^^^^^^^^^^^^^^^^^^^
+>map.set : (key: string, value: number) => Map<string, number>
+>        : ^   ^^^^^^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>map : Map<string, number>
+>    : ^^^^^^^^^^^^^^^^^^^
+>set : (key: string, value: number) => Map<string, number>
+>    : ^   ^^^^^^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>'a' : "a"
+>    : ^^^
+>1 : 1
+>  : ^
+
+    if (map.has('a')) {
+>map.has('a') : boolean
+>             : ^^^^^^^
+>map.has : (key: string) => boolean
+>        : ^   ^^^^^^^^^^^^^       
+>map : Map<string, number>
+>    : ^^^^^^^^^^^^^^^^^^^
+>has : (key: string) => boolean
+>    : ^   ^^^^^^^^^^^^^       
+>'a' : "a"
+>    : ^^^
+
+        const val = map.get('a');   // Should be `number`, not `number | undefined`
+>val : number
+>    : ^^^^^^
+>map.get('a') : number
+>             : ^^^^^^
+>map.get : (key: string) => number | undefined
+>        : ^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>map : Map<string, number>
+>    : ^^^^^^^^^^^^^^^^^^^
+>get : (key: string) => number | undefined
+>    : ^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>'a' : "a"
+>    : ^^^
+
+        const val2 = val + 1;       // Should not error
+>val2 : number
+>     : ^^^^^^
+>val + 1 : number
+>        : ^^^^^^
+>val : number
+>    : ^^^^^^
+>1 : 1
+>  : ^
+    }
+
+    // Without has() -> `number | undefined`
+    const val3 = map.get('a');
+>val3 : number | undefined
+>     : ^^^^^^^^^^^^^^^^^^
+>map.get('a') : number | undefined
+>             : ^^^^^^^^^^^^^^^^^^
+>map.get : (key: string) => number | undefined
+>        : ^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>map : Map<string, number>
+>    : ^^^^^^^^^^^^^^^^^^^
+>get : (key: string) => number | undefined
+>    : ^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>'a' : "a"
+>    : ^^^
+
+    if (map.has('a')) {
+>map.has('a') : boolean
+>             : ^^^^^^^
+>map.has : (key: string) => boolean
+>        : ^   ^^^^^^^^^^^^^       
+>map : Map<string, number>
+>    : ^^^^^^^^^^^^^^^^^^^
+>has : (key: string) => boolean
+>    : ^   ^^^^^^^^^^^^^       
+>'a' : "a"
+>    : ^^^
+
+        const val4 = map.get('b');  // Different key -> `number | undefined`
+>val4 : number | undefined
+>     : ^^^^^^^^^^^^^^^^^^
+>map.get('b') : number | undefined
+>             : ^^^^^^^^^^^^^^^^^^
+>map.get : (key: string) => number | undefined
+>        : ^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>map : Map<string, number>
+>    : ^^^^^^^^^^^^^^^^^^^
+>get : (key: string) => number | undefined
+>    : ^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>'b' : "b"
+>    : ^^^
+    }
+}
+
+{
+    // TODO
+    // declare function fail(): never;
+    // declare const a: string | null;
+    // a || fail();
+    // a.charAt(0); // Object is possibly 'null'. ts(2531)
+    // 2) Narrowing in Unreachable Code Fails
+}
+
+{
+    type C = 'black' | 'red' | 'green' | 'yellow' | 'blue' | string
+>C : string | "black" | "red" | "green" | "yellow" | "blue"
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    type X1 = C extends string ? true : false
+>X1 : true
+>   : ^^^^
+>true : true
+>     : ^^^^
+>false : false
+>      : ^^^^^
+
+    type X2 = C extends 'black' ? true : false
+>X2 : false
+>   : ^^^^^
+>true : true
+>     : ^^^^
+>false : false
+>      : ^^^^^
+
+    type X3 = C extends 'banana' ? true : false
+>X3 : false
+>   : ^^^^^
+>true : true
+>     : ^^^^
+>false : false
+>      : ^^^^^
+
+    const x: C = ''
+>x : string | "black" | "red" | "green" | "yellow" | "blue"
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>'' : ""
+>   : ^^
+
+    const y1: string = x
+>y1 : string
+>   : ^^^^^^
+>x : string | "black" | "red" | "green" | "yellow" | "blue"
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    const y2: C = x
+>y2 : string | "black" | "red" | "green" | "yellow" | "blue"
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x : string | "black" | "red" | "green" | "yellow" | "blue"
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    type X4 = C extends infer U extends string ? U : never
+>X4 : string | "black" | "red" | "green" | "yellow" | "blue"
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    type A<T> = T extends infer U extends 'black' ? U : never
+>A : T extends infer U extends "black" ? U : never
+>  : ^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    type X5 = A<C>
+>X5 : "black"
+>   : ^^^^^^^
+
+    let c: C
+>c : string | "black" | "red" | "green" | "yellow" | "blue"
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    c = 'black'
+>c = 'black' : "black"
+>            : ^^^^^^^
+>c : string | "black" | "red" | "green" | "yellow" | "blue"
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>'black' : "black"
+>        : ^^^^^^^
+
+    if (c === 'red') {} // should error here
+>c === 'red' : boolean
+>            : ^^^^^^^
+>c : "black"
+>  : ^^^^^^^
+>'red' : "red"
+>      : ^^^^^
+
+    c = 'red' // OK, because we use the original binding type
+>c = 'red' : "red"
+>          : ^^^^^
+>c : string | "black" | "red" | "green" | "yellow" | "blue"
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>'red' : "red"
+>      : ^^^^^
+}
+
+// {
+//     interface Emitter {
+//         emit(event: 'event_1'): void;
+//         emit(event: 'event_2'): void;
+//         emit(event: 'event_3'): void;
+//         emit(event: 'event_4'): void;
+//     }
+
+//     type EventName = Parameters<Emitter["emit"]>[0]
+//     // is -> type EventName = "event_4"
+//     // wanted -> type EventName = "event_1" | "event_2" | "event_3" | "event_4"
+//     const a: EventName = "event_4";
+//     const b: EventName = "event_1";
+// }
+
+// {
+//     declare function x(v: number | string): true & asserts v is string
+// }
+
+{
+    // Explicit annotation
+    function isString(val: any): asserts val is string {
+>isString : (val: any) => asserts val is string
+>         : ^   ^^   ^^^^^                     
+>val : any
+>    : ^^^
+
+        if (typeof val !== "string") throw "Nope"
+>typeof val !== "string" : boolean
+>                        : ^^^^^^^
+>typeof val : "string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function"
+>           : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>val : any
+>    : ^^^
+>"string" : "string"
+>         : ^^^^^^^^
+>"Nope" : "Nope"
+>       : ^^^^^^
+    }
+
+    // Inferred assertion signature!
+    function isString2(val: any) {
+>isString2 : (val: any) => asserts val is string
+>          : ^   ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>val : any
+>    : ^^^
+
+        if (typeof val !== "string") throw "Nope"
+>typeof val !== "string" : boolean
+>                        : ^^^^^^^
+>typeof val : "string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function"
+>           : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>val : any
+>    : ^^^
+>"string" : "string"
+>         : ^^^^^^^^
+>"Nope" : "Nope"
+>       : ^^^^^^
+    }
+
+    const x: string | number = "3";
+>x : string | number
+>  : ^^^^^^^^^^^^^^^
+>"3" : "3"
+>    : ^^^
+
+    isString(x);
+>isString(x) : void
+>            : ^^^^
+>isString : (val: any) => asserts val is string
+>         : ^   ^^   ^^^^^                     
+>x : string | number
+>  : ^^^^^^^^^^^^^^^
+
+    x.toLowerCase() // should work - x is now string
+>x.toLowerCase() : string
+>                : ^^^^^^
+>x.toLowerCase : () => string
+>              : ^^^^^^      
+>x : string
+>  : ^^^^^^
+>toLowerCase : () => string
+>            : ^^^^^^      
+
+    const y: string | number = "test";
+>y : string | number
+>  : ^^^^^^^^^^^^^^^
+>"test" : "test"
+>       : ^^^^^^
+
+    isString2(y);
+>isString2(y) : void
+>             : ^^^^
+>isString2 : (val: any) => asserts val is string
+>          : ^   ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>y : string | number
+>  : ^^^^^^^^^^^^^^^
+
+    y.toLowerCase() // should also work - inferred asserts!
+>y.toLowerCase() : string
+>                : ^^^^^^
+>y.toLowerCase : () => string
+>              : ^^^^^^      
+>y : string
+>  : ^^^^^^
+>toLowerCase : () => string
+>            : ^^^^^^      
+
+    // Using 'is' expression instead of typeof
+    const isString3 = (val: any) => {
+>isString3 : (val: any) => asserts val is string
+>          : ^   ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>(val: any) => {        if (!(val is string)) throw "Nope"    } : (val: any) => asserts val is string
+>                                                               : ^   ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>val : any
+>    : ^^^
+
+        if (!(val is string)) throw "Nope"
+>!(val is string) : boolean
+>                 : ^^^^^^^
+>(val is string) : string
+>                : ^^^^^^
+>val is string : string
+>              : ^^^^^^
+>val : any
+>    : ^^^
+>"Nope" : "Nope"
+>       : ^^^^^^
+    }
+
+    const z: string | number = "hello";
+>z : string | number
+>  : ^^^^^^^^^^^^^^^
+>"hello" : "hello"
+>        : ^^^^^^^
+
+    isString3(z);
+>isString3(z) : void
+>             : ^^^^
+>isString3 : (val: any) => asserts val is string
+>          : ^   ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>z : string | number
+>  : ^^^^^^^^^^^^^^^
+
+    z.toLowerCase() // should also work with 'is' expression!
+>z.toLowerCase() : string
+>                : ^^^^^^
+>z.toLowerCase : () => string
+>              : ^^^^^^      
+>z : string
+>  : ^^^^^^
+>toLowerCase : () => string
+>            : ^^^^^^      
+}
+
+{
+    // #16229
+    class O<T=any> {
+>O : O<T>
+>  : ^^^^
+
+        constructor(public array: T[]) { }
+>array : T[]
+>      : ^^^
+    }
+    declare class B<T> {
+>B : B<T>
+>  : ^^^^
+
+        put(v: T): void
+>put : (v: T) => void
+>    : ^ ^^ ^^^^^    
+>v : T
+>  : ^
+
+        get(): T
+>get : () => T
+>    : ^^^^^^ 
+    }
+    type C<T> = T extends (infer U | string) ? B<U> : never
+>C : T extends string | infer U ? B<U> : never
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^^^^
+
+    type E = (string | number)
+>E : string | number
+>  : ^^^^^^^^^^^^^^^
+
+    type D = C<E>
+>D : B<string> | B<number>
+>  : ^^^^^^^^^^^^^^^^^^^^^
+
+    type F<T extends number> = T
+>F : T
+>  : ^
+
+    type F2 = F<string | number>
+>F2 : string | number
+>   : ^^^^^^^^^^^^^^^
+
+    type F3<T> = T extends number ? true : false
+>F3 : T extends number ? true : false
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>true : true
+>     : ^^^^
+>false : false
+>      : ^^^^^
+
+    type F4 = F3<string | number>
+>F4 : boolean
+>   : ^^^^^^^
+
+    type F5<T> = { x: T }
+>F5 : { x: T; }
+>   : ^^^^^ ^^^
+>x : T
+>  : ^
+
+    type F6 = F5<string | number>
+>F6 : { x: string | number; }
+>   : ^^^^^^^^^^^^^^^^^^^^^^^
+
+    declare let val: B<number> | B<string>;
+>val : B<string> | B<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+    declare let val2: number | string;
+>val2 : string | number
+>     : ^^^^^^^^^^^^^^^
+
+    declare function f<T>(x: B<T>, v: T): T;
+>f : <T>(x: B<T>, v: T) => T
+>  : ^ ^^ ^^^^^^^^ ^^ ^^^^^ 
+>x : B<T>
+>  : ^^^^
+>v : T
+>  : ^
+
+    f(val, val2);
+>f(val, val2) : string | number
+>             : ^^^^^^^^^^^^^^^
+>f : <T>(x: B<T>, v: T) => T
+>  : ^ ^^ ^^^^^^^^ ^^ ^^^^^ 
+>val : B<string> | B<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+>val2 : string | number
+>     : ^^^^^^^^^^^^^^^
+}
+
+{
+    // satisfies postfix on function declarations
+    type Bar = (a: number) => number
+>Bar : (a: number) => number
+>    : ^ ^^      ^^^^^      
+>a : number
+>  : ^^^^^^
+
+    function bar(a) {
+>bar : (a: number) => number
+>    : ^ ^^^^^^^^^^^^^^^^^^^
+>a : number
+>  : ^^^^^^
+
+        return a // should be a number
+>a : number
+>  : ^^^^^^
+
+    } satisfies Bar
+
+    type Bar2 = (a: number, ...rest: number[]) => number
+>Bar2 : (a: number, ...rest: number[]) => number
+>     : ^ ^^      ^^^^^    ^^        ^^^^^      
+>a : number
+>  : ^^^^^^
+>rest : number[]
+>     : ^^^^^^^^
+
+    function bar2(a, ...arr) {
+>bar2 : (a: number, ...arr: number[]) => number
+>     : ^ ^^^^^^^^^^^^^   ^^^^^^^^^^^^^^^^^^^^^
+>a : number
+>  : ^^^^^^
+>arr : number[]
+>    : ^^^^^^^^
+
+        return arr[1] + a // should be a number
+>arr[1] + a : number
+>           : ^^^^^^
+>arr[1] : number
+>       : ^^^^^^
+>arr : number[]
+>    : ^^^^^^^^
+>1 : 1
+>  : ^
+>a : number
+>  : ^^^^^^
+
+    } satisfies Bar2
+
+    function bar3({ a }) {
+>bar3 : ({ a }: { a: number; }) => number
+>     : ^     ^^^^^^^      ^^^^^^^^^^^^^^
+>a : number
+>  : ^^^^^^
+
+        return a // should be a number
+>a : number
+>  : ^^^^^^
+
+    } satisfies (arg: { a: number }) => number
+>arg : { a: number; }
+>    : ^^^^^      ^^^
+>a : number
+>  : ^^^^^^
+}
+
+{
+    // JSX should parse
+    // TODO: auto include `jsx` lib if project includes JSX 
+    const y = <div></div>
+>y : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div></div> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+}
+
+{
+    // This expression is not callable. Not all constituents of type '(() => T) | (T & Function)' are callable. Type 'T & Function' has no call signatures.(2349)
+    type Initializer<T> = T | (() => T)
+>Initializer : T | (() => T)
+>            : ^^^^^^^^^^^ ^
+
+    function correct<T>(arg: Initializer<T>) {
+>correct : <T>(arg: T | (() => T)) => any
+>        : ^ ^^   ^^^^^^^^^^^^^^^^^^^^^^^
+>arg : T | (() => T)
+>    : ^^^^^^^^^^^^^
+
+        return typeof arg === 'function' ? arg() : arg // FIXME: should not error
+>typeof arg === 'function' ? arg() : arg : any
+>                                        : ^^^
+>typeof arg === 'function' : boolean
+>                          : ^^^^^^^
+>typeof arg : "string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function"
+>           : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>arg : T | (() => T)
+>    : ^^^^^^^^^^^^^
+>'function' : "function"
+>           : ^^^^^^^^^^
+>arg() : any
+>      : ^^^
+>arg : (() => T) | (T & Function)
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>arg : T
+>    : ^
+    }
+}
+
+{
+    // treat objects as having null prototype by default
+    // likewise, using an object as a string should be flagged if the
+    // object does not have an explicit `toString` method
+    const o = {} as object
+>o : object
+>  : ^^^^^^
+>{} as object : object
+>             : ^^^^^^
+>{} : {}
+>   : ^^
+
+    o.toString // checker error, `toString` isn't known to the checker
+>o.toString : () => string
+>           : ^^^^^^      
+>o : object
+>  : ^^^^^^
+>toString : () => string
+>         : ^^^^^^      
+
+    ;`${o}` // error
+>`${o}` : string
+>       : ^^^^^^
+>o : object
+>  : ^^^^^^
+
+    const o2 = {} as { toString(): string }
+>o2 : { toString(): string; }
+>   : ^^^^^^^^^^^^^^      ^^^
+>{} as { toString(): string } : { toString(): string; }
+>                             : ^^^^^^^^^^^^^^      ^^^
+>{} : {}
+>   : ^^
+>toString : () => string
+>         : ^^^^^^      
+
+    ;`${o2}` // OK
+>`${o2}` : string
+>        : ^^^^^^
+>o2 : { toString(): string; }
+>   : ^^^^^^^^^^^^^^      ^^^
+}
+
+{
+    const o: { n: number } | undefined = { n: 1 }
+>o : { n: number; } | undefined
+>  : ^^^^^      ^^^^^^^^^^^^^^^
+>n : number
+>  : ^^^^^^
+>{ n: 1 } : { n: number; }
+>         : ^^^^^^^^^^^^^^
+>n : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+
+    // should all be OK, we will support optional chaining for assignments
+    o?.n = 1 
+>o?.n = 1 : 1
+>         : ^
+>o?.n : number | undefined
+>     : ^^^^^^^^^^^^^^^^^^
+>o : { n: number; } | undefined
+>  : ^^^^^      ^^^^^^^^^^^^^^^
+>n : number | undefined
+>  : ^^^^^^^^^^^^^^^^^^
+>1 : 1
+>  : ^
+
+    o?.n++
+>o?.n++ : number
+>       : ^^^^^^
+>o?.n : number | undefined
+>     : ^^^^^^^^^^^^^^^^^^
+>o : { n: number; } | undefined
+>  : ^^^^^      ^^^^^^^^^^^^^^^
+>n : number | undefined
+>  : ^^^^^^^^^^^^^^^^^^
+
+    const exp1 = o?.n === 10        // boolean | undefined
+>exp1 : boolean | undefined
+>     : ^^^^^^^^^^^^^^^^^^^
+>o?.n === 10 : boolean | undefined
+>            : ^^^^^^^^^^^^^^^^^^^
+>o?.n : number | undefined
+>     : ^^^^^^^^^^^^^^^^^^
+>o : { n: number; } | undefined
+>  : ^^^^^      ^^^^^^^^^^^^^^^
+>n : number | undefined
+>  : ^^^^^^^^^^^^^^^^^^
+>10 : 10
+>   : ^^
+
+    const o2: { n: number } | undefined = { n: 1 }
+>o2 : { n: number; } | undefined
+>   : ^^^^^      ^^^^^^^^^^^^^^^
+>n : number
+>  : ^^^^^^
+>{ n: 1 } : { n: number; }
+>         : ^^^^^^^^^^^^^^
+>n : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+
+    const exp2 = o?.n === o2?.n     // boolean | undefined
+>exp2 : boolean | undefined
+>     : ^^^^^^^^^^^^^^^^^^^
+>o?.n === o2?.n : boolean | undefined
+>               : ^^^^^^^^^^^^^^^^^^^
+>o?.n : number | undefined
+>     : ^^^^^^^^^^^^^^^^^^
+>o : { n: number; } | undefined
+>  : ^^^^^      ^^^^^^^^^^^^^^^
+>n : number | undefined
+>  : ^^^^^^^^^^^^^^^^^^
+>o2?.n : number | undefined
+>      : ^^^^^^^^^^^^^^^^^^
+>o2 : { n: number; } | undefined
+>   : ^^^^^      ^^^^^^^^^^^^^^^
+>n : number | undefined
+>  : ^^^^^^^^^^^^^^^^^^
+
+    // --> short circuit whole thing if o or o2 is nullish
+
+    // should not error
+    const exp3 = o2?.n > 10         // boolean | undefined
+>exp3 : boolean | undefined
+>     : ^^^^^^^^^^^^^^^^^^^
+>o2?.n > 10 : boolean | undefined
+>           : ^^^^^^^^^^^^^^^^^^^
+>o2?.n : number | undefined
+>      : ^^^^^^^^^^^^^^^^^^
+>o2 : { n: number; } | undefined
+>   : ^^^^^      ^^^^^^^^^^^^^^^
+>n : number | undefined
+>  : ^^^^^^^^^^^^^^^^^^
+>10 : 10
+>   : ^^
+
+    if (o2?.n !== 0) {
+>o2?.n !== 0 : boolean | undefined
+>            : ^^^^^^^^^^^^^^^^^^^
+>o2?.n : number | undefined
+>      : ^^^^^^^^^^^^^^^^^^
+>o2 : { n: number; } | undefined
+>   : ^^^^^      ^^^^^^^^^^^^^^^
+>n : number | undefined
+>  : ^^^^^^^^^^^^^^^^^^
+>0 : 0
+>  : ^
+
+        o2 // should narrow to be non-nullish
+>o2 : { n: number; }
+>   : ^^^^^      ^^^
+    }
+
+    // const o3: { n: number | undefined } | undefined = { n: 1 }
+
+    // note: we are _not_ implementing chaining for prefix unary
+    // --> it did not feel quite right
+
+    // 1 in obj?.foo;  // TypeError
+    // for (bar of obj?.foo);  // TypeError
+    // bar instanceof obj?.foo;  // TypeError
+}
+
+{
+    const f = (): 1 | 2 => 1
+>f : () => 1 | 2
+>  : ^^^^^^     
+>(): 1 | 2 => 1 : () => 1 | 2
+>               : ^^^^^^     
+>1 : 1
+>  : ^
+
+    switch (const v = f()) {
+>v : 2 | 1
+>  : ^^^^^
+>f() : 2 | 1
+>    : ^^^^^
+>f : () => 1 | 2
+>  : ^^^^^^     
+
+        case 1: console.log('got 1', v)
+>1 : 1
+>  : ^
+>console.log('got 1', v) : void
+>                        : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>'got 1' : "got 1"
+>        : ^^^^^^^
+>v : 1
+>  : ^
+
+        case 2: console.log('got 2', v)
+>2 : 2
+>  : ^
+>console.log('got 2', v) : void
+>                        : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>'got 2' : "got 2"
+>        : ^^^^^^^
+>v : 2
+>  : ^
+    }
+
+    const x: string | number = 1
+>x : string | number
+>  : ^^^^^^^^^^^^^^^
+>1 : 1
+>  : ^
+
+    switch (x) {
+>x : string | number
+>  : ^^^^^^^^^^^^^^^
+
+        case is string:
+            console.log('got string', x)
+>console.log('got string', x) : void
+>                             : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>'got string' : "got string"
+>             : ^^^^^^^^^^^^
+>x : string
+>  : ^^^^^^
+
+        case is number:
+            console.log('got number', x)
+>console.log('got number', x) : void
+>                             : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>'got number' : "got number"
+>             : ^^^^^^^^^^^^
+>x : number
+>  : ^^^^^^
+    }
+
+    const x2: unknown = {}
+>x2 : unknown
+>   : ^^^^^^^
+>{} : {}
+>   : ^^
+
+    switch (x2) {
+>x2 : unknown
+>   : ^^^^^^^
+
+        case is { y: number }:
+>y : number
+>  : ^^^^^^
+
+            console.log('y', x2.y)
+>console.log('y', x2.y) : void
+>                       : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>'y' : "y"
+>    : ^^^
+>x2.y : number
+>     : ^^^^^^
+>x2 : { y: number; }
+>   : ^^^^^      ^^^
+>y : number
+>  : ^^^^^^
+
+        case is 1:
+        case is 2:
+            fallthrough
+        case is 3:
+            x2 // 1 | 2 | 3
+>x2 : 2 | 1 | 3
+>   : ^^^^^^^^^
+    }
+
+    const x3: string | 10 = 10
+>x3 : string | 10
+>   : ^^^^^^^^^^^
+>10 : 10
+>   : ^^
+
+    switch (x3) {
+>x3 : string | 10
+>   : ^^^^^^^^^^^
+
+        case 10: console.log(x3)
+>10 : 10
+>   : ^^
+>console.log(x3) : void
+>                : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>x3 : 10
+>   : ^^
+
+        case is string: console.log(x3)
+>console.log(x3) : void
+>                : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>x3 : string
+>   : ^^^^^^
+    }
+}
+
+{
+    type F = { x: number } | { y: string }
+>F : { x: number; } | { y: string; }
+>  : ^^^^^      ^^^^^^^^^^^      ^^^
+>x : number
+>  : ^^^^^^
+>y : string
+>  : ^^^^^^
+
+        function x(f: F) {
+>x : (f: { x: number; } | { y: string; }) => string | number
+>  : ^ ^^^^^^^      ^^^^^^^^^^^      ^^^^^^^^^^^^^^^^^^^^^^^
+>f : { x: number; } | { y: string; }
+>  : ^^^^^      ^^^^^^^^^^^      ^^^
+
+        if (f is { x: number }) {
+>f is { x: number } : { x: number; }
+>                   : ^^^^^      ^^^
+>f : { x: number; } | { y: string; }
+>  : ^^^^^      ^^^^^^^^^^^      ^^^
+>x : number
+>  : ^^^^^^
+
+            return f.x
+>f.x : number
+>    : ^^^^^^
+>f : { x: number; }
+>  : ^^^^^      ^^^
+>x : number
+>  : ^^^^^^
+        }
+        return f.y
+>f.y : string
+>    : ^^^^^^
+>f : { y: string; }
+>  : ^^^^^      ^^^
+>y : string
+>  : ^^^^^^
+    }
+}
+
+{
+    try {} catch (e) {}
+>e : Error
+>  : ^^^^^
+
+    try {} catch (e: Error) {}
+>e : Error
+>  : ^^^^^
+}
+
+{
+    const x = <A>(x: A) => x
+>x : <A>(x: A) => A
+>  : ^ ^^ ^^ ^^^^^^
+><A>(x: A) => x : <A>(x: A) => A
+>               : ^ ^^ ^^ ^^^^^^
+>x : A
+>  : ^
+>x : A
+>  : ^
+}
+
+{
+    // Request: Class Decorator Mutation #4881
+    
+}
+
+{
+    // conditional type should use union of signatures for overloads 
+    // if the supertype is a bare fn literal
+}
+
+
+// TODO: unnamed fn params `type F = ({ a: number }) => number`
+// let a?: number
+
+// TODO:
+// This code should compile due to narrowing on x:
+// const o = {foo: 1, bar: 2} as const;
+// const x: string = 'foo';
+// if (x in o) {
+//     const y: "foo" | "bar" = x; // OK
+// }
+
+{
+    // Support ReadonlyArray.includes as a type guard #31018
+}
+
+{
+    // Deprioritise properties of the form { prop?: never } in completions #62024
+}
+
+{
+    // Allow narrowing of unions discriminated by numeric literals using > < etc #61770
+    // FIXME: rt should be `number`
+    function example1(...args: [number] | []) {
+>example1 : (...args: [number] | []) => number | undefined
+>         : ^^^^    ^^             ^^^^^^^^^^^^^^^^^^^^^^^
+>args : [number] | []
+>     : ^^^^^^^^^^^^^
+
+        if (args.length > 0) {
+>args.length > 0 : boolean
+>                : ^^^^^^^
+>args.length : 0 | 1
+>            : ^^^^^
+>args : [number] | []
+>     : ^^^^^^^^^^^^^
+>length : 0 | 1
+>       : ^^^^^
+>0 : 0
+>  : ^
+
+            return args[0];
+>args[0] : number
+>        : ^^^^^^
+>args : NonEmptyArray<number> | NonEmptyArray<never>
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>0 : 0
+>  : ^
+        }
+    }
+}
+
+{
+    // #16665: "Include Default Parameter Values in Signature Help".
+}
+
+// Add a Mutable type (opposite of Readonly) to lib.d.ts #24509
+// https://github.com/microsoft/TypeScript/issues/24509
+
+// The possibility of using the readonly keyword for an entire interface has been suggested in A cheaper, easier to implement middle ground could be #21152.
+// --> // mutable
+
+// class GenericClass<T> {
+//   type SpecializedArray = Array<{ val: T }>;
+
+//   func1(arr: SpecializedArray): SpecializedArray {
+//     ..  
+//   }
+
+//   func2(arr: SpecializedArray): SpecializedArray {
+//     ...
+//   }
+// }
+
+{
+    // Type guard should infer the type of parent object when applied on a property #42384
+}
+
+{
+    // optional chaining does not work for unknown #35799
+    // const prop: unknown = { key : { value: "Hello World" } };
+
+    // const helloworld = prop?.key?.value;
+}
+
+// {
+//     function test<T extends {accepted: boolean}>(cb: (value: T) => void) {
+//     return (data: Omit<T, 'accepted'>) => cb({...data, accepted: true});
+//     }
+// }
+
+// Allow tsconfig to be a module, not only json #25271
+// "paths": { "foo/*": ["*"] }
+
+
+// Treat JSON types more literally #26552
+
+// When importing a JSON file, strings and numbers are typed as string and number rather than the string or number literals in the file.
+// Also, array literals are imported as T[] instead of [T1, T2, T3] tuples.
+
+// Since the JSON is almost an object literal, I believe it makes more sense to type it more specifically.
+
+{
+    const elements: Element[] = []
+>elements : Element[]
+>         : ^^^^^^^^^
+>[] : never[]
+>   : ^^^^^^^
+
+    function Foo(props: { children: Element[] }) {
+>Foo : (props: { children: Element[]; }) => HTMLDivElement
+>    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+>props : { children: Element[]; }
+>      : ^^^^^^^^^^^^         ^^^
+>children : Element[]
+>         : ^^^^^^^^^
+
+        return <div>{...props.children}</div>
+><div>{...props.children}</div> : HTMLDivElement
+>                               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>props.children : Element[]
+>               : ^^^^^^^^^
+>props : { children: Element[]; }
+>      : ^^^^^^^^^^^^         ^^^
+>children : Element[]
+>         : ^^^^^^^^^
+>div : any
+>    : ^^^
+    }
+    const f = <Foo>{...elements}</Foo>
+>f : Element
+>  : ^^^^^^^
+><Foo>{...elements}</Foo> : Element
+>                         : ^^^^^^^
+>Foo : (props: { children: Element[]; }) => HTMLDivElement
+>    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+>elements : Element[]
+>         : ^^^^^^^^^
+>Foo : (props: { children: Element[]; }) => HTMLDivElement
+>    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+
+    const y = <Foo>{elements}</Foo> // error
+>y : Element
+>  : ^^^^^^^
+><Foo>{elements}</Foo> : Element
+>                      : ^^^^^^^
+>Foo : (props: { children: Element[]; }) => HTMLDivElement
+>    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+>elements : Element[]
+>         : ^^^^^^^^^
+>Foo : (props: { children: Element[]; }) => HTMLDivElement
+>    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+
+    const x0 = <Foo></Foo> // no error
+>x0 : Element
+>   : ^^^^^^^
+><Foo></Foo> : Element
+>            : ^^^^^^^
+>Foo : (props: { children: Element[]; }) => HTMLDivElement
+>    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+>Foo : (props: { children: Element[]; }) => HTMLDivElement
+>    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+
+    const x1 = <Foo><div/></Foo> // no error
+>x1 : Element
+>   : ^^^^^^^
+><Foo><div/></Foo> : Element
+>                  : ^^^^^^^
+>Foo : (props: { children: Element[]; }) => HTMLDivElement
+>    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+><div/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>Foo : (props: { children: Element[]; }) => HTMLDivElement
+>    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+
+    const x2 = <Foo><div/><div/></Foo> // no error
+>x2 : Element
+>   : ^^^^^^^
+><Foo><div/><div/></Foo> : Element
+>                        : ^^^^^^^
+>Foo : (props: { children: Element[]; }) => HTMLDivElement
+>    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+><div/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+><div/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>Foo : (props: { children: Element[]; }) => HTMLDivElement
+>    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+
+    const x3 = <Foo>a</Foo> // error
+>x3 : Element
+>   : ^^^^^^^
+><Foo>a</Foo> : Element
+>             : ^^^^^^^
+>Foo : (props: { children: Element[]; }) => HTMLDivElement
+>    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+>Foo : (props: { children: Element[]; }) => HTMLDivElement
+>    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+
+    const x4 = <Foo/> // error (this is explictly no elements)
+>x4 : Element
+>   : ^^^^^^^
+><Foo/> : Element
+>       : ^^^^^^^
+>Foo : (props: { children: Element[]; }) => HTMLDivElement
+>    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+
+    function Foo2(props: { children: [string, number] }) {
+>Foo2 : (props: { children: [string, number]; }) => HTMLDivElement
+>     : ^     ^^                               ^^^^^^^^^^^^^^^^^^^
+>props : { children: [string, number]; }
+>      : ^^^^^^^^^^^^                ^^^
+>children : [string, number]
+>         : ^^^^^^^^^^^^^^^^
+
+        return <div></div>
+><div></div> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+    }
+    const f2 = <Foo2>{'hi'}{...([1,2] as number[])}</Foo2> // error
+>f2 : Element
+>   : ^^^^^^^
+><Foo2>{'hi'}{...([1,2] as number[])}</Foo2> : Element
+>                                            : ^^^^^^^
+>Foo2 : (props: { children: [string, number]; }) => HTMLDivElement
+>     : ^     ^^                               ^^^^^^^^^^^^^^^^^^^
+>'hi' : "hi"
+>     : ^^^^
+>([1,2] as number[]) : number[]
+>                    : ^^^^^^^^
+>[1,2] as number[] : number[]
+>                  : ^^^^^^^^
+>[1,2] : number[]
+>      : ^^^^^^^^
+>1 : 1
+>  : ^
+>2 : 2
+>  : ^
+>Foo2 : (props: { children: [string, number]; }) => HTMLDivElement
+>     : ^     ^^                               ^^^^^^^^^^^^^^^^^^^
+
+    const f3 = <Foo2>{'hi'}{...([1] as [number])}</Foo2> // no error
+>f3 : Element
+>   : ^^^^^^^
+><Foo2>{'hi'}{...([1] as [number])}</Foo2> : Element
+>                                          : ^^^^^^^
+>Foo2 : (props: { children: [string, number]; }) => HTMLDivElement
+>     : ^     ^^                               ^^^^^^^^^^^^^^^^^^^
+>'hi' : "hi"
+>     : ^^^^
+>([1] as [number]) : [number]
+>                  : ^^^^^^^^
+>[1] as [number] : [number]
+>                : ^^^^^^^^
+>[1] : [number]
+>    : ^^^^^^^^
+>1 : 1
+>  : ^
+>Foo2 : (props: { children: [string, number]; }) => HTMLDivElement
+>     : ^     ^^                               ^^^^^^^^^^^^^^^^^^^
+
+    function FooOpt(props: { children?: Element[] }) {
+>FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
+>       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+>props : { children?: Element[]; }
+>      : ^^^^^^^^^^^^^         ^^^
+>children : Element[] | undefined
+>         : ^^^^^^^^^^^^^^^^^^^^^
+
+        return <div>{...(props.children ?? [])}</div>
+><div>{...(props.children ?? [])}</div> : HTMLDivElement
+>                                       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>(props.children ?? []) : Element[]
+>                       : ^^^^^^^^^
+>props.children ?? [] : Element[]
+>                     : ^^^^^^^^^
+>props.children : Element[] | undefined
+>               : ^^^^^^^^^^^^^^^^^^^^^
+>props : { children?: Element[]; }
+>      : ^^^^^^^^^^^^^         ^^^
+>children : Element[] | undefined
+>         : ^^^^^^^^^^^^^^^^^^^^^
+>[] : never[]
+>   : ^^^^^^^
+>div : any
+>    : ^^^
+    }
+    {
+        const f = <FooOpt>{...elements}</FooOpt> // no error
+>f : Element
+>  : ^^^^^^^
+><FooOpt>{...elements}</FooOpt> : Element
+>                               : ^^^^^^^
+>FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
+>       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+>elements : Element[]
+>         : ^^^^^^^^^
+>FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
+>       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+
+        const y = <FooOpt>{elements}</FooOpt> // error
+>y : Element
+>  : ^^^^^^^
+><FooOpt>{elements}</FooOpt> : Element
+>                            : ^^^^^^^
+>FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
+>       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+>elements : Element[]
+>         : ^^^^^^^^^
+>FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
+>       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+
+        const x0 = <FooOpt></FooOpt> // no error
+>x0 : Element
+>   : ^^^^^^^
+><FooOpt></FooOpt> : Element
+>                  : ^^^^^^^
+>FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
+>       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+>FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
+>       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+
+        const x1 = <FooOpt><div/></FooOpt> // no error
+>x1 : Element
+>   : ^^^^^^^
+><FooOpt><div/></FooOpt> : Element
+>                        : ^^^^^^^
+>FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
+>       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+><div/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
+>       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+
+        const x2 = <FooOpt><div/><div/></FooOpt> // no error
+>x2 : Element
+>   : ^^^^^^^
+><FooOpt><div/><div/></FooOpt> : Element
+>                              : ^^^^^^^
+>FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
+>       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+><div/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+><div/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
+>       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+
+        const x3 = <FooOpt>a</FooOpt> // error
+>x3 : Element
+>   : ^^^^^^^
+><FooOpt>a</FooOpt> : Element
+>                   : ^^^^^^^
+>FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
+>       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+>FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
+>       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+
+        const x4 = <FooOpt/> // no error
+>x4 : Element
+>   : ^^^^^^^
+><FooOpt/> : Element
+>          : ^^^^^^^
+>FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
+>       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+    }
+
+    {
+        function F1(props: { v: string }) {
+>F1 : (props: { v: string; }) => HTMLSpanElement
+>   : ^     ^^              ^^^^^^^^^^^^^^^^^^^^
+>props : { v: string; }
+>      : ^^^^^      ^^^
+>v : string
+>  : ^^^^^^
+
+            return <span>{props.v}</span>
+><span>{props.v}</span> : HTMLSpanElement
+>                       : ^^^^^^^^^^^^^^^
+>span : any
+>     : ^^^
+>props.v : string
+>        : ^^^^^^
+>props : { v: string; }
+>      : ^^^^^      ^^^
+>v : string
+>  : ^^^^^^
+>span : any
+>     : ^^^
+        }
+        function Main() {
+>Main : () => Element
+>     : ^^^^^^^^^^^^^
+
+            const v = 'aaa'
+>v : "aaa"
+>  : ^^^^^
+>'aaa' : "aaa"
+>      : ^^^^^
+
+            return <F1 v={v}></F1> // no error
+><F1 v={v}></F1> : Element
+>                : ^^^^^^^
+>F1 : (props: { v: string; }) => HTMLSpanElement
+>   : ^     ^^              ^^^^^^^^^^^^^^^^^^^^
+>v : string
+>  : ^^^^^^
+>v : "aaa"
+>  : ^^^^^
+>F1 : (props: { v: string; }) => HTMLSpanElement
+>   : ^     ^^              ^^^^^^^^^^^^^^^^^^^^
+        }
+    }
+
+    {
+        const x = <>aaa{1}</>
+>x : [string, number]
+>  : ^^^^^^^^^^^^^^^^
+><>aaa{1}</> : [string, number]
+>            : ^^^^^^^^^^^^^^^^
+>1 : 1
+>  : ^
+    }
+}
+
+// update expression
+declare const el: Element;
+>el : Element
+>   : ^^^^^^^
+
+const d = <div onClick={() => {
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div onClick={() => {    try update el}}></div> : HTMLDivElement
+>                                                : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>onClick : () => void
+>        : ^^^^^^^^^^
+>() => {    try update el} : () => void
+>                          : ^^^^^^^^^^
+
+    try update el
+>update el : Element
+>          : ^^^^^^^
+>el : Element
+>   : ^^^^^^^
+
+}}></div>
+>div : any
+>    : ^^^
+
+// shorthand_jsx_attribute
+const value = ''
+>value : ""
+>      : ^^
+>'' : ""
+>   : ^^
+
+const d2 = <input {value}/>
+>d2 : HTMLInputElement
+>   : ^^^^^^^^^^^^^^^^
+><input {value}/> : HTMLInputElement
+>                 : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>value : string
+>      : ^^^^^^
+>value : ""
+>      : ^^
+
+const d3 = <div>
+>d3 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div>  <#if {true}>     <div></div>  </></div> : HTMLDivElement
+>                                               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+  <#if {true}>
+>true : true
+>     : ^^^^
+
+     <div></div>
+><div></div> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+  </>
+</div>
+>div : any
+>    : ^^^
+
+const cond = true
+>cond : true
+>     : ^^^^
+>true : true
+>     : ^^^^
+
+const d4 = <div><#if {cond}></></div>
+>d4 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div><#if {cond}></></div> : HTMLDivElement
+>                           : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>cond : true
+>     : ^^^^
+>div : any
+>    : ^^^
+
+{
+    // cfa should work inside <#if>
+    let v = undefined as { x: () => number } | undefined
+>v : { x: () => number; } | undefined
+>  : ^^^^^            ^^^^^^^^^^^^^^^
+>undefined as { x: () => number } | undefined : { x: () => number; } | undefined
+>                                             : ^^^^^            ^^^^^^^^^^^^^^^
+>undefined : undefined
+>          : ^^^^^^^^^
+>x : () => number
+>  : ^^^^^^      
+
+    const d = <div>
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div>        <#if {v}>          <div>{v.x()}</div>        </>    </div> : HTMLDivElement
+>                                                                        : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <#if {v}>
+>v : { x: () => number; } | undefined
+>  : ^^^^^            ^^^^^^^^^^^^^^^
+
+          <div>{v.x()}</div>
+><div>{v.x()}</div> : HTMLDivElement
+>                   : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>v.x() : number
+>      : ^^^^^^
+>v.x : () => number
+>    : ^^^^^^      
+>v : { x: () => number; }
+>  : ^^^^^            ^^^
+>x : () => number
+>  : ^^^^^^      
+>div : any
+>    : ^^^
+
+        </>
+    </div>
+>div : any
+>    : ^^^
+}
+
+{
+    // error, possibly null
+    update document.querySelector('.a')
+>update document.querySelector('.a') : Element | null
+>                                    : ^^^^^^^^^^^^^^
+>document.querySelector('.a') : Element | null
+>                             : ^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>'.a' : ".a"
+>     : ^^^^
+
+    if (const x = document.querySelector('.a')) {
+>x : Element
+>  : ^^^^^^^
+>document.querySelector('.a') : Element | null
+>                             : ^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>'.a' : ".a"
+>     : ^^^^
+
+        // error, needs try or void
+        update x
+>update x : Element
+>         : ^^^^^^^
+>x : Element
+>  : ^^^^^^^
+
+        // ok
+        try update x
+>update x : Element
+>         : ^^^^^^^
+>x : Element
+>  : ^^^^^^^
+
+        // ok
+        void update x
+>void update x : undefined
+>              : ^^^^^^^^^
+>update x : Element
+>         : ^^^^^^^
+>x : Element
+>  : ^^^^^^^
+    }
+
+    {
+        let y = 0
+>y : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+        const x = <div>{y}</div>
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div>{y}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>y : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+        update x // ok
+>update x : HTMLDivElement
+>         : ^^^^^^^^^^^^^^
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+    }
+
+    {
+        const x = <div>hi</div>
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div>hi</div> : HTMLDivElement
+>              : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+        update x // error, `x` has no updatable expressions
+>update x : HTMLDivElement
+>         : ^^^^^^^^^^^^^^
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+        try update x // error, `x` has no updatable expressions
+>update x : HTMLDivElement
+>         : ^^^^^^^^^^^^^^
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+        void update x // error, `x` has no updatable expressions
+>void update x : undefined
+>              : ^^^^^^^^^
+>update x : HTMLDivElement
+>         : ^^^^^^^^^^^^^^
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+    }
+
+    { 
+        let y = 0
+>y : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+        const x = <div><div>{y}</div></div>
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div><div>{y}</div></div> : HTMLDivElement
+>                          : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+><div>{y}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>y : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+        update x // ok
+>update x : HTMLDivElement
+>         : ^^^^^^^^^^^^^^
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+    }
+
+    { 
+        let y = 0
+>y : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+        const x = <div><div id={y}></div></div>
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div><div id={y}></div></div> : HTMLDivElement
+>                              : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+><div id={y}></div> : HTMLDivElement
+>                   : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>id : number
+>   : ^^^^^^
+>y : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+        update x // ok
+>update x : HTMLDivElement
+>         : ^^^^^^^^^^^^^^
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+    }
+
+    { 
+        let y = 0
+>y : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+        const x = <div id={y}></div>
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div id={y}></div> : HTMLDivElement
+>                   : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>id : number
+>   : ^^^^^^
+>y : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+        update x // ok
+>update x : HTMLDivElement
+>         : ^^^^^^^^^^^^^^
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+    }
+
+    {
+        // components can always be updated
+        function Comp() { return <div></div> }
+>Comp : () => HTMLDivElement
+>     : ^^^^^^^^^^^^^^^^^^^^
+><div></div> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+        const el = <Comp/>
+>el : Element
+>   : ^^^^^^^
+><Comp/> : Element
+>        : ^^^^^^^
+>Comp : () => HTMLDivElement
+>     : ^^^^^^^^^^^^^^^^^^^^
+
+        update el // ok
+>update el : Element
+>          : ^^^^^^^
+>el : Element
+>   : ^^^^^^^
+    }
+}
+
+
+// !T (FallibleType) and try expr
+{
+    class Err1 extends Error { override name = "Err1" as const }
+>Err1 : Err1
+>     : ^^^^
+>Error : Error
+>      : ^^^^^
+>name : "Err1"
+>     : ^^^^^^
+>"Err1" as const : "Err1"
+>                : ^^^^^^
+>"Err1" : "Err1"
+>       : ^^^^^^
+
+    class Err2 extends Error { override name = "Err2" as const }
+>Err2 : Err2
+>     : ^^^^
+>Error : Error
+>      : ^^^^^
+>name : "Err2"
+>     : ^^^^^^
+>"Err2" as const : "Err2"
+>                : ^^^^^^
+>"Err2" : "Err2"
+>       : ^^^^^^
+
+    function mayFail(): !string {
+>mayFail : () => string | Err1 | Err2
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        if (Math.random() > 0.5) return new Err1()
+>Math.random() > 0.5 : boolean
+>                    : ^^^^^^^
+>Math.random() : number
+>              : ^^^^^^
+>Math.random : () => number
+>            : ^^^^^^      
+>Math : Math
+>     : ^^^^
+>random : () => number
+>       : ^^^^^^      
+>0.5 : 0.5
+>    : ^^^
+>new Err1() : Err1
+>           : ^^^^
+>Err1 : typeof Err1
+>     : ^^^^^^^^^^^
+
+        if (Math.random() > 0.3) return new Err2()
+>Math.random() > 0.3 : boolean
+>                    : ^^^^^^^
+>Math.random() : number
+>              : ^^^^^^
+>Math.random : () => number
+>            : ^^^^^^      
+>Math : Math
+>     : ^^^^
+>random : () => number
+>       : ^^^^^^      
+>0.3 : 0.3
+>    : ^^^
+>new Err2() : Err2
+>           : ^^^^
+>Err2 : typeof Err2
+>     : ^^^^^^^^^^^
+
+        return 'hello'
+>'hello' : "hello"
+>        : ^^^^^^^
+    }
+
+    // callers see the full error union
+    const x: string | Err1 | Err2 = mayFail()
+>x : string | Err1 | Err2
+>  : ^^^^^^^^^^^^^^^^^^^^
+>mayFail() : string | Err1 | Err2
+>          : ^^^^^^^^^^^^^^^^^^^^
+>mayFail : () => string | Err1 | Err2
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    // ReturnType should also capture errors
+    const y: ReturnType<typeof mayFail> = '' as typeof x
+>y : string | Err1 | Err2
+>  : ^^^^^^^^^^^^^^^^^^^^
+>mayFail : () => string | Err1 | Err2
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>'' as typeof x : string | Err1 | Err2
+>               : ^^^^^^^^^^^^^^^^^^^^
+>'' : ""
+>   : ^^
+>x : string | Err1 | Err2
+>  : ^^^^^^^^^^^^^^^^^^^^
+
+    // try unwraps: throws error, returns string
+    const z: string = try mayFail()
+>z : string
+>  : ^^^^^^
+>mayFail() : string | Err1 | Err2
+>          : ^^^^^^^^^^^^^^^^^^^^
+>mayFail : () => string | Err1 | Err2
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    // each of the following cases should report 'Did you forget `try`?' in addition to the normal issue
+    function test(_x: string): void {}
+>test : (_x: string) => void
+>     : ^  ^^      ^^^^^    
+>_x : string
+>   : ^^^^^^
+
+    test(mayFail())
+>test(mayFail()) : void
+>                : ^^^^
+>test : (_x: string) => void
+>     : ^  ^^      ^^^^^    
+>mayFail() : string | Err1 | Err2
+>          : ^^^^^^^^^^^^^^^^^^^^
+>mayFail : () => string | Err1 | Err2
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    const z2: string = mayFail()
+>z2 : string
+>   : ^^^^^^
+>mayFail() : string | Err1 | Err2
+>          : ^^^^^^^^^^^^^^^^^^^^
+>mayFail : () => string | Err1 | Err2
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    // no hint: target already accepts the full union
+    const z3: string | Err1 | Err2 = mayFail()
+>z3 : string | Err1 | Err2
+>   : ^^^^^^^^^^^^^^^^^^^^
+>mayFail() : string | Err1 | Err2
+>          : ^^^^^^^^^^^^^^^^^^^^
+>mayFail : () => string | Err1 | Err2
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    // hint: string is assignable to string | number after stripping errors
+    function test2(_x: string | number): void {}
+>test2 : (_x: string | number) => void
+>      : ^  ^^               ^^^^^    
+>_x : string | number
+>   : ^^^^^^^^^^^^^^^
+
+    test2(mayFail())
+>test2(mayFail()) : void
+>                 : ^^^^
+>test2 : (_x: string | number) => void
+>      : ^  ^^               ^^^^^    
+>mayFail() : string | Err1 | Err2
+>          : ^^^^^^^^^^^^^^^^^^^^
+>mayFail : () => string | Err1 | Err2
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    // no hint: string is not assignable to boolean — unrelated mismatch
+    const z4: boolean = mayFail()
+>z4 : boolean
+>   : ^^^^^^^
+>mayFail() : string | Err1 | Err2
+>          : ^^^^^^^^^^^^^^^^^^^^
+>mayFail : () => string | Err1 | Err2
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    // should have hint
+    function f(): string { return mayFail() }
+>f : () => string
+>  : ^^^^^^      
+>mayFail() : string | Err1 | Err2
+>          : ^^^^^^^^^^^^^^^^^^^^
+>mayFail : () => string | Err1 | Err2
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    // never error
+    const foo = () => ''
+>foo : () => string
+>    : ^^^^^^^^^^^^
+>() => '' : () => string
+>         : ^^^^^^^^^^^^
+>'' : ""
+>   : ^^
+
+    const z5 = try foo()
+>z5 : string
+>   : ^^^^^^
+>foo() : string
+>      : ^^^^^^
+>foo : () => string
+>    : ^^^^^^^^^^^^
+
+    // always error
+    const foo2 = () => new Error()
+>foo2 : () => Error
+>     : ^^^^^^^^^^^
+>() => new Error() : () => Error
+>                  : ^^^^^^^^^^^
+>new Error() : Error
+>            : ^^^^^
+>Error : ErrorConstructor
+>      : ^^^^^^^^^^^^^^^^
+
+    const z6 = try foo2()  
+>z6 : never
+>   : ^^^^^
+>foo2() : Error
+>       : ^^^^^
+>foo2 : () => Error
+>     : ^^^^^^^^^^^
+
+    function effect(cond = true): !void {
+>effect : (cond?: boolean) => !void
+>       : ^    ^^^^^^^^^^^^^^^     
+>cond : boolean
+>     : ^^^^^^^
+>true : true
+>     : ^^^^
+
+        if (cond) return new Error()
+>cond : boolean
+>     : ^^^^^^^
+>new Error() : Error
+>            : ^^^^^
+>Error : ErrorConstructor
+>      : ^^^^^^^^^^^^^^^^
+    }
+
+    // hint: unhandled fallible return type: void | Error
+    effect()
+>effect() : void | Error
+>         : ^^^^^^^^^^^^
+>effect : (cond?: boolean) => !void
+>       : ^    ^^^^^^^^^^^^^^^     
+
+    try effect() // ok
+>effect() : void | Error
+>         : ^^^^^^^^^^^^
+>effect : (cond?: boolean) => !void
+>       : ^    ^^^^^^^^^^^^^^^     
+
+    void effect() // ok
+>void effect() : undefined
+>              : ^^^^^^^^^
+>effect() : void | Error
+>         : ^^^^^^^^^^^^
+>effect : (cond?: boolean) => !void
+>       : ^    ^^^^^^^^^^^^^^^     
+
+    const z7 = effect() // ok
+>z7 : void | Error
+>   : ^^^^^^^^^^^^
+>effect() : void | Error
+>         : ^^^^^^^^^^^^
+>effect : (cond?: boolean) => !void
+>       : ^    ^^^^^^^^^^^^^^^     
+
+    function wrapsEffect() {
+>wrapsEffect : () => void | Error
+>            : ^^^^^^^^^^^^^^^^^^
+
+        return effect() // ok
+>effect() : void | Error
+>         : ^^^^^^^^^^^^
+>effect : (cond?: boolean) => !void
+>       : ^    ^^^^^^^^^^^^^^^     
+    }
+}
+
+// FIXME: `typeNodeMentionsPromise` in checker.ts is brittle
+{
+    async function getValue() { return 42 }
+>getValue : () => Promise<number>
+>         : ^^^^^^^^^^^^^^^^^^^^^
+>42 : 42
+>   : ^^
+
+    async function testAutoAwait() {
+>testAutoAwait : () => Promise<void>
+>              : ^^^^^^^^^^^^^^^^^^^
+
+        const v = getValue()  // number
+>v : number
+>  : ^^^^^^
+>getValue() : number
+>           : ^^^^^^
+>getValue : () => Promise<number>
+>         : ^^^^^^^^^^^^^^^^^^^^^
+    }
+
+    declare function fetchNum(): Promise<number>
+>fetchNum : () => Promise<number>
+>         : ^^^^^^               
+
+    async function testDeclared() {
+>testDeclared : () => Promise<void>
+>             : ^^^^^^^^^^^^^^^^^^^
+
+        const n = fetchNum()  // number
+>n : number
+>  : ^^^^^^
+>fetchNum() : number
+>           : ^^^^^^
+>fetchNum : () => Promise<number>
+>         : ^^^^^^               
+    }
+
+    declare function passThrough<T>(x: T): T
+>passThrough : <T>(x: T) => T
+>            : ^ ^^ ^^ ^^^^^ 
+>x : T
+>  : ^
+
+    async function testPassThrough() {
+>testPassThrough : () => Promise<void>
+>                : ^^^^^^^^^^^^^^^^^^^
+
+        const p: Promise<number> = Promise.resolve(1)
+>p : Promise<number>
+>  : ^^^^^^^^^^^^^^^
+>Promise.resolve(1) : number
+>                   : ^^^^^^
+>Promise.resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }
+>                : ^^^^^^             ^^^ ^^     ^^ ^^^                   ^^^ ^^     ^^                  ^^^                   ^^^
+>Promise : PromiseConstructor
+>        : ^^^^^^^^^^^^^^^^^^
+>resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }
+>        : ^^^^^^             ^^^ ^^     ^^ ^^^                   ^^^ ^^     ^^                  ^^^                   ^^^
+>1 : 1
+>  : ^
+
+        const r = passThrough(p)  // Promise<number>, not number
+>r : Promise<number>
+>  : ^^^^^^^^^^^^^^^
+>passThrough(p) : Promise<number>
+>               : ^^^^^^^^^^^^^^^
+>passThrough : <T>(x: T) => T
+>            : ^ ^^ ^^ ^^^^^ 
+>p : Promise<number>
+>  : ^^^^^^^^^^^^^^^
+    }
+
+    declare function memoize<T extends () => any>(fn: T): T
+>memoize : <T extends () => any>(fn: T) => T
+>        : ^ ^^^^^^^^^         ^^  ^^ ^^^^^ 
+>fn : T
+>   : ^
+
+    async function testMemoize() {
+>testMemoize : () => Promise<void>
+>            : ^^^^^^^^^^^^^^^^^^^
+
+        async function inner() { return 1 }
+>inner : () => Promise<number>
+>      : ^^^^^^^^^^^^^^^^^^^^^
+>1 : 1
+>  : ^
+
+        const m = memoize(inner)
+>m : () => Promise<number>
+>  : ^^^^^^^^^^^^^^^^^^^^^
+>memoize(inner) : () => Promise<number>
+>               : ^^^^^^^^^^^^^^^^^^^^^
+>memoize : <T extends () => any>(fn: T) => T
+>        : ^ ^^^^^^^^^         ^^  ^^ ^^^^^ 
+>inner : () => Promise<number>
+>      : ^^^^^^^^^^^^^^^^^^^^^
+
+        const v = m()  // number
+>v : number
+>  : ^^^^^^
+>m() : number
+>    : ^^^^^^
+>m : () => Promise<number>
+>  : ^^^^^^^^^^^^^^^^^^^^^
+    }
+}
+
+// .syn async return type elision
+{
+    async function elided(): number { return 1 }
+>elided : () => Promise<number>
+>       : ^^^^^^^^^^^^^^^^^^^^^
+>1 : 1
+>  : ^
+
+    async function testElided() {
+>testElided : () => Promise<void>
+>           : ^^^^^^^^^^^^^^^^^^^
+
+        const v = elided()  // number
+>v : number
+>  : ^^^^^^
+>elided() : number
+>         : ^^^^^^
+>elided : () => Promise<number>
+>       : ^^^^^^^^^^^^^^^^^^^^^
+    }
+
+    async function explicit(): Promise<number> { return 1 }
+>explicit : () => Promise<number>
+>         : ^^^^^^               
+>1 : 1
+>  : ^
+
+    async function testExplicit() {
+>testExplicit : () => Promise<void>
+>             : ^^^^^^^^^^^^^^^^^^^
+
+        const v = explicit()  // number
+>v : number
+>  : ^^^^^^
+>explicit() : number
+>           : ^^^^^^
+>explicit : () => Promise<number>
+>         : ^^^^^^               
+    }
+
+    async function inferred() { return 1 }
+>inferred : () => Promise<number>
+>         : ^^^^^^^^^^^^^^^^^^^^^
+>1 : 1
+>  : ^
+
+    async function testInferred() {
+>testInferred : () => Promise<void>
+>             : ^^^^^^^^^^^^^^^^^^^
+
+        const v = inferred()  // number
+>v : number
+>  : ^^^^^^
+>inferred() : number
+>           : ^^^^^^
+>inferred : () => Promise<number>
+>         : ^^^^^^^^^^^^^^^^^^^^^
+    }
+}
+
+{
+    const x = <div @ a>
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div @ a>        <div @ b></div>        <#block>            console.log(a, b)        </>    </div> : HTMLDivElement
+>                                                                                                   : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+        <div @ b></div>
+><div @ b></div> : HTMLDivElement
+>                : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>b : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <#block>
+            console.log(a, b)
+>console.log(a, b) : void
+>                  : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>a : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+>b : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+        </>
+    </div>
+>div : any
+>    : ^^^
+
+    console.log(a, b)
+>console.log(a, b) : void
+>                  : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>a : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+>b : any
+>  : ^^^
+}
+
+// spread JSX elements
+{
+    declare function Comp(): Element[];
+>Comp : () => Element[]
+>     : ^^^^^^         
+
+    const spread1 = <div><...Comp /></div> // ok
+>spread1 : HTMLDivElement
+>        : ^^^^^^^^^^^^^^
+><div><...Comp /></div> : HTMLDivElement
+>                       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+><...Comp /> : Element
+>            : ^^^^^^^
+>Comp : () => Element[]
+>     : ^^^^^^         
+>div : any
+>    : ^^^
+
+    const noSpread1 = <div><Comp /></div> // error
+>noSpread1 : HTMLDivElement
+>          : ^^^^^^^^^^^^^^
+><div><Comp /></div> : HTMLDivElement
+>                    : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+><Comp /> : Element
+>         : ^^^^^^^
+>Comp : () => Element[]
+>     : ^^^^^^         
+>div : any
+>    : ^^^
+
+    // errors on intrinsics
+    const spread2 = <div><...div /></div>
+>spread2 : HTMLDivElement
+>        : ^^^^^^^^^^^^^^
+><div><...div /></div> : HTMLDivElement
+>                      : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+><...div /> : HTMLDivElement
+>           : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+    const spread3 = <div><...div></div></div>
+>spread3 : HTMLDivElement
+>        : ^^^^^^^^^^^^^^
+><div><...div></div></div> : HTMLDivElement
+>                          : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+><...div></div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+    declare function Comp2(): (() => void)[];
+>Comp2 : () => (() => void)[]
+>      : ^^^^^^              
+
+    const spread4 = <div><...Comp2 /></div>  // error, intrinsics want something Element-like
+>spread4 : HTMLDivElement
+>        : ^^^^^^^^^^^^^^
+><div><...Comp2 /></div> : HTMLDivElement
+>                        : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+><...Comp2 /> : Element
+>             : ^^^^^^^
+>Comp2 : () => (() => void)[]
+>      : ^^^^^^              
+>div : any
+>    : ^^^
+
+    declare function Comp3(): Element;
+>Comp3 : () => Element
+>      : ^^^^^^       
+
+    const noSpread2 = <div><Comp3 /></div> // ok
+>noSpread2 : HTMLDivElement
+>          : ^^^^^^^^^^^^^^
+><div><Comp3 /></div> : HTMLDivElement
+>                     : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+><Comp3 /> : Element
+>          : ^^^^^^^
+>Comp3 : () => Element
+>      : ^^^^^^       
+>div : any
+>    : ^^^
+
+    const spread5 = <div><...Comp3 /></div> // error
+>spread5 : HTMLDivElement
+>        : ^^^^^^^^^^^^^^
+><div><...Comp3 /></div> : HTMLDivElement
+>                        : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+><...Comp3 /> : Element
+>             : ^^^^^^^
+>Comp3 : () => Element
+>      : ^^^^^^       
+>div : any
+>    : ^^^
+
+    declare function Comp4(props: { children: Element[] }): Element;
+>Comp4 : (props: { children: Element[]; }) => Element
+>      : ^     ^^                        ^^^^^       
+>props : { children: Element[]; }
+>      : ^^^^^^^^^^^^         ^^^
+>children : Element[]
+>         : ^^^^^^^^^
+
+    // ok
+    const spread6 = <Comp4>
+>spread6 : Element
+>        : ^^^^^^^
+><Comp4>      <Comp3 />      <...Comp />    </Comp4> : Element
+>                                                    : ^^^^^^^
+>Comp4 : (props: { children: Element[]; }) => Element
+>      : ^     ^^                        ^^^^^       
+
+      <Comp3 />
+><Comp3 /> : Element
+>          : ^^^^^^^
+>Comp3 : () => Element
+>      : ^^^^^^       
+
+      <...Comp />
+><...Comp /> : Element
+>            : ^^^^^^^
+>Comp : () => Element[]
+>     : ^^^^^^         
+
+    </Comp4>
+>Comp4 : (props: { children: Element[]; }) => Element
+>      : ^     ^^                        ^^^^^       
+
+    // error
+    const spread7 = <Comp4>
+>spread7 : Element
+>        : ^^^^^^^
+><Comp4>      <Comp3 />      <Comp />    </Comp4> : Element
+>                                                 : ^^^^^^^
+>Comp4 : (props: { children: Element[]; }) => Element
+>      : ^     ^^                        ^^^^^       
+
+      <Comp3 />
+><Comp3 /> : Element
+>          : ^^^^^^^
+>Comp3 : () => Element
+>      : ^^^^^^       
+
+      <Comp />
+><Comp /> : Element
+>         : ^^^^^^^
+>Comp : () => Element[]
+>     : ^^^^^^         
+
+    </Comp4>
+>Comp4 : (props: { children: Element[]; }) => Element
+>      : ^     ^^                        ^^^^^       
+
+    declare function Comp5(): [Element] | [];
+>Comp5 : () => [Element] | []
+>      : ^^^^^^              
+
+    // ok
+    const spread8 = <Comp4>
+>spread8 : Element
+>        : ^^^^^^^
+><Comp4>        <...Comp5 />    </Comp4> : Element
+>                                        : ^^^^^^^
+>Comp4 : (props: { children: Element[]; }) => Element
+>      : ^     ^^                        ^^^^^       
+
+        <...Comp5 />
+><...Comp5 /> : Element
+>             : ^^^^^^^
+>Comp5 : () => [Element] | []
+>      : ^^^^^^              
+
+    </Comp4>
+>Comp4 : (props: { children: Element[]; }) => Element
+>      : ^     ^^                        ^^^^^       
+}
+
+{
+    const cond = true as boolean
+>cond : boolean
+>     : ^^^^^^^
+>true as boolean : boolean
+>                : ^^^^^^^
+>true : true
+>     : ^^^^
+
+    // [] | [HtmlDivElement]
+    const if1 = <#if {cond}>
+>if1 : [] | [HTMLDivElement]
+>    : ^^^^^^^^^^^^^^^^^^^^^
+>cond : boolean
+>     : ^^^^^^^
+
+      <div></div>
+><div></div> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+    </>
+    // [HtmlDivElement]
+    const if2 = <#if {true}>
+>if2 : [HTMLDivElement]
+>    : ^^^^^^^^^^^^^^^^
+>true : true
+>     : ^^^^
+
+      <div></div>
+><div></div> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+    </>
+    // []
+    const if3 = <#if {false}>
+>if3 : []
+>    : ^^
+>false : false
+>      : ^^^^^
+
+      <div></div>
+><div></div> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+    </>
+}
+
+// /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a
+
+// ^(\s*)on(.*)\?:
+// $1on\L$2?:

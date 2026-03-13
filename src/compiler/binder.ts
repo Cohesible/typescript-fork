@@ -130,6 +130,7 @@ import {
     IfStatement,
     ImportClause,
     JsxBlock,
+    JsxElseDirective,
     JsxIfDirective,
     InternalSymbolName,
     isAliasableExpression,
@@ -331,6 +332,7 @@ import {
     JsxElement,
     JsxSelfClosingElement,
     getJsxElementNameContainer,
+    findJsxElseDirective,
 } from "./_namespaces/ts.js";
 import * as performance from "./_namespaces/ts.performance.js";
 
@@ -1149,6 +1151,9 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             case SyntaxKind.JsxIfDirective:
                 bindJsxIfDirective(node as JsxIfDirective);
                 break;
+            case SyntaxKind.JsxElseDirective:
+                bindJsxElseDirective(node as JsxElseDirective);
+                break;
             case SyntaxKind.JsxBlock:
                 bindEach((node as JsxBlock).statements);
                 break;
@@ -1678,8 +1683,10 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
     function bindJsxIfDirective(node: JsxIfDirective): void {
         if (!node.condition.expression) {
             bind(node.condition);
-            return bindEach(node.children);
+            bindEach(node.children);
+            return;
         }
+        const elseClause = findJsxElseDirective(node);
         const thenLabel = createBranchLabel();
         const elseLabel = createBranchLabel();
         const postLabel = createBranchLabel();
@@ -1688,9 +1695,22 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
         bindEach(node.children);
         addAntecedent(postLabel, currentFlow);
         currentFlow = finishFlowLabel(elseLabel);
-        // TODO: else
+        if (elseClause) {
+            elseClause.elseFlowNode = currentFlow;
+        }
         addAntecedent(postLabel, currentFlow);
         currentFlow = finishFlowLabel(postLabel);
+    }
+
+    function bindJsxElseDirective(node: JsxElseDirective): void {
+        if (node.elseFlowNode) {
+            const saveCurrentFlow = currentFlow;
+            currentFlow = node.elseFlowNode;
+            bindEach(node.children);
+            currentFlow = saveCurrentFlow;
+        } else {
+            bindEach(node.children);
+        }
     }
 
     function bindReturnOrThrow(node: ReturnStatement | ThrowStatement): void {
@@ -4120,6 +4140,7 @@ export function getContainerFlags(node: Node): ContainerFlags {
         case SyntaxKind.JsxElement:
         case SyntaxKind.JsxFragment:
         case SyntaxKind.JsxIfDirective:
+        case SyntaxKind.JsxElseDirective:
             return ContainerFlags.IsBlockScopedContainer | ContainerFlags.HasLocals;
 
         case SyntaxKind.IfStatement:

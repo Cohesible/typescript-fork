@@ -36,6 +36,7 @@ import {
     JsxAttributes,
     JsxBlock,
     JsxElement,
+    JsxElseDirective,
     JsxFragment,
     JsxIfDirective,
     JsxOpeningLikeElement,
@@ -295,6 +296,8 @@ function getOutliningSpanForNode(n: Node, sourceFile: SourceFile): OutliningSpan
             return spanForJSXFragment(n as JsxFragment);
         case SyntaxKind.JsxIfDirective:
             return spanForJsxIfDirective(n as JsxIfDirective);
+        case SyntaxKind.JsxElseDirective:
+            return spanForJsxElseDirective(n as JsxElseDirective);
         case SyntaxKind.JsxBlock:
             return spanForJsxBlock(n as JsxBlock);
         case SyntaxKind.JsxSelfClosingElement:
@@ -367,6 +370,11 @@ function getOutliningSpanForNode(n: Node, sourceFile: SourceFile): OutliningSpan
     function spanForJsxIfDirective(node: JsxIfDirective): OutliningSpan | undefined {
         const textSpan = createTextSpanFromBounds(node.getStart(sourceFile), node.getEnd());
         return createOutliningSpan(textSpan, OutliningSpanKind.Code, textSpan, /*autoCollapse*/ false, "<#if>...</#if>");
+    }
+
+    function spanForJsxElseDirective(node: JsxElseDirective): OutliningSpan | undefined {
+        const textSpan = createTextSpanFromBounds(node.getStart(sourceFile), node.getEnd());
+        return createOutliningSpan(textSpan, OutliningSpanKind.Code, textSpan, /*autoCollapse*/ false, "<#else>...</>");
     }
 
     function spanForJsxBlock(node: JsxBlock): OutliningSpan | undefined {

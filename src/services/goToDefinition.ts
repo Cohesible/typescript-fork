@@ -125,10 +125,11 @@ export function getDefinitionAtPosition(program: Program, sourceFile: SourceFile
         return fileReferenceDefinition;
     }
 
-    const node = getTouchingPropertyName(sourceFile, position);
-    if (node === sourceFile) {
+    const start = getTouchingPropertyName(sourceFile, position);
+    if (start === sourceFile) {
         return undefined;
     }
+    const node = start.parent?.kind === SyntaxKind.JsxNamespacedName ? start.parent : start;
 
     const { parent } = node;
     const typeChecker = program.getTypeChecker();

@@ -369,7 +369,7 @@ function getOutliningSpanForNode(n: Node, sourceFile: SourceFile): OutliningSpan
 
     function spanForJsxIfDirective(node: JsxIfDirective): OutliningSpan | undefined {
         const textSpan = createTextSpanFromBounds(node.getStart(sourceFile), node.getEnd());
-        return createOutliningSpan(textSpan, OutliningSpanKind.Code, textSpan, /*autoCollapse*/ false, "<#if>...</#if>");
+        return createOutliningSpan(textSpan, OutliningSpanKind.Code, textSpan, /*autoCollapse*/ false, "<#if>...</>");
     }
 
     function spanForJsxElseDirective(node: JsxElseDirective): OutliningSpan | undefined {
@@ -379,7 +379,7 @@ function getOutliningSpanForNode(n: Node, sourceFile: SourceFile): OutliningSpan
 
     function spanForJsxBlock(node: JsxBlock): OutliningSpan | undefined {
         const textSpan = createTextSpanFromBounds(node.getStart(sourceFile), node.getEnd());
-        return createOutliningSpan(textSpan, OutliningSpanKind.Code, textSpan, /*autoCollapse*/ false, "{ ... }");
+        return createOutliningSpan(textSpan, OutliningSpanKind.Code, textSpan, /*autoCollapse*/ false, "<#block>...</>");
     }
 
     function spanForJSXAttributes(node: JsxAttributes): OutliningSpan | undefined {

@@ -2,12 +2,8 @@ main.syn(21,12): error TS1355: A 'const' assertions can only be applied to refer
 main.syn(58,19): error TS2881: This expression is never nullish.
 main.syn(106,9): error TS2367: This comparison appears to be unintentional because the types '"a"' and '"b"' have no overlap.
 main.syn(161,9): error TS2367: This comparison appears to be unintentional because the types '"black"' and '"red"' have no overlap.
-main.syn(218,5): error TS1184: Modifiers cannot appear here.
 main.syn(227,17): error TS2344: Type 'string | number' does not satisfy the constraint 'number'.
   Type 'string' is not assignable to type 'number'.
-main.syn(233,5): error TS1184: Modifiers cannot appear here.
-main.syn(234,5): error TS1184: Modifiers cannot appear here.
-main.syn(235,5): error TS1184: Modifiers cannot appear here.
 main.syn(266,44): error TS2349: This expression is not callable.
   Not all constituents of type '(() => T) | (T & Function)' are callable.
     Type 'T & Function' has no call signatures.
@@ -22,45 +18,43 @@ main.syn(469,17): error TS2322: Type '{ children: [string, ...number[]]; }' is n
 main.syn(477,20): error TS2882: This JSX tag's 'children' prop expects type 'Element[] | undefined', but the child has array type 'Element[]'. Did you mean to spread it with '{...}'?
 main.syn(481,28): error TS2747: 'FooOpt' components don't accept text as child elements. Text in JSX has the type 'string', but the expected type of 'children' is 'Element[] | undefined'.
   Type 'string' is not assignable to type 'Element'.
-main.syn(503,9): error TS2884: 'try' has no effect because the expression cannot be an 'Error'.
 main.syn(530,12): error TS2345: Argument of type 'Element | null' is not assignable to parameter of type 'Updatable'.
   Type 'null' is not assignable to type 'Updatable'.
-main.syn(536,13): error TS2884: 'try' has no effect because the expression cannot be an 'Error'.
-main.syn(550,13): error TS2884: 'try' has no effect because the expression cannot be an 'Error'.
-main.syn(562,29): error TS2322: Type 'number' is not assignable to type 'string'.
-main.syn(568,24): error TS2322: Type 'number' is not assignable to type 'string'.
-main.syn(601,10): error TS2345: Argument of type 'string | Err1 | Err2' is not assignable to parameter of type 'string'.
+main.syn(545,9): error TS95201: update has no effect: this element contains no dynamic expressions
+main.syn(595,9): error TS95202: Possibly redundant 'update': 'x1' was already updated above with no intervening changes.
+main.syn(599,9): error TS95202: Possibly redundant 'update': 'x1' was already updated above with no intervening changes.
+main.syn(626,10): error TS2345: Argument of type 'string | Err1 | Err2' is not assignable to parameter of type 'string'.
   Type 'Err1' is not assignable to type 'string'.
-main.syn(602,11): error TS2322: Type 'string | Err1 | Err2' is not assignable to type 'string'.
+main.syn(627,11): error TS2322: Type 'string | Err1 | Err2' is not assignable to type 'string'.
   Type 'Err1' is not assignable to type 'string'.
-main.syn(609,11): error TS2345: Argument of type 'string | Err1 | Err2' is not assignable to parameter of type 'string | number'.
+main.syn(634,11): error TS2345: Argument of type 'string | Err1 | Err2' is not assignable to parameter of type 'string | number'.
   Type 'Err1' is not assignable to type 'string | number'.
-main.syn(612,11): error TS2322: Type 'string | Err1 | Err2' is not assignable to type 'boolean'.
+main.syn(637,11): error TS2322: Type 'string | Err1 | Err2' is not assignable to type 'boolean'.
   Type 'string' is not assignable to type 'boolean'.
-main.syn(615,28): error TS2322: Type 'string | Err1 | Err2' is not assignable to type 'string'.
+main.syn(640,28): error TS2322: Type 'string | Err1 | Err2' is not assignable to type 'string'.
   Type 'Err1' is not assignable to type 'string'.
-main.syn(619,20): error TS2884: 'try' has no effect because the expression cannot be an 'Error'.
-main.syn(623,20): error TS2885: 'try' will always throw because the expression always returns an 'Error'.
-main.syn(630,5): error TS2886: This expression returns 'void | Error'. Use 'try' to throw on error, or 'void' to discard the result.
-main.syn(650,5): error TS1184: Modifiers cannot appear here.
-main.syn(655,5): error TS1184: Modifiers cannot appear here.
-main.syn(657,15): error TS2322: Type 'number' is not assignable to type 'Promise<number>'.
-main.syn(661,5): error TS1184: Modifiers cannot appear here.
-main.syn(694,20): error TS2304: Cannot find name 'b'.
-main.syn(699,5): error TS1184: Modifiers cannot appear here.
-main.syn(701,29): error TS95200: 'Comp' returns 'Element[]' and cannot be used as a single JSX element. Did you mean '...Comp'?
-main.syn(704,26): error TS95198: Spread JSX element type 'HTMLDivElement' is not an array type.
-main.syn(705,26): error TS95198: Spread JSX element type 'HTMLDivElement' is not an array type.
-main.syn(707,5): error TS1184: Modifiers cannot appear here.
-main.syn(708,26): error TS2322: Type '() => void' is not assignable to type 'Child'.
-main.syn(710,5): error TS1184: Modifiers cannot appear here.
-main.syn(712,26): error TS95198: Spread JSX element type 'Element' is not an array type.
-main.syn(714,5): error TS1184: Modifiers cannot appear here.
-main.syn(724,8): error TS95200: 'Comp' returns 'Element[]' and cannot be used as a single JSX element. Did you mean '...Comp'?
-main.syn(727,5): error TS1184: Modifiers cannot appear here.
+main.syn(644,20): error TS2884: 'try' has no effect because the expression cannot be an 'Error'.
+main.syn(648,20): error TS2885: 'try' will always throw because the expression always returns an 'Error'.
+main.syn(655,5): error TS2886: This expression returns 'void | Error'. Use 'try' to throw on error, or 'void' to discard the result.
+main.syn(672,5): error TS2886: This expression returns 'Err<"bad"> | undefined'. Use 'try' to throw on error, or 'void' to discard the result.
+main.syn(753,20): error TS95204: Async call to 'foo' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+main.syn(755,9): error TS95204: Async call to 'foo' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+main.syn(773,8): error TS95203: Auto-await is ambiguous: 'bar' returns 'Promise<number>' which is also directly assignable to the expected type. Use 'await' or 'as async' to be explicit.
+main.syn(780,11): error TS95204: Async call to 'bar' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+main.syn(780,18): error TS95204: Async call to 'bar' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+main.syn(787,20): error TS95204: Async call to 'bar' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+main.syn(814,15): error TS2322: Type 'number' is not assignable to type 'Promise<number>'.
+main.syn(853,20): error TS2304: Cannot find name 'b'.
+main.syn(863,29): error TS95200: 'Comp' returns 'Element[]' and cannot be used as a single JSX element. Did you mean '...Comp'?
+main.syn(866,26): error TS95198: Spread JSX element type 'HTMLDivElement' is not an array type.
+main.syn(867,26): error TS95198: Spread JSX element type 'HTMLDivElement' is not an array type.
+main.syn(870,26): error TS2322: Type '() => void' is not assignable to type 'Child'.
+main.syn(874,26): error TS95198: Spread JSX element type 'Element' is not an array type.
+main.syn(887,8): error TS95200: 'Comp' returns 'Element[]' and cannot be used as a single JSX element. Did you mean '...Comp'?
+main.syn(916,1): error TS1005: '>' expected.
 
 
-==== main.syn (47 errors) ====
+==== main.syn (41 errors) ====
     function f<T>(t: reify T): T {
         switch (Type.kind(t)) {
             case "array":
@@ -92,7 +86,7 @@ main.syn(727,5): error TS1184: Modifiers cannot appear here.
     }
     
     function bar2() {
-        const p = foo()
+        const p: Promise<number> = foo()
     }
     
     async function z() {
@@ -287,8 +281,6 @@ main.syn(727,5): error TS1184: Modifiers cannot appear here.
             constructor(public array: T[]) { }
         }
         declare class B<T> {
-        ~~~~~~~
-!!! error TS1184: Modifiers cannot appear here.
             put(v: T): void
             get(): T
         }
@@ -307,14 +299,8 @@ main.syn(727,5): error TS1184: Modifiers cannot appear here.
         type F6 = F5<string | number>
     
         declare let val: B<number> | B<string>;
-        ~~~~~~~
-!!! error TS1184: Modifiers cannot appear here.
         declare let val2: number | string;
-        ~~~~~~~
-!!! error TS1184: Modifiers cannot appear here.
         declare function f<T>(x: B<T>, v: T): T;
-        ~~~~~~~
-!!! error TS1184: Modifiers cannot appear here.
         f(val, val2);
     }
     
@@ -606,9 +592,7 @@ main.syn(727,5): error TS1184: Modifiers cannot appear here.
     // update expression
     declare const el: Element;
     const d = <div onClick={() => {
-        try update el
-            ~~~~~~~~~
-!!! error TS2884: 'try' has no effect because the expression cannot be an 'Error'.
+        update el
     }}></div>
     
     // shorthand_jsx_attribute
@@ -641,14 +625,8 @@ main.syn(727,5): error TS1184: Modifiers cannot appear here.
 !!! error TS2345:   Type 'null' is not assignable to type 'Updatable'.
     
         if (const x = document.querySelector('.a')) {
-            // error, needs try or void
+            // ok
             update x
-            // ok
-            try update x
-                ~~~~~~~~
-!!! error TS2884: 'try' has no effect because the expression cannot be an 'Error'.
-            // ok
-            void update x
         }
     
         {
@@ -660,10 +638,8 @@ main.syn(727,5): error TS1184: Modifiers cannot appear here.
         {
             const x = <div>hi</div>
             update x // error, `x` has no updatable expressions
-            try update x // error, `x` has no updatable expressions
-                ~~~~~~~~
-!!! error TS2884: 'try' has no effect because the expression cannot be an 'Error'.
-            void update x // error, `x` has no updatable expressions
+            ~~~~~~~~
+!!! error TS95201: update has no effect: this element contains no dynamic expressions
         }
     
         { 
@@ -673,18 +649,14 @@ main.syn(727,5): error TS1184: Modifiers cannot appear here.
         }
     
         { 
-            let y = 0
+            let y = '0'
             const x = <div><div id={y}></div></div>
-                                ~~
-!!! error TS2322: Type 'number' is not assignable to type 'string'.
             update x // ok
         }
     
         { 
-            let y = 0
+            let y = '0'
             const x = <div id={y}></div>
-                           ~~
-!!! error TS2322: Type 'number' is not assignable to type 'string'.
             update x // ok
         }
     
@@ -694,10 +666,45 @@ main.syn(727,5): error TS1184: Modifiers cannot appear here.
             const el = <Comp/>
             update el // ok
         }
+    
+        {
+            // expressions and blocks always make the element updatable
+            const el = <div>
+                {<span>hi</span>}
+            </div>
+            update el // ok
+    
+            // blocks 
+            const el2 = <div>
+                <#block>
+                    console.log('hi')
+                </>
+            </div>
+            update el2 // ok
+        }
+    
+        {
+            // TODO
+            let y = 0
+            const x1 = <div>{y}</div>
+            const x2 = <div>{y}</div>
+            update x1
+            update x1 // error: possibly redundant update, did you mean x2?
+            ~~~~~~~~~
+!!! error TS95202: Possibly redundant 'update': 'x1' was already updated above with no intervening changes.
+    
+            let z = 0
+            z += 1
+            update x1 // error: possibly redundant update, did you mean x2?
+            ~~~~~~~~~
+!!! error TS95202: Possibly redundant 'update': 'x1' was already updated above with no intervening changes.
+        }
     }
     
-    
     // !T (FallibleType) and try expr
+    // { ok: false; code: string } is also considered an error
+    // this is a lightweight error
+    // the callee frame is not preserved because the caller constructs the error
     {
         class Err1 extends Error { override name = "Err1" as const }
         class Err2 extends Error { override name = "Err2" as const }
@@ -721,12 +728,12 @@ main.syn(727,5): error TS1184: Modifiers cannot appear here.
              ~~~~~~~~~
 !!! error TS2345: Argument of type 'string | Err1 | Err2' is not assignable to parameter of type 'string'.
 !!! error TS2345:   Type 'Err1' is not assignable to type 'string'.
-!!! related TS2883 main.syn:601:10: Did you forget to use 'try'? The expression returns a fallible type.
+!!! related TS2883 main.syn:626:10: Did you forget to use 'try'? The expression returns a fallible type.
         const z2: string = mayFail()
               ~~
 !!! error TS2322: Type 'string | Err1 | Err2' is not assignable to type 'string'.
 !!! error TS2322:   Type 'Err1' is not assignable to type 'string'.
-!!! related TS2883 main.syn:602:24: Did you forget to use 'try'? The expression returns a fallible type.
+!!! related TS2883 main.syn:627:24: Did you forget to use 'try'? The expression returns a fallible type.
     
         // no hint: target already accepts the full union
         const z3: string | Err1 | Err2 = mayFail()
@@ -737,7 +744,7 @@ main.syn(727,5): error TS1184: Modifiers cannot appear here.
               ~~~~~~~~~
 !!! error TS2345: Argument of type 'string | Err1 | Err2' is not assignable to parameter of type 'string | number'.
 !!! error TS2345:   Type 'Err1' is not assignable to type 'string | number'.
-!!! related TS2883 main.syn:609:11: Did you forget to use 'try'? The expression returns a fallible type.
+!!! related TS2883 main.syn:634:11: Did you forget to use 'try'? The expression returns a fallible type.
     
         // no hint: string is not assignable to boolean — unrelated mismatch
         const z4: boolean = mayFail()
@@ -750,7 +757,7 @@ main.syn(727,5): error TS1184: Modifiers cannot appear here.
                                ~~~~~~
 !!! error TS2322: Type 'string | Err1 | Err2' is not assignable to type 'string'.
 !!! error TS2322:   Type 'Err1' is not assignable to type 'string'.
-!!! related TS2883 main.syn:615:35: Did you forget to use 'try'? The expression returns a fallible type.
+!!! related TS2883 main.syn:640:35: Did you forget to use 'try'? The expression returns a fallible type.
     
         // never error
         const foo = () => ''
@@ -782,9 +789,155 @@ main.syn(727,5): error TS1184: Modifiers cannot appear here.
         function wrapsEffect() {
             return effect() // ok
         }
+    
+        function effect2(cond = true) {
+            if (cond) return err('bad')
+        }
+    
+        // hint: unhandled fallible return type: void | Err<'bad'>
+        effect2()
+        ~~~~~~~~~
+!!! error TS2886: This expression returns 'Err<"bad"> | undefined'. Use 'try' to throw on error, or 'void' to discard the result.
     }
     
-    // FIXME: `typeNodeMentionsPromise` in checker.ts is brittle
+    {
+        type MyPromise = Promise<number>
+        function aliased(): MyPromise {
+            return Promise.resolve(1)
+        }
+    
+        async function f1() {
+            const n = aliased() // number
+        }
+    
+        const m1 = new Map<number, MyPromise>()
+        const m2 = new Map<number, Promise<number>>()
+        async function f2() {
+            const n1 = m1.get(0) // Promise<number> | undefined
+            const n2 = m2.get(0) // Promise<number> | undefined
+        }
+    
+        function f3(): Promise<number> | undefined {
+            return m1.get(0)
+        }
+    
+        async function f4() {
+            const n = f3() // Promise<number> | undefined
+        }
+    
+        class Box<T> {
+            get(): T {
+                throw ""
+            }
+        }
+    
+        const b: Box<Promise<number>> = new Box()
+        async function f5() {
+            const n = b.get() // Promise<number>
+        }
+    
+        // special case: promise chains
+        // the end result is auto-awaited, not the initial call
+        async function f6() {
+            // number | void
+            const n = foo().then(x => x + 1).catch(e => {})
+            // Promise<number | void>
+            const n2 = foo().then(x => x + 1).catch(e => {}) as async
+            const n3 = foo().then(x => x + 1).toFixed(1) // string
+        }
+    
+        // we have to respect the promise protocol
+        // `catch` / `finally` should take priority here
+        // this is *rare* edge case and may not even be worth the perf cost to check
+        //
+        // however, Promise may have more methods in the future, so such a check
+        // could eventually be needed anyway to avoid needless avoid code churn
+        class Catchable {
+            // normal ts checks that `then` methods are erroneous in an async ctx
+            // then() { return '0' }
+            catch() { return 0 }
+            finally() { return 0 }
+        }
+    
+        async function f7() {
+            const f = async () => new Catchable()
+            f().catch() // number
+            f().finally() // number
+    
+            // error, emits as `(await f().catch()).then()` because we must materialize after `.catch`
+            f().catch().then() 
+        }
+    
+    }
+    
+    // TODO:
+    {
+        async function foo() {
+            return 1 as number
+        }
+    
+        function sync() {
+            const p = foo() as async // OK
+            const p2 = foo() // checker error
+                       ~~~~~
+!!! error TS95204: Async call to 'foo' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+            foo() as async // OK
+            foo() // checker error
+            ~~~~~
+!!! error TS95204: Async call to 'foo' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+    
+            // `await` is still an error inside sync context
+            await p
+        }
+    
+        async function _async() {
+            const v = foo()
+            await v // await without a Promise in the type is treated as a possible mistake 
+            // but superfluous awaits are OK
+            await foo()
+        }
+    
+        async function bar() {
+            return 2
+        }
+    
+        function f8<T>(p: Promise<T> | T): void {}
+        f8(bar()) // error, ambiguous, use `await` or `as async`
+           ~~~~~
+!!! error TS95203: Auto-await is ambiguous: 'bar' returns 'Promise<number>' which is also directly assignable to the expected type. Use 'await' or 'as async' to be explicit.
+    
+        function f9() {
+            function f(p1: Promise<number>, p2: Promise<number>) {}
+            // both calls require `as async`
+            // we do not consider parameter types to be "explicitly typed" for auto-await
+            // because then the callee signature influences caller behavior, possibly interleaving calls
+            f(bar(), bar()) 
+              ~~~~~
+!!! error TS95204: Async call to 'bar' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+                     ~~~~~
+!!! error TS95204: Async call to 'bar' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+        }
+    
+        // this one is subtle: we require `as async` regardless of the return type annotation
+        // adding `async` to the fn declaration would otherwise catch rejections
+        function foo2(): Promise<number>  {
+            try {
+                return bar() // error, needs `as async`
+                       ~~~~~
+!!! error TS95204: Async call to 'bar' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+            } catch {
+                return Promise.resolve(0)
+            }
+        }
+    
+        async function foo3() {
+            // we (unfortunately) special-case `Promise.resolve` and `Promise.resolve` for auto-await
+            // they should not be awaited because they are, effectively, constructors
+            const x1 = Promise.resolve(0) // Promise<number>
+            const x2 = Promise.reject(0) // Promise<number>
+        }
+    }
+    
     {
         async function getValue() { return 42 }
         async function testAutoAwait() {
@@ -792,15 +945,11 @@ main.syn(727,5): error TS1184: Modifiers cannot appear here.
         }
     
         declare function fetchNum(): Promise<number>
-        ~~~~~~~
-!!! error TS1184: Modifiers cannot appear here.
         async function testDeclared() {
             const n = fetchNum()  // number
         }
     
         declare function passThrough<T>(x: T): T
-        ~~~~~~~
-!!! error TS1184: Modifiers cannot appear here.
         async function testPassThrough() {
             const p: Promise<number> = Promise.resolve(1)
                   ~
@@ -809,8 +958,6 @@ main.syn(727,5): error TS1184: Modifiers cannot appear here.
         }
     
         declare function memoize<T extends () => any>(fn: T): T
-        ~~~~~~~
-!!! error TS1184: Modifiers cannot appear here.
         async function testMemoize() {
             async function inner() { return 1 }
             const m = memoize(inner)
@@ -818,7 +965,7 @@ main.syn(727,5): error TS1184: Modifiers cannot appear here.
         }
     }
     
-    // .syn async return type elision
+    // async return type elision
     {
         async function elided(): number { return 1 }
         async function testElided() {
@@ -836,8 +983,10 @@ main.syn(727,5): error TS1184: Modifiers cannot appear here.
         }
     }
     
+    // element names
     {
-        const x = <div @ a>
+        // b can be seen within the tree, but not outside
+        ;<div @ a>
             <div @ b></div>
             <#block>
                 console.log(a, b)
@@ -846,13 +995,14 @@ main.syn(727,5): error TS1184: Modifiers cannot appear here.
         console.log(a, b)
                        ~
 !!! error TS2304: Cannot find name 'b'.
+    
+        // trailing bindings should be parsed correctly:
+        ;<div id="aaa" @ c />
     }
     
     // spread JSX elements
     {
         declare function Comp(): Element[];
-        ~~~~~~~
-!!! error TS1184: Modifiers cannot appear here.
         const spread1 = <div><...Comp /></div> // ok
         const noSpread1 = <div><Comp /></div> // error
                                 ~~~~
@@ -867,27 +1017,22 @@ main.syn(727,5): error TS1184: Modifiers cannot appear here.
 !!! error TS95198: Spread JSX element type 'HTMLDivElement' is not an array type.
     
         declare function Comp2(): (() => void)[];
-        ~~~~~~~
-!!! error TS1184: Modifiers cannot appear here.
         const spread4 = <div><...Comp2 /></div>  // error, intrinsics want something Element-like
                              ~~~~~~~~~~~~
 !!! error TS2322: Type '() => void' is not assignable to type 'Child'.
     
         declare function Comp3(): Element;
-        ~~~~~~~
-!!! error TS1184: Modifiers cannot appear here.
         const noSpread2 = <div><Comp3 /></div> // ok
         const spread5 = <div><...Comp3 /></div> // error
                              ~~~~~~~~~~~~
 !!! error TS95198: Spread JSX element type 'Element' is not an array type.
     
         declare function Comp4(props: { children: Element[] }): Element;
-        ~~~~~~~
-!!! error TS1184: Modifiers cannot appear here.
         // ok
         const spread6 = <Comp4>
           <Comp3 />
           <...Comp />
+          <...Comp></Comp>
         </Comp4>
     
         // error
@@ -899,8 +1044,6 @@ main.syn(727,5): error TS1184: Modifiers cannot appear here.
         </Comp4>
     
         declare function Comp5(): [Element] | [];
-        ~~~~~~~
-!!! error TS1184: Modifiers cannot appear here.
         // ok
         const spread8 = <Comp4>
             <...Comp5 />
@@ -922,6 +1065,13 @@ main.syn(727,5): error TS1184: Modifiers cannot appear here.
           <div></div>
         </>
     }
+    
+    {
+        // do not parse this as JSX, we should only see '> expected'
+        const m = new Map<string, Promise<string
+    }
+    ~
+!!! error TS1005: '>' expected.
     
     // /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a
     

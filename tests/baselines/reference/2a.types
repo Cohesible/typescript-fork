@@ -1,7 +1,7 @@
 //// [tests/cases/compiler/2a.ts] ////
 
 === Performance Stats ===
-Type Count: 1,000 -> 2,500
+Type Count: 2,500
 
 === main.syn ===
 function f<T>(t: reify T): T {
@@ -126,7 +126,7 @@ function bar2() {
 >bar2 : () => void
 >     : ^^^^^^^^^^
 
-    const p = foo()
+    const p: Promise<number> = foo()
 >p : Promise<number>
 >  : ^^^^^^^^^^^^^^^
 >foo() : Promise<number>
@@ -1958,16 +1958,16 @@ declare const el: Element;
 const d = <div onClick={() => {
 >d : HTMLDivElement
 >  : ^^^^^^^^^^^^^^
-><div onClick={() => {    try update el}}></div> : HTMLDivElement
->                                                : ^^^^^^^^^^^^^^
+><div onClick={() => {    update el}}></div> : HTMLDivElement
+>                                            : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 >onClick : () => void
 >        : ^^^^^^^^^^
->() => {    try update el} : () => void
->                          : ^^^^^^^^^^
+>() => {    update el} : () => void
+>                      : ^^^^^^^^^^
 
-    try update el
+    update el
 >update el : Element
 >          : ^^^^^^^
 >el : Element
@@ -2115,24 +2115,8 @@ const d4 = <div><#if {cond}></></div>
 >'.a' : ".a"
 >     : ^^^^
 
-        // error, needs try or void
+        // ok
         update x
->update x : Element
->         : ^^^^^^^
->x : Element
->  : ^^^^^^^
-
-        // ok
-        try update x
->update x : Element
->         : ^^^^^^^
->x : Element
->  : ^^^^^^^
-
-        // ok
-        void update x
->void update x : undefined
->              : ^^^^^^^^^
 >update x : Element
 >         : ^^^^^^^
 >x : Element
@@ -2177,22 +2161,8 @@ const d4 = <div><#if {cond}></></div>
 >    : ^^^
 
         update x // error, `x` has no updatable expressions
->update x : HTMLDivElement
->         : ^^^^^^^^^^^^^^
->x : HTMLDivElement
->  : ^^^^^^^^^^^^^^
-
-        try update x // error, `x` has no updatable expressions
->update x : HTMLDivElement
->         : ^^^^^^^^^^^^^^
->x : HTMLDivElement
->  : ^^^^^^^^^^^^^^
-
-        void update x // error, `x` has no updatable expressions
->void update x : undefined
->              : ^^^^^^^^^
->update x : HTMLDivElement
->         : ^^^^^^^^^^^^^^
+>update x : never
+>         : ^^^^^
 >x : HTMLDivElement
 >  : ^^^^^^^^^^^^^^
     }
@@ -2230,11 +2200,11 @@ const d4 = <div><#if {cond}></></div>
     }
 
     { 
-        let y = 0
->y : number
+        let y = '0'
+>y : string
 >  : ^^^^^^
->0 : 0
->  : ^
+>'0' : "0"
+>    : ^^^
 
         const x = <div><div id={y}></div></div>
 >x : HTMLDivElement
@@ -2247,9 +2217,9 @@ const d4 = <div><#if {cond}></></div>
 >                   : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->id : number
+>id : string
 >   : ^^^^^^
->y : number
+>y : string
 >  : ^^^^^^
 >div : any
 >    : ^^^
@@ -2264,11 +2234,11 @@ const d4 = <div><#if {cond}></></div>
     }
 
     { 
-        let y = 0
->y : number
+        let y = '0'
+>y : string
 >  : ^^^^^^
->0 : 0
->  : ^
+>'0' : "0"
+>    : ^^^
 
         const x = <div id={y}></div>
 >x : HTMLDivElement
@@ -2277,9 +2247,9 @@ const d4 = <div><#if {cond}></></div>
 >                   : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->id : number
+>id : string
 >   : ^^^^^^
->y : number
+>y : string
 >  : ^^^^^^
 >div : any
 >    : ^^^
@@ -2317,10 +2287,139 @@ const d4 = <div><#if {cond}></></div>
 >el : Element
 >   : ^^^^^^^
     }
+
+    {
+        // expressions and blocks always make the element updatable
+        const el = <div>
+>el : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div>            {<span>hi</span>}        </div> : HTMLDivElement
+>                                                 : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+            {<span>hi</span>}
+><span>hi</span> : HTMLSpanElement
+>                : ^^^^^^^^^^^^^^^
+>span : any
+>     : ^^^
+>span : any
+>     : ^^^
+
+        </div>
+>div : any
+>    : ^^^
+
+        update el // ok
+>update el : HTMLDivElement
+>          : ^^^^^^^^^^^^^^
+>el : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+
+        // blocks 
+        const el2 = <div>
+>el2 : HTMLDivElement
+>    : ^^^^^^^^^^^^^^
+><div>            <#block>                console.log('hi')            </>        </div> : HTMLDivElement
+>                                                                                        : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+            <#block>
+                console.log('hi')
+>console.log('hi') : void
+>                  : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>'hi' : "hi"
+>     : ^^^^
+
+            </>
+        </div>
+>div : any
+>    : ^^^
+
+        update el2 // ok
+>update el2 : HTMLDivElement
+>           : ^^^^^^^^^^^^^^
+>el2 : HTMLDivElement
+>    : ^^^^^^^^^^^^^^
+    }
+
+    {
+        // TODO
+        let y = 0
+>y : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+        const x1 = <div>{y}</div>
+>x1 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div>{y}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>y : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+        const x2 = <div>{y}</div>
+>x2 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div>{y}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>y : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+        update x1
+>update x1 : HTMLDivElement
+>          : ^^^^^^^^^^^^^^
+>x1 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+
+        update x1 // error: possibly redundant update, did you mean x2?
+>update x1 : HTMLDivElement
+>          : ^^^^^^^^^^^^^^
+>x1 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+
+        let z = 0
+>z : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+        z += 1
+>z += 1 : number
+>       : ^^^^^^
+>z : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+
+        update x1 // error: possibly redundant update, did you mean x2?
+>update x1 : HTMLDivElement
+>          : ^^^^^^^^^^^^^^
+>x1 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+    }
 }
 
-
 // !T (FallibleType) and try expr
+// { ok: false; code: string } is also considered an error
+// this is a lightweight error
+// the callee frame is not preserved because the caller constructs the error
 {
     class Err1 extends Error { override name = "Err1" as const }
 >Err1 : Err1
@@ -2528,8 +2627,8 @@ const d4 = <div><#if {cond}></></div>
 >     : ^^^^^^^^^^^
 
     function effect(cond = true): !void {
->effect : (cond?: boolean) => !void
->       : ^    ^^^^^^^^^^^^^^^     
+>effect : (cond?: boolean) => void | Error
+>       : ^    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >cond : boolean
 >     : ^^^^^^^
 >true : true
@@ -2548,30 +2647,30 @@ const d4 = <div><#if {cond}></></div>
     effect()
 >effect() : void | Error
 >         : ^^^^^^^^^^^^
->effect : (cond?: boolean) => !void
->       : ^    ^^^^^^^^^^^^^^^     
+>effect : (cond?: boolean) => void | Error
+>       : ^    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     try effect() // ok
 >effect() : void | Error
 >         : ^^^^^^^^^^^^
->effect : (cond?: boolean) => !void
->       : ^    ^^^^^^^^^^^^^^^     
+>effect : (cond?: boolean) => void | Error
+>       : ^    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     void effect() // ok
 >void effect() : undefined
 >              : ^^^^^^^^^
 >effect() : void | Error
 >         : ^^^^^^^^^^^^
->effect : (cond?: boolean) => !void
->       : ^    ^^^^^^^^^^^^^^^     
+>effect : (cond?: boolean) => void | Error
+>       : ^    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     const z7 = effect() // ok
 >z7 : void | Error
 >   : ^^^^^^^^^^^^
 >effect() : void | Error
 >         : ^^^^^^^^^^^^
->effect : (cond?: boolean) => !void
->       : ^    ^^^^^^^^^^^^^^^     
+>effect : (cond?: boolean) => void | Error
+>       : ^    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     function wrapsEffect() {
 >wrapsEffect : () => void | Error
@@ -2580,12 +2679,590 @@ const d4 = <div><#if {cond}></></div>
         return effect() // ok
 >effect() : void | Error
 >         : ^^^^^^^^^^^^
->effect : (cond?: boolean) => !void
->       : ^    ^^^^^^^^^^^^^^^     
+>effect : (cond?: boolean) => void | Error
+>       : ^    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    }
+
+    function effect2(cond = true) {
+>effect2 : (cond?: boolean) => Err<"bad"> | undefined
+>        : ^    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>cond : boolean
+>     : ^^^^^^^
+>true : true
+>     : ^^^^
+
+        if (cond) return err('bad')
+>cond : boolean
+>     : ^^^^^^^
+>err('bad') : Err<"bad">
+>           : ^^^^^^^^^^
+>err : <T extends string>(code: T) => Err<T>
+>    : ^ ^^^^^^^^^      ^^    ^^ ^^^^^      
+>'bad' : "bad"
+>      : ^^^^^
+    }
+
+    // hint: unhandled fallible return type: void | Err<'bad'>
+    effect2()
+>effect2() : Err<"bad"> | undefined
+>          : ^^^^^^^^^^^^^^^^^^^^^^
+>effect2 : (cond?: boolean) => Err<"bad"> | undefined
+>        : ^    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+}
+
+{
+    type MyPromise = Promise<number>
+>MyPromise : Promise<number>
+>          : ^^^^^^^^^^^^^^^
+
+    function aliased(): MyPromise {
+>aliased : () => Promise<number>
+>        : ^^^^^^^^^^^^^^^^^^^^^
+
+        return Promise.resolve(1)
+>Promise.resolve(1) : Promise<number>
+>                   : ^^^^^^^^^^^^^^^
+>Promise.resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }
+>                : ^^^^^^             ^^^ ^^     ^^ ^^^                   ^^^ ^^     ^^                  ^^^                   ^^^
+>Promise : PromiseConstructor
+>        : ^^^^^^^^^^^^^^^^^^
+>resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }
+>        : ^^^^^^             ^^^ ^^     ^^ ^^^                   ^^^ ^^     ^^                  ^^^                   ^^^
+>1 : 1
+>  : ^
+    }
+
+    async function f1() {
+>f1 : () => Promise<void>
+>   : ^^^^^^^^^^^^^^^^^^^
+
+        const n = aliased() // number
+>n : Promise<number>
+>  : ^^^^^^^^^^^^^^^
+>aliased() : Promise<number>
+>          : ^^^^^^^^^^^^^^^
+>aliased : () => Promise<number>
+>        : ^^^^^^^^^^^^^^^^^^^^^
+    }
+
+    const m1 = new Map<number, MyPromise>()
+>m1 : Map<number, Promise<number>>
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>new Map<number, MyPromise>() : Map<number, Promise<number>>
+>                             : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>Map : MapConstructor
+>    : ^^^^^^^^^^^^^^
+
+    const m2 = new Map<number, Promise<number>>()
+>m2 : Map<number, Promise<number>>
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>new Map<number, Promise<number>>() : Map<number, Promise<number>>
+>                                   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>Map : MapConstructor
+>    : ^^^^^^^^^^^^^^
+
+    async function f2() {
+>f2 : () => Promise<void>
+>   : ^^^^^^^^^^^^^^^^^^^
+
+        const n1 = m1.get(0) // Promise<number> | undefined
+>n1 : Promise<number> | undefined
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>m1.get(0) : Promise<number> | undefined
+>          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>m1.get : (key: number) => Promise<number> | undefined
+>       : ^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>m1 : Map<number, Promise<number>>
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>get : (key: number) => Promise<number> | undefined
+>    : ^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>0 : 0
+>  : ^
+
+        const n2 = m2.get(0) // Promise<number> | undefined
+>n2 : Promise<number> | undefined
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>m2.get(0) : Promise<number> | undefined
+>          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>m2.get : (key: number) => Promise<number> | undefined
+>       : ^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>m2 : Map<number, Promise<number>>
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>get : (key: number) => Promise<number> | undefined
+>    : ^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>0 : 0
+>  : ^
+    }
+
+    function f3(): Promise<number> | undefined {
+>f3 : () => Promise<number> | undefined
+>   : ^^^^^^                           
+
+        return m1.get(0)
+>m1.get(0) : Promise<number> | undefined
+>          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>m1.get : (key: number) => Promise<number> | undefined
+>       : ^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>m1 : Map<number, Promise<number>>
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>get : (key: number) => Promise<number> | undefined
+>    : ^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>0 : 0
+>  : ^
+    }
+
+    async function f4() {
+>f4 : () => Promise<void>
+>   : ^^^^^^^^^^^^^^^^^^^
+
+        const n = f3() // Promise<number> | undefined
+>n : Promise<number> | undefined
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>f3() : Promise<number> | undefined
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>f3 : () => Promise<number> | undefined
+>   : ^^^^^^                           
+    }
+
+    class Box<T> {
+>Box : Box<T>
+>    : ^^^^^^
+
+        get(): T {
+>get : () => T
+>    : ^^^^^^ 
+
+            throw ""
+>"" : ""
+>   : ^^
+        }
+    }
+
+    const b: Box<Promise<number>> = new Box()
+>b : Box<Promise<number>>
+>  : ^^^^^^^^^^^^^^^^^^^^
+>new Box() : Box<Promise<number>>
+>          : ^^^^^^^^^^^^^^^^^^^^
+>Box : typeof Box
+>    : ^^^^^^^^^^
+
+    async function f5() {
+>f5 : () => Promise<void>
+>   : ^^^^^^^^^^^^^^^^^^^
+
+        const n = b.get() // Promise<number>
+>n : Promise<number>
+>  : ^^^^^^^^^^^^^^^
+>b.get() : Promise<number>
+>        : ^^^^^^^^^^^^^^^
+>b.get : () => Promise<number>
+>      : ^^^^^^^^^^^^^^^^^^^^^
+>b : Box<Promise<number>>
+>  : ^^^^^^^^^^^^^^^^^^^^
+>get : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+    }
+
+    // special case: promise chains
+    // the end result is auto-awaited, not the initial call
+    async function f6() {
+>f6 : () => Promise<void>
+>   : ^^^^^^^^^^^^^^^^^^^
+
+        // number | void
+        const n = foo().then(x => x + 1).catch(e => {})
+>n : number | void
+>  : ^^^^^^^^^^^^^
+>foo().then(x => x + 1).catch(e => {}) : number | void
+>                                      : ^^^^^^^^^^^^^
+>foo().then(x => x + 1).catch : <TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null | undefined) => Promise<number | TResult>
+>                             : ^       ^^^^^^^^^^          ^^^^^      ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>foo().then(x => x + 1) : Promise<number>
+>                       : ^^^^^^^^^^^^^^^
+>foo().then : <TResult1 = number, TResult2 = never>(onfulfilled?: ((value: number) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined) => Promise<TResult1 | TResult2>
+>           : ^        ^^^^^^^^^^^        ^^^^^^^^^^           ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^          ^^^^^      ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>foo() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+>then : <TResult1 = number, TResult2 = never>(onfulfilled?: ((value: number) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined) => Promise<TResult1 | TResult2>
+>     : ^        ^^^^^^^^^^^        ^^^^^^^^^^           ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^          ^^^^^      ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x => x + 1 : (x: number) => number
+>           : ^ ^^^^^^^^^^^^^^^^^^^
+>x : number
+>  : ^^^^^^
+>x + 1 : number
+>      : ^^^^^^
+>x : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+>catch : <TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null | undefined) => Promise<number | TResult>
+>      : ^       ^^^^^^^^^^          ^^^^^      ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>e => {} : (e: any) => void
+>        : ^ ^^^^^^^^^^^^^^
+>e : any
+>  : ^^^
+
+        // Promise<number | void>
+        const n2 = foo().then(x => x + 1).catch(e => {}) as async
+>n2 : Promise<number | void>
+>   : ^^^^^^^^^^^^^^^^^^^^^^
+>foo().then(x => x + 1).catch(e => {}) as async : Promise<number | void>
+>                                               : ^^^^^^^^^^^^^^^^^^^^^^
+>foo().then(x => x + 1).catch(e => {}) : Promise<number | void>
+>                                      : ^^^^^^^^^^^^^^^^^^^^^^
+>foo().then(x => x + 1).catch : <TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null | undefined) => Promise<number | TResult>
+>                             : ^       ^^^^^^^^^^          ^^^^^      ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>foo().then(x => x + 1) : Promise<number>
+>                       : ^^^^^^^^^^^^^^^
+>foo().then : <TResult1 = number, TResult2 = never>(onfulfilled?: ((value: number) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined) => Promise<TResult1 | TResult2>
+>           : ^        ^^^^^^^^^^^        ^^^^^^^^^^           ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^          ^^^^^      ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>foo() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+>then : <TResult1 = number, TResult2 = never>(onfulfilled?: ((value: number) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined) => Promise<TResult1 | TResult2>
+>     : ^        ^^^^^^^^^^^        ^^^^^^^^^^           ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^          ^^^^^      ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x => x + 1 : (x: number) => number
+>           : ^ ^^^^^^^^^^^^^^^^^^^
+>x : number
+>  : ^^^^^^
+>x + 1 : number
+>      : ^^^^^^
+>x : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+>catch : <TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null | undefined) => Promise<number | TResult>
+>      : ^       ^^^^^^^^^^          ^^^^^      ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>e => {} : (e: any) => void
+>        : ^ ^^^^^^^^^^^^^^
+>e : any
+>  : ^^^
+
+        const n3 = foo().then(x => x + 1).toFixed(1) // string
+>n3 : string
+>   : ^^^^^^
+>foo().then(x => x + 1).toFixed(1) : string
+>                                  : ^^^^^^
+>foo().then(x => x + 1).toFixed : (fractionDigits?: number) => string
+>                               : ^              ^^^      ^^^^^      
+>foo().then(x => x + 1) : number
+>                       : ^^^^^^
+>foo().then : <TResult1 = number, TResult2 = never>(onfulfilled?: ((value: number) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined) => Promise<TResult1 | TResult2>
+>           : ^        ^^^^^^^^^^^        ^^^^^^^^^^           ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^          ^^^^^      ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>foo() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+>then : <TResult1 = number, TResult2 = never>(onfulfilled?: ((value: number) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined) => Promise<TResult1 | TResult2>
+>     : ^        ^^^^^^^^^^^        ^^^^^^^^^^           ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^          ^^^^^      ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x => x + 1 : (x: number) => number
+>           : ^ ^^^^^^^^^^^^^^^^^^^
+>x : number
+>  : ^^^^^^
+>x + 1 : number
+>      : ^^^^^^
+>x : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+>toFixed : (fractionDigits?: number) => string
+>        : ^              ^^^      ^^^^^      
+>1 : 1
+>  : ^
+    }
+
+    // we have to respect the promise protocol
+    // `catch` / `finally` should take priority here
+    // this is *rare* edge case and may not even be worth the perf cost to check
+    //
+    // however, Promise may have more methods in the future, so such a check
+    // could eventually be needed anyway to avoid needless avoid code churn
+    class Catchable {
+>Catchable : Catchable
+>          : ^^^^^^^^^
+
+        // normal ts checks that `then` methods are erroneous in an async ctx
+        // then() { return '0' }
+        catch() { return 0 }
+>catch : () => number
+>      : ^^^^^^^^^^^^
+>0 : 0
+>  : ^
+
+        finally() { return 0 }
+>finally : () => number
+>        : ^^^^^^^^^^^^
+>0 : 0
+>  : ^
+    }
+
+    async function f7() {
+>f7 : () => Promise<void>
+>   : ^^^^^^^^^^^^^^^^^^^
+
+        const f = async () => new Catchable()
+>f : () => Promise<Catchable>
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^
+>async () => new Catchable() : () => Promise<Catchable>
+>                            : ^^^^^^^^^^^^^^^^^^^^^^^^
+>new Catchable() : Catchable
+>                : ^^^^^^^^^
+>Catchable : typeof Catchable
+>          : ^^^^^^^^^^^^^^^^
+
+        f().catch() // number
+>f().catch() : Catchable
+>            : ^^^^^^^^^
+>f().catch : <TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null | undefined) => Promise<Catchable | TResult>
+>          : ^       ^^^^^^^^^^          ^^^^^      ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>f() : Promise<Catchable>
+>    : ^^^^^^^^^^^^^^^^^^
+>f : () => Promise<Catchable>
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^
+>catch : <TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null | undefined) => Promise<Catchable | TResult>
+>      : ^       ^^^^^^^^^^          ^^^^^      ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        f().finally() // number
+>f().finally() : number
+>              : ^^^^^^
+>f().finally : () => number
+>            : ^^^^^^^^^^^^
+>f() : Catchable
+>    : ^^^^^^^^^
+>f : () => Promise<Catchable>
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^
+>finally : () => number
+>        : ^^^^^^^^^^^^
+
+        // error, emits as `(await f().catch()).then()` because we must materialize after `.catch`
+        f().catch().then() 
+>f().catch().then() : Catchable
+>                   : ^^^^^^^^^
+>f().catch().then : <TResult1 = Catchable, TResult2 = never>(onfulfilled?: ((value: Catchable) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined) => Promise<TResult1 | TResult2>
+>                 : ^        ^^^^^^^^^^^^^^        ^^^^^^^^^^           ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^          ^^^^^      ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>f().catch() : Promise<Catchable>
+>            : ^^^^^^^^^^^^^^^^^^
+>f().catch : <TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null | undefined) => Promise<Catchable | TResult>
+>          : ^       ^^^^^^^^^^          ^^^^^      ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>f() : Promise<Catchable>
+>    : ^^^^^^^^^^^^^^^^^^
+>f : () => Promise<Catchable>
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^
+>catch : <TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null | undefined) => Promise<Catchable | TResult>
+>      : ^       ^^^^^^^^^^          ^^^^^      ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>then : <TResult1 = Catchable, TResult2 = never>(onfulfilled?: ((value: Catchable) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined) => Promise<TResult1 | TResult2>
+>     : ^        ^^^^^^^^^^^^^^        ^^^^^^^^^^           ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^          ^^^^^      ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    }
+
+}
+
+// TODO:
+{
+    async function foo() {
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+        return 1 as number
+>1 as number : number
+>            : ^^^^^^
+>1 : 1
+>  : ^
+    }
+
+    function sync() {
+>sync : () => void
+>     : ^^^^^^^^^^
+
+        const p = foo() as async // OK
+>p : Promise<number>
+>  : ^^^^^^^^^^^^^^^
+>foo() as async : Promise<number>
+>               : ^^^^^^^^^^^^^^^
+>foo() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+        const p2 = foo() // checker error
+>p2 : Promise<number>
+>   : ^^^^^^^^^^^^^^^
+>foo() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+        foo() as async // OK
+>foo() as async : Promise<number>
+>               : ^^^^^^^^^^^^^^^
+>foo() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+        foo() // checker error
+>foo() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+        // `await` is still an error inside sync context
+        await p
+>await p : number
+>        : ^^^^^^
+>p : Promise<number>
+>  : ^^^^^^^^^^^^^^^
+    }
+
+    async function _async() {
+>_async : () => Promise<void>
+>       : ^^^^^^^^^^^^^^^^^^^
+
+        const v = foo()
+>v : number
+>  : ^^^^^^
+>foo() : number
+>      : ^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+        await v // await without a Promise in the type is treated as a possible mistake 
+>await v : number
+>        : ^^^^^^
+>v : number
+>  : ^^^^^^
+
+        // but superfluous awaits are OK
+        await foo()
+>await foo() : number
+>            : ^^^^^^
+>foo() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+    }
+
+    async function bar() {
+>bar : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+        return 2
+>2 : 2
+>  : ^
+    }
+
+    function f8<T>(p: Promise<T> | T): void {}
+>f8 : <T>(p: Promise<T> | T) => void
+>   : ^ ^^ ^^              ^^^^^    
+>p : T | Promise<T>
+>  : ^^^^^^^^^^^^^^
+
+    f8(bar()) // error, ambiguous, use `await` or `as async`
+>f8(bar()) : void
+>          : ^^^^
+>f8 : <T>(p: Promise<T> | T) => void
+>   : ^ ^^ ^^              ^^^^^    
+>bar() : number
+>      : ^^^^^^
+>bar : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+    function f9() {
+>f9 : () => void
+>   : ^^^^^^^^^^
+
+        function f(p1: Promise<number>, p2: Promise<number>) {}
+>f : (p1: Promise<number>, p2: Promise<number>) => void
+>  : ^  ^^               ^^  ^^               ^^^^^^^^^
+>p1 : Promise<number>
+>   : ^^^^^^^^^^^^^^^
+>p2 : Promise<number>
+>   : ^^^^^^^^^^^^^^^
+
+        // both calls require `as async`
+        // we do not consider parameter types to be "explicitly typed" for auto-await
+        // because then the callee signature influences caller behavior, possibly interleaving calls
+        f(bar(), bar()) 
+>f(bar(), bar()) : void
+>                : ^^^^
+>f : (p1: Promise<number>, p2: Promise<number>) => void
+>  : ^  ^^               ^^  ^^               ^^^^^^^^^
+>bar() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>bar : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+>bar() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>bar : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+    }
+
+    // this one is subtle: we require `as async` regardless of the return type annotation
+    // adding `async` to the fn declaration would otherwise catch rejections
+    function foo2(): Promise<number>  {
+>foo2 : () => Promise<number>
+>     : ^^^^^^               
+
+        try {
+            return bar() // error, needs `as async`
+>bar() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>bar : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+        } catch {
+            return Promise.resolve(0)
+>Promise.resolve(0) : Promise<number>
+>                   : ^^^^^^^^^^^^^^^
+>Promise.resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }
+>                : ^^^^^^             ^^^ ^^     ^^ ^^^                   ^^^ ^^     ^^                  ^^^                   ^^^
+>Promise : PromiseConstructor
+>        : ^^^^^^^^^^^^^^^^^^
+>resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }
+>        : ^^^^^^             ^^^ ^^     ^^ ^^^                   ^^^ ^^     ^^                  ^^^                   ^^^
+>0 : 0
+>  : ^
+        }
+    }
+
+    async function foo3() {
+>foo3 : () => Promise<void>
+>     : ^^^^^^^^^^^^^^^^^^^
+
+        // we (unfortunately) special-case `Promise.resolve` and `Promise.resolve` for auto-await
+        // they should not be awaited because they are, effectively, constructors
+        const x1 = Promise.resolve(0) // Promise<number>
+>x1 : number
+>   : ^^^^^^
+>Promise.resolve(0) : number
+>                   : ^^^^^^
+>Promise.resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }
+>                : ^^^^^^             ^^^ ^^     ^^ ^^^                   ^^^ ^^     ^^                  ^^^                   ^^^
+>Promise : PromiseConstructor
+>        : ^^^^^^^^^^^^^^^^^^
+>resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }
+>        : ^^^^^^             ^^^ ^^     ^^ ^^^                   ^^^ ^^     ^^                  ^^^                   ^^^
+>0 : 0
+>  : ^
+
+        const x2 = Promise.reject(0) // Promise<number>
+>x2 : never
+>   : ^^^^^
+>Promise.reject(0) : never
+>                  : ^^^^^
+>Promise.reject : <T = never>(reason?: any) => Promise<T>
+>               : ^ ^^^^^^^^^^      ^^^   ^^^^^          
+>Promise : PromiseConstructor
+>        : ^^^^^^^^^^^^^^^^^^
+>reject : <T = never>(reason?: any) => Promise<T>
+>       : ^ ^^^^^^^^^^      ^^^   ^^^^^          
+>0 : 0
+>  : ^
     }
 }
 
-// FIXME: `typeNodeMentionsPromise` in checker.ts is brittle
 {
     async function getValue() { return 42 }
 >getValue : () => Promise<number>
@@ -2694,7 +3371,7 @@ const d4 = <div><#if {cond}></></div>
     }
 }
 
-// .syn async return type elision
+// async return type elision
 {
     async function elided(): number { return 1 }
 >elided : () => Promise<number>
@@ -2754,10 +3431,10 @@ const d4 = <div><#if {cond}></></div>
     }
 }
 
+// element names
 {
-    const x = <div @ a>
->x : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+    // b can be seen within the tree, but not outside
+    ;<div @ a>
 ><div @ a>        <div @ b></div>        <#block>            console.log(a, b)        </>    </div> : HTMLDivElement
 >                                                                                                   : ^^^^^^^^^^^^^^
 >div : any
@@ -2808,6 +3485,17 @@ const d4 = <div><#if {cond}></></div>
 >  : ^^^^^^^^^^^^^^
 >b : any
 >  : ^^^
+
+    // trailing bindings should be parsed correctly:
+    ;<div id="aaa" @ c />
+><div id="aaa" @ c /> : HTMLDivElement
+>                     : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>c : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+>id : string
+>   : ^^^^^^
 }
 
 // spread JSX elements
@@ -2937,8 +3625,8 @@ const d4 = <div><#if {cond}></></div>
     const spread6 = <Comp4>
 >spread6 : Element
 >        : ^^^^^^^
-><Comp4>      <Comp3 />      <...Comp />    </Comp4> : Element
->                                                    : ^^^^^^^
+><Comp4>      <Comp3 />      <...Comp />      <...Comp></Comp>    </Comp4> : Element
+>                                                                          : ^^^^^^^
 >Comp4 : (props: { children: Element[]; }) => Element
 >      : ^     ^^                        ^^^^^       
 
@@ -2951,6 +3639,14 @@ const d4 = <div><#if {cond}></></div>
       <...Comp />
 ><...Comp /> : Element
 >            : ^^^^^^^
+>Comp : () => Element[]
+>     : ^^^^^^         
+
+      <...Comp></Comp>
+><...Comp></Comp> : Element
+>                 : ^^^^^^^
+>Comp : () => Element[]
+>     : ^^^^^^         
 >Comp : () => Element[]
 >     : ^^^^^^         
 
@@ -3064,6 +3760,17 @@ const d4 = <div><#if {cond}></></div>
 >    : ^^^
 
     </>
+}
+
+{
+    // do not parse this as JSX, we should only see '> expected'
+    const m = new Map<string, Promise<string
+>m : Map<string, Promise<string>>
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>new Map<string, Promise<string : Map<string, Promise<string>>
+>                               : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>Map : MapConstructor
+>    : ^^^^^^^^^^^^^^
 }
 
 // /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a

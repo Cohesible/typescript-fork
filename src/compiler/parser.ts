@@ -6392,8 +6392,28 @@ namespace Parser {
         const dotDotDotToken = parseOptionalToken(SyntaxKind.DotDotDotToken);
         const tagName = parseJsxElementName();
         const typeArguments = (contextFlags & NodeFlags.JavaScriptFile) === 0 ? tryParseTypeArguments() : undefined;
-        const identifier = token() === SyntaxKind.AtToken ? parseJsxElementIdentifier() : undefined;
-        const attributes = parseJsxAttributes();
+        let identifier = token() === SyntaxKind.AtToken ? parseJsxElementIdentifier() : undefined;
+        let attributes = parseJsxAttributes();
+
+        // try parsing out trailing `@ ident` as a binding
+        if (!identifier) {
+            const props = attributes.properties;
+            if (props.length >= 2) {
+                const last = props[props.length - 1];
+                const secondToLast = props[props.length - 2];
+                if (
+                    secondToLast.kind === SyntaxKind.JsxAttribute && !(secondToLast as JsxAttribute).initializer &&
+                    isIdentifierNode((secondToLast as JsxAttribute).name) && idText((secondToLast as JsxAttribute).name as Identifier) === "@" &&
+                    last.kind === SyntaxKind.JsxAttribute && !(last as JsxAttribute).initializer &&
+                    isIdentifierNode((last as JsxAttribute).name)
+                ) {
+                    identifier = (last as JsxAttribute).name as Identifier;
+                    const trimmed = props.slice(0, -2);
+                    const attrsPos = attributes.pos;
+                    attributes = finishNode(factory.createJsxAttributes(createNodeArray(trimmed, attrsPos, attributes.end)), attrsPos);
+                }
+            }
+        }
 
         let node: JsxOpeningLikeElement;
 
@@ -6661,21 +6681,10 @@ namespace Parser {
         tagName: PrivateIdentifier,
         openingTag: JsxOpeningElement | JsxOpeningFragment | undefined,
     ) {
-        let condition: JsxExpression;
-        const condPos = getNodePos();
-        if (token() === SyntaxKind.OpenBraceToken) {
-            nextToken();
-            const innerExpr = token() !== SyntaxKind.CloseBraceToken
-                ? parseAssignmentExpressionOrHigher(/*allowReturnTypeInArrowFunction*/ false)
-                : undefined;
-            parseExpected(SyntaxKind.CloseBraceToken);
-            condition = finishNode(factory.createJsxExpression(/*dotDotDotToken*/ undefined, innerExpr), condPos);
-        }
-        else {
-            parseExpected(SyntaxKind.OpenBraceToken);
-            condition = finishNode(factory.createJsxExpression(/*dotDotDotToken*/ undefined, /*expression*/ undefined), condPos);
-        }
-
+        const openParenPosition = getNodePos();
+        const openParenParsed = parseExpected(SyntaxKind.OpenParenToken);
+        const condition = allowInAnd(parseExpression);
+        parseExpectedMatchingBrackets(SyntaxKind.OpenParenToken, SyntaxKind.CloseParenToken, openParenParsed, openParenPosition);
         const { children, hasError } = parseJsxDirectiveBody(pos, tagName, openingTag);
         const n = finishNode(factory.createJsxIfDirective(condition, children), pos);
         if (hasError) (n as Mutable<typeof n>).flags |= NodeFlags.ThisNodeHasError;
@@ -7126,6 +7135,10 @@ namespace Parser {
         if (expression.kind === SyntaxKind.ExpressionWithTypeArguments) {
             typeArguments = (expression as ExpressionWithTypeArguments).typeArguments;
             expression = (expression as ExpressionWithTypeArguments).expression;
+        }
+        // parse out type args if we see `<`, as it is unlikely to be a comparison
+        if (typeArguments === undefined && token() === SyntaxKind.LessThanToken && !scanner.hasPrecedingLineBreak()) {
+            typeArguments = tryParseTypeArguments();
         }
         if (token() === SyntaxKind.QuestionDotToken) {
             parseErrorAtCurrentToken(Diagnostics.Invalid_optional_chain_from_new_expression_Did_you_mean_to_call_0, getTextOfNodeFromSourceText(sourceText, expression));

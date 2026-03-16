@@ -1135,6 +1135,13 @@ interface URIErrorConstructor extends ErrorConstructor {
 
 declare var URIError: URIErrorConstructor;
 
+interface Err<T extends string = string> { 
+    readonly ok: false;
+    readonly code: T;
+}
+
+declare function err<T extends string>(code: T): Err<T>;
+
 interface JSON {
     /**
      * Converts a JavaScript Object Notation (JSON) string into an object.

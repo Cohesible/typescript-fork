@@ -30,7 +30,7 @@ async function bar() {
 }
 
 function bar2() {
-    const p = foo()
+    const p: Promise<number> = foo()
 }
 
 async function z() {
@@ -503,7 +503,7 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 // update expression
 declare const el: Element;
 const d = <div onClick={() => {
-    try update el
+    update el
 }}></div>
 
 // shorthand_jsx_attribute
@@ -533,12 +533,8 @@ const d4 = <div><#if {cond}></></div>
     update document.querySelector('.a')
 
     if (const x = document.querySelector('.a')) {
-        // error, needs try or void
+        // ok
         update x
-        // ok
-        try update x
-        // ok
-        void update x
     }
 
     {
@@ -550,8 +546,6 @@ const d4 = <div><#if {cond}></></div>
     {
         const x = <div>hi</div>
         update x // error, `x` has no updatable expressions
-        try update x // error, `x` has no updatable expressions
-        void update x // error, `x` has no updatable expressions
     }
 
     { 
@@ -561,13 +555,13 @@ const d4 = <div><#if {cond}></></div>
     }
 
     { 
-        let y = 0
+        let y = '0'
         const x = <div><div id={y}></div></div>
         update x // ok
     }
 
     { 
-        let y = 0
+        let y = '0'
         const x = <div id={y}></div>
         update x // ok
     }
@@ -578,10 +572,41 @@ const d4 = <div><#if {cond}></></div>
         const el = <Comp/>
         update el // ok
     }
+
+    {
+        // expressions and blocks always make the element updatable
+        const el = <div>
+            {<span>hi</span>}
+        </div>
+        update el // ok
+
+        // blocks 
+        const el2 = <div>
+            <#block>
+                console.log('hi')
+            </>
+        </div>
+        update el2 // ok
+    }
+
+    {
+        // TODO
+        let y = 0
+        const x1 = <div>{y}</div>
+        const x2 = <div>{y}</div>
+        update x1
+        update x1 // error: possibly redundant update, did you mean x2?
+
+        let z = 0
+        z += 1
+        update x1 // error: possibly redundant update, did you mean x2?
+    }
 }
 
-
 // !T (FallibleType) and try expr
+// { ok: false; code: string } is also considered an error
+// this is a lightweight error
+// the callee frame is not preserved because the caller constructs the error
 {
     class Err1 extends Error { override name = "Err1" as const }
     class Err2 extends Error { override name = "Err2" as const }
@@ -641,9 +666,141 @@ const d4 = <div><#if {cond}></></div>
     function wrapsEffect() {
         return effect() // ok
     }
+
+    function effect2(cond = true) {
+        if (cond) return err('bad')
+    }
+
+    // hint: unhandled fallible return type: void | Err<'bad'>
+    effect2()
 }
 
-// FIXME: `typeNodeMentionsPromise` in checker.ts is brittle
+{
+    type MyPromise = Promise<number>
+    function aliased(): MyPromise {
+        return Promise.resolve(1)
+    }
+
+    async function f1() {
+        const n = aliased() // number
+    }
+
+    const m1 = new Map<number, MyPromise>()
+    const m2 = new Map<number, Promise<number>>()
+    async function f2() {
+        const n1 = m1.get(0) // Promise<number> | undefined
+        const n2 = m2.get(0) // Promise<number> | undefined
+    }
+
+    function f3(): Promise<number> | undefined {
+        return m1.get(0)
+    }
+
+    async function f4() {
+        const n = f3() // Promise<number> | undefined
+    }
+
+    class Box<T> {
+        get(): T {
+            throw ""
+        }
+    }
+
+    const b: Box<Promise<number>> = new Box()
+    async function f5() {
+        const n = b.get() // Promise<number>
+    }
+
+    // special case: promise chains
+    // the end result is auto-awaited, not the initial call
+    async function f6() {
+        // number | void
+        const n = foo().then(x => x + 1).catch(e => {})
+        // Promise<number | void>
+        const n2 = foo().then(x => x + 1).catch(e => {}) as async
+        const n3 = foo().then(x => x + 1).toFixed(1) // string
+    }
+
+    // we have to respect the promise protocol
+    // `catch` / `finally` should take priority here
+    // this is *rare* edge case and may not even be worth the perf cost to check
+    //
+    // however, Promise may have more methods in the future, so such a check
+    // could eventually be needed anyway to avoid needless avoid code churn
+    class Catchable {
+        // normal ts checks that `then` methods are erroneous in an async ctx
+        // then() { return '0' }
+        catch() { return 0 }
+        finally() { return 0 }
+    }
+
+    async function f7() {
+        const f = async () => new Catchable()
+        f().catch() // number
+        f().finally() // number
+
+        // error, emits as `(await f().catch()).then()` because we must materialize after `.catch`
+        f().catch().then() 
+    }
+
+}
+
+// TODO:
+{
+    async function foo() {
+        return 1 as number
+    }
+
+    function sync() {
+        const p = foo() as async // OK
+        const p2 = foo() // checker error
+        foo() as async // OK
+        foo() // checker error
+
+        // `await` is still an error inside sync context
+        await p
+    }
+
+    async function _async() {
+        const v = foo()
+        await v // await without a Promise in the type is treated as a possible mistake 
+        // but superfluous awaits are OK
+        await foo()
+    }
+
+    async function bar() {
+        return 2
+    }
+
+    function f8<T>(p: Promise<T> | T): void {}
+    f8(bar()) // error, ambiguous, use `await` or `as async`
+
+    function f9() {
+        function f(p1: Promise<number>, p2: Promise<number>) {}
+        // both calls require `as async`
+        // we do not consider parameter types to be "explicitly typed" for auto-await
+        // because then the callee signature influences caller behavior, possibly interleaving calls
+        f(bar(), bar()) 
+    }
+
+    // this one is subtle: we require `as async` regardless of the return type annotation
+    // adding `async` to the fn declaration would otherwise catch rejections
+    function foo2(): Promise<number>  {
+        try {
+            return bar() // error, needs `as async`
+        } catch {
+            return Promise.resolve(0)
+        }
+    }
+
+    async function foo3() {
+        // we (unfortunately) special-case `Promise.resolve` and `Promise.resolve` for auto-await
+        // they should not be awaited because they are, effectively, constructors
+        const x1 = Promise.resolve(0) // Promise<number>
+        const x2 = Promise.reject(0) // Promise<number>
+    }
+}
+
 {
     async function getValue() { return 42 }
     async function testAutoAwait() {
@@ -669,7 +826,7 @@ const d4 = <div><#if {cond}></></div>
     }
 }
 
-// .syn async return type elision
+// async return type elision
 {
     async function elided(): number { return 1 }
     async function testElided() {
@@ -687,14 +844,19 @@ const d4 = <div><#if {cond}></></div>
     }
 }
 
+// element names
 {
-    const x = <div @ a>
+    // b can be seen within the tree, but not outside
+    ;<div @ a>
         <div @ b></div>
         <#block>
             console.log(a, b)
         </>
     </div>
     console.log(a, b)
+
+    // trailing bindings should be parsed correctly:
+    ;<div id="aaa" @ c />
 }
 
 // spread JSX elements
@@ -719,6 +881,7 @@ const d4 = <div><#if {cond}></></div>
     const spread6 = <Comp4>
       <Comp3 />
       <...Comp />
+      <...Comp></Comp>
     </Comp4>
 
     // error
@@ -748,6 +911,11 @@ const d4 = <div><#if {cond}></></div>
     const if3 = <#if {false}>
       <div></div>
     </>
+}
+
+{
+    // do not parse this as JSX, we should only see '> expected'
+    const m = new Map<string, Promise<string
 }
 
 // /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a

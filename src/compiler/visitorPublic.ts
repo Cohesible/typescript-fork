@@ -1722,7 +1722,7 @@ const visitEachChildTable: VisitEachChildTable = {
     [SyntaxKind.JsxIfDirective]: function visitEachChildOfJsxIfDirective(node, visitor, context, nodesVisitor, nodeVisitor, _tokenVisitor) {
         return context.factory.updateJsxIfDirective(
             node,
-            Debug.checkDefined(nodeVisitor(node.condition, visitor, isJsxExpression)),
+            Debug.checkDefined(nodeVisitor(node.condition, visitor, isExpression)),
             nodesVisitor(node.children, visitor, isJsxChild)
         );
     },

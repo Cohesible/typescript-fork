@@ -3829,6 +3829,9 @@ export function createScanner(
 
     function scanJsxAttributeIdentifier(): SyntaxKind {
         if (tokenIsIdentifierOrKeyword(token) || token === SyntaxKind.AtToken || token === SyntaxKind.MinusToken) {
+            // Punctuation tokens don't reset tokenValue in scan
+            if (token === SyntaxKind.AtToken) tokenValue = "@";
+            else if (token === SyntaxKind.MinusToken) tokenValue = "-";
             while (pos < end) {
                 const ch = charCodeUnchecked(pos);
                 if (ch === CharacterCodes.minus) {
@@ -3842,7 +3845,7 @@ export function createScanner(
                     continue;
                 }
                 const oldPos = pos;
-                tokenValue += scanIdentifierParts(); // reuse `scanIdentifierParts` so unicode escapes are handled
+                tokenValue += scanIdentifierParts();
                 if (pos === oldPos) {
                     break;
                 }

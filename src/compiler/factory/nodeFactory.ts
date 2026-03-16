@@ -5984,7 +5984,7 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     }
 
     // @api
-    function createJsxIfDirective(condition: JsxExpression, children: readonly JsxChild[], elseClause?: JsxElseDirective) {
+    function createJsxIfDirective(condition: Expression, children: readonly JsxChild[], elseClause?: JsxElseDirective) {
         const node = createBaseNode<JsxIfDirective>(SyntaxKind.JsxIfDirective);
         node.condition = condition;
         node.children = createNodeArray(children);
@@ -5995,7 +5995,7 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     }
 
     // @api
-    function updateJsxIfDirective(node: JsxIfDirective, condition: JsxExpression, children: readonly JsxChild[], elseClause?: JsxElseDirective) {
+    function updateJsxIfDirective(node: JsxIfDirective, condition: Expression, children: readonly JsxChild[], elseClause?: JsxElseDirective) {
         return node.condition !== condition || node.children !== children
             ? update(createJsxIfDirective(condition, children, elseClause), node)
             : node;

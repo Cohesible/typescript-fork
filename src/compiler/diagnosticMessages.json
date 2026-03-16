@@ -3025,6 +3025,22 @@
         "category": "Error",
         "code": 95200
     },
+    "update has no effect: this element contains no dynamic expressions": {
+        "category": "Error",
+        "code": 95201
+    },
+    "Possibly redundant 'update': '{0}' was already updated above with no intervening changes.": {
+        "category": "Error",
+        "code": 95202
+    },
+    "Auto-await is ambiguous: '{0}' returns '{1}' which is also directly assignable to the expected type. Use 'await' or 'as async' to be explicit.": {
+        "category": "Error",
+        "code": 95203
+    },
+    "Async call to '{0}' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.": {
+        "category": "Error",
+        "code": 95204
+    },
     "'{0}' is defined as an accessor in class '{1}', but is overridden here in '{2}' as an instance property.": {
         "category": "Error",
         "code": 2610

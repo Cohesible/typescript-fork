@@ -62,6 +62,15 @@ interface Element {
 	[Symbol.update]?(): void
 }
 
+// TODO: generate these augmentations
+// this likely has a significant impact on check time
+type CurrentTarget<T> = { currentTarget: T }
+interface HTMLInputElement {
+  oninput?: (ev: InputEvent & CurrentTarget<this>) => any
+}
+
+// Can be used directly in JSX expressions for intrinsic elements. 
+// Wires directly write into the patch point, eliminating the need for a coarse update.
 declare class Wire<T> {
   	constructor(initial: T);
 	constructor(...args: T extends undefined ? [] : [T]);
@@ -77,9 +86,9 @@ declare class Wire<T> {
 	 * Weakly subscribes to the Wire. 
 	 * 
 	 * `cb` is immediately executed with the current Wire state if the Wire is not in a transient state. 
-	 * Otherwise, `cb` will be called after all other listeners.
+	 * Otherwise, `cb` is called after all other listeners.
 	 * 
-	 * The returned function unsubscribes `cb` from the Wire. Holding the diposer keeps the attachment alive.
+	 * The returned function unsubscribes `cb` from the Wire. Holding the disposer keeps the attachment alive.
 	 */
 	listen(cb: (value: T) => void): () => void
 	/**
@@ -544,7 +553,6 @@ declare namespace JSX {
 		autofocus?: boolean;
 		autoFocus?: boolean;
 		class?: string;
-		className?: string;
 		contenteditable?: Booleanish | '' | 'plaintext-only' | 'inherit';
 		contentEditable?: Booleanish | '' | 'plaintext-only' | 'inherit';
 		dir?: 'auto' | 'rtl' | 'ltr';

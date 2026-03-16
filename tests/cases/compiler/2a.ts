@@ -34,7 +34,7 @@ async function bar() {
 }
 
 function bar2() {
-    const p = foo()
+    const p: Promise<number> = foo()
 }
 
 async function z() {
@@ -514,19 +514,19 @@ const d = <div onClick={() => {
 const value = ''
 const d2 = <input {value}/>
 const d3 = <div>
-  <#if {true}>
+  <#if (true)>
      <div></div>
   </>
 </div>
 
 const cond = true
-const d4 = <div><#if {cond}></></div>
+const d4 = <div><#if (cond)></></div>
 
 {
     // cfa should work inside <#if>
     let v = undefined as { x: () => number } | undefined
     const d = <div>
-        <#if {v}>
+        <#if (v)>
           <div>{v.x()}</div>
         </>
     </div>
@@ -559,13 +559,13 @@ const d4 = <div><#if {cond}></></div>
     }
 
     { 
-        let y = 0
+        let y = '0'
         const x = <div><div id={y}></div></div>
         update x // ok
     }
 
     { 
-        let y = 0
+        let y = '0'
         const x = <div id={y}></div>
         update x // ok
     }
@@ -578,16 +578,39 @@ const d4 = <div><#if {cond}></></div>
     }
 
     {
+        // expressions and blocks always make the element updatable
+        const el = <div>
+            {<span>hi</span>}
+        </div>
+        update el // ok
+
+        // do 
+        const el2 = <div>
+            <#block>
+                console.log('hi')
+            </>
+        </div>
+        update el2 // ok
+    }
+
+    {
+        // TODO
         let y = 0
         const x1 = <div>{y}</div>
         const x2 = <div>{y}</div>
         update x1
         update x1 // error: possibly redundant update, did you mean x2?
+
+        let z = 0
+        z += 1
+        update x1 // error: possibly redundant update, did you mean x2?
     }
 }
 
-
 // !T (FallibleType) and try expr
+// { ok: false; code: string } is also considered an error
+// this is a lightweight error
+// the callee frame is not preserved because the caller constructs the error
 {
     class Err1 extends Error { override name = "Err1" as const }
     class Err2 extends Error { override name = "Err2" as const }
@@ -647,9 +670,140 @@ const d4 = <div><#if {cond}></></div>
     function wrapsEffect() {
         return effect() // ok
     }
+
+    function effect2(cond = true) {
+        if (cond) return err('bad')
+    }
+
+    // hint: unhandled fallible return type: void | Err<'bad'>
+    effect2()
 }
 
-// FIXME: `typeNodeMentionsPromise` in checker.ts is brittle
+{
+    type MyPromise = Promise<number>
+    function aliased(): MyPromise {
+        return Promise.resolve(1)
+    }
+
+    async function f1() {
+        const n = aliased() // number
+    }
+
+    const m1 = new Map<number, MyPromise>()
+    const m2 = new Map<number, Promise<number>>()
+    async function f2() {
+        const n1 = m1.get(0) // Promise<number> | undefined
+        const n2 = m2.get(0) // Promise<number> | undefined
+    }
+
+    function f3(): Promise<number> | undefined {
+        return m1.get(0)
+    }
+
+    async function f4() {
+        const n = f3() // Promise<number> | undefined
+    }
+
+    class Box<T> {
+        get(): T {
+            throw ""
+        }
+    }
+
+    const b: Box<Promise<number>> = new Box()
+    async function f5() {
+        const n = b.get() // Promise<number>
+    }
+
+    // special case: promise chains
+    // the end result is auto-awaited, not the initial call
+    async function f6() {
+        // number | void
+        const n = foo().then(x => x + 1).catch(e => {})
+        // Promise<number | void>
+        const n2 = foo().then(x => x + 1).catch(e => {}) as async
+        const n3 = foo().then(x => x + 1).toFixed(1) // string
+    }
+
+    // we have to respect the promise protocol
+    // `catch` / `finally` should take priority here
+    // this is *rare* edge case and may not even be worth the perf cost to check
+    //
+    // however, Promise may have more methods in the future, so such a check
+    // could eventually be needed anyway to avoid needless avoid code churn
+    class Catchable {
+        // normal ts checks that `then` methods are erroneous in an async ctx
+        // then() { return '0' }
+        catch() { return 0 }
+        finally() { return 0 }
+    }
+
+    async function f7() {
+        const f = async () => new Catchable()
+        f().catch() // number
+        f().finally() // number
+
+        // error, emits as `(await f().catch()).then()` because we must materialize after `.catch`
+        f().catch().then() 
+    }
+
+}
+
+{
+    async function foo() {
+        return 1 as number
+    }
+
+    function sync() {
+        const p = foo() as async // OK
+        const p2 = foo() // checker error
+        foo() as async // OK
+        foo() // checker error
+
+        // `await` is still an error inside sync context
+        await p
+    }
+
+    async function _async() {
+        const v = foo()
+        await v // await without a Promise in the type is treated as a possible mistake 
+        // but superfluous awaits are OK
+        await foo()
+    }
+
+    async function bar() {
+        return 2
+    }
+
+    function f8<T>(p: Promise<T> | T): void {}
+    f8(bar()) // error, ambiguous, use `await` or `as async`
+
+    function f9() {
+        function f(p1: Promise<number>, p2: Promise<number>) {}
+        // both calls require `as async`
+        // we do not consider parameter types to be "explicitly typed" for auto-await
+        // because then the callee signature influences caller behavior, possibly interleaving calls
+        f(bar(), bar()) 
+    }
+
+    // this one is subtle: we require `as async` regardless of the return type annotation
+    // adding `async` to the fn declaration would otherwise catch rejections
+    function foo2(): Promise<number>  {
+        try {
+            return bar() // error, needs `as async`
+        } catch {
+            return Promise.resolve(0)
+        }
+    }
+
+    async function foo3() {
+        // we (unfortunately) special-case `Promise.resolve` and `Promise.resolve` for auto-await
+        // they should not be awaited because they are, effectively, constructors
+        const x1 = Promise.resolve(0) // Promise<number>
+        const x2 = Promise.reject(0) // Promise<number>
+    }
+}
+
 {
     async function getValue() { return 42 }
     async function testAutoAwait() {
@@ -675,7 +829,7 @@ const d4 = <div><#if {cond}></></div>
     }
 }
 
-// .syn async return type elision
+// async return type elision
 {
     async function elided(): number { return 1 }
     async function testElided() {
@@ -693,14 +847,19 @@ const d4 = <div><#if {cond}></></div>
     }
 }
 
+// element names
 {
-    const x = <div @ a>
+    // b can be seen within the tree, but not outside
+    ;<div @ a>
         <div @ b></div>
         <#block>
             console.log(a, b)
         </>
     </div>
     console.log(a, b)
+
+    // trailing bindings should be parsed correctly:
+    ;<div id="aaa" @ c />
 }
 
 // spread JSX elements
@@ -725,6 +884,7 @@ const d4 = <div><#if {cond}></></div>
     const spread6 = <Comp4>
       <Comp3 />
       <...Comp />
+      <...Comp></Comp>
     </Comp4>
 
     // error
@@ -743,18 +903,189 @@ const d4 = <div><#if {cond}></></div>
 {
     const cond = true as boolean
     // [] | [HtmlDivElement]
-    const if1 = <#if {cond}>
+    const if1 = <#if (cond)>
       <div></div>
     </>
     // [HtmlDivElement]
-    const if2 = <#if {true}>
+    const if2 = <#if (true)>
       <div></div>
     </>
     // []
-    const if3 = <#if {false}>
+    const if3 = <#if (false)>
       <div></div>
     </>
 }
+
+{
+    // do not parse this as JSX, we should only see '> expected'
+    const m = new Map<string, Promise<string
+}
+
+// --- component directive ---
+// - essentially parsed as a fn declaration within the opening tag
+//  * body is optional
+//  * empty body with no trivia inside `{}` should be diagnostic in checker: remove dead code
+//  * using `return` produces a checker diagnostic, prefer throw if needing to bail out
+// - similar to Flow's `component` declaration syntax; the params correspond to fields of `props` in fn components
+// - its children become the return type with one exception: truly singular elements (intrinics/components) are kept singular
+//  * this is true even if the component has block directives as siblings to the root
+// - `Foo` is accessible in the current scope as a normal symbol like any other function declaration
+// - when used as an expression, it behaves like a function expression, name can be elided
+//
+// <#component Foo(x: string) {
+//   // component init code, runs once
+//   const y = `hello: ${x}`
+// }>
+//   <div>{y}</div>
+// </> 
+//
+// <Foo x="hi" />
+//
+// <#component Foo2(x: string): [HTMLDivElement, HTMLDivElement]>
+//   <div>{x}</div>
+//   <div>{x}</div>
+// </> 
+//
+// <...Foo2 x="hi" />
+//
+// <#component Foo(x: string): HTMLDivElement>
+//   <div />
+// </>
+//
+// const Foo = <#component(x: string): HTMLDivElement>
+//   <div />
+// </>
+//
+// Foo is then typed as `(props: { x: string }) => HTMLDivElement`
+//
+//
+//
+// --- named children via `<:name>` aka labeled fragments ---
+// - only works for components
+// - children are passed as a record instead of an array
+// - all or nothing: if any children are named, all must be named.
+//
+// <#component Foo(children: { x: [string] })>
+//   <div>{children.x[0]}</div>
+// </> 
+//
+// <Foo>
+//   <:x>
+//      hi
+//   </>
+// </Foo>
+//
+//
+// --- callable fragments (similar to Svelte's "snippets") ---
+// - labeled fragments can be annotated with parameters, parsed as normal fn param list, turning it into a function
+// - callee observes a function producing a fragment e.g. v => <>{v}</>
+// - caller observes retained identity after materialization
+//   * a callable fragment does **not** produce new elements on subsequent calls beyond whatever JSX expressions produce
+// - `update` does not cascade into callable fragments directly, rather, they are updated when the component is
+//   * this is because callable fragments are essentially callbacks
+// - labeled fragments cannot use element name syntax in their opening element
+//   * callable fragments create new element name scopes, same as `#if` directives
+// - callable fragments are intentionally _not_ components. They are explicit, parameterized patch points.
+// - a callable, labeled fragments are analogous to JS method syntax for object literals
+//
+// <#component Foo<T>(v: T, children: { x: (v: T) => [string] })>
+//   <div>{...children.x(v)}</div>
+// </> 
+//
+// <Foo v="hi">
+//   <:x(v)>
+//      {v}
+//   </>
+// </Foo>
+//
+//
+// --- approximate desugar, if :x were elided, #init is not real directive but represents init statements ---
+// <:x>
+//     <#init> 
+//         let el, el_v
+//     </>
+//     {v => { 
+//         el_v = v 
+//         if (!el) { 
+//             el = <>{v}</>
+//         } else { 
+//             update el 
+//         } 
+//         return el 
+//     }} 
+// </>
+//
+// <:x(v)>
+//  <div @ d />
+// </>
+//
+// <:y>
+//  <div @ d />
+// </>
+//
+// `d` is not accessible outside of `:x` but is accessible outside of `:y`
+//
+// You can pass in computed/dynamic named children using spread. 
+// The following is almost identical to `<:x(v)>{v}</>` except it creates a new closure and fragment on every update:
+//
+// <Foo v="hi">
+//  {...{ x: v => <>{v}</> }}
+// </Foo>
+//
+//
+// --- WIP: unlabeled callable fragments ---
+// - callable fragments can be used without labels, analogous to arrow function expressions
+// - they appear as `<(...params)> </>`
+// - cannot appear as a child of an intrinsic
+//
+//
+//
+// --- WIP: explicit (JSX) resource management ---
+// - repurposes `using` so that disposable objects behave intuitively in JSX contexts
+// - the behavior is slightly different based on the containing directive:
+//    * <#block> disposers are ran in LIFO order across the entire static tree before `update` proceeds
+//    * component body disposers are ran when the element itself is disposed. This is usually manually or via `using` itself
+// - `using` cannot used in JSX context beyond the top-level scope of a <#block> or component bodies
+// - any `using` binding means that the tree root becomes disposable
+// - components used directly in the tree syntax likewise contribute a disposer if needed
+// - will likely _not_ use `Symbol.dispose` but rather a different symbol for tree roots. 
+//      * `using` will work on both symbols in JSX context, with the new one taking priority
+// - adds global `drop` function for easier manual clean-up, this simply calls the dispose method 
+// - TBD: enable `using` in JSX contexts to tolerate disposables of type `() => void`
+//      * useful for adhoc disposers and aligns with the ecosystem convention for returning functions as disposers
+//      * checker enforces operand evaluates into `() => void` and only `() => void` to mitigate unintentional usage e.g. a disposer with an optional param
+//
+//
+// let counter = 0
+// const x = <div>
+//      <#component Comp() {
+//         const id = counter++
+//         using disposables = new DisposableStack()
+//         disposables.defer(() => console.log(`disposed ${id}`))
+//      }>
+//        <div>i am {id}</div>
+//      </>
+//      <#block>
+//        using c = <Comp/>
+//      </>
+//     {c}
+//   </div>
+//
+// update x // 'disposed 0'
+// drop(x) // 'disposed 1'
+// 
+// using `update` on dropped/disposed elements results in runtime exception
+//
+//
+// TBD: should inference add `Disposable` to types explicitly via
+// intersection, or should it be closer to `update` where anything
+// that has the dispose symbol method in their type, even if optional,
+// supports the `using` syntax?
+//
+// TBD: emit diagnostic for `defer` statement in immediate #block scopes?
+
+
+
 
 // /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a
 

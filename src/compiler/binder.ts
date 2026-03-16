@@ -1543,15 +1543,6 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
         }
     }
 
-    function bindJsxCondition(node: JsxExpression | undefined, trueTarget: FlowLabel, falseTarget: FlowLabel) {
-        doWithConditionalBranches(bind, node, trueTarget, falseTarget);
-        const exp = node?.expression
-        if (!exp || !isLogicalAssignmentExpression(exp) && !isLogicalExpression(exp) && !(isOptionalChain(exp) && isOutermostOptionalChain(exp))) {
-            addAntecedent(trueTarget, createFlowCondition(FlowFlags.TrueCondition, currentFlow, exp));
-            addAntecedent(falseTarget, createFlowCondition(FlowFlags.FalseCondition, currentFlow, exp));
-        }
-    }
-
     function bindIterativeStatement(node: Statement, breakTarget: FlowLabel, continueTarget: FlowLabel): void {
         const saveBreakTarget = currentBreakTarget;
         const saveContinueTarget = currentContinueTarget;
@@ -1681,7 +1672,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
     }
 
     function bindJsxIfDirective(node: JsxIfDirective): void {
-        if (!node.condition.expression) {
+        if (!node.condition) {
             bind(node.condition);
             bindEach(node.children);
             return;
@@ -1690,7 +1681,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
         const thenLabel = createBranchLabel();
         const elseLabel = createBranchLabel();
         const postLabel = createBranchLabel();
-        bindJsxCondition(node.condition, thenLabel, elseLabel);
+        bindCondition(node.condition, thenLabel, elseLabel);
         currentFlow = finishFlowLabel(thenLabel);
         bindEach(node.children);
         addAntecedent(postLabel, currentFlow);

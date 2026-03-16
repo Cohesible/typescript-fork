@@ -3323,7 +3323,7 @@ export interface JsxFragment extends PrimaryExpression {
 
 export interface JsxIfDirective extends PrimaryExpression {
     readonly kind: SyntaxKind.JsxIfDirective;
-    readonly condition: JsxExpression;
+    readonly condition: Expression;
     readonly children: NodeArray<JsxChild>;
 }
 
@@ -9364,8 +9364,8 @@ export interface NodeFactory {
     updateJsxExpression(node: JsxExpression, expression: Expression | undefined): JsxExpression;
     createJsxNamespacedName(namespace: Identifier, name: Identifier): JsxNamespacedName;
     updateJsxNamespacedName(node: JsxNamespacedName, namespace: Identifier, name: Identifier): JsxNamespacedName;
-    createJsxIfDirective(condition: JsxExpression, children: readonly JsxChild[]): JsxIfDirective;
-    updateJsxIfDirective(node: JsxIfDirective, condition: JsxExpression, children: readonly JsxChild[]): JsxIfDirective;
+    createJsxIfDirective(condition: Expression, children: readonly JsxChild[]): JsxIfDirective;
+    updateJsxIfDirective(node: JsxIfDirective, condition: Expression, children: readonly JsxChild[]): JsxIfDirective;
     createJsxElseDirective(children: readonly JsxChild[]): JsxElseDirective;
     updateJsxElseDirective(node: JsxElseDirective, children: readonly JsxChild[]): JsxElseDirective;
     createJsxBlock(statements: readonly Statement[]): JsxBlock;

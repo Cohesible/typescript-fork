@@ -4349,9 +4349,19 @@ function getCompletionData(
             isSolelyIdentifierDefinitionLocation(contextToken) ||
             isDotOfNumericLiteral(contextToken) ||
             isInJsxText(contextToken) ||
-            isBigIntLiteral(contextToken);
+            isBigIntLiteral(contextToken) ||
+            // block at <| inside JSX before the user has typed anything
+            (contextToken === previousToken && isRightOfOpenTagWithNoIdentifier(contextToken));
         log("getCompletionsAtPosition: isCompletionListBlocker: " + (timestamp() - start));
         return result;
+    }
+
+    function isRightOfOpenTagWithNoIdentifier(contextToken: Node): boolean {
+        if (contextToken.kind !== SyntaxKind.LessThanToken) return false;
+        const p = contextToken.parent;
+        return p.kind === SyntaxKind.JsxOpeningElement ||
+            p.kind === SyntaxKind.JsxSelfClosingElement ||
+            p.kind === SyntaxKind.JsxElement;
     }
 
     function isInJsxText(contextToken: Node): boolean {
@@ -5019,6 +5029,20 @@ function getCompletionData(
                     // |
                     return false;
                 }
+
+                // `<div @ `
+                if (
+                    isJsxAttribute(parent) && !parent.initializer &&
+                    (contextToken as Identifier).text === "@"
+                ) {
+                    return true;
+                } else if (
+                    (containingNodeKind === SyntaxKind.JsxOpeningElement || containingNodeKind === SyntaxKind.JsxSelfClosingElement) &&
+                    contextToken === (parent as JsxOpeningLikeElement).name
+                ) {
+                    return true;
+                }
+
                 break;
             }
 

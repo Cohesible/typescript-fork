@@ -2277,6 +2277,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     var deferredGlobalESSymbolConstructorTypeSymbol: Symbol | undefined;
     var deferredGlobalESSymbolType: ObjectType | undefined;
     var deferredGlobalTypedPropertyDescriptorType: GenericType;
+    var deferredGlobalErrType: GenericType | undefined;
     var deferredGlobalPromiseType: GenericType | undefined;
     var deferredGlobalPromiseLikeType: GenericType | undefined;
     var deferredGlobalPromiseConstructorSymbol: Symbol | undefined;
@@ -16282,7 +16283,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             }
             if (
                 isFunctionLike(declaration) && !!(getFunctionFlags(declaration) & FunctionFlags.Async) ||
-                returnTypeAnnotationMentionsPromise(declaration)
+                returnTypeAnnotationIsAsync(declaration)
             ) {
                 flags |= SignatureFlags.ReturnsPromise;
             }
@@ -16291,18 +16292,19 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return links.resolvedSignature;
     }
 
-    function returnTypeAnnotationMentionsPromise(declaration: SignatureDeclaration | JSDocSignature): boolean {
+    function returnTypeAnnotationIsAsync(declaration: SignatureDeclaration | JSDocSignature): boolean {
         const returnTypeNode = getEffectiveReturnTypeNode(declaration as SignatureDeclaration);
-        return !!returnTypeNode && typeNodeMentionsPromise(returnTypeNode);
+        return !!returnTypeNode && typeNodeIsAsync(returnTypeNode);
     }
 
-    function typeNodeMentionsPromise(node: TypeNode): boolean {
+    // brittle but fast
+    function typeNodeIsAsync(node: TypeNode): boolean {
         if (isTypeReferenceNode(node)) {
             const name = isIdentifier(node.typeName) ? node.typeName.escapedText : undefined;
             return name === "Promise" || name === "PromiseLike";
         }
-        if (node.kind === SyntaxKind.UnionType || node.kind === SyntaxKind.IntersectionType) {
-            return (node as UnionOrIntersectionTypeNode).types.some(typeNodeMentionsPromise);
+        if (node.kind === SyntaxKind.UnionType) {
+            return (node as UnionOrIntersectionTypeNode).types.every(typeNodeIsAsync);
         }
         return false;
     }
@@ -16516,19 +16518,14 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 signature.compositeSignatures ? instantiateType(getUnionOrIntersectionType(map(signature.compositeSignatures, getReturnTypeOfSignature), signature.compositeKind, UnionReduction.Subtype), signature.mapper) :
                 getReturnTypeFromAnnotation(signature.declaration!) ||
                 (nodeIsMissing((signature.declaration as FunctionLikeDeclaration).body) ? anyType : getReturnTypeFromBody(signature.declaration as FunctionLikeDeclaration));
-            // For !T annotations with a body: body inference gives "hello" | Err1 | Err2 — replace
-            // the non-Error parts with the declared T so callers see string | Err1 | Err2.
             if (signature.declaration && !signature.target && !signature.compositeSignatures) {
                 const fallibleNode = getEffectiveReturnTypeNode(signature.declaration);
                 if (fallibleNode?.kind === SyntaxKind.FallibleType && (signature.declaration as FunctionLikeDeclaration).body) {
                     const innerType = getTypeFromTypeNode((fallibleNode as FallibleTypeNode).type);
-                    const globalError = getGlobalType("Error" as __String, 0, /*reportErrors*/ false);
-                    if (globalError) {
-                        const errorParts = type.flags & TypeFlags.Union
-                            ? (type as UnionType).types.filter(t => isTypeAssignableTo(t, globalError))
-                            : isTypeAssignableTo(type, globalError) ? [type] : [];
-                        type = errorParts.length > 0 ? getUnionType([innerType, ...errorParts]) : innerType;
-                    }
+                    const errorParts = type.flags & TypeFlags.Union
+                        ? (type as UnionType).types.filter(t => isErrorArmType(t))
+                        : isErrorArmType(type) ? [type] : [];
+                    type = errorParts.length > 0 ? getUnionType([innerType, ...errorParts]) : innerType;
                 }
             }
             if (signature.flags & SignatureFlags.IsInnerCallChain) {
@@ -16591,7 +16588,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 isFunctionLike(declaration) &&
                 !!(getFunctionFlags(declaration) & FunctionFlags.Async) &&
                 getSourceFileOfNode(declaration)?.scriptKind === ScriptKind.Syn &&
-                !typeNodeMentionsPromise(typeNode)
+                !typeNodeIsAsync(typeNode)
             ) {
                 return createPromiseType(getTypeFromTypeNode(typeNode));
             }
@@ -17619,6 +17616,19 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
     function getGlobalESSymbolType() {
         return (deferredGlobalESSymbolType ||= getGlobalType("Symbol" as __String, /*arity*/ 0, /*reportErrors*/ false)) || emptyObjectType;
+    }
+
+    function getGlobalErrType() {
+        return (deferredGlobalErrType ||= getGlobalType("Err" as __String, /*arity*/ 1, /*reportErrors*/ false)) || emptyGenericType;
+    }
+
+    function isErrorArmType(t: Type): boolean {
+        const globalError = getGlobalType("Error" as __String, 0, /*reportErrors*/ false);
+        if (globalError && isTypeAssignableTo(t, globalError)) return true;
+        const errType = getGlobalErrType();
+        if (errType === emptyGenericType) return false;
+        const errStringType = createTypeFromGenericGlobalType(errType, [stringType]);
+        return isTypeAssignableTo(t, errStringType);
     }
 
     function getGlobalPromiseType(reportErrors: boolean) {
@@ -19129,7 +19139,12 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         if (!links.resolvedType) {
             const innerType = getTypeFromTypeNode(node.type);
             const globalError = getGlobalType("Error" as __String, 0, /*reportErrors*/ false);
-            links.resolvedType = globalError ? getUnionType([innerType, globalError]) : innerType;
+            const errType = getGlobalErrType();
+            const errStringType = errType !== emptyGenericType ? createTypeFromGenericGlobalType(errType, [stringType]) : undefined;
+            const errorArms: Type[] = [];
+            if (globalError) errorArms.push(globalError);
+            if (errStringType) errorArms.push(errStringType);
+            links.resolvedType = errorArms.length > 0 ? getUnionType([innerType, ...errorArms]) : innerType;
         }
         return links.resolvedType;
     }
@@ -19140,15 +19155,13 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
      * it assignable to `target`.
      */
     function getFallibleTryHint(source: Type, target: Type, errorNode: Node): Diagnostic | undefined {
-        const globalError = getGlobalType("Error" as __String, 0, /*reportErrors*/ false);
-        if (!globalError) return undefined;
-        // source must be a union that contains at least one Error subtype
+        // source must be a union that contains at least one error-arm type
         if (!(source.flags & TypeFlags.Union)) return undefined;
         const parts = (source as UnionType).types;
-        const errorParts = parts.filter(t => isTypeAssignableTo(t, globalError));
+        const errorParts = parts.filter(t => isErrorArmType(t));
         if (!errorParts.length) return undefined;
         // stripping the errors must make the remaining type(s) assignable to target
-        const nonErrorParts = parts.filter(t => !isTypeAssignableTo(t, globalError));
+        const nonErrorParts = parts.filter(t => !isErrorArmType(t));
         if (!nonErrorParts.length) return undefined;
         const strippedSource = nonErrorParts.length === 1 ? nonErrorParts[0] : getUnionType(nonErrorParts);
         if (!isTypeAssignableTo(strippedSource, target)) return undefined;
@@ -34218,7 +34231,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function checkJsxIfDirective(node: JsxIfDirective, _checkMode: CheckMode | undefined): Type {
-        const cond = node.condition.expression;
+        const cond = node.condition;
         if (cond) checkExpression(cond);
         const childrenType = checkJsxChildren(node);
 
@@ -34470,7 +34483,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 continue; // empty jsx expressions don't *really* count as present children
             }
             else if (child.kind === SyntaxKind.JsxIfDirective) {
-                if (child.condition.expression) checkExpression(child.condition.expression);
+                checkExpression(child.condition);
                 const ifBodyType = checkJsxChildren(child, checkMode);
                 const elseClause = findJsxElseDirective(child);
                 if (!elseClause) {
@@ -38434,6 +38447,22 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             // TODO(auto await): check destination type?
             // TODO(auto await): check unions, check PromiseLike/Thenable
             if (node.parent.kind !== SyntaxKind.AwaitExpression && shouldAwait) {
+                // defer awaiting if we access a method on Promise to preserve promise chaining
+                if (isPropertyAccessExpression(node.parent) && node.parent.expression === node) {
+                    const propName = node.parent.name.escapedText;
+                    if (getPropertyOfType(returnType, propName)) {
+                        // Stricter check (perf cost): the value's method takes priority, auto-await
+                        // to collapse the chain. e.g. a class with its own `.catch()` supercedes
+                        // Promise's `.catch`. 
+                        // const inner = getTypeArguments(returnType as GenericType)[0];
+                        // if (inner && getPropertyOfType(inner, propName)) {
+                        //     /* fall through to auto-await */
+                        // } else {
+                        //     return returnType;
+                        // }
+                        return returnType;
+                    }
+                }
                 if (node.parent.kind === SyntaxKind.AsExpression) {
                     const targetTypeNode = (node.parent as AsExpression).type;
                     const isTypeRef = isTypeReferenceNode(targetTypeNode) && isIdentifier(targetTypeNode.typeName);
@@ -38445,7 +38474,47 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                         }
                     }
                 } else {
-                    returnType = getTypeArguments(returnType as GenericType)[0] || anyType;
+                    const unwrapped = getTypeArguments(returnType as GenericType)[0] || anyType;
+                    const contextualType = getContextualType(node, /*contextFlags*/ undefined);
+                    if (contextualType
+                        && !(contextualType.flags & (TypeFlags.Any | TypeFlags.Unknown))
+                        && isTypeAssignableTo(returnType, contextualType)
+                        && isTypeAssignableTo(unwrapped, contextualType)
+                    ) {
+                        const funcText = isIdentifier(node.expression) ? idText(node.expression)
+                            : isPropertyAccessExpression(node.expression) ? idText(node.expression.name)
+                            : getTextOfNode(node.expression);
+                        error(node, Diagnostics.Auto_await_is_ambiguous_Colon_0_returns_1_which_is_also_directly_assignable_to_the_expected_type_Use_await_or_as_async_to_be_explicit, funcText, typeToString(returnType));
+                    }
+                    returnType = unwrapped;
+                }
+            }
+        }
+        else {
+            // require `as async` on Promise-returning fn calls inside sync contexts
+            // Suppressed by:
+            //   1. `foo() as async`                  
+            //   2. `const p: Promise<number> = foo()`
+            //   3. `return foo()`, except inside try/catch
+            if (signature && (signature.flags & SignatureFlags.ReturnsPromise)
+                && node.parent.kind !== SyntaxKind.AwaitExpression
+            ) {
+                const isAsAsync = node.parent.kind === SyntaxKind.AsExpression
+                    && isConstOrAsyncTypeReference((node.parent as AsExpression).type);
+                const isExplicitBinding = node.parent.kind === SyntaxKind.VariableDeclaration
+                    && !!(node.parent as VariableDeclaration).type;
+                const isReturnOutsideTry = node.parent.kind === SyntaxKind.ReturnStatement
+                    && !findAncestor(node, n => isFunctionLike(n) ? "quit" : n.kind === SyntaxKind.TryStatement);
+                // BRITTLE: special case Promise.resolve / Promise.reject so that they are not considered async
+                const isPromiseConstructor = isPropertyAccessExpression(node.expression)
+                    && isIdentifier(node.expression.expression)
+                    && idText(node.expression.expression) === "Promise"
+                    && (idText(node.expression.name) === "resolve" || idText(node.expression.name) === "reject");
+                if (!isAsAsync && !isExplicitBinding && !isReturnOutsideTry && !isPromiseConstructor) {
+                    const funcText = isIdentifier(node.expression) ? idText(node.expression)
+                        : isPropertyAccessExpression(node.expression) ? idText(node.expression.name)
+                        : getTextOfNode(node.expression);
+                    error(node, Diagnostics.Async_call_to_0_in_sync_function_Colon_result_type_will_change_if_this_function_is_made_async_Use_as_async_or_an_explicit_type_annotation, funcText);
                 }
             }
         }
@@ -44706,7 +44775,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         //
         if (
             getSourceFileOfNode(node)?.scriptKind === ScriptKind.Syn &&
-            !typeNodeMentionsPromise(returnTypeNode)
+            !typeNodeIsAsync(returnTypeNode)
         ) {
             return;
         }
@@ -46190,12 +46259,11 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             getSourceFileOfNode(node)?.scriptKind === ScriptKind.Syn &&
             exprType.flags & TypeFlags.Union
         ) {
-            const globalError = getGlobalType("Error" as __String, 0, /*reportErrors*/ false);
-            if (globalError) {
+            {
                 const parts = (exprType as UnionType).types;
                 if (
-                    parts.some(t => isTypeAssignableTo(t, globalError)) &&
-                    parts.some(t => !isTypeAssignableTo(t, globalError))
+                    parts.some(t => isErrorArmType(t)) &&
+                    parts.some(t => !isErrorArmType(t))
                 ) {
                     error(node.expression, Diagnostics.This_expression_returns_0_Use_try_to_throw_on_error_or_void_to_discard_the_result, typeToString(exprType));
                 }
@@ -50229,12 +50297,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     function checkTryExpression(node: TryExpression): Type {
         const operandType = checkExpression(node.expression);
         if (operandType === silentNeverType) return silentNeverType;
-        const globalError = getGlobalType("Error" as __String, 0, /*reportErrors*/ false);
-        if (!globalError) return operandType;
 
         const parts = operandType.flags & TypeFlags.Union ? (operandType as UnionType).types : [operandType];
-        const errorParts = parts.filter(t => isTypeAssignableTo(t, globalError));
-        const nonErrorParts = parts.filter(t => !isTypeAssignableTo(t, globalError));
+        const errorParts = parts.filter(t => isErrorArmType(t));
+        const nonErrorParts = parts.filter(t => !isErrorArmType(t));
 
         if (errorParts.length === 0) {
             error(node.expression, Diagnostics.try_has_no_effect_because_the_expression_cannot_be_an_Error);
@@ -50262,37 +50328,92 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             return exprType;
         }
 
-        // const jsxSource = getJsxSourceOfExpression(node.expression);
-        // if (jsxSource !== undefined) {
-        //     if (!jsxHasDynamicContent(jsxSource)) {
-        //         error(node, Diagnostics.update_has_no_effect_Colon_this_element_contains_no_dynamic_expressions);
-        //         return silentNeverType;
-        //     }
-        //     return exprType;
-        // }
+        const jsxSource = getJsxSourceOfExpression(node.expression);
+        if (jsxSource !== undefined) {
+            if (!jsxHasDynamicContent(jsxSource)) {
+                error(node, Diagnostics.update_has_no_effect_Colon_this_element_contains_no_dynamic_expressions);
+                return silentNeverType;
+            }
+            checkRedundantUpdate(node);
+            return exprType;
+        }
 
-        // if (updateSym.flags & SymbolFlags.Optional) {
-        //     const typeErrorType = getGlobalType("TypeError" as __String, 0, /*reportErrors*/ false);
-        //     return typeErrorType ? getUnionType([exprType, typeErrorType]) : exprType;
-        // }
+        checkRedundantUpdate(node);
 
         return exprType;
     }
 
-    function getJsxSourceOfExpression(expr: Expression): JsxElement | JsxSelfClosingElement | JsxFragment | undefined {
-        if (!isIdentifier(expr)) return undefined;
-        const sym = getResolvedSymbol(expr);
-        if (!sym) return undefined;
-        const decl = sym.valueDeclaration;
-        if (!decl || !isVariableDeclaration(decl)) return undefined;
-        const init = decl.initializer;
-        if (!init) return undefined;
-        return isJsxElement(init) || isJsxSelfClosingElement(init) || isJsxFragment(init) ? init : undefined;
+    function checkRedundantUpdate(node: UpdateExpressionExpression): void {
+        const stmt = node.parent;
+        if (!stmt || stmt.kind !== SyntaxKind.ExpressionStatement) return;
+        const block = stmt.parent;
+        if (!block || !(block.kind === SyntaxKind.Block || block.kind === SyntaxKind.SourceFile || block.kind === SyntaxKind.ModuleBlock || block.kind === SyntaxKind.CaseClause || block.kind === SyntaxKind.DefaultClause)) return;
+
+        const stmts = (block as Block | SourceFile).statements;
+        const idx = stmts.indexOf(stmt as Statement);
+        if (idx <= 0) return;
+
+        const operand = node.expression;
+
+        for (let i = idx - 1; i >= 0; i--) {
+            const prev = stmts[i];
+
+            if (
+                prev.kind === SyntaxKind.ExpressionStatement &&
+                (prev as ExpressionStatement).expression.kind === SyntaxKind.UpdateExpressionExpression
+            ) {
+                const prevUpdate = (prev as ExpressionStatement).expression as UpdateExpressionExpression;
+                if (isMatchingReference(operand, prevUpdate.expression)) {
+                    error(node, Diagnostics.Possibly_redundant_update_Colon_0_was_already_updated_above_with_no_intervening_changes, getTextOfNode(operand));
+                    return;
+                }
+                continue;
+            }
+
+            if (statementContainsCall(prev)) return;
+
+            if (statementAssignsTo(prev, operand)) return;
+        }
     }
 
-    function jsxHasDynamicContent(node: JsxElement | JsxSelfClosingElement | JsxFragment | JsxIfDirective): boolean {
+    function statementContainsCall(node: Node): boolean {
+        return !!forEachChild(node, function visit(n): boolean | undefined {
+            if (isCallExpression(n)) return true;
+            return forEachChild(n, visit);
+        });
+    }
+
+    function statementAssignsTo(node: Node, operand: Expression): boolean {
+        const operandSymbol = isIdentifier(operand) ? getResolvedSymbol(operand) : undefined;
+        return !!forEachChild(node, function visit(n): boolean | undefined {
+            if (
+                isBinaryExpression(n) &&
+                isAssignmentOperator(n.operatorToken.kind) &&
+                isMatchingReference(operand, n.left)
+            ) return true;
+            if (isVariableDeclaration(n) && operandSymbol && getSymbolOfDeclaration(n) === operandSymbol) return true;
+            return forEachChild(n, visit);
+        });
+    }
+
+    function getJsxSourceOfExpression(expr: Expression): JsxElement | JsxSelfClosingElement | JsxFragment | undefined {
+        if (!isIdentifier(expr)) return;
+        const sym = getResolvedSymbol(expr);
+        let decl: Node | undefined  = sym?.valueDeclaration;
+        if (!decl) return;
+        if (isVariableDeclaration(decl)) {
+            decl = decl.initializer;
+            if (!decl) return;
+        }
+        if (isJsxElement(decl) || isJsxSelfClosingElement(decl) || isJsxFragment(decl)) {
+            return decl;
+        }
+    }
+
+
+    function jsxHasDynamicContent(node: JsxElement | JsxSelfClosingElement | JsxFragment | JsxIfDirective | JsxElseDirective): boolean {
         const tagName = isJsxSelfClosingElement(node) ? node.tagName : isJsxElement(node) ? node.openingElement.tagName : undefined;
-        if (tagName && !isJsxIntrinsicTagName(tagName)) return true;
+        if (!tagName || !isJsxIntrinsicTagName(tagName)) return true;
 
         const attrs = isJsxSelfClosingElement(node) ? node.attributes
             : isJsxElement(node) ? node.openingElement.attributes
@@ -50303,7 +50424,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 if (isJsxAttribute(attr) && attr.initializer && attr.initializer.kind === SyntaxKind.JsxExpression) return true;
             }
         }
-        const children = (isJsxElement(node) || isJsxFragment(node) || node.kind === SyntaxKind.JsxIfDirective) ? node.children : undefined;
+        const children = (isJsxElement(node) || isJsxFragment(node)) ? node.children : undefined;
         if (children) {
             for (const child of children) {
                 if (child.kind === SyntaxKind.JsxBlock) return true;

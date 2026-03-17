@@ -277,7 +277,9 @@ import {
     JsxElement,
     JsxExpression,
     JsxFragment,
-    JsxBlock,
+    JsxRunDirective,
+    JsxComponentDirective,
+    JsxLabeledFragment,
     JsxElseDirective,
     JsxIfDirective,
     JsxNamespacedName,
@@ -1015,8 +1017,12 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         updateJsxIfDirective,
         createJsxElseDirective,
         updateJsxElseDirective,
-        createJsxBlock,
-        updateJsxBlock,
+        createJsxRunDirective,
+        updateJsxRunDirective,
+        createJsxComponentDirective,
+        updateJsxComponentDirective,
+        createJsxLabeledFragment,
+        updateJsxLabeledFragment,
         createCaseClause,
         updateCaseClause,
         createCaseIsClause,
@@ -6017,17 +6023,79 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     }
 
     // @api
-    function createJsxBlock(statements: readonly Statement[]) {
-        const node = createBaseNode<JsxBlock>(SyntaxKind.JsxBlock);
+    function createJsxRunDirective(statements: readonly Statement[]) {
+        const node = createBaseNode<JsxRunDirective>(SyntaxKind.JsxRunDirective);
         node.statements = createNodeArray(statements);
         node.transformFlags |= propagateChildrenFlags(node.statements) | TransformFlags.ContainsJsx;
         return node;
     }
 
     // @api
-    function updateJsxBlock(node: JsxBlock, statements: readonly Statement[]) {
+    function updateJsxRunDirective(node: JsxRunDirective, statements: readonly Statement[]) {
         return node.statements !== statements
-            ? update(createJsxBlock(statements), node)
+            ? update(createJsxRunDirective(statements), node)
+            : node;
+    }
+
+    // @api
+    function createJsxComponentDirective(
+        name: Identifier | undefined,
+        typeParameters: readonly TypeParameterDeclaration[] | undefined,
+        parameters: readonly ParameterDeclaration[],
+        type: TypeNode | undefined,
+        body: Block | undefined,
+        children: readonly JsxChild[],
+    ) {
+        const node = createBaseNode<JsxComponentDirective>(SyntaxKind.JsxComponentDirective);
+        node.name = name;
+        node.typeParameters = typeParameters && createNodeArray(typeParameters);
+        node.parameters = createNodeArray(parameters);
+        node.type = type;
+        node.body = body;
+        node.children = createNodeArray(children);
+        node.transformFlags |= propagateChildFlags(node.name)
+            | propagateChildrenFlags(node.typeParameters)
+            | propagateChildrenFlags(node.parameters)
+            | propagateChildFlags(node.type)
+            | propagateChildFlags(node.body)
+            | propagateChildrenFlags(node.children)
+            | TransformFlags.ContainsJsx;
+        return node;
+    }
+
+    // @api
+    function updateJsxComponentDirective(
+        node: JsxComponentDirective,
+        name: Identifier | undefined,
+        typeParameters: readonly TypeParameterDeclaration[] | undefined,
+        parameters: readonly ParameterDeclaration[],
+        type: TypeNode | undefined,
+        body: Block | undefined,
+        children: readonly JsxChild[],
+    ) {
+        return node.name !== name || node.typeParameters !== typeParameters || node.parameters !== parameters
+            || node.type !== type || node.body !== body || node.children !== children
+            ? update(createJsxComponentDirective(name, typeParameters, parameters, type, body, children), node)
+            : node;
+    }
+
+    // @api
+    function createJsxLabeledFragment(label: Identifier, parameters: readonly ParameterDeclaration[] | undefined, children: readonly JsxChild[]) {
+        const node = createBaseNode<JsxLabeledFragment>(SyntaxKind.JsxLabeledFragment);
+        node.label = label;
+        node.parameters = parameters ? createNodeArray(parameters) : undefined;
+        node.children = createNodeArray(children);
+        node.transformFlags |= propagateChildFlags(node.label)
+            | propagateChildrenFlags(node.parameters)
+            | propagateChildrenFlags(node.children)
+            | TransformFlags.ContainsJsx;
+        return node;
+    }
+
+    // @api
+    function updateJsxLabeledFragment(node: JsxLabeledFragment, label: Identifier, parameters: readonly ParameterDeclaration[] | undefined, children: readonly JsxChild[]) {
+        return node.label !== label || node.parameters !== parameters || node.children !== children
+            ? update(createJsxLabeledFragment(label, parameters, children), node)
             : node;
     }
 

@@ -129,7 +129,9 @@ import {
     JsxClosingElement,
     JsxClosingFragment,
     JsxElement,
-    JsxBlock,
+    JsxRunDirective,
+    JsxComponentDirective,
+    JsxLabeledFragment,
     JsxExpression,
     JsxElseDirective,
     JsxFragment,
@@ -984,8 +986,24 @@ export function isJsxElseDirective(node: Node): node is JsxElseDirective {
     return node.kind === SyntaxKind.JsxElseDirective;
 }
 
-export function isJsxBlock(node: Node): node is JsxBlock {
-    return node.kind === SyntaxKind.JsxBlock;
+export function isJsxRunDirective(node: Node): node is JsxRunDirective {
+    return node.kind === SyntaxKind.JsxRunDirective;
+}
+
+export function isJsxComponentDirective(node: Node): node is JsxComponentDirective {
+    return node.kind === SyntaxKind.JsxComponentDirective;
+}
+
+export function isJsxLabeledFragment(node: Node): node is JsxLabeledFragment {
+    return node.kind === SyntaxKind.JsxLabeledFragment;
+}
+
+export function isJsxDirectiveLike(node: Node): node is JsxIfDirective | JsxElseDirective | JsxRunDirective | JsxComponentDirective | JsxLabeledFragment {
+    return node.kind === SyntaxKind.JsxIfDirective
+        || node.kind === SyntaxKind.JsxElseDirective
+        || node.kind === SyntaxKind.JsxRunDirective
+        || node.kind === SyntaxKind.JsxComponentDirective
+        || node.kind === SyntaxKind.JsxLabeledFragment;
 }
 
 // Clauses

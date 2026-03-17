@@ -103,6 +103,8 @@ declare namespace JSX {
 	type Child = ChildNode | string | number;
 	type Children = Child[];
 
+	type NodeLike = string | number | ChildNode | Wire<string | number>
+
 	interface ComponentNode<T extends () => ChildNode = () => ChildNode> extends ChildNode, Updatable {
 		readonly root: ReturnType<T>
 	}

@@ -835,7 +835,9 @@ import {
     JsxElement,
     JsxEmit,
     JsxExpression,
-    JsxBlock,
+    JsxRunDirective,
+    JsxComponentDirective,
+    JsxLabeledFragment,
     JsxFlags,
     JsxFragment,
     JsxIfDirective,
@@ -847,6 +849,7 @@ import {
     JsxSelfClosingElement,
     JsxSpreadAttribute,
     JsxTagNameExpression,
+    JsxText,
     KeywordTypeNode,
     LabeledStatement,
     LanguageFeatureMinimumTarget,
@@ -12823,6 +12826,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return type;
             }
         }
+        else if (declaration && declaration.kind === SyntaxKind.JsxComponentDirective) {
+            return getJsxComponentDirectiveType(declaration as unknown as JsxComponentDirective);
+        }
         const type = createObjectType(ObjectFlags.Anonymous, symbol);
         if (symbol.flags & SymbolFlags.Class) {
             const baseTypeVariable = getBaseTypeVariableOfClass(symbol);
@@ -21848,7 +21854,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return { errorNode: child, innerExpression: child, nameType };
             case SyntaxKind.JsxIfDirective:
             case SyntaxKind.JsxElseDirective:
-            case SyntaxKind.JsxBlock:
+            case SyntaxKind.JsxRunDirective:
+            case SyntaxKind.JsxComponentDirective:
+            case SyntaxKind.JsxLabeledFragment:
                 return { errorNode: child, innerExpression: undefined, nameType };
             default:
                 return Debug.assertNever(child, "Found invalid jsx child");
@@ -21890,7 +21898,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             }
             if (moreThanOneRealChildren) {
                 if (arrayLikeTargetParts !== neverType) {
-                    const realSource = checkJsxChildren(containingElement, CheckMode.Normal);
+                    const realSource = getJsxChildrenType(containingElement, CheckMode.Normal);
                     const children = generateJsxChildren(containingElement, getInvalidTextualChildDiagnostic);
                     result = elaborateIterableOrArrayLikeTargetElementwise(children, realSource, arrayLikeTargetParts, relation, containingMessageChain, errorOutputContainer) || result;
                 }
@@ -32388,6 +32396,15 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     // Return contextual type of parameter or undefined if no contextual type is available
     function getContextuallyTypedParameterType(parameter: ParameterDeclaration): Type | undefined {
         const func = parameter.parent;
+        if ((func as Node).kind === SyntaxKind.JsxLabeledFragment) {
+            const frag = func as unknown as JsxLabeledFragment;
+            const contextualFuncType = getContextualTypeForJsxLabeledFragment(frag);
+            const contextualSig = contextualFuncType && getSignaturesOfType(contextualFuncType, SignatureKind.Call)[0];
+            if (contextualSig) {
+                return getTypeAtPosition(contextualSig, frag.parameters!.indexOf(parameter));
+            }
+            return;
+        }
         if (!isContextSensitiveFunctionOrObjectLiteralMethod(func)) {
             // Check if this is a function declaration with a satisfies type
             if (func.kind === SyntaxKind.FunctionDeclaration && (func as FunctionDeclaration).satisfiesType) {
@@ -34222,7 +34239,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             checkExpression(node.closingElement.tagName);
         }
 
-        checkJsxChildren(node);
+        getJsxChildrenType(node);
     }
 
     function checkJsxElement(node: JsxElement, _checkMode: CheckMode | undefined): Type {
@@ -34232,21 +34249,145 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
     function checkJsxIfDirective(node: JsxIfDirective, _checkMode: CheckMode | undefined): Type {
         const cond = node.condition;
-        if (cond) checkExpression(cond);
-        const childrenType = checkJsxChildren(node);
+        checkExpression(cond);
+        const childrenType = getJsxChildrenType(node);
 
-        const condType = cond ? getTypeOfExpression(cond) : anyType;
+        const condType = getTypeOfExpression(cond);
         if (!(condType.flags & TypeFlags.Any) && isTypeAssignableTo(condType, trueType)) return childrenType;
 
         const elseClause = findJsxElseDirective(node);
-        const elseType = elseClause ? checkJsxChildren(elseClause) : createTupleType([]);
+        const elseType = elseClause ? getJsxChildrenType(elseClause) : createTupleType([]);
         if (!(condType.flags & TypeFlags.Any) && isTypeAssignableTo(condType, falseType)) return elseType;
 
         return getUnionType([childrenType, elseType]);
     }
 
-    function checkJsxBlock(node: JsxBlock): void {
+    function checkJsxRunDirective(node: JsxRunDirective): void {
         forEach(node.statements, checkSourceElement);
+    }
+
+    function getJsxComponentDirectiveType(node: JsxComponentDirective): Type {
+        const links = getNodeLinks(node);
+        if (links.resolvedType) return links.resolvedType;
+
+        forEach(node.parameters, checkParameter);
+        if (node.body) {
+            for (const s of node.body.statements) {
+                if (s.kind === SyntaxKind.ReturnStatement) {
+                    error(s, Diagnostics.Return_statement_is_not_allowed_in_component_directive_body);
+                }
+                checkSourceElement(s);
+            }
+        }
+        // Infer return type from children
+        const childrenTuple = getJsxChildrenType(node);
+        const returnType = node.type
+            ? getTypeFromTypeNode(node.type)
+            : simplifySingularJsxTuple(childrenTuple);
+        // Build props type: { x: T1, y?: T2, ... }
+        const propsType = buildComponentPropsType(node.parameters);
+        // Build type params
+        const typeParams = node.typeParameters
+            ? map(node.typeParameters, tp => getDeclaredTypeOfTypeParameter(getSymbolOfDeclaration(tp)))
+            : undefined;
+        // Create (props: PropsType) => ReturnType signature.
+        // If no parameters were declared, props is optional (minArgumentCount=0).
+        const propsSymbol = createParameter("props" as __String, propsType);
+        const sig = createSignature(
+            /*declaration*/ undefined,
+            typeParams,
+            /*thisParameter*/ undefined,
+            [propsSymbol],
+            returnType,
+            /*resolvedTypePredicate*/ undefined,
+            /*minArgumentCount*/ node.parameters.length === 0 ? 0 : 1,
+            SignatureFlags.None,
+        );
+        const funcType = createAnonymousType(/*symbol*/ undefined, emptySymbols, [sig], emptyArray, emptyArray);
+        return links.resolvedType = funcType;
+    }
+
+    function simplifySingularJsxTuple(tuple: Type): Type {
+        if (isTupleType(tuple)) {
+            const typeArgs = getTypeArguments(tuple as TupleTypeReference);
+            const flags = (tuple as TupleTypeReference).target.elementFlags;
+            if (typeArgs.length === 1 && (flags[0] & ElementFlags.Required)) {
+                return typeArgs[0];
+            }
+        }
+        return tuple;
+    }
+
+    function buildComponentPropsType(parameters: NodeArray<ParameterDeclaration>): Type {
+        const members = createSymbolTable();
+        for (const param of parameters) {
+            if (!param.name || !isIdentifier(param.name)) continue;
+            const paramName = param.name.escapedText;
+            const paramType = param.type ? getTypeFromTypeNode(param.type) : anyType;
+            const optional = !!param.questionToken || !!param.initializer;
+            const propSym = createProperty(paramName, optional ? getOptionalType(paramType, /*isProperty*/ true) : paramType);
+            if (optional) propSym.flags |= SymbolFlags.Optional;
+            members.set(paramName, propSym);
+        }
+        return createAnonymousType(/*symbol*/ undefined, members, emptyArray, emptyArray, emptyArray);
+    }
+
+    function checkJsxComponentDirective(node: JsxComponentDirective, _checkMode: CheckMode | undefined): Type {
+        return getJsxComponentDirectiveType(node);
+    }
+
+    function getContextualTypeForJsxLabeledFragment(node: JsxLabeledFragment): Type | undefined {
+        if (!isJsxElement(node.parent)) return undefined;
+        const openingElement = node.parent.openingElement;
+        const jsxChildrenPropertyName = getJsxElementChildrenPropertyName(getJsxNamespaceAt(openingElement));
+        if (!jsxChildrenPropertyName) return undefined;
+        const tagType = isJsxNamespacedName(openingElement.tagName) ? anyType : getTypeOfExpression(openingElement.tagName);
+        const callSigs = getSignaturesOfType(tagType, SignatureKind.Call);
+        if (callSigs.length === 0) return undefined;
+        const propsParams = callSigs[0].parameters;
+        if (propsParams.length === 0) return undefined;
+        const propsType = getTypeOfSymbol(propsParams[0]);
+        const childrenProp = getPropertyOfType(propsType, jsxChildrenPropertyName);
+        if (!childrenProp) return undefined;
+        const childrenType = getTypeOfSymbol(childrenProp);
+        const labelProp = getPropertyOfType(childrenType, node.label.escapedText);
+        return labelProp ? getTypeOfSymbol(labelProp) : undefined;
+    }
+
+    function checkJsxLabeledFragment(node: JsxLabeledFragment, checkMode: CheckMode | undefined): Type {
+        const links = getNodeLinks(node);
+        if (links.resolvedType) return links.resolvedType;
+
+        forEach(node.parameters, checkParameter);
+        const childrenTuple = getJsxChildrenType(node, checkMode);
+
+        let fragmentType: Type;
+        if (node.parameters) {
+            // callable: (param1: T1, param2: T2, ...) => ChildTuple
+            // Parameter types flow from getContextuallyTypedParameterType for unannotated params.
+            const paramSymbols = map(node.parameters, p => {
+                const name = isIdentifier(p.name) ? p.name.escapedText : ("arg" as __String);
+                const sym = getSymbolOfDeclaration(p);
+                const type = p.type ? getTypeFromTypeNode(p.type) : sym ? getTypeOfSymbol(sym) : anyType;
+                return createParameter(name, type);
+            });
+            const minCount = countWhere(node.parameters, p => !p.questionToken && !p.initializer);
+            const sig = createSignature(
+                /*declaration*/ undefined,
+                /*typeParameters*/ undefined,
+                /*thisParameter*/ undefined,
+                paramSymbols,
+                childrenTuple,
+                /*resolvedTypePredicate*/ undefined,
+                minCount,
+                SignatureFlags.None,
+            );
+            fragmentType = createAnonymousType(/*symbol*/ undefined, emptySymbols, [sig], emptyArray, emptyArray);
+        }
+        else {
+            fragmentType = childrenTuple;
+        }
+        return links.resolvedType = fragmentType;
     }
 
     function getTypeOfJsxElementIdentifierDeclaration(node: JsxElement | JsxSelfClosingElement): Type {
@@ -34271,7 +34412,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             );
         }
 
-        const childrenType = checkJsxChildren(node);
+        const childrenType = getJsxChildrenType(node);
         if (nodeSourceFile?.scriptKind === ScriptKind.Syn) {
             return childrenType;
         }
@@ -34396,7 +34537,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             isJsxElementParent &&
             (semanticChildCount > 0 || isSynJsxElement)
         ) {
-            const childrenType: Type = checkJsxChildren(parent as JsxElement | JsxFragment, checkMode);
+            const childrenType: Type = getJsxChildrenType(parent as JsxElement | JsxFragment, checkMode);
 
             if (!hasSpreadAnyType && jsxChildrenPropertyName && jsxChildrenPropertyName !== "") {
                 // Error if there is a attribute named "children" explicitly specified and children element.
@@ -34466,7 +34607,104 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return result;
     }
 
-    function checkJsxChildren(node: JsxElement | JsxFragment | JsxIfDirective | JsxElseDirective, checkMode?: CheckMode): Type {
+    function getJsxChildrenType(node: JsxElement | JsxFragment | JsxIfDirective | JsxElseDirective | JsxComponentDirective | JsxLabeledFragment, checkMode?: CheckMode): Type {
+        if (checkMode) {
+            return checkJsxChildren(node, checkMode);
+        }
+        const links = getNodeLinks(node);
+        return links.resolvedJsxChildren ??= checkJsxChildren(node);
+    }
+
+    function checkJsxChildren(node: JsxElement | JsxFragment | JsxIfDirective | JsxElseDirective | JsxComponentDirective | JsxLabeledFragment, checkMode?: CheckMode): Type {
+        let objectMode: boolean | undefined;
+        const spreadElements = new Map<JsxChild, Type>();
+        for (const child of node.children) {
+            if (child.kind === SyntaxKind.JsxLabeledFragment) {
+                if (objectMode === false) {
+                    error(child, Diagnostics.Named_children_must_be_used_consistently_Colon_either_all_children_must_be_labeled_fragments_or_none);
+                }
+                objectMode ??= true;
+                continue;
+            }
+            if (child.kind === SyntaxKind.JsxExpression && (child as JsxExpression).dotDotDotToken && (child as JsxExpression).expression) {
+                const exprType = checkExpression((child as JsxExpression).expression!, checkMode);
+                spreadElements.set(child, exprType);
+                if (exprType.flags & TypeFlags.Union) {
+                    // unions can create scenarios where the spread must be the only child e.g.
+                    //   { x: string[] } | string[]
+                    // this spread is fine _if_ it's the only child 
+                    const types = (exprType as UnionType).types;
+                    for (const t of types) {
+                        const shouldBeObjectMode = !isArrayLikeType(t);
+                        if (objectMode === undefined) {
+                            objectMode = shouldBeObjectMode;
+                        } else if (objectMode !== shouldBeObjectMode) {
+                            const otherChildren = filter(node.children, c => {
+                                if (c === child) return false;
+                                if (c.kind === SyntaxKind.JsxText && (c as JsxText).containsOnlyTriviaWhiteSpaces) return false;
+                                if (c.kind === SyntaxKind.JsxExpression && !(c as JsxExpression).expression) return false;
+                                return true;
+                            });
+                            if (otherChildren.length === 0) {
+                                return exprType;
+                            }
+                            error(child, Diagnostics.Named_children_must_be_used_consistently_Colon_either_all_children_must_be_labeled_fragments_or_none);
+                            break;
+                        }
+                    }
+                    continue;
+                }
+                const shouldBeObjectMode = !isArrayLikeType(exprType);
+                if (objectMode === undefined) {
+                    objectMode = shouldBeObjectMode;
+                } else if (objectMode !== shouldBeObjectMode) {
+                    error(child, Diagnostics.Named_children_must_be_used_consistently_Colon_either_all_children_must_be_labeled_fragments_or_none);                      
+                }
+                continue;
+            }
+            if (child.kind === SyntaxKind.JsxText && (child as JsxText).containsOnlyTriviaWhiteSpaces) continue;
+            if (child.kind === SyntaxKind.JsxExpression && !(child as JsxExpression).expression) continue;
+            if (objectMode === true) {
+                error(child, Diagnostics.Named_children_must_be_used_consistently_Colon_either_all_children_must_be_labeled_fragments_or_none);                      
+            }
+            objectMode ??= false;
+        }
+
+        if (objectMode) {
+            const members = createSymbolTable();
+            const explicitLabelKeys = new Set<__String>();
+            for (const child of node.children) {
+                if (child.kind === SyntaxKind.JsxText && (child as JsxText).containsOnlyTriviaWhiteSpaces) continue;
+                if (child.kind === SyntaxKind.JsxExpression && !(child as JsxExpression).expression) continue;
+
+                const spreadType = spreadElements.get(child);
+                if (spreadType) {
+                    const props = getPropertiesOfType(spreadType);
+                    for (const prop of props) {
+                        const required = !(prop.flags & SymbolFlags.Optional);
+                        if (required && explicitLabelKeys.has(prop.escapedName)) {
+                            error(child, Diagnostics.Spread_always_overwrites_explicit_labeled_fragment_Colon_0, unescapeLeadingUnderscores(prop.escapedName));
+                        }
+                        members.set(prop.escapedName, prop);
+                    }
+                    continue;
+                }
+
+                if (child.kind !== SyntaxKind.JsxLabeledFragment) continue;
+                const frag = child as JsxLabeledFragment;
+                const labelName = frag.label.escapedText;
+                if (members.has(labelName)) {
+                    error(frag.label, Diagnostics.Duplicate_labeled_fragment_Colon_0, unescapeLeadingUnderscores(labelName));
+                    continue;
+                }
+                const fragType = checkJsxLabeledFragment(frag, checkMode);
+                const propSym = createProperty(labelName, fragType);
+                members.set(labelName, propSym);
+                explicitLabelKeys.add(labelName);
+            }
+            return createAnonymousType(/*symbol*/ undefined, members, emptyArray, emptyArray, emptyArray);
+        }
+
         const elementTypes: Type[] = [];
         const elementFlags: ElementFlags[] = [];
         const isSynFile = getSourceFileOfNode(node)?.scriptKind === ScriptKind.Syn;
@@ -34484,20 +34722,24 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             }
             else if (child.kind === SyntaxKind.JsxIfDirective) {
                 checkExpression(child.condition);
-                const ifBodyType = checkJsxChildren(child, checkMode);
+                const ifBodyType = getJsxChildrenType(child, checkMode);
                 const elseClause = findJsxElseDirective(child);
                 if (!elseClause) {
                     elementTypes.push(getUnionType([ifBodyType, createTupleType([])]));
                     elementFlags.push(ElementFlags.Variadic);
                     continue;
                 }
-                const elseBodyType = checkJsxChildren(elseClause, checkMode);
+                const elseBodyType = getJsxChildrenType(elseClause, checkMode);
                 elementTypes.push(getUnionType([ifBodyType, elseBodyType]));
                 elementFlags.push(ElementFlags.Variadic);
             }
-            else if (child.kind === SyntaxKind.JsxBlock) {
-                checkJsxBlock(child as JsxBlock);
+            else if (child.kind === SyntaxKind.JsxRunDirective) {
+                checkJsxRunDirective(child as JsxRunDirective);
                 continue;
+            }
+            else if (child.kind === SyntaxKind.JsxComponentDirective) {
+                checkJsxComponentDirective(child as JsxComponentDirective, checkMode);
+                continue; // contributes nothing to parent's children tuple
             }
             else if (child.kind === SyntaxKind.JsxElseDirective) {
                 continue; // handled by parent
@@ -38484,7 +38726,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                         const funcText = isIdentifier(node.expression) ? idText(node.expression)
                             : isPropertyAccessExpression(node.expression) ? idText(node.expression.name)
                             : getTextOfNode(node.expression);
-                        error(node, Diagnostics.Auto_await_is_ambiguous_Colon_0_returns_1_which_is_also_directly_assignable_to_the_expected_type_Use_await_or_as_async_to_be_explicit, funcText, typeToString(returnType));
+                        error(node, Diagnostics._0_returns_1_which_is_also_directly_assignable_to_the_expected_type_Use_await_or_as_async, funcText, typeToString(returnType));
                     }
                     returnType = unwrapped;
                 }
@@ -42933,8 +43175,12 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return checkJsxFragment(node as JsxFragment);
             case SyntaxKind.JsxIfDirective:
                 return checkJsxIfDirective(node as unknown as JsxIfDirective, checkMode);
-            case SyntaxKind.JsxBlock:
+            case SyntaxKind.JsxRunDirective:
                 return voidType;
+            case SyntaxKind.JsxComponentDirective:
+                return checkJsxComponentDirective(node as JsxComponentDirective, checkMode);
+            case SyntaxKind.JsxLabeledFragment:
+                return checkJsxLabeledFragment(node as JsxLabeledFragment, checkMode);
             case SyntaxKind.JsxAttributes:
                 return checkJsxAttributes(node as JsxAttributes, checkMode);
             case SyntaxKind.JsxOpeningElement:
@@ -50427,7 +50673,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         const children = (isJsxElement(node) || isJsxFragment(node)) ? node.children : undefined;
         if (children) {
             for (const child of children) {
-                if (child.kind === SyntaxKind.JsxBlock) return true;
+                if (child.kind === SyntaxKind.JsxRunDirective) return true;
                 if (child.kind === SyntaxKind.JsxExpression && (child as JsxExpression).expression) return true;
                 if (isJsxElement(child) || isJsxSelfClosingElement(child) || isJsxFragment(child) || child.kind === SyntaxKind.JsxIfDirective) {
                     if (jsxHasDynamicContent(child as JsxElement | JsxSelfClosingElement | JsxFragment)) return true;
@@ -51607,6 +51853,17 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 }
                 // no other meta properties are valid syntax, thus no others should have symbols
                 return undefined;
+            } else if (parent.kind === SyntaxKind.JsxLabeledFragment && (parent as JsxLabeledFragment).label === node) {
+                const container = parent.parent;
+                switch (container.kind) {
+                    case SyntaxKind.JsxElement:
+                    case SyntaxKind.JsxFragment:
+                    case SyntaxKind.JsxIfDirective:
+                    case SyntaxKind.JsxElseDirective:
+                    case SyntaxKind.JsxLabeledFragment: 
+                        const t = getJsxChildrenType(container as JsxElement | JsxFragment | JsxIfDirective | JsxElseDirective | JsxLabeledFragment);
+                        return getPropertyOfType(t, (node as Identifier).escapedText);
+                }
             }
         }
 

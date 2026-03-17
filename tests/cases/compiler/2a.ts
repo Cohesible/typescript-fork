@@ -586,7 +586,7 @@ const d4 = <div><#if (cond)></></div>
 
         // do 
         const el2 = <div>
-            <#block>
+            <#run>
                 console.log('hi')
             </>
         </div>
@@ -852,7 +852,7 @@ const d4 = <div><#if (cond)></></div>
     // b can be seen within the tree, but not outside
     ;<div @ a>
         <div @ b></div>
-        <#block>
+        <#run>
             console.log(a, b)
         </>
     </div>
@@ -919,6 +919,7 @@ const d4 = <div><#if (cond)></></div>
 {
     // do not parse this as JSX, we should only see '> expected'
     const m = new Map<string, Promise<string
+    // >
 }
 
 // --- component directive ---
@@ -1043,9 +1044,9 @@ const d4 = <div><#if (cond)></></div>
 // --- WIP: explicit (JSX) resource management ---
 // - repurposes `using` so that disposable objects behave intuitively in JSX contexts
 // - the behavior is slightly different based on the containing directive:
-//    * <#block> disposers are ran in LIFO order across the entire static tree before `update` proceeds
+//    * <#run> disposers are ran in LIFO order across the entire static tree before `update` proceeds
 //    * component body disposers are ran when the element itself is disposed. This is usually manually or via `using` itself
-// - `using` cannot used in JSX context beyond the top-level scope of a <#block> or component bodies
+// - `using` cannot used in JSX context beyond the top-level scope of a <#run> or component bodies
 // - any `using` binding means that the tree root becomes disposable
 // - components used directly in the tree syntax likewise contribute a disposer if needed
 // - will likely _not_ use `Symbol.dispose` but rather a different symbol for tree roots. 
@@ -1065,7 +1066,7 @@ const d4 = <div><#if (cond)></></div>
 //      }>
 //        <div>i am {id}</div>
 //      </>
-//      <#block>
+//      <#run>
 //        using c = <Comp/>
 //      </>
 //     {c}
@@ -1082,10 +1083,111 @@ const d4 = <div><#if (cond)></></div>
 // that has the dispose symbol method in their type, even if optional,
 // supports the `using` syntax?
 //
-// TBD: emit diagnostic for `defer` statement in immediate #block scopes?
+// TBD: emit diagnostic for `defer` statement in immediate #run scopes?
 
 
 
+
+{
+    <#component Foo(x: string)>
+        <div>{x}</div>
+    </>
+    const r1 = <Foo x="hi" />
+    // Foo is typed as (props: { x: string }) => HTMLDivElement
+
+    ;<#component Bar(x: string)>
+        <div>{x}</div>
+        <div>{x}</div>
+    </>
+    const r2 = <Bar x="hi" />
+
+    ;<#component Baz(x: string): HTMLDivElement>
+        <div>{x}</div>
+    </>
+    const r3 = <Baz x="hi" />
+
+    ;<#component WithOpt(x: string, y?: number)>
+        <div>{x}</div>
+    </>
+    const r4a = <WithOpt x="hi" />       // ok
+    const r4b = <WithOpt x="hi" y={1} /> // ok
+}
+
+{
+    // expression form
+    const Expr = <#component(x: string): HTMLDivElement>
+        <div>{x}</div>
+    </>
+    // Expr is (props: { x: string }) => HTMLDivElement
+    const r5 = <Expr x="hello" />
+}
+
+{
+    // component with init body
+    <#component WithBody(x: string) {
+        const y = `hello: ${x}`
+    }>
+        <div>{y}</div>
+    </>
+    const r6 = <WithBody x="world" />
+}
+
+{
+    <#component BadReturn(x: string) {
+        return x
+    }>
+        <div>{x}</div>
+    </>
+}
+
+{
+    // plain labeled fragment
+    <#component Foo(children: { content: [string, string] })>
+        <div>{...children.content}</div>
+    </>
+    const r_lf1 = <Foo>
+        <:content>hi{'there'}</>
+    </Foo>
+
+    // callable labeled fragment
+    ;<#component Bar(children: { item: (val: string) => [HTMLSpanElement] })>
+        <div>{...children.item("test")}</div>
+    </>
+    const r_lf2 = <Bar>
+        <:item(val: string)><span>{val}</span></>
+    </Bar>
+
+    // contextual typingg
+    ;<#component Ctx(children: { slot: (n: number, s: string) => [HTMLDivElement] })>
+        <div>{...children.slot(1, 'hi')}</div>
+    </>
+    const r_ctx = <Ctx>
+        <:slot(n, s)><div>{n.toFixed()}{s.toUpperCase()}</div></>
+    </Ctx>
+
+    ;<#component Ctx2(children: { slot: (s: string) => [string] })>
+        <div>{...children.slot('hi')}</div>
+    </>
+    const r_ctx2 = <Ctx2>
+        <:slot(s)>{s}</>
+    </Ctx2>
+
+    const r_ctx3 = <Ctx2>
+        {...{
+            slot: s => <>{s}</>
+        }}
+    </Ctx2>
+
+    const r_dup = <Foo>
+        <:content>hi{'there'}</>
+        <:content>oh{'no'}</>
+    </Foo>
+
+    const r_mix = <Foo>
+        <div>hi</div>
+        <:content>there{'!'}</>
+    </Foo>
+}
 
 // /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a
 

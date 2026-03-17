@@ -3033,13 +3033,29 @@
         "category": "Error",
         "code": 95202
     },
-    "Auto-await is ambiguous: '{0}' returns '{1}' which is also directly assignable to the expected type. Use 'await' or 'as async' to be explicit.": {
+    "'{0}' returns '{1}' which is also directly assignable to the expected type. Use 'await' or 'as async'.": {
         "category": "Error",
         "code": 95203
     },
     "Async call to '{0}' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.": {
         "category": "Error",
         "code": 95204
+    },
+    "Return statement is not allowed in component directive body": {
+        "category": "Error",
+        "code": 95205
+    },
+    "Named children must be used consistently: either all children must be labeled fragments or none.": {
+        "category": "Error",
+        "code": 95206
+    },
+    "Duplicate labeled fragment ':{0}'.": {
+        "category": "Error",
+        "code": 95207
+    },
+    "Spread always overwrites explicit labeled fragment ':{0}'.": {
+        "category": "Error",
+        "code": 95208
     },
     "'{0}' is defined as an accessor in class '{1}', but is overridden here in '{2}' as an instance property.": {
         "category": "Error",

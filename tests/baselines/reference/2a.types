@@ -1999,12 +1999,12 @@ const d2 = <input {value}/>
 const d3 = <div>
 >d3 : HTMLDivElement
 >   : ^^^^^^^^^^^^^^
-><div>  <#if {true}>     <div></div>  </></div> : HTMLDivElement
+><div>  <#if (true)>     <div></div>  </></div> : HTMLDivElement
 >                                               : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 
-  <#if {true}>
+  <#if (true)>
 >true : true
 >     : ^^^^
 
@@ -2027,10 +2027,10 @@ const cond = true
 >true : true
 >     : ^^^^
 
-const d4 = <div><#if {cond}></></div>
+const d4 = <div><#if (cond)></></div>
 >d4 : HTMLDivElement
 >   : ^^^^^^^^^^^^^^
-><div><#if {cond}></></div> : HTMLDivElement
+><div><#if (cond)></></div> : HTMLDivElement
 >                           : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
@@ -2054,12 +2054,12 @@ const d4 = <div><#if {cond}></></div>
     const d = <div>
 >d : HTMLDivElement
 >  : ^^^^^^^^^^^^^^
-><div>        <#if {v}>          <div>{v.x()}</div>        </>    </div> : HTMLDivElement
+><div>        <#if (v)>          <div>{v.x()}</div>        </>    </div> : HTMLDivElement
 >                                                                        : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 
-        <#if {v}>
+        <#if (v)>
 >v : { x: () => number; } | undefined
 >  : ^^^^^            ^^^^^^^^^^^^^^^
 
@@ -2316,16 +2316,16 @@ const d4 = <div><#if {cond}></></div>
 >el : HTMLDivElement
 >   : ^^^^^^^^^^^^^^
 
-        // blocks 
+        // do 
         const el2 = <div>
 >el2 : HTMLDivElement
 >    : ^^^^^^^^^^^^^^
-><div>            <#block>                console.log('hi')            </>        </div> : HTMLDivElement
->                                                                                        : ^^^^^^^^^^^^^^
+><div>            <#run>                console.log('hi')            </>        </div> : HTMLDivElement
+>                                                                                      : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 
-            <#block>
+            <#run>
                 console.log('hi')
 >console.log('hi') : void
 >                  : ^^^^
@@ -3059,7 +3059,6 @@ const d4 = <div><#if {cond}></></div>
 
 }
 
-// TODO:
 {
     async function foo() {
 >foo : () => Promise<number>
@@ -3435,8 +3434,8 @@ const d4 = <div><#if {cond}></></div>
 {
     // b can be seen within the tree, but not outside
     ;<div @ a>
-><div @ a>        <div @ b></div>        <#block>            console.log(a, b)        </>    </div> : HTMLDivElement
->                                                                                                   : ^^^^^^^^^^^^^^
+><div @ a>        <div @ b></div>        <#run>            console.log(a, b)        </>    </div> : HTMLDivElement
+>                                                                                                 : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 >a : HTMLDivElement
@@ -3452,7 +3451,7 @@ const d4 = <div><#if {cond}></></div>
 >div : any
 >    : ^^^
 
-        <#block>
+        <#run>
             console.log(a, b)
 >console.log(a, b) : void
 >                  : ^^^^
@@ -3713,7 +3712,7 @@ const d4 = <div><#if {cond}></></div>
 >     : ^^^^
 
     // [] | [HtmlDivElement]
-    const if1 = <#if {cond}>
+    const if1 = <#if (cond)>
 >if1 : [] | [HTMLDivElement]
 >    : ^^^^^^^^^^^^^^^^^^^^^
 >cond : boolean
@@ -3729,7 +3728,7 @@ const d4 = <div><#if {cond}></></div>
 
     </>
     // [HtmlDivElement]
-    const if2 = <#if {true}>
+    const if2 = <#if (true)>
 >if2 : [HTMLDivElement]
 >    : ^^^^^^^^^^^^^^^^
 >true : true
@@ -3745,7 +3744,7 @@ const d4 = <div><#if {cond}></></div>
 
     </>
     // []
-    const if3 = <#if {false}>
+    const if3 = <#if (false)>
 >if3 : []
 >    : ^^
 >false : false
@@ -3771,6 +3770,694 @@ const d4 = <div><#if {cond}></></div>
 >                               : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >Map : MapConstructor
 >    : ^^^^^^^^^^^^^^
+
+    // >
+}
+
+// --- component directive ---
+// - essentially parsed as a fn declaration within the opening tag
+//  * body is optional
+//  * empty body with no trivia inside `{}` should be diagnostic in checker: remove dead code
+//  * using `return` produces a checker diagnostic, prefer throw if needing to bail out
+// - similar to Flow's `component` declaration syntax; the params correspond to fields of `props` in fn components
+// - its children become the return type with one exception: truly singular elements (intrinics/components) are kept singular
+//  * this is true even if the component has block directives as siblings to the root
+// - `Foo` is accessible in the current scope as a normal symbol like any other function declaration
+// - when used as an expression, it behaves like a function expression, name can be elided
+//
+// <#component Foo(x: string) {
+//   // component init code, runs once
+//   const y = `hello: ${x}`
+// }>
+//   <div>{y}</div>
+// </> 
+//
+// <Foo x="hi" />
+//
+// <#component Foo2(x: string): [HTMLDivElement, HTMLDivElement]>
+//   <div>{x}</div>
+//   <div>{x}</div>
+// </> 
+//
+// <...Foo2 x="hi" />
+//
+// <#component Foo(x: string): HTMLDivElement>
+//   <div />
+// </>
+//
+// const Foo = <#component(x: string): HTMLDivElement>
+//   <div />
+// </>
+//
+// Foo is then typed as `(props: { x: string }) => HTMLDivElement`
+//
+//
+//
+// --- named children via `<:name>` aka labeled fragments ---
+// - only works for components
+// - children are passed as a record instead of an array
+// - all or nothing: if any children are named, all must be named.
+//
+// <#component Foo(children: { x: [string] })>
+//   <div>{children.x[0]}</div>
+// </> 
+//
+// <Foo>
+//   <:x>
+//      hi
+//   </>
+// </Foo>
+//
+//
+// --- callable fragments (similar to Svelte's "snippets") ---
+// - labeled fragments can be annotated with parameters, parsed as normal fn param list, turning it into a function
+// - callee observes a function producing a fragment e.g. v => <>{v}</>
+// - caller observes retained identity after materialization
+//   * a callable fragment does **not** produce new elements on subsequent calls beyond whatever JSX expressions produce
+// - `update` does not cascade into callable fragments directly, rather, they are updated when the component is
+//   * this is because callable fragments are essentially callbacks
+// - labeled fragments cannot use element name syntax in their opening element
+//   * callable fragments create new element name scopes, same as `#if` directives
+// - callable fragments are intentionally _not_ components. They are explicit, parameterized patch points.
+// - a callable, labeled fragments are analogous to JS method syntax for object literals
+//
+// <#component Foo<T>(v: T, children: { x: (v: T) => [string] })>
+//   <div>{...children.x(v)}</div>
+// </> 
+//
+// <Foo v="hi">
+//   <:x(v)>
+//      {v}
+//   </>
+// </Foo>
+//
+//
+// --- approximate desugar, if :x were elided, #init is not real directive but represents init statements ---
+// <:x>
+//     <#init> 
+//         let el, el_v
+//     </>
+//     {v => { 
+//         el_v = v 
+//         if (!el) { 
+//             el = <>{v}</>
+//         } else { 
+//             update el 
+//         } 
+//         return el 
+//     }} 
+// </>
+//
+// <:x(v)>
+//  <div @ d />
+// </>
+//
+// <:y>
+//  <div @ d />
+// </>
+//
+// `d` is not accessible outside of `:x` but is accessible outside of `:y`
+//
+// You can pass in computed/dynamic named children using spread. 
+// The following is almost identical to `<:x(v)>{v}</>` except it creates a new closure and fragment on every update:
+//
+// <Foo v="hi">
+//  {...{ x: v => <>{v}</> }}
+// </Foo>
+//
+//
+// --- WIP: unlabeled callable fragments ---
+// - callable fragments can be used without labels, analogous to arrow function expressions
+// - they appear as `<(...params)> </>`
+// - cannot appear as a child of an intrinsic
+//
+//
+//
+// --- WIP: explicit (JSX) resource management ---
+// - repurposes `using` so that disposable objects behave intuitively in JSX contexts
+// - the behavior is slightly different based on the containing directive:
+//    * <#run> disposers are ran in LIFO order across the entire static tree before `update` proceeds
+//    * component body disposers are ran when the element itself is disposed. This is usually manually or via `using` itself
+// - `using` cannot used in JSX context beyond the top-level scope of a <#run> or component bodies
+// - any `using` binding means that the tree root becomes disposable
+// - components used directly in the tree syntax likewise contribute a disposer if needed
+// - will likely _not_ use `Symbol.dispose` but rather a different symbol for tree roots. 
+//      * `using` will work on both symbols in JSX context, with the new one taking priority
+// - adds global `drop` function for easier manual clean-up, this simply calls the dispose method 
+// - TBD: enable `using` in JSX contexts to tolerate disposables of type `() => void`
+//      * useful for adhoc disposers and aligns with the ecosystem convention for returning functions as disposers
+//      * checker enforces operand evaluates into `() => void` and only `() => void` to mitigate unintentional usage e.g. a disposer with an optional param
+//
+//
+// let counter = 0
+// const x = <div>
+//      <#component Comp() {
+//         const id = counter++
+//         using disposables = new DisposableStack()
+//         disposables.defer(() => console.log(`disposed ${id}`))
+//      }>
+//        <div>i am {id}</div>
+//      </>
+//      <#run>
+//        using c = <Comp/>
+//      </>
+//     {c}
+//   </div>
+//
+// update x // 'disposed 0'
+// drop(x) // 'disposed 1'
+// 
+// using `update` on dropped/disposed elements results in runtime exception
+//
+//
+// TBD: should inference add `Disposable` to types explicitly via
+// intersection, or should it be closer to `update` where anything
+// that has the dispose symbol method in their type, even if optional,
+// supports the `using` syntax?
+//
+// TBD: emit diagnostic for `defer` statement in immediate #run scopes?
+
+
+
+
+{
+    // basic named component - singular child infers singular return type
+    <#component Foo(x: string)>
+>Foo : any
+>    : ^^^
+>x : string
+>  : ^^^^^^
+
+        <div>{x}</div>
+><div>{x}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>x : string
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+    const r1 = <Foo x="hi" />
+>r1 : Element
+>   : ^^^^^^^
+><Foo x="hi" /> : Element
+>               : ^^^^^^^
+>Foo : (props: { x: string; }) => HTMLDivElement
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x : string
+>  : ^^^^^^
+
+    // Foo is typed as (props: { x: string }) => HTMLDivElement
+
+    // multiple children - tuple return type
+    ;<#component Bar(x: string)>
+>Bar : any
+>    : ^^^
+>x : string
+>  : ^^^^^^
+
+        <div>{x}</div>
+><div>{x}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>x : string
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+        <div>{x}</div>
+><div>{x}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>x : string
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+    const r2 = <Bar x="hi" />
+>r2 : Element
+>   : ^^^^^^^
+><Bar x="hi" /> : Element
+>               : ^^^^^^^
+>Bar : (props: { x: string; }) => [HTMLDivElement, HTMLDivElement]
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x : string
+>  : ^^^^^^
+
+    // Bar returns [HTMLDivElement, HTMLDivElement]
+
+    // explicit return type annotation
+    ;<#component Baz(x: string): HTMLDivElement>
+>Baz : any
+>    : ^^^
+>x : string
+>  : ^^^^^^
+
+        <div>{x}</div>
+><div>{x}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>x : string
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+    const r3 = <Baz x="hi" />
+>r3 : Element
+>   : ^^^^^^^
+><Baz x="hi" /> : Element
+>               : ^^^^^^^
+>Baz : (props: { x: string; }) => HTMLDivElement
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x : string
+>  : ^^^^^^
+
+    // optional param becomes optional prop
+    ;<#component WithOpt(x: string, y?: number)>
+>WithOpt : any
+>        : ^^^
+>x : string
+>  : ^^^^^^
+>y : number | undefined
+>  : ^^^^^^^^^^^^^^^^^^
+
+        <div>{x}</div>
+><div>{x}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>x : string
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+    const r4a = <WithOpt x="hi" />       // ok — y is optional
+>r4a : Element
+>    : ^^^^^^^
+><WithOpt x="hi" /> : Element
+>                   : ^^^^^^^
+>WithOpt : (props: { x: string; y?: number | undefined; }) => HTMLDivElement
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x : string
+>  : ^^^^^^
+
+    const r4b = <WithOpt x="hi" y={1} /> // ok
+>r4b : Element
+>    : ^^^^^^^
+><WithOpt x="hi" y={1} /> : Element
+>                         : ^^^^^^^
+>WithOpt : (props: { x: string; y?: number | undefined; }) => HTMLDivElement
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x : string
+>  : ^^^^^^
+>y : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+}
+
+{
+    // expression form — name elided, assigned via const
+    const Expr = <#component(x: string): HTMLDivElement>
+>Expr : (props: { x: string; }) => HTMLDivElement
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x : string
+>  : ^^^^^^
+
+        <div>{x}</div>
+><div>{x}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>x : string
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+    // Expr is (props: { x: string }) => HTMLDivElement
+    const r5 = <Expr x="hello" />
+>r5 : Element
+>   : ^^^^^^^
+><Expr x="hello" /> : Element
+>                   : ^^^^^^^
+>Expr : (props: { x: string; }) => HTMLDivElement
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x : string
+>  : ^^^^^^
+}
+
+{
+    // component with init body
+    <#component WithBody(x: string) {
+>WithBody : any
+>         : ^^^
+>x : string
+>  : ^^^^^^
+
+        const y = `hello: ${x}`
+>y : string
+>  : ^^^^^^
+>`hello: ${x}` : string
+>              : ^^^^^^
+>x : string
+>  : ^^^^^^
+
+    }>
+        <div>{y}</div>
+><div>{y}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>y : string
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+    const r6 = <WithBody x="world" />
+>r6 : Element
+>   : ^^^^^^^
+><WithBody x="world" /> : Element
+>                       : ^^^^^^^
+>WithBody : (props: { x: string; }) => HTMLDivElement
+>         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x : string
+>  : ^^^^^^
+}
+
+{
+    // return in init body is a diagnostic
+    <#component BadReturn(x: string) {
+>BadReturn : any
+>          : ^^^
+>x : string
+>  : ^^^^^^
+
+        return x // error: return not allowed in component body
+>x : string
+>  : ^^^^^^
+
+    }>
+        <div>{x}</div>
+><div>{x}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>x : string
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+}
+
+{
+    // component declares `children` as a typed record; caller provides labeled fragments
+
+    // plain labeled fragment — caller passes named children as record
+    <#component Foo(children: { content: [string, string] })>
+>Foo : any
+>    : ^^^
+>children : { content: [string, string]; }
+>         : ^^^^^^^^^^^                ^^^
+>content : [string, string]
+>        : ^^^^^^^^^^^^^^^^
+
+        <div>{...children.content}</div>
+><div>{...children.content}</div> : HTMLDivElement
+>                                 : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>children.content : [string, string]
+>                 : ^^^^^^^^^^^^^^^^
+>children : { content: [string, string]; }
+>         : ^^^^^^^^^^^                ^^^
+>content : [string, string]
+>        : ^^^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+    const r_lf1 = <Foo>
+>r_lf1 : Element
+>      : ^^^^^^^
+><Foo>        <:content>hi{'there'}</>    </Foo> : Element
+>                                                : ^^^^^^^
+>Foo : (props: { children: { content: [string, string]; }; }) => HTMLDivElement
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        <:content>hi{'there'}</>
+>content : any
+>        : ^^^
+>'there' : "there"
+>        : ^^^^^^^
+
+    </Foo>
+>Foo : (props: { children: { content: [string, string]; }; }) => HTMLDivElement
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    // callable labeled fragment — label maps to a function in the children record
+    ;<#component Bar(children: { item: (val: string) => [HTMLSpanElement] })>
+>Bar : any
+>    : ^^^
+>children : { item: (val: string) => [HTMLSpanElement]; }
+>         : ^^^^^^^^                                  ^^^
+>item : (val: string) => [HTMLSpanElement]
+>     : ^   ^^      ^^^^^                 
+>val : string
+>    : ^^^^^^
+
+        <div>{...children.item("test")}</div>
+><div>{...children.item("test")}</div> : HTMLDivElement
+>                                      : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>children.item("test") : [HTMLSpanElement]
+>                      : ^^^^^^^^^^^^^^^^^
+>children.item : (val: string) => [HTMLSpanElement]
+>              : ^   ^^      ^^^^^                 
+>children : { item: (val: string) => [HTMLSpanElement]; }
+>         : ^^^^^^^^                                  ^^^
+>item : (val: string) => [HTMLSpanElement]
+>     : ^   ^^      ^^^^^                 
+>"test" : "test"
+>       : ^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+    const r_lf2 = <Bar>
+>r_lf2 : Element
+>      : ^^^^^^^
+><Bar>        <:item(val: string)><span>{val}</span></>    </Bar> : Element
+>                                                                 : ^^^^^^^
+>Bar : (props: { children: { item: (val: string) => [HTMLSpanElement]; }; }) => HTMLDivElement
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        <:item(val: string)><span>{val}</span></>
+>item : any
+>     : ^^^
+>val : string
+>    : ^^^^^^
+><span>{val}</span> : HTMLSpanElement
+>                   : ^^^^^^^^^^^^^^^
+>span : any
+>     : ^^^
+>val : string
+>    : ^^^^^^
+>span : any
+>     : ^^^
+
+    </Bar>
+>Bar : (props: { children: { item: (val: string) => [HTMLSpanElement]; }; }) => HTMLDivElement
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    // contextual typing: unannotated params infer type from parent component's children declaration
+    ;<#component Ctx(children: { slot: (n: number, s: string) => [HTMLDivElement] })>
+>Ctx : any
+>    : ^^^
+>children : { slot: (n: number, s: string) => [HTMLDivElement]; }
+>         : ^^^^^^^^                                          ^^^
+>slot : (n: number, s: string) => [HTMLDivElement]
+>     : ^ ^^      ^^ ^^      ^^^^^                
+>n : number
+>  : ^^^^^^
+>s : string
+>  : ^^^^^^
+
+        <div>{...children.slot(1, 'hi')}</div>
+><div>{...children.slot(1, 'hi')}</div> : HTMLDivElement
+>                                       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>children.slot(1, 'hi') : [HTMLDivElement]
+>                       : ^^^^^^^^^^^^^^^^
+>children.slot : (n: number, s: string) => [HTMLDivElement]
+>              : ^ ^^      ^^ ^^      ^^^^^                
+>children : { slot: (n: number, s: string) => [HTMLDivElement]; }
+>         : ^^^^^^^^                                          ^^^
+>slot : (n: number, s: string) => [HTMLDivElement]
+>     : ^ ^^      ^^ ^^      ^^^^^                
+>1 : 1
+>  : ^
+>'hi' : "hi"
+>     : ^^^^
+>div : any
+>    : ^^^
+
+    </>
+    const r_ctx = <Ctx>
+>r_ctx : Element
+>      : ^^^^^^^
+><Ctx>        <:slot(n, s)><div>{n.toFixed()}{s.toUpperCase()}</div></>    </Ctx> : Element
+>                                                                                 : ^^^^^^^
+>Ctx : (props: { children: { slot: (n: number, s: string) => [HTMLDivElement]; }; }) => HTMLDivElement
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        <:slot(n, s)><div>{n.toFixed()}{s.toUpperCase()}</div></>
+>slot : any
+>     : ^^^
+>n : number
+>  : ^^^^^^
+>s : string
+>  : ^^^^^^
+><div>{n.toFixed()}{s.toUpperCase()}</div> : HTMLDivElement
+>                                          : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>n.toFixed() : string
+>            : ^^^^^^
+>n.toFixed : (fractionDigits?: number) => string
+>          : ^              ^^^      ^^^^^      
+>n : number
+>  : ^^^^^^
+>toFixed : (fractionDigits?: number) => string
+>        : ^              ^^^      ^^^^^      
+>s.toUpperCase() : string
+>                : ^^^^^^
+>s.toUpperCase : () => string
+>              : ^^^^^^      
+>s : string
+>  : ^^^^^^
+>toUpperCase : () => string
+>            : ^^^^^^      
+>div : any
+>    : ^^^
+
+    </Ctx>
+>Ctx : (props: { children: { slot: (n: number, s: string) => [HTMLDivElement]; }; }) => HTMLDivElement
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    ;<#component Ctx2(children: { slot: (s: string) => [string] })>
+>Ctx2 : any
+>     : ^^^
+>children : { slot: (s: string) => [string]; }
+>         : ^^^^^^^^                       ^^^
+>slot : (s: string) => [string]
+>     : ^ ^^      ^^^^^        
+>s : string
+>  : ^^^^^^
+
+        <div>{...children.slot('hi')}</div>
+><div>{...children.slot('hi')}</div> : HTMLDivElement
+>                                    : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>children.slot('hi') : [string]
+>                    : ^^^^^^^^
+>children.slot : (s: string) => [string]
+>              : ^ ^^      ^^^^^        
+>children : { slot: (s: string) => [string]; }
+>         : ^^^^^^^^                       ^^^
+>slot : (s: string) => [string]
+>     : ^ ^^      ^^^^^        
+>'hi' : "hi"
+>     : ^^^^
+>div : any
+>    : ^^^
+
+    </>
+    const r_ctx2 = <Ctx2>
+>r_ctx2 : Element
+>       : ^^^^^^^
+><Ctx2>        <:slot(s)>{s}</>    </Ctx2> : Element
+>                                          : ^^^^^^^
+>Ctx2 : (props: { children: { slot: (s: string) => [string]; }; }) => HTMLDivElement
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        <:slot(s)>{s}</>
+>slot : any
+>     : ^^^
+>s : string
+>  : ^^^^^^
+>s : string
+>  : ^^^^^^
+
+    </Ctx2>
+>Ctx2 : (props: { children: { slot: (s: string) => [string]; }; }) => HTMLDivElement
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+    // duplicate label at call site — error
+    const r_dup = <Foo>
+>r_dup : Element
+>      : ^^^^^^^
+><Foo>        <:content>hi{'there'}</>        <:content>oh{'no'}</>    </Foo> : Element
+>                                                                             : ^^^^^^^
+>Foo : (props: { children: { content: [string, string]; }; }) => HTMLDivElement
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        <:content>hi{'there'}</>
+>content : any
+>        : ^^^
+>'there' : "there"
+>        : ^^^^^^^
+
+        <:content>oh{'no'}</>
+>content : any
+>        : ^^^
+>'no' : "no"
+>     : ^^^^
+
+    </Foo>
+>Foo : (props: { children: { content: [string, string]; }; }) => HTMLDivElement
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    // all-or-nothing violation at call site — error
+    const r_mix = <Foo>
+>r_mix : Element
+>      : ^^^^^^^
+><Foo>        <div>hi</div>        <:content>there{'!'}</>    </Foo> : Element
+>                                                                    : ^^^^^^^
+>Foo : (props: { children: { content: [string, string]; }; }) => HTMLDivElement
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        <div>hi</div>
+><div>hi</div> : HTMLDivElement
+>              : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+        <:content>there{'!'}</>
+>content : any
+>        : ^^^
+>'!' : "!"
+>    : ^^^
+
+    </Foo>
+>Foo : (props: { children: { content: [string, string]; }; }) => HTMLDivElement
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^^^^^^^^^
 }
 
 // /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a

@@ -4395,7 +4395,7 @@ function getCompletionData(
                 return location.parent.kind !== SyntaxKind.JsxElseDirective;
             }
 
-            if (contextToken.parent.kind === SyntaxKind.JsxBlock) {
+            if (contextToken.parent.kind === SyntaxKind.JsxRunDirective) {
                 return false;
             }
 

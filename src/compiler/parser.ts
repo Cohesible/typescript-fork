@@ -228,7 +228,9 @@ import {
     JsxClosingElement,
     JsxClosingFragment,
     JsxElement,
-    JsxBlock,
+    JsxRunDirective,
+    JsxComponentDirective,
+    JsxLabeledFragment,
     JsxExpression,
     JsxFragment,
     JsxElseDirective,
@@ -1080,8 +1082,21 @@ const forEachChildTable: ForEachChildTable = {
     [SyntaxKind.JsxElseDirective]: function forEachChildInJsxElseDirective<T>(node: JsxElseDirective, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNodes(cbNode, cbNodes, node.children);
     },
-    [SyntaxKind.JsxBlock]: function forEachChildInJsxBlock<T>(node: JsxBlock, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+    [SyntaxKind.JsxRunDirective]: function forEachChildInJsxRunDirective<T>(node: JsxRunDirective, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNodes(cbNode, cbNodes, node.statements);
+    },
+    [SyntaxKind.JsxComponentDirective]: function forEachChildInJsxComponentDirective<T>(node: JsxComponentDirective, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+        return visitNode(cbNode, node.name) ||
+            visitNodes(cbNode, cbNodes, node.typeParameters) ||
+            visitNodes(cbNode, cbNodes, node.parameters) ||
+            visitNode(cbNode, node.type) ||
+            visitNode(cbNode, node.body) ||
+            visitNodes(cbNode, cbNodes, node.children);
+    },
+    [SyntaxKind.JsxLabeledFragment]: function forEachChildInJsxLabeledFragment<T>(node: JsxLabeledFragment, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+        return visitNode(cbNode, node.label) ||
+            visitNodes(cbNode, cbNodes, node.parameters) ||
+            visitNodes(cbNode, cbNodes, node.children);
     },
     [SyntaxKind.OptionalType]: forEachChildInOptionalRestOrJSDocParameterModifier,
     [SyntaxKind.RestType]: forEachChildInOptionalRestOrJSDocParameterModifier,
@@ -2891,7 +2906,7 @@ namespace Parser {
         }
 
         switch (parsingContext) {
-            case ParsingContext.JsxBlockStatements:
+            case ParsingContext.JsxRunDirectiveStatements:
             case ParsingContext.SourceElements:
             case ParsingContext.BlockStatements:
             case ParsingContext.SwitchClauseStatements:
@@ -3095,7 +3110,7 @@ namespace Parser {
                 return token() === SyntaxKind.OpenBraceToken || token() === SyntaxKind.CloseBraceToken;
             case ParsingContext.JsxAttributes:
                 return token() === SyntaxKind.GreaterThanToken || token() === SyntaxKind.SlashToken;
-            case ParsingContext.JsxBlockStatements:
+            case ParsingContext.JsxRunDirectiveStatements:
                 if (token() === SyntaxKind.LessThanSlashToken) return true;
                 // falls through
             case ParsingContext.JsxChildren:
@@ -3535,7 +3550,7 @@ namespace Parser {
                 return parseErrorAtCurrentToken(Diagnostics.Identifier_expected);
             case ParsingContext.JsxChildren:
                 return parseErrorAtCurrentToken(Diagnostics.Identifier_expected);
-            case ParsingContext.JsxBlockStatements:
+            case ParsingContext.JsxRunDirectiveStatements:
                 return parseErrorAtCurrentToken(Diagnostics.Declaration_or_statement_expected);
             case ParsingContext.ImportAttributes:
                 return parseErrorAtCurrentToken(Diagnostics.Identifier_or_string_literal_expected);
@@ -5736,6 +5751,13 @@ namespace Parser {
                 break;
             }
 
+            // ASI for JSX directives:
+            //   const y = foo()
+            //   <#component Bar()>...
+            if (token() === SyntaxKind.LessThanToken && scanner.hasPrecedingLineBreak() && scriptKind === ScriptKind.Syn && lookAhead(() => nextToken() === SyntaxKind.PrivateIdentifier)) {
+                break;
+            }
+
             if (token() === SyntaxKind.AsKeyword || token() === SyntaxKind.SatisfiesKeyword || token() === SyntaxKind.IsKeyword) {
                 // Make sure we *do* perform ASI for constructs like this:
                 //    var x = foo
@@ -6198,6 +6220,9 @@ namespace Parser {
             if (lookAhead(() => nextToken() === SyntaxKind.PrivateIdentifier)) {
                 return parseJsxDirective(openingTag);
             }
+            if (lookAhead(() => nextToken() === SyntaxKind.ColonToken)) {
+                return parseJsxLabeledFragment(openingTag);
+            }
         }
         return parseJsxElementOrSelfClosingElementOrFragment(inExpressionContext, topInvalidNodePosition, openingTag, mustBeUnary);
     }
@@ -6269,7 +6294,7 @@ namespace Parser {
         // of one sort or another.
         // If we are in a unary context, we can't do this recovery; the binary expression we return here is not
         // a valid UnaryExpression and will cause problems later.
-        if (!mustBeUnary && inExpressionContext && token() === SyntaxKind.LessThanToken) {
+        if (!mustBeUnary && inExpressionContext && token() === SyntaxKind.LessThanToken && !lookAhead(() => nextToken() === SyntaxKind.PrivateIdentifier)) {
             const topBadPos = typeof topInvalidNodePosition === "undefined" ? result.pos : topInvalidNodePosition;
             const invalidElement = tryParse(() => parseJsxElementOrSelfClosingElementOrFragment(/*inExpressionContext*/ true, topBadPos));
             if (invalidElement) {
@@ -6319,7 +6344,7 @@ namespace Parser {
                     nextToken();
                     return scanner.hasPrecedingLineBreak();
                 })) {
-                    return parseJsxBlock();
+                    return parseJsxRunDirective();
                 }
                 return parseJsxExpression(/*inExpressionContext*/ false);
             case SyntaxKind.LessThanToken:
@@ -6329,14 +6354,14 @@ namespace Parser {
         }
     }
 
-    function parseJsxBlock(): JsxBlock {
+    function parseJsxRunDirective(): JsxRunDirective {
         const pos = getNodePos();
         parseExpected(SyntaxKind.OpenBraceToken);
         const statements = parseList(ParsingContext.BlockStatements, parseStatement);
         if (parseExpected(SyntaxKind.CloseBraceToken, /*diagnosticMessage*/ undefined, /*shouldAdvance*/ false)) {
             scanJsxText();
         }
-        return finishNode(factory.createJsxBlock(statements), pos);
+        return finishNode(factory.createJsxRunDirective(statements), pos);
     }
 
     function parseJsxChildren(openingTag: JsxOpeningElement | JsxOpeningFragment): NodeArray<JsxChild> {
@@ -6597,7 +6622,7 @@ namespace Parser {
         return finishNode(factory.createJsxJsxClosingFragment(), pos);
     }
 
-    function parseDirectiveEnd(tagName: PrivateIdentifier, inExpressionContext: boolean) {
+    function parseDirectiveEnd(tagName: Identifier | PrivateIdentifier, inExpressionContext: boolean) {
         const endPos = getNodePos();
         let hasError = false;
         if (token() === SyntaxKind.LessThanSlashToken && lookAhead(() => {
@@ -6623,7 +6648,7 @@ namespace Parser {
 
     function parseJsxDirectiveBody(
         pos: number,
-        tagName: PrivateIdentifier,
+        tagName: Identifier | PrivateIdentifier,
         openingTag: JsxOpeningElement | JsxOpeningFragment | undefined
     ) {
         parseExpected(SyntaxKind.GreaterThanToken, /*diagnosticMessage*/ undefined, /*shouldAdvance*/ false);
@@ -6659,12 +6684,26 @@ namespace Parser {
                 if (hasError) (n as Mutable<typeof n>).flags |= NodeFlags.ThisNodeHasError;
                 return n;
             }
-            case '#block': {
+            case '#run': {
                 const pos = getNodePos();
                 parseExpected(SyntaxKind.GreaterThanToken);
-                const statements = parseList(ParsingContext.JsxBlockStatements, parseStatement);
+                const statements = parseList(ParsingContext.JsxRunDirectiveStatements, parseStatement);
                 const { hasError } = parseDirectiveEnd(tagName, !openingTag);
-                const n = finishNode(factory.createJsxBlock(statements), pos);
+                const n = finishNode(factory.createJsxRunDirective(statements), pos);
+                if (hasError) (n as Mutable<typeof n>).flags |= NodeFlags.ThisNodeHasError;
+                return n;
+            }
+            case '#component': {
+                const compName = token() === SyntaxKind.Identifier ? parseIdentifier() : undefined;
+                const typeParameters = parseTypeParameters();
+                const openParenPos = getNodePos();
+                const openParenParsed = parseExpected(SyntaxKind.OpenParenToken);
+                const parameters = parseParametersWorker(SignatureFlags.None, /*allowAmbiguity*/ true);
+                parseExpectedMatchingBrackets(SyntaxKind.OpenParenToken, SyntaxKind.CloseParenToken, openParenParsed, openParenPos);
+                const type = parseReturnType(SyntaxKind.ColonToken, /*isType*/ false);
+                const body = token() === SyntaxKind.OpenBraceToken ? parseBlock(/*ignoreMissingOpenBrace*/ false) : undefined;
+                const { children, hasError } = parseJsxDirectiveBody(pos, tagName, openingTag);
+                const n = finishNode(factory.createJsxComponentDirective(compName, typeParameters, parameters, type, body, children), pos);
                 if (hasError) (n as Mutable<typeof n>).flags |= NodeFlags.ThisNodeHasError;
                 return n;
             }
@@ -6674,6 +6713,24 @@ namespace Parser {
         const { children, endPos } = parseJsxDirectiveBody(pos, tagName, openingTag);
         const close = finishNode(factory.createJsxClosingElement(factory.createIdentifier("")), endPos);
         return factory.createJsxElement(open, children, close);
+    }
+
+    function parseJsxLabeledFragment(openingTag: JsxOpeningElement | JsxOpeningFragment | undefined) {
+        const pos = getNodePos();
+        parseExpected(SyntaxKind.LessThanToken);
+        parseExpected(SyntaxKind.ColonToken);
+        const label = parseIdentifier();
+        let parameters: NodeArray<ParameterDeclaration> | undefined;
+        if (token() === SyntaxKind.OpenParenToken) {
+            const openParenPos = getNodePos();
+            const openParenParsed = parseExpected(SyntaxKind.OpenParenToken);
+            parameters = parseParametersWorker(SignatureFlags.None, /*allowAmbiguity*/ true);
+            parseExpectedMatchingBrackets(SyntaxKind.OpenParenToken, SyntaxKind.CloseParenToken, openParenParsed, openParenPos);
+        }
+        const { children, hasError } = parseJsxDirectiveBody(pos, label, openingTag);
+        const n = finishNode(factory.createJsxLabeledFragment(label, parameters, children), pos);
+        if (hasError) (n as Mutable<typeof n>).flags |= NodeFlags.ThisNodeHasError;
+        return n;
     }
 
     function finishJsxIfDirective(
@@ -9187,7 +9244,7 @@ namespace Parser {
         ObjectLiteralMembers,      // Members in object literal
         JsxAttributes,             // Attributes in jsx element
         JsxChildren,               // Things between opening and closing JSX tags
-        JsxBlockStatements,
+        JsxRunDirectiveStatements,
         ArrayLiteralMembers,       // Members in array literal
         Parameters,                // Parameters in parameter list
         JSDocParameters,           // JSDoc parameters in parameter list of JSDoc function type

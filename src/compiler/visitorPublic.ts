@@ -50,11 +50,12 @@ import {
     isJsxAttributeName,
     isJsxAttributes,
     isJsxChild,
-    JsxBlock,
+    JsxRunDirective,
+    JsxComponentDirective,
+    JsxLabeledFragment,
     isJsxClosingElement,
     isJsxClosingFragment,
     JsxElseDirective,
-    isJsxExpression,
     isJsxOpeningElement,
     isJsxOpeningFragment,
     isJsxTagNameExpression,
@@ -1732,10 +1733,29 @@ const visitEachChildTable: VisitEachChildTable = {
             nodesVisitor((node as JsxElseDirective).children, visitor, isJsxChild),
         );
     },
-    [SyntaxKind.JsxBlock]: function visitEachChildOfJsxBlock(node, visitor, context, nodesVisitor, _nodeVisitor, _tokenVisitor) {
-        return context.factory.updateJsxBlock(
-            node as JsxBlock,
-            nodesVisitor((node as JsxBlock).statements, visitor, isStatement),
+    [SyntaxKind.JsxRunDirective]: function visitEachChildOfJsxRunDirective(node, visitor, context, nodesVisitor, _nodeVisitor, _tokenVisitor) {
+        return context.factory.updateJsxRunDirective(
+            node as JsxRunDirective,
+            nodesVisitor((node as JsxRunDirective).statements, visitor, isStatement),
+        );
+    },
+    [SyntaxKind.JsxComponentDirective]: function visitEachChildOfJsxComponentDirective(node, visitor, context, nodesVisitor, nodeVisitor, _tokenVisitor) {
+        return context.factory.updateJsxComponentDirective(
+            node as JsxComponentDirective,
+            nodeVisitor((node as JsxComponentDirective).name, visitor, isIdentifier),
+            nodesVisitor((node as JsxComponentDirective).typeParameters, visitor, isTypeParameterDeclaration),
+            nodesVisitor((node as JsxComponentDirective).parameters, visitor, isParameter),
+            nodeVisitor((node as JsxComponentDirective).type, visitor, isTypeNode),
+            nodeVisitor((node as JsxComponentDirective).body, visitor, isBlock),
+            nodesVisitor((node as JsxComponentDirective).children, visitor, isJsxChild),
+        );
+    },
+    [SyntaxKind.JsxLabeledFragment]: function visitEachChildOfJsxLabeledFragment(node, visitor, context, nodesVisitor, nodeVisitor, _tokenVisitor) {
+        return context.factory.updateJsxLabeledFragment(
+            node as JsxLabeledFragment,
+            Debug.checkDefined(nodeVisitor((node as JsxLabeledFragment).label, visitor, isIdentifier)),
+            nodesVisitor((node as JsxLabeledFragment).parameters, visitor, isParameter),
+            nodesVisitor((node as JsxLabeledFragment).children, visitor, isJsxChild),
         );
     },
 

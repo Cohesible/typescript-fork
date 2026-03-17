@@ -382,7 +382,9 @@ export const enum SyntaxKind {
     JsxNamespacedName,
     JsxIfDirective,
     JsxElseDirective,
-    JsxBlock,
+    JsxRunDirective,
+    JsxComponentDirective,
+    JsxLabeledFragment,
 
     // Clauses
     CaseClause,
@@ -1210,7 +1212,9 @@ export type HasChildren =
     | JsxNamespacedName
     | JsxIfDirective
     | JsxElseDirective
-    | JsxBlock
+    | JsxRunDirective
+    | JsxComponentDirective
+    | JsxLabeledFragment
     | CaseClause
     | CaseIsClause
     | DefaultClause
@@ -1466,7 +1470,9 @@ export type IsContainer =
     | ConstructorTypeNode
     | ClassStaticBlockDeclaration
     | FunctionExpression
-    | ArrowFunction;
+    | ArrowFunction
+    | JsxComponentDirective
+    | JsxLabeledFragment;
 
 /**
  * Nodes that introduce a new block scope. Corresponds with `ContainerFlags.IsBlockScopedContainer` in binder.ts.
@@ -1573,6 +1579,8 @@ export type HasLocals =
     | MappedTypeNode
     | MethodDeclaration
     | MethodSignature
+    | JsxComponentDirective
+    | JsxLabeledFragment
     | ModuleDeclaration
     | SetAccessorDeclaration
     | SourceFile
@@ -3333,9 +3341,28 @@ export interface JsxElseDirective extends PrimaryExpression {
     /** @internal */ elseFlowNode?: FlowNode // used by the binder
 }
 
-export interface JsxBlock extends PrimaryExpression {
-    readonly kind: SyntaxKind.JsxBlock;
+export interface JsxRunDirective extends PrimaryExpression {
+    readonly kind: SyntaxKind.JsxRunDirective;
     readonly statements: NodeArray<Statement>;
+}
+
+export interface JsxComponentDirective extends PrimaryExpression, LocalsContainer {
+    readonly kind: SyntaxKind.JsxComponentDirective;
+    readonly name?: Identifier;
+    readonly typeParameters?: NodeArray<TypeParameterDeclaration>;
+    readonly parameters: NodeArray<ParameterDeclaration>;
+    readonly type?: TypeNode;
+    readonly body?: Block;
+    readonly children: NodeArray<JsxChild>;
+    /** @internal */ symbol: Symbol; // set by binder when named
+}
+
+export interface JsxLabeledFragment extends PrimaryExpression, LocalsContainer {
+    readonly kind: SyntaxKind.JsxLabeledFragment;
+    readonly label: Identifier;
+    readonly parameters?: NodeArray<ParameterDeclaration>;
+    readonly children: NodeArray<JsxChild>;
+    /** @internal */ symbol: Symbol;
 }
 
 /// The opening element of a <>...</> JsxFragment
@@ -3398,13 +3425,16 @@ export type JsxChild =
     | JsxFragment
     | JsxIfDirective
     | JsxElseDirective
-    | JsxBlock;
+    | JsxRunDirective
+    | JsxComponentDirective
+    | JsxLabeledFragment;
 
 export type JsxContainer =
     | JsxElement
     | JsxFragment
     | JsxIfDirective
-    | JsxElseDirective;
+    | JsxElseDirective
+    | JsxComponentDirective;
 
 export interface Statement extends Node, JSDocContainer {
     _statementBrand: any;
@@ -6391,6 +6421,7 @@ export interface NodeLinks {
     resolvedType?: Type;                // Cached type of type node
     resolvedSignature?: Signature;      // Cached signature of signature node or call expression
     resolvedSymbol?: Symbol;            // Cached name resolution result
+    resolvedJsxChildren?: Type;         // Cached type for JSX children
     effectsSignature?: Signature;       // Signature with possible control flow effects
     enumMemberValue?: EvaluatorResult;  // Constant value of enum member
     isVisible?: boolean;                // Is this node visible
@@ -9368,8 +9399,12 @@ export interface NodeFactory {
     updateJsxIfDirective(node: JsxIfDirective, condition: Expression, children: readonly JsxChild[]): JsxIfDirective;
     createJsxElseDirective(children: readonly JsxChild[]): JsxElseDirective;
     updateJsxElseDirective(node: JsxElseDirective, children: readonly JsxChild[]): JsxElseDirective;
-    createJsxBlock(statements: readonly Statement[]): JsxBlock;
-    updateJsxBlock(node: JsxBlock, statements: readonly Statement[]): JsxBlock;
+    createJsxRunDirective(statements: readonly Statement[]): JsxRunDirective;
+    updateJsxRunDirective(node: JsxRunDirective, statements: readonly Statement[]): JsxRunDirective;
+    createJsxComponentDirective(name: Identifier | undefined, typeParameters: readonly TypeParameterDeclaration[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode | undefined, body: Block | undefined, children: readonly JsxChild[]): JsxComponentDirective;
+    updateJsxComponentDirective(node: JsxComponentDirective, name: Identifier | undefined, typeParameters: readonly TypeParameterDeclaration[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode | undefined, body: Block | undefined, children: readonly JsxChild[]): JsxComponentDirective;
+    createJsxLabeledFragment(label: Identifier, parameters: readonly ParameterDeclaration[] | undefined, children: readonly JsxChild[]): JsxLabeledFragment;
+    updateJsxLabeledFragment(node: JsxLabeledFragment, label: Identifier, parameters: readonly ParameterDeclaration[] | undefined, children: readonly JsxChild[]): JsxLabeledFragment;
 
     //
     // Clauses

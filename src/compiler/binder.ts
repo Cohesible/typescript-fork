@@ -129,7 +129,8 @@ import {
     idText,
     IfStatement,
     ImportClause,
-    JsxBlock,
+    JsxRunDirective,
+    JsxComponentDirective,
     JsxElseDirective,
     JsxIfDirective,
     InternalSymbolName,
@@ -328,11 +329,11 @@ import {
     WhileStatement,
     WithStatement,
     CaseIsClause,
-    JsxExpression,
     JsxElement,
     JsxSelfClosingElement,
     getJsxElementNameContainer,
     findJsxElseDirective,
+    JsxLabeledFragment,
 } from "./_namespaces/ts.js";
 import * as performance from "./_namespaces/ts.performance.js";
 
@@ -1154,8 +1155,14 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             case SyntaxKind.JsxElseDirective:
                 bindJsxElseDirective(node as JsxElseDirective);
                 break;
-            case SyntaxKind.JsxBlock:
-                bindEach((node as JsxBlock).statements);
+            case SyntaxKind.JsxRunDirective:
+                bindEach((node as JsxRunDirective).statements);
+                break;
+            case SyntaxKind.JsxComponentDirective:
+                bindJsxComponentDirective(node as JsxComponentDirective);
+                break;
+            case SyntaxKind.JsxLabeledFragment:
+                bindEachChild(node);
                 break;
             case SyntaxKind.JsxElement:
                 bindEachChild(node);
@@ -1672,11 +1679,6 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
     }
 
     function bindJsxIfDirective(node: JsxIfDirective): void {
-        if (!node.condition) {
-            bind(node.condition);
-            bindEach(node.children);
-            return;
-        }
         const elseClause = findJsxElseDirective(node);
         const thenLabel = createBranchLabel();
         const elseLabel = createBranchLabel();
@@ -1691,6 +1693,10 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
         }
         addAntecedent(postLabel, currentFlow);
         currentFlow = finishFlowLabel(postLabel);
+    }
+
+    function bindJsxComponentDirective(node: JsxComponentDirective): void {
+        bindEachChild(node);
     }
 
     function bindJsxElseDirective(node: JsxElseDirective): void {
@@ -2470,6 +2476,8 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             case SyntaxKind.ClassStaticBlockDeclaration:
             case SyntaxKind.TypeAliasDeclaration:
             case SyntaxKind.MappedType:
+            case SyntaxKind.JsxComponentDirective:
+            case SyntaxKind.JsxLabeledFragment:
                 // All the children of these container types are never visible through another
                 // symbol (i.e. through another symbol's 'exports' or 'members').  Instead,
                 // they're only accessed 'lexically' (i.e. from code that exists underneath
@@ -3156,6 +3164,11 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                 return bindPropertyOrMethodOrAccessor(node as Declaration, SymbolFlags.Method | ((node as MethodDeclaration).questionToken ? SymbolFlags.Optional : SymbolFlags.None), isObjectLiteralMethod(node) ? SymbolFlags.PropertyExcludes : SymbolFlags.MethodExcludes);
             case SyntaxKind.FunctionDeclaration:
                 return bindFunctionDeclaration(node as FunctionDeclaration);
+            case SyntaxKind.JsxComponentDirective:
+                if ((node as JsxComponentDirective).name) {
+                    bindBlockScopedDeclaration(node as unknown as Declaration, SymbolFlags.Function, SymbolFlags.FunctionExcludes);
+                }
+                return;
             case SyntaxKind.Constructor:
                 return declareSymbolAndAddToSymbolTable(node as Declaration, SymbolFlags.Constructor, /*symbolExcludes:*/ SymbolFlags.None);
             case SyntaxKind.GetAccessor:
@@ -4134,6 +4147,14 @@ export function getContainerFlags(node: Node): ContainerFlags {
         case SyntaxKind.JsxElseDirective:
             return ContainerFlags.IsBlockScopedContainer | ContainerFlags.HasLocals;
 
+        case SyntaxKind.JsxLabeledFragment:
+            if (!(node as JsxLabeledFragment).parameters) {
+                break
+            }
+            // falls through
+        case SyntaxKind.JsxComponentDirective:
+            return ContainerFlags.IsContainer | ContainerFlags.IsControlFlowContainer | ContainerFlags.HasLocals;
+
         case SyntaxKind.IfStatement:
         case SyntaxKind.WhileStatement:
         case SyntaxKind.SwitchStatement:
@@ -4162,7 +4183,7 @@ export function getContainerFlags(node: Node): ContainerFlags {
             // By not creating a new block-scoped-container here, we ensure that both 'var x'
             // and 'let x' go into the Function-container's locals, and we do get a collision
             // conflict.
-            return isFunctionLike(node.parent) || isClassStaticBlockDeclaration(node.parent) ? ContainerFlags.None : ContainerFlags.IsBlockScopedContainer | ContainerFlags.HasLocals;
+            return isFunctionLike(node.parent) || isClassStaticBlockDeclaration(node.parent) || node.parent.kind === SyntaxKind.JsxComponentDirective ? ContainerFlags.None : ContainerFlags.IsBlockScopedContainer | ContainerFlags.HasLocals;
     }
 
     return ContainerFlags.None;

@@ -396,8 +396,10 @@ import {
     JsonSourceFile,
     JsxAttributeName,
     JsxChild,
+    JsxComponentDirective,
+    JsxLabeledFragment,
     JsxElement,
-    JsxBlock,
+    JsxRunDirective,
     JsxEmit,
     JsxElseDirective,
     JsxFragment,
@@ -3696,6 +3698,7 @@ export function isInExpressionContext(node: Node): boolean {
         case SyntaxKind.Decorator:
         case SyntaxKind.JsxExpression:
         case SyntaxKind.JsxSpreadAttribute:
+        case SyntaxKind.JsxIfDirective:
         case SyntaxKind.SpreadAssignment:
             return true;
         case SyntaxKind.ExpressionWithTypeArguments:
@@ -5066,11 +5069,17 @@ export function getJsxElementNameContainer(node: Node): Node | undefined {
         switch (n.kind) {
             case SyntaxKind.JsxExpression:
                 return el;
+            case SyntaxKind.JsxLabeledFragment:
+                if ((n as JsxLabeledFragment).parameters) {
+                    return n;
+                }
+                // falls through
             case SyntaxKind.JsxElement:
             case SyntaxKind.JsxFragment:
             case SyntaxKind.JsxSelfClosingElement:
                 el = n
                 break;
+            case SyntaxKind.JsxComponentDirective:
             case SyntaxKind.JsxIfDirective:
             case SyntaxKind.JsxElseDirective:
             case SyntaxKind.SourceFile:
@@ -5091,7 +5100,7 @@ export function getJsxElementNameContainer(node: Node): Node | undefined {
 }
 
 export function findJsxElseDirective(node: JsxIfDirective): JsxElseDirective | undefined {
-    if (node.parent.kind === SyntaxKind.JsxElement || node.parent.kind === SyntaxKind.JsxIfDirective || node.parent.kind === SyntaxKind.JsxElseDirective) {
+    if (node.parent.kind === SyntaxKind.JsxElement || node.parent.kind === SyntaxKind.JsxIfDirective || node.parent.kind === SyntaxKind.JsxElseDirective || node.parent.kind === SyntaxKind.JsxComponentDirective) {
         const children = (node.parent as JsxIfDirective).children;
         const index = children.indexOf(node)
         if (index === -1) return
@@ -10873,9 +10882,11 @@ export function getContainingNodeArray(node: Node): NodeArray<Node> | undefined 
         case SyntaxKind.JsxFragment:
         case SyntaxKind.JsxIfDirective:
         case SyntaxKind.JsxElseDirective:
-            return isJsxChild(node) ? (parent as JsxElement | JsxFragment | JsxIfDirective | JsxElseDirective).children : undefined;
-        case SyntaxKind.JsxBlock:
-            return isStatement(node) ? (parent as JsxBlock).statements : undefined;
+        case SyntaxKind.JsxComponentDirective:
+        case SyntaxKind.JsxLabeledFragment:
+            return isJsxChild(node) ? (parent as JsxElement | JsxFragment | JsxIfDirective | JsxElseDirective | JsxComponentDirective | JsxLabeledFragment).children : undefined;
+        case SyntaxKind.JsxRunDirective:
+            return isStatement(node) ? (parent as JsxRunDirective).statements : undefined;
         case SyntaxKind.JsxOpeningElement:
         case SyntaxKind.JsxSelfClosingElement:
             return isTypeNode(node) ? (parent as JsxOpeningElement | JsxSelfClosingElement).typeArguments : undefined;

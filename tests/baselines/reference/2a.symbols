@@ -1154,7 +1154,7 @@ const d3 = <div>
 >d3 : Symbol(d3, Decl(main.syn, 508, 5))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
-  <#if {true}>
+  <#if (true)>
      <div></div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
@@ -1166,7 +1166,7 @@ const d3 = <div>
 const cond = true
 >cond : Symbol(cond, Decl(main.syn, 514, 5))
 
-const d4 = <div><#if {cond}></></div>
+const d4 = <div><#if (cond)></></div>
 >d4 : Symbol(d4, Decl(main.syn, 515, 5))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >cond : Symbol(cond, Decl(main.syn, 514, 5))
@@ -1183,7 +1183,7 @@ const d4 = <div><#if {cond}></></div>
 >d : Symbol(d, Decl(main.syn, 520, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
-        <#if {v}>
+        <#if (v)>
 >v : Symbol(v, Decl(main.syn, 519, 7))
 
           <div>{v.x()}</div>
@@ -1319,12 +1319,12 @@ const d4 = <div><#if {cond}></></div>
         update el // ok
 >el : Symbol(el, Decl(main.syn, 574, 13))
 
-        // blocks 
+        // do 
         const el2 = <div>
 >el2 : Symbol(el2, Decl(main.syn, 580, 13))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
-            <#block>
+            <#run>
                 console.log('hi')
 >console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
 >console : Symbol(console, Decl(lib.dom.d.ts, --, --))
@@ -1708,99 +1708,98 @@ const d4 = <div><#if {cond}></></div>
 
 }
 
-// TODO:
 {
     async function foo() {
->foo : Symbol(foo, Decl(main.syn, 745, 1))
+>foo : Symbol(foo, Decl(main.syn, 744, 1))
 
         return 1 as number
     }
 
     function sync() {
->sync : Symbol(sync, Decl(main.syn, 748, 5))
+>sync : Symbol(sync, Decl(main.syn, 747, 5))
 
         const p = foo() as async // OK
->p : Symbol(p, Decl(main.syn, 751, 13))
->foo : Symbol(foo, Decl(main.syn, 745, 1))
+>p : Symbol(p, Decl(main.syn, 750, 13))
+>foo : Symbol(foo, Decl(main.syn, 744, 1))
 >async : Symbol(async)
 
         const p2 = foo() // checker error
->p2 : Symbol(p2, Decl(main.syn, 752, 13))
->foo : Symbol(foo, Decl(main.syn, 745, 1))
+>p2 : Symbol(p2, Decl(main.syn, 751, 13))
+>foo : Symbol(foo, Decl(main.syn, 744, 1))
 
         foo() as async // OK
->foo : Symbol(foo, Decl(main.syn, 745, 1))
+>foo : Symbol(foo, Decl(main.syn, 744, 1))
 >async : Symbol(async)
 
         foo() // checker error
->foo : Symbol(foo, Decl(main.syn, 745, 1))
+>foo : Symbol(foo, Decl(main.syn, 744, 1))
 
         // `await` is still an error inside sync context
         await p
->p : Symbol(p, Decl(main.syn, 751, 13))
+>p : Symbol(p, Decl(main.syn, 750, 13))
     }
 
     async function _async() {
->_async : Symbol(_async, Decl(main.syn, 758, 5))
+>_async : Symbol(_async, Decl(main.syn, 757, 5))
 
         const v = foo()
->v : Symbol(v, Decl(main.syn, 761, 13))
->foo : Symbol(foo, Decl(main.syn, 745, 1))
+>v : Symbol(v, Decl(main.syn, 760, 13))
+>foo : Symbol(foo, Decl(main.syn, 744, 1))
 
         await v // await without a Promise in the type is treated as a possible mistake 
->v : Symbol(v, Decl(main.syn, 761, 13))
+>v : Symbol(v, Decl(main.syn, 760, 13))
 
         // but superfluous awaits are OK
         await foo()
->foo : Symbol(foo, Decl(main.syn, 745, 1))
+>foo : Symbol(foo, Decl(main.syn, 744, 1))
     }
 
     async function bar() {
->bar : Symbol(bar, Decl(main.syn, 765, 5))
+>bar : Symbol(bar, Decl(main.syn, 764, 5))
 
         return 2
     }
 
     function f8<T>(p: Promise<T> | T): void {}
->f8 : Symbol(f8, Decl(main.syn, 769, 5))
->T : Symbol(T, Decl(main.syn, 771, 16))
->p : Symbol(p, Decl(main.syn, 771, 19))
+>f8 : Symbol(f8, Decl(main.syn, 768, 5))
+>T : Symbol(T, Decl(main.syn, 770, 16))
+>p : Symbol(p, Decl(main.syn, 770, 19))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
->T : Symbol(T, Decl(main.syn, 771, 16))
->T : Symbol(T, Decl(main.syn, 771, 16))
+>T : Symbol(T, Decl(main.syn, 770, 16))
+>T : Symbol(T, Decl(main.syn, 770, 16))
 
     f8(bar()) // error, ambiguous, use `await` or `as async`
->f8 : Symbol(f8, Decl(main.syn, 769, 5))
->bar : Symbol(bar, Decl(main.syn, 765, 5))
+>f8 : Symbol(f8, Decl(main.syn, 768, 5))
+>bar : Symbol(bar, Decl(main.syn, 764, 5))
 
     function f9() {
->f9 : Symbol(f9, Decl(main.syn, 772, 13))
+>f9 : Symbol(f9, Decl(main.syn, 771, 13))
 
         function f(p1: Promise<number>, p2: Promise<number>) {}
->f : Symbol(f, Decl(main.syn, 774, 19))
->p1 : Symbol(p1, Decl(main.syn, 775, 19))
+>f : Symbol(f, Decl(main.syn, 773, 19))
+>p1 : Symbol(p1, Decl(main.syn, 774, 19))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
->p2 : Symbol(p2, Decl(main.syn, 775, 39))
+>p2 : Symbol(p2, Decl(main.syn, 774, 39))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 
         // both calls require `as async`
         // we do not consider parameter types to be "explicitly typed" for auto-await
         // because then the callee signature influences caller behavior, possibly interleaving calls
         f(bar(), bar()) 
->f : Symbol(f, Decl(main.syn, 774, 19))
->bar : Symbol(bar, Decl(main.syn, 765, 5))
->bar : Symbol(bar, Decl(main.syn, 765, 5))
+>f : Symbol(f, Decl(main.syn, 773, 19))
+>bar : Symbol(bar, Decl(main.syn, 764, 5))
+>bar : Symbol(bar, Decl(main.syn, 764, 5))
     }
 
     // this one is subtle: we require `as async` regardless of the return type annotation
     // adding `async` to the fn declaration would otherwise catch rejections
     function foo2(): Promise<number>  {
->foo2 : Symbol(foo2, Decl(main.syn, 780, 5))
+>foo2 : Symbol(foo2, Decl(main.syn, 779, 5))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 
         try {
             return bar() // error, needs `as async`
->bar : Symbol(bar, Decl(main.syn, 765, 5))
+>bar : Symbol(bar, Decl(main.syn, 764, 5))
 
         } catch {
             return Promise.resolve(0)
@@ -1811,18 +1810,18 @@ const d4 = <div><#if {cond}></></div>
     }
 
     async function foo3() {
->foo3 : Symbol(foo3, Decl(main.syn, 790, 5))
+>foo3 : Symbol(foo3, Decl(main.syn, 789, 5))
 
         // we (unfortunately) special-case `Promise.resolve` and `Promise.resolve` for auto-await
         // they should not be awaited because they are, effectively, constructors
         const x1 = Promise.resolve(0) // Promise<number>
->x1 : Symbol(x1, Decl(main.syn, 795, 13))
+>x1 : Symbol(x1, Decl(main.syn, 794, 13))
 >Promise.resolve : Symbol(PromiseConstructor.resolve, Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 >resolve : Symbol(PromiseConstructor.resolve, Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --))
 
         const x2 = Promise.reject(0) // Promise<number>
->x2 : Symbol(x2, Decl(main.syn, 796, 13))
+>x2 : Symbol(x2, Decl(main.syn, 795, 13))
 >Promise.reject : Symbol(PromiseConstructor.reject, Decl(lib.es2015.promise.d.ts, --, --))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 >reject : Symbol(PromiseConstructor.reject, Decl(lib.es2015.promise.d.ts, --, --))
@@ -1831,109 +1830,109 @@ const d4 = <div><#if {cond}></></div>
 
 {
     async function getValue() { return 42 }
->getValue : Symbol(getValue, Decl(main.syn, 800, 1))
+>getValue : Symbol(getValue, Decl(main.syn, 799, 1))
 
     async function testAutoAwait() {
->testAutoAwait : Symbol(testAutoAwait, Decl(main.syn, 801, 43))
+>testAutoAwait : Symbol(testAutoAwait, Decl(main.syn, 800, 43))
 
         const v = getValue()  // number
->v : Symbol(v, Decl(main.syn, 803, 13))
->getValue : Symbol(getValue, Decl(main.syn, 800, 1))
+>v : Symbol(v, Decl(main.syn, 802, 13))
+>getValue : Symbol(getValue, Decl(main.syn, 799, 1))
     }
 
     declare function fetchNum(): Promise<number>
->fetchNum : Symbol(fetchNum, Decl(main.syn, 804, 5))
+>fetchNum : Symbol(fetchNum, Decl(main.syn, 803, 5))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 
     async function testDeclared() {
->testDeclared : Symbol(testDeclared, Decl(main.syn, 806, 48))
+>testDeclared : Symbol(testDeclared, Decl(main.syn, 805, 48))
 
         const n = fetchNum()  // number
->n : Symbol(n, Decl(main.syn, 808, 13))
->fetchNum : Symbol(fetchNum, Decl(main.syn, 804, 5))
+>n : Symbol(n, Decl(main.syn, 807, 13))
+>fetchNum : Symbol(fetchNum, Decl(main.syn, 803, 5))
     }
 
     declare function passThrough<T>(x: T): T
->passThrough : Symbol(passThrough, Decl(main.syn, 809, 5))
->T : Symbol(T, Decl(main.syn, 811, 33))
->x : Symbol(x, Decl(main.syn, 811, 36))
->T : Symbol(T, Decl(main.syn, 811, 33))
->T : Symbol(T, Decl(main.syn, 811, 33))
+>passThrough : Symbol(passThrough, Decl(main.syn, 808, 5))
+>T : Symbol(T, Decl(main.syn, 810, 33))
+>x : Symbol(x, Decl(main.syn, 810, 36))
+>T : Symbol(T, Decl(main.syn, 810, 33))
+>T : Symbol(T, Decl(main.syn, 810, 33))
 
     async function testPassThrough() {
->testPassThrough : Symbol(testPassThrough, Decl(main.syn, 811, 44))
+>testPassThrough : Symbol(testPassThrough, Decl(main.syn, 810, 44))
 
         const p: Promise<number> = Promise.resolve(1)
->p : Symbol(p, Decl(main.syn, 813, 13))
+>p : Symbol(p, Decl(main.syn, 812, 13))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 >Promise.resolve : Symbol(PromiseConstructor.resolve, Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 >resolve : Symbol(PromiseConstructor.resolve, Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --))
 
         const r = passThrough(p)  // Promise<number>, not number
->r : Symbol(r, Decl(main.syn, 814, 13))
->passThrough : Symbol(passThrough, Decl(main.syn, 809, 5))
->p : Symbol(p, Decl(main.syn, 813, 13))
+>r : Symbol(r, Decl(main.syn, 813, 13))
+>passThrough : Symbol(passThrough, Decl(main.syn, 808, 5))
+>p : Symbol(p, Decl(main.syn, 812, 13))
     }
 
     declare function memoize<T extends () => any>(fn: T): T
->memoize : Symbol(memoize, Decl(main.syn, 815, 5))
->T : Symbol(T, Decl(main.syn, 817, 29))
->fn : Symbol(fn, Decl(main.syn, 817, 50))
->T : Symbol(T, Decl(main.syn, 817, 29))
->T : Symbol(T, Decl(main.syn, 817, 29))
+>memoize : Symbol(memoize, Decl(main.syn, 814, 5))
+>T : Symbol(T, Decl(main.syn, 816, 29))
+>fn : Symbol(fn, Decl(main.syn, 816, 50))
+>T : Symbol(T, Decl(main.syn, 816, 29))
+>T : Symbol(T, Decl(main.syn, 816, 29))
 
     async function testMemoize() {
->testMemoize : Symbol(testMemoize, Decl(main.syn, 817, 59))
+>testMemoize : Symbol(testMemoize, Decl(main.syn, 816, 59))
 
         async function inner() { return 1 }
->inner : Symbol(inner, Decl(main.syn, 818, 34))
+>inner : Symbol(inner, Decl(main.syn, 817, 34))
 
         const m = memoize(inner)
->m : Symbol(m, Decl(main.syn, 820, 13))
->memoize : Symbol(memoize, Decl(main.syn, 815, 5))
->inner : Symbol(inner, Decl(main.syn, 818, 34))
+>m : Symbol(m, Decl(main.syn, 819, 13))
+>memoize : Symbol(memoize, Decl(main.syn, 814, 5))
+>inner : Symbol(inner, Decl(main.syn, 817, 34))
 
         const v = m()  // number
->v : Symbol(v, Decl(main.syn, 821, 13))
->m : Symbol(m, Decl(main.syn, 820, 13))
+>v : Symbol(v, Decl(main.syn, 820, 13))
+>m : Symbol(m, Decl(main.syn, 819, 13))
     }
 }
 
 // async return type elision
 {
     async function elided(): number { return 1 }
->elided : Symbol(elided, Decl(main.syn, 826, 1))
+>elided : Symbol(elided, Decl(main.syn, 825, 1))
 
     async function testElided() {
->testElided : Symbol(testElided, Decl(main.syn, 827, 48))
+>testElided : Symbol(testElided, Decl(main.syn, 826, 48))
 
         const v = elided()  // number
->v : Symbol(v, Decl(main.syn, 829, 13))
->elided : Symbol(elided, Decl(main.syn, 826, 1))
+>v : Symbol(v, Decl(main.syn, 828, 13))
+>elided : Symbol(elided, Decl(main.syn, 825, 1))
     }
 
     async function explicit(): Promise<number> { return 1 }
->explicit : Symbol(explicit, Decl(main.syn, 830, 5))
+>explicit : Symbol(explicit, Decl(main.syn, 829, 5))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 
     async function testExplicit() {
->testExplicit : Symbol(testExplicit, Decl(main.syn, 832, 59))
+>testExplicit : Symbol(testExplicit, Decl(main.syn, 831, 59))
 
         const v = explicit()  // number
->v : Symbol(v, Decl(main.syn, 834, 13))
->explicit : Symbol(explicit, Decl(main.syn, 830, 5))
+>v : Symbol(v, Decl(main.syn, 833, 13))
+>explicit : Symbol(explicit, Decl(main.syn, 829, 5))
     }
 
     async function inferred() { return 1 }
->inferred : Symbol(inferred, Decl(main.syn, 835, 5))
+>inferred : Symbol(inferred, Decl(main.syn, 834, 5))
 
     async function testInferred() {
->testInferred : Symbol(testInferred, Decl(main.syn, 837, 42))
+>testInferred : Symbol(testInferred, Decl(main.syn, 836, 42))
 
         const v = inferred()  // number
->v : Symbol(v, Decl(main.syn, 839, 13))
->inferred : Symbol(inferred, Decl(main.syn, 835, 5))
+>v : Symbol(v, Decl(main.syn, 838, 13))
+>inferred : Symbol(inferred, Decl(main.syn, 834, 5))
     }
 }
 
@@ -1942,20 +1941,20 @@ const d4 = <div><#if {cond}></></div>
     // b can be seen within the tree, but not outside
     ;<div @ a>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->a : Symbol(a, Decl(main.syn, 846, 5))
+>a : Symbol(a, Decl(main.syn, 845, 5))
 
         <div @ b></div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->b : Symbol(b, Decl(main.syn, 847, 8))
+>b : Symbol(b, Decl(main.syn, 846, 8))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
-        <#block>
+        <#run>
             console.log(a, b)
 >console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
 >console : Symbol(console, Decl(lib.dom.d.ts, --, --))
 >log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
->a : Symbol(a, Decl(main.syn, 846, 5))
->b : Symbol(b, Decl(main.syn, 847, 8))
+>a : Symbol(a, Decl(main.syn, 845, 5))
+>b : Symbol(b, Decl(main.syn, 846, 8))
 
         </>
     </div>
@@ -1965,135 +1964,135 @@ const d4 = <div><#if {cond}></></div>
 >console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
 >console : Symbol(console, Decl(lib.dom.d.ts, --, --))
 >log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
->a : Symbol(a, Decl(main.syn, 846, 5))
+>a : Symbol(a, Decl(main.syn, 845, 5))
 
     // trailing bindings should be parsed correctly:
     ;<div id="aaa" @ c />
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->c : Symbol(c, Decl(main.syn, 855, 5))
->id : Symbol(id, Decl(main.syn, 855, 9))
+>c : Symbol(c, Decl(main.syn, 854, 5))
+>id : Symbol(id, Decl(main.syn, 854, 9))
 }
 
 // spread JSX elements
 {
     declare function Comp(): Element[];
->Comp : Symbol(Comp, Decl(main.syn, 859, 1))
+>Comp : Symbol(Comp, Decl(main.syn, 858, 1))
 >Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
 
     const spread1 = <div><...Comp /></div> // ok
->spread1 : Symbol(spread1, Decl(main.syn, 861, 9))
+>spread1 : Symbol(spread1, Decl(main.syn, 860, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->Comp : Symbol(Comp, Decl(main.syn, 859, 1))
+>Comp : Symbol(Comp, Decl(main.syn, 858, 1))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     const noSpread1 = <div><Comp /></div> // error
->noSpread1 : Symbol(noSpread1, Decl(main.syn, 862, 9))
+>noSpread1 : Symbol(noSpread1, Decl(main.syn, 861, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->Comp : Symbol(Comp, Decl(main.syn, 859, 1))
+>Comp : Symbol(Comp, Decl(main.syn, 858, 1))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     // errors on intrinsics
     const spread2 = <div><...div /></div>
->spread2 : Symbol(spread2, Decl(main.syn, 865, 9))
+>spread2 : Symbol(spread2, Decl(main.syn, 864, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     const spread3 = <div><...div></div></div>
->spread3 : Symbol(spread3, Decl(main.syn, 866, 9))
+>spread3 : Symbol(spread3, Decl(main.syn, 865, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     declare function Comp2(): (() => void)[];
->Comp2 : Symbol(Comp2, Decl(main.syn, 866, 45))
+>Comp2 : Symbol(Comp2, Decl(main.syn, 865, 45))
 
     const spread4 = <div><...Comp2 /></div>  // error, intrinsics want something Element-like
->spread4 : Symbol(spread4, Decl(main.syn, 869, 9))
+>spread4 : Symbol(spread4, Decl(main.syn, 868, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->Comp2 : Symbol(Comp2, Decl(main.syn, 866, 45))
+>Comp2 : Symbol(Comp2, Decl(main.syn, 865, 45))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     declare function Comp3(): Element;
->Comp3 : Symbol(Comp3, Decl(main.syn, 869, 43))
+>Comp3 : Symbol(Comp3, Decl(main.syn, 868, 43))
 >Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
 
     const noSpread2 = <div><Comp3 /></div> // ok
->noSpread2 : Symbol(noSpread2, Decl(main.syn, 872, 9))
+>noSpread2 : Symbol(noSpread2, Decl(main.syn, 871, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->Comp3 : Symbol(Comp3, Decl(main.syn, 869, 43))
+>Comp3 : Symbol(Comp3, Decl(main.syn, 868, 43))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     const spread5 = <div><...Comp3 /></div> // error
->spread5 : Symbol(spread5, Decl(main.syn, 873, 9))
+>spread5 : Symbol(spread5, Decl(main.syn, 872, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->Comp3 : Symbol(Comp3, Decl(main.syn, 869, 43))
+>Comp3 : Symbol(Comp3, Decl(main.syn, 868, 43))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     declare function Comp4(props: { children: Element[] }): Element;
->Comp4 : Symbol(Comp4, Decl(main.syn, 873, 43))
->props : Symbol(props, Decl(main.syn, 875, 27))
->children : Symbol(children, Decl(main.syn, 875, 35))
+>Comp4 : Symbol(Comp4, Decl(main.syn, 872, 43))
+>props : Symbol(props, Decl(main.syn, 874, 27))
+>children : Symbol(children, Decl(main.syn, 874, 35))
 >Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
 >Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
 
     // ok
     const spread6 = <Comp4>
->spread6 : Symbol(spread6, Decl(main.syn, 877, 9))
->Comp4 : Symbol(Comp4, Decl(main.syn, 873, 43))
+>spread6 : Symbol(spread6, Decl(main.syn, 876, 9))
+>Comp4 : Symbol(Comp4, Decl(main.syn, 872, 43))
 
       <Comp3 />
->Comp3 : Symbol(Comp3, Decl(main.syn, 869, 43))
+>Comp3 : Symbol(Comp3, Decl(main.syn, 868, 43))
 
       <...Comp />
->Comp : Symbol(Comp, Decl(main.syn, 859, 1))
+>Comp : Symbol(Comp, Decl(main.syn, 858, 1))
 
       <...Comp></Comp>
->Comp : Symbol(Comp, Decl(main.syn, 859, 1))
->Comp : Symbol(Comp, Decl(main.syn, 859, 1))
+>Comp : Symbol(Comp, Decl(main.syn, 858, 1))
+>Comp : Symbol(Comp, Decl(main.syn, 858, 1))
 
     </Comp4>
->Comp4 : Symbol(Comp4, Decl(main.syn, 873, 43))
+>Comp4 : Symbol(Comp4, Decl(main.syn, 872, 43))
 
     // error
     const spread7 = <Comp4>
->spread7 : Symbol(spread7, Decl(main.syn, 884, 9))
->Comp4 : Symbol(Comp4, Decl(main.syn, 873, 43))
+>spread7 : Symbol(spread7, Decl(main.syn, 883, 9))
+>Comp4 : Symbol(Comp4, Decl(main.syn, 872, 43))
 
       <Comp3 />
->Comp3 : Symbol(Comp3, Decl(main.syn, 869, 43))
+>Comp3 : Symbol(Comp3, Decl(main.syn, 868, 43))
 
       <Comp />
->Comp : Symbol(Comp, Decl(main.syn, 859, 1))
+>Comp : Symbol(Comp, Decl(main.syn, 858, 1))
 
     </Comp4>
->Comp4 : Symbol(Comp4, Decl(main.syn, 873, 43))
+>Comp4 : Symbol(Comp4, Decl(main.syn, 872, 43))
 
     declare function Comp5(): [Element] | [];
->Comp5 : Symbol(Comp5, Decl(main.syn, 887, 12))
+>Comp5 : Symbol(Comp5, Decl(main.syn, 886, 12))
 >Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
 
     // ok
     const spread8 = <Comp4>
->spread8 : Symbol(spread8, Decl(main.syn, 891, 9))
->Comp4 : Symbol(Comp4, Decl(main.syn, 873, 43))
+>spread8 : Symbol(spread8, Decl(main.syn, 890, 9))
+>Comp4 : Symbol(Comp4, Decl(main.syn, 872, 43))
 
         <...Comp5 />
->Comp5 : Symbol(Comp5, Decl(main.syn, 887, 12))
+>Comp5 : Symbol(Comp5, Decl(main.syn, 886, 12))
 
     </Comp4>
->Comp4 : Symbol(Comp4, Decl(main.syn, 873, 43))
+>Comp4 : Symbol(Comp4, Decl(main.syn, 872, 43))
 }
 
 {
     const cond = true as boolean
->cond : Symbol(cond, Decl(main.syn, 897, 9))
+>cond : Symbol(cond, Decl(main.syn, 896, 9))
 
     // [] | [HtmlDivElement]
-    const if1 = <#if {cond}>
->if1 : Symbol(if1, Decl(main.syn, 899, 9))
->cond : Symbol(cond, Decl(main.syn, 897, 9))
+    const if1 = <#if (cond)>
+>if1 : Symbol(if1, Decl(main.syn, 898, 9))
+>cond : Symbol(cond, Decl(main.syn, 896, 9))
 
       <div></div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
@@ -2101,8 +2100,8 @@ const d4 = <div><#if {cond}></></div>
 
     </>
     // [HtmlDivElement]
-    const if2 = <#if {true}>
->if2 : Symbol(if2, Decl(main.syn, 903, 9))
+    const if2 = <#if (true)>
+>if2 : Symbol(if2, Decl(main.syn, 902, 9))
 
       <div></div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
@@ -2110,8 +2109,8 @@ const d4 = <div><#if {cond}></></div>
 
     </>
     // []
-    const if3 = <#if {false}>
->if3 : Symbol(if3, Decl(main.syn, 907, 9))
+    const if3 = <#if (false)>
+>if3 : Symbol(if3, Decl(main.syn, 906, 9))
 
       <div></div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
@@ -2123,9 +2122,451 @@ const d4 = <div><#if {cond}></></div>
 {
     // do not parse this as JSX, we should only see '> expected'
     const m = new Map<string, Promise<string
->m : Symbol(m, Decl(main.syn, 914, 9))
+>m : Symbol(m, Decl(main.syn, 913, 9))
 >Map : Symbol(Map, Decl(lib.es2015.collection.d.ts, --, --), Decl(lib.es2015.collection.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
+
+    // >
+}
+
+// --- component directive ---
+// - essentially parsed as a fn declaration within the opening tag
+//  * body is optional
+//  * empty body with no trivia inside `{}` should be diagnostic in checker: remove dead code
+//  * using `return` produces a checker diagnostic, prefer throw if needing to bail out
+// - similar to Flow's `component` declaration syntax; the params correspond to fields of `props` in fn components
+// - its children become the return type with one exception: truly singular elements (intrinics/components) are kept singular
+//  * this is true even if the component has block directives as siblings to the root
+// - `Foo` is accessible in the current scope as a normal symbol like any other function declaration
+// - when used as an expression, it behaves like a function expression, name can be elided
+//
+// <#component Foo(x: string) {
+//   // component init code, runs once
+//   const y = `hello: ${x}`
+// }>
+//   <div>{y}</div>
+// </> 
+//
+// <Foo x="hi" />
+//
+// <#component Foo2(x: string): [HTMLDivElement, HTMLDivElement]>
+//   <div>{x}</div>
+//   <div>{x}</div>
+// </> 
+//
+// <...Foo2 x="hi" />
+//
+// <#component Foo(x: string): HTMLDivElement>
+//   <div />
+// </>
+//
+// const Foo = <#component(x: string): HTMLDivElement>
+//   <div />
+// </>
+//
+// Foo is then typed as `(props: { x: string }) => HTMLDivElement`
+//
+//
+//
+// --- named children via `<:name>` aka labeled fragments ---
+// - only works for components
+// - children are passed as a record instead of an array
+// - all or nothing: if any children are named, all must be named.
+//
+// <#component Foo(children: { x: [string] })>
+//   <div>{children.x[0]}</div>
+// </> 
+//
+// <Foo>
+//   <:x>
+//      hi
+//   </>
+// </Foo>
+//
+//
+// --- callable fragments (similar to Svelte's "snippets") ---
+// - labeled fragments can be annotated with parameters, parsed as normal fn param list, turning it into a function
+// - callee observes a function producing a fragment e.g. v => <>{v}</>
+// - caller observes retained identity after materialization
+//   * a callable fragment does **not** produce new elements on subsequent calls beyond whatever JSX expressions produce
+// - `update` does not cascade into callable fragments directly, rather, they are updated when the component is
+//   * this is because callable fragments are essentially callbacks
+// - labeled fragments cannot use element name syntax in their opening element
+//   * callable fragments create new element name scopes, same as `#if` directives
+// - callable fragments are intentionally _not_ components. They are explicit, parameterized patch points.
+// - a callable, labeled fragments are analogous to JS method syntax for object literals
+//
+// <#component Foo<T>(v: T, children: { x: (v: T) => [string] })>
+//   <div>{...children.x(v)}</div>
+// </> 
+//
+// <Foo v="hi">
+//   <:x(v)>
+//      {v}
+//   </>
+// </Foo>
+//
+//
+// --- approximate desugar, if :x were elided, #init is not real directive but represents init statements ---
+// <:x>
+//     <#init> 
+//         let el, el_v
+//     </>
+//     {v => { 
+//         el_v = v 
+//         if (!el) { 
+//             el = <>{v}</>
+//         } else { 
+//             update el 
+//         } 
+//         return el 
+//     }} 
+// </>
+//
+// <:x(v)>
+//  <div @ d />
+// </>
+//
+// <:y>
+//  <div @ d />
+// </>
+//
+// `d` is not accessible outside of `:x` but is accessible outside of `:y`
+//
+// You can pass in computed/dynamic named children using spread. 
+// The following is almost identical to `<:x(v)>{v}</>` except it creates a new closure and fragment on every update:
+//
+// <Foo v="hi">
+//  {...{ x: v => <>{v}</> }}
+// </Foo>
+//
+//
+// --- WIP: unlabeled callable fragments ---
+// - callable fragments can be used without labels, analogous to arrow function expressions
+// - they appear as `<(...params)> </>`
+// - cannot appear as a child of an intrinsic
+//
+//
+//
+// --- WIP: explicit (JSX) resource management ---
+// - repurposes `using` so that disposable objects behave intuitively in JSX contexts
+// - the behavior is slightly different based on the containing directive:
+//    * <#run> disposers are ran in LIFO order across the entire static tree before `update` proceeds
+//    * component body disposers are ran when the element itself is disposed. This is usually manually or via `using` itself
+// - `using` cannot used in JSX context beyond the top-level scope of a <#run> or component bodies
+// - any `using` binding means that the tree root becomes disposable
+// - components used directly in the tree syntax likewise contribute a disposer if needed
+// - will likely _not_ use `Symbol.dispose` but rather a different symbol for tree roots. 
+//      * `using` will work on both symbols in JSX context, with the new one taking priority
+// - adds global `drop` function for easier manual clean-up, this simply calls the dispose method 
+// - TBD: enable `using` in JSX contexts to tolerate disposables of type `() => void`
+//      * useful for adhoc disposers and aligns with the ecosystem convention for returning functions as disposers
+//      * checker enforces operand evaluates into `() => void` and only `() => void` to mitigate unintentional usage e.g. a disposer with an optional param
+//
+//
+// let counter = 0
+// const x = <div>
+//      <#component Comp() {
+//         const id = counter++
+//         using disposables = new DisposableStack()
+//         disposables.defer(() => console.log(`disposed ${id}`))
+//      }>
+//        <div>i am {id}</div>
+//      </>
+//      <#run>
+//        using c = <Comp/>
+//      </>
+//     {c}
+//   </div>
+//
+// update x // 'disposed 0'
+// drop(x) // 'disposed 1'
+// 
+// using `update` on dropped/disposed elements results in runtime exception
+//
+//
+// TBD: should inference add `Disposable` to types explicitly via
+// intersection, or should it be closer to `update` where anything
+// that has the dispose symbol method in their type, even if optional,
+// supports the `using` syntax?
+//
+// TBD: emit diagnostic for `defer` statement in immediate #run scopes?
+
+
+
+
+{
+    // basic named component - singular child infers singular return type
+    <#component Foo(x: string)>
+>x : Symbol(x, Decl(main.syn, 1085, 20))
+
+        <div>{x}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>x : Symbol(x, Decl(main.syn, 1085, 20))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    const r1 = <Foo x="hi" />
+>r1 : Symbol(r1, Decl(main.syn, 1088, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 1083, 1))
+>x : Symbol(x, Decl(main.syn, 1088, 19))
+
+    // Foo is typed as (props: { x: string }) => HTMLDivElement
+
+    // multiple children - tuple return type
+    ;<#component Bar(x: string)>
+>x : Symbol(x, Decl(main.syn, 1092, 21))
+
+        <div>{x}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>x : Symbol(x, Decl(main.syn, 1092, 21))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <div>{x}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>x : Symbol(x, Decl(main.syn, 1092, 21))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    const r2 = <Bar x="hi" />
+>r2 : Symbol(r2, Decl(main.syn, 1096, 9))
+>Bar : Symbol(Bar, Decl(main.syn, 1092, 5))
+>x : Symbol(x, Decl(main.syn, 1096, 19))
+
+    // Bar returns [HTMLDivElement, HTMLDivElement]
+
+    // explicit return type annotation
+    ;<#component Baz(x: string): HTMLDivElement>
+>x : Symbol(x, Decl(main.syn, 1100, 21))
+>HTMLDivElement : Symbol(HTMLDivElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+
+        <div>{x}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>x : Symbol(x, Decl(main.syn, 1100, 21))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    const r3 = <Baz x="hi" />
+>r3 : Symbol(r3, Decl(main.syn, 1103, 9))
+>Baz : Symbol(Baz, Decl(main.syn, 1100, 5))
+>x : Symbol(x, Decl(main.syn, 1103, 19))
+
+    // optional param becomes optional prop
+    ;<#component WithOpt(x: string, y?: number)>
+>x : Symbol(x, Decl(main.syn, 1106, 25))
+>y : Symbol(y, Decl(main.syn, 1106, 35))
+
+        <div>{x}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>x : Symbol(x, Decl(main.syn, 1106, 25))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    const r4a = <WithOpt x="hi" />       // ok — y is optional
+>r4a : Symbol(r4a, Decl(main.syn, 1109, 9))
+>WithOpt : Symbol(WithOpt, Decl(main.syn, 1106, 5))
+>x : Symbol(x, Decl(main.syn, 1109, 24))
+
+    const r4b = <WithOpt x="hi" y={1} /> // ok
+>r4b : Symbol(r4b, Decl(main.syn, 1110, 9))
+>WithOpt : Symbol(WithOpt, Decl(main.syn, 1106, 5))
+>x : Symbol(x, Decl(main.syn, 1110, 24))
+>y : Symbol(y, Decl(main.syn, 1110, 31))
+}
+
+{
+    // expression form — name elided, assigned via const
+    const Expr = <#component(x: string): HTMLDivElement>
+>Expr : Symbol(Expr, Decl(main.syn, 1115, 9))
+>x : Symbol(x, Decl(main.syn, 1115, 29))
+>HTMLDivElement : Symbol(HTMLDivElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+
+        <div>{x}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>x : Symbol(x, Decl(main.syn, 1115, 29))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    // Expr is (props: { x: string }) => HTMLDivElement
+    const r5 = <Expr x="hello" />
+>r5 : Symbol(r5, Decl(main.syn, 1119, 9))
+>Expr : Symbol(Expr, Decl(main.syn, 1115, 9))
+>x : Symbol(x, Decl(main.syn, 1119, 20))
+}
+
+{
+    // component with init body
+    <#component WithBody(x: string) {
+>x : Symbol(x, Decl(main.syn, 1124, 25))
+
+        const y = `hello: ${x}`
+>y : Symbol(y, Decl(main.syn, 1125, 13))
+>x : Symbol(x, Decl(main.syn, 1124, 25))
+
+    }>
+        <div>{y}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>y : Symbol(y, Decl(main.syn, 1125, 13))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    const r6 = <WithBody x="world" />
+>r6 : Symbol(r6, Decl(main.syn, 1129, 9))
+>WithBody : Symbol(WithBody, Decl(main.syn, 1122, 1))
+>x : Symbol(x, Decl(main.syn, 1129, 24))
+}
+
+{
+    // return in init body is a diagnostic
+    <#component BadReturn(x: string) {
+>x : Symbol(x, Decl(main.syn, 1134, 26))
+
+        return x // error: return not allowed in component body
+>x : Symbol(x, Decl(main.syn, 1134, 26))
+
+    }>
+        <div>{x}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>x : Symbol(x, Decl(main.syn, 1134, 26))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+}
+
+{
+    // component declares `children` as a typed record; caller provides labeled fragments
+
+    // plain labeled fragment — caller passes named children as record
+    <#component Foo(children: { content: [string, string] })>
+>children : Symbol(children, Decl(main.syn, 1145, 20))
+>content : Symbol(content, Decl(main.syn, 1145, 31))
+
+        <div>{...children.content}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>children.content : Symbol(content, Decl(main.syn, 1145, 31))
+>children : Symbol(children, Decl(main.syn, 1145, 20))
+>content : Symbol(content, Decl(main.syn, 1145, 31))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    const r_lf1 = <Foo>
+>r_lf1 : Symbol(r_lf1, Decl(main.syn, 1148, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 1141, 1))
+
+        <:content>hi{'there'}</>
+    </Foo>
+>Foo : Symbol(Foo, Decl(main.syn, 1141, 1))
+
+    // callable labeled fragment — label maps to a function in the children record
+    ;<#component Bar(children: { item: (val: string) => [HTMLSpanElement] })>
+>children : Symbol(children, Decl(main.syn, 1153, 21))
+>item : Symbol(item, Decl(main.syn, 1153, 32))
+>val : Symbol(val, Decl(main.syn, 1153, 40))
+>HTMLSpanElement : Symbol(HTMLSpanElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+
+        <div>{...children.item("test")}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>children.item : Symbol(item, Decl(main.syn, 1153, 32))
+>children : Symbol(children, Decl(main.syn, 1153, 21))
+>item : Symbol(item, Decl(main.syn, 1153, 32))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    const r_lf2 = <Bar>
+>r_lf2 : Symbol(r_lf2, Decl(main.syn, 1156, 9))
+>Bar : Symbol(Bar, Decl(main.syn, 1153, 5))
+
+        <:item(val: string)><span>{val}</span></>
+>val : Symbol(val, Decl(main.syn, 1157, 15))
+>span : Symbol(JSX.IntrinsicElements.span, Decl(lib.jsx.d.ts, --, --))
+>val : Symbol(val, Decl(main.syn, 1157, 15))
+>span : Symbol(JSX.IntrinsicElements.span, Decl(lib.jsx.d.ts, --, --))
+
+    </Bar>
+>Bar : Symbol(Bar, Decl(main.syn, 1153, 5))
+
+    // contextual typing: unannotated params infer type from parent component's children declaration
+    ;<#component Ctx(children: { slot: (n: number, s: string) => [HTMLDivElement] })>
+>children : Symbol(children, Decl(main.syn, 1161, 21))
+>slot : Symbol(slot, Decl(main.syn, 1161, 32))
+>n : Symbol(n, Decl(main.syn, 1161, 40))
+>s : Symbol(s, Decl(main.syn, 1161, 50))
+>HTMLDivElement : Symbol(HTMLDivElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+
+        <div>{...children.slot(1, 'hi')}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>children.slot : Symbol(slot, Decl(main.syn, 1161, 32))
+>children : Symbol(children, Decl(main.syn, 1161, 21))
+>slot : Symbol(slot, Decl(main.syn, 1161, 32))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    const r_ctx = <Ctx>
+>r_ctx : Symbol(r_ctx, Decl(main.syn, 1164, 9))
+>Ctx : Symbol(Ctx, Decl(main.syn, 1161, 5))
+
+        <:slot(n, s)><div>{n.toFixed()}{s.toUpperCase()}</div></>
+>n : Symbol(n, Decl(main.syn, 1165, 15))
+>s : Symbol(s, Decl(main.syn, 1165, 17))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>n.toFixed : Symbol(Number.toFixed, Decl(lib.es5.d.ts, --, --))
+>n : Symbol(n, Decl(main.syn, 1165, 15))
+>toFixed : Symbol(Number.toFixed, Decl(lib.es5.d.ts, --, --))
+>s.toUpperCase : Symbol(String.toUpperCase, Decl(lib.es5.d.ts, --, --))
+>s : Symbol(s, Decl(main.syn, 1165, 17))
+>toUpperCase : Symbol(String.toUpperCase, Decl(lib.es5.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </Ctx>
+>Ctx : Symbol(Ctx, Decl(main.syn, 1161, 5))
+
+    ;<#component Ctx2(children: { slot: (s: string) => [string] })>
+>children : Symbol(children, Decl(main.syn, 1168, 22))
+>slot : Symbol(slot, Decl(main.syn, 1168, 33))
+>s : Symbol(s, Decl(main.syn, 1168, 41))
+
+        <div>{...children.slot('hi')}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>children.slot : Symbol(slot, Decl(main.syn, 1168, 33))
+>children : Symbol(children, Decl(main.syn, 1168, 22))
+>slot : Symbol(slot, Decl(main.syn, 1168, 33))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    const r_ctx2 = <Ctx2>
+>r_ctx2 : Symbol(r_ctx2, Decl(main.syn, 1171, 9))
+>Ctx2 : Symbol(Ctx2, Decl(main.syn, 1168, 5))
+
+        <:slot(s)>{s}</>
+>s : Symbol(s, Decl(main.syn, 1172, 15))
+>s : Symbol(s, Decl(main.syn, 1172, 15))
+
+    </Ctx2>
+>Ctx2 : Symbol(Ctx2, Decl(main.syn, 1168, 5))
+
+
+    // duplicate label at call site — error
+    const r_dup = <Foo>
+>r_dup : Symbol(r_dup, Decl(main.syn, 1177, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 1141, 1))
+
+        <:content>hi{'there'}</>
+        <:content>oh{'no'}</>
+    </Foo>
+>Foo : Symbol(Foo, Decl(main.syn, 1141, 1))
+
+    // all-or-nothing violation at call site — error
+    const r_mix = <Foo>
+>r_mix : Symbol(r_mix, Decl(main.syn, 1183, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 1141, 1))
+
+        <div>hi</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <:content>there{'!'}</>
+    </Foo>
+>Foo : Symbol(Foo, Decl(main.syn, 1141, 1))
 }
 
 // /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a

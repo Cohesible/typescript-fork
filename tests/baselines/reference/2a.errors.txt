@@ -37,24 +37,28 @@ main.syn(644,20): error TS2884: 'try' has no effect because the expression canno
 main.syn(648,20): error TS2885: 'try' will always throw because the expression always returns an 'Error'.
 main.syn(655,5): error TS2886: This expression returns 'void | Error'. Use 'try' to throw on error, or 'void' to discard the result.
 main.syn(672,5): error TS2886: This expression returns 'Err<"bad"> | undefined'. Use 'try' to throw on error, or 'void' to discard the result.
-main.syn(753,20): error TS95204: Async call to 'foo' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
-main.syn(755,9): error TS95204: Async call to 'foo' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
-main.syn(773,8): error TS95203: Auto-await is ambiguous: 'bar' returns 'Promise<number>' which is also directly assignable to the expected type. Use 'await' or 'as async' to be explicit.
-main.syn(780,11): error TS95204: Async call to 'bar' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
-main.syn(780,18): error TS95204: Async call to 'bar' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
-main.syn(787,20): error TS95204: Async call to 'bar' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
-main.syn(814,15): error TS2322: Type 'number' is not assignable to type 'Promise<number>'.
-main.syn(853,20): error TS2304: Cannot find name 'b'.
-main.syn(863,29): error TS95200: 'Comp' returns 'Element[]' and cannot be used as a single JSX element. Did you mean '...Comp'?
+main.syn(752,20): error TS95204: Async call to 'foo' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+main.syn(754,9): error TS95204: Async call to 'foo' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+main.syn(772,8): error TS95203: 'bar' returns 'Promise<number>' which is also directly assignable to the expected type. Use 'await' or 'as async'.
+main.syn(779,11): error TS95204: Async call to 'bar' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+main.syn(779,18): error TS95204: Async call to 'bar' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+main.syn(786,20): error TS95204: Async call to 'bar' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+main.syn(813,15): error TS2322: Type 'number' is not assignable to type 'Promise<number>'.
+main.syn(852,20): error TS2304: Cannot find name 'b'.
+main.syn(862,29): error TS95200: 'Comp' returns 'Element[]' and cannot be used as a single JSX element. Did you mean '...Comp'?
+main.syn(865,26): error TS95198: Spread JSX element type 'HTMLDivElement' is not an array type.
 main.syn(866,26): error TS95198: Spread JSX element type 'HTMLDivElement' is not an array type.
-main.syn(867,26): error TS95198: Spread JSX element type 'HTMLDivElement' is not an array type.
-main.syn(870,26): error TS2322: Type '() => void' is not assignable to type 'Child'.
-main.syn(874,26): error TS95198: Spread JSX element type 'Element' is not an array type.
-main.syn(887,8): error TS95200: 'Comp' returns 'Element[]' and cannot be used as a single JSX element. Did you mean '...Comp'?
+main.syn(869,26): error TS2322: Type '() => void' is not assignable to type 'Child'.
+main.syn(873,26): error TS95198: Spread JSX element type 'Element' is not an array type.
+main.syn(886,8): error TS95200: 'Comp' returns 'Element[]' and cannot be used as a single JSX element. Did you mean '...Comp'?
 main.syn(916,1): error TS1005: '>' expected.
+main.syn(1097,17): error TS95200: 'Bar' returns '[HTMLDivElement, HTMLDivElement]' and cannot be used as a single JSX element. Did you mean '...Bar'?
+main.syn(1136,9): error TS95205: Return statement is not allowed in component directive body
+main.syn(1180,11): error TS95207: Duplicate labeled fragment ':content'.
+main.syn(1185,9): error TS95206: Named children must be used consistently: either all children must be labeled fragments or none.
 
 
-==== main.syn (41 errors) ====
+==== main.syn (45 errors) ====
     function f<T>(t: reify T): T {
         switch (Type.kind(t)) {
             case "array":
@@ -599,19 +603,19 @@ main.syn(916,1): error TS1005: '>' expected.
     const value = ''
     const d2 = <input {value}/>
     const d3 = <div>
-      <#if {true}>
+      <#if (true)>
          <div></div>
       </>
     </div>
     
     const cond = true
-    const d4 = <div><#if {cond}></></div>
+    const d4 = <div><#if (cond)></></div>
     
     {
         // cfa should work inside <#if>
         let v = undefined as { x: () => number } | undefined
         const d = <div>
-            <#if {v}>
+            <#if (v)>
               <div>{v.x()}</div>
             </>
         </div>
@@ -674,9 +678,9 @@ main.syn(916,1): error TS1005: '>' expected.
             </div>
             update el // ok
     
-            // blocks 
+            // do 
             const el2 = <div>
-                <#block>
+                <#run>
                     console.log('hi')
                 </>
             </div>
@@ -870,7 +874,6 @@ main.syn(916,1): error TS1005: '>' expected.
     
     }
     
-    // TODO:
     {
         async function foo() {
             return 1 as number
@@ -904,7 +907,7 @@ main.syn(916,1): error TS1005: '>' expected.
         function f8<T>(p: Promise<T> | T): void {}
         f8(bar()) // error, ambiguous, use `await` or `as async`
            ~~~~~
-!!! error TS95203: Auto-await is ambiguous: 'bar' returns 'Promise<number>' which is also directly assignable to the expected type. Use 'await' or 'as async' to be explicit.
+!!! error TS95203: 'bar' returns 'Promise<number>' which is also directly assignable to the expected type. Use 'await' or 'as async'.
     
         function f9() {
             function f(p1: Promise<number>, p2: Promise<number>) {}
@@ -988,7 +991,7 @@ main.syn(916,1): error TS1005: '>' expected.
         // b can be seen within the tree, but not outside
         ;<div @ a>
             <div @ b></div>
-            <#block>
+            <#run>
                 console.log(a, b)
             </>
         </div>
@@ -1053,15 +1056,15 @@ main.syn(916,1): error TS1005: '>' expected.
     {
         const cond = true as boolean
         // [] | [HtmlDivElement]
-        const if1 = <#if {cond}>
+        const if1 = <#if (cond)>
           <div></div>
         </>
         // [HtmlDivElement]
-        const if2 = <#if {true}>
+        const if2 = <#if (true)>
           <div></div>
         </>
         // []
-        const if3 = <#if {false}>
+        const if3 = <#if (false)>
           <div></div>
         </>
     }
@@ -1069,9 +1072,290 @@ main.syn(916,1): error TS1005: '>' expected.
     {
         // do not parse this as JSX, we should only see '> expected'
         const m = new Map<string, Promise<string
+        // >
     }
     ~
 !!! error TS1005: '>' expected.
+    
+    // --- component directive ---
+    // - essentially parsed as a fn declaration within the opening tag
+    //  * body is optional
+    //  * empty body with no trivia inside `{}` should be diagnostic in checker: remove dead code
+    //  * using `return` produces a checker diagnostic, prefer throw if needing to bail out
+    // - similar to Flow's `component` declaration syntax; the params correspond to fields of `props` in fn components
+    // - its children become the return type with one exception: truly singular elements (intrinics/components) are kept singular
+    //  * this is true even if the component has block directives as siblings to the root
+    // - `Foo` is accessible in the current scope as a normal symbol like any other function declaration
+    // - when used as an expression, it behaves like a function expression, name can be elided
+    //
+    // <#component Foo(x: string) {
+    //   // component init code, runs once
+    //   const y = `hello: ${x}`
+    // }>
+    //   <div>{y}</div>
+    // </> 
+    //
+    // <Foo x="hi" />
+    //
+    // <#component Foo2(x: string): [HTMLDivElement, HTMLDivElement]>
+    //   <div>{x}</div>
+    //   <div>{x}</div>
+    // </> 
+    //
+    // <...Foo2 x="hi" />
+    //
+    // <#component Foo(x: string): HTMLDivElement>
+    //   <div />
+    // </>
+    //
+    // const Foo = <#component(x: string): HTMLDivElement>
+    //   <div />
+    // </>
+    //
+    // Foo is then typed as `(props: { x: string }) => HTMLDivElement`
+    //
+    //
+    //
+    // --- named children via `<:name>` aka labeled fragments ---
+    // - only works for components
+    // - children are passed as a record instead of an array
+    // - all or nothing: if any children are named, all must be named.
+    //
+    // <#component Foo(children: { x: [string] })>
+    //   <div>{children.x[0]}</div>
+    // </> 
+    //
+    // <Foo>
+    //   <:x>
+    //      hi
+    //   </>
+    // </Foo>
+    //
+    //
+    // --- callable fragments (similar to Svelte's "snippets") ---
+    // - labeled fragments can be annotated with parameters, parsed as normal fn param list, turning it into a function
+    // - callee observes a function producing a fragment e.g. v => <>{v}</>
+    // - caller observes retained identity after materialization
+    //   * a callable fragment does **not** produce new elements on subsequent calls beyond whatever JSX expressions produce
+    // - `update` does not cascade into callable fragments directly, rather, they are updated when the component is
+    //   * this is because callable fragments are essentially callbacks
+    // - labeled fragments cannot use element name syntax in their opening element
+    //   * callable fragments create new element name scopes, same as `#if` directives
+    // - callable fragments are intentionally _not_ components. They are explicit, parameterized patch points.
+    // - a callable, labeled fragments are analogous to JS method syntax for object literals
+    //
+    // <#component Foo<T>(v: T, children: { x: (v: T) => [string] })>
+    //   <div>{...children.x(v)}</div>
+    // </> 
+    //
+    // <Foo v="hi">
+    //   <:x(v)>
+    //      {v}
+    //   </>
+    // </Foo>
+    //
+    //
+    // --- approximate desugar, if :x were elided, #init is not real directive but represents init statements ---
+    // <:x>
+    //     <#init> 
+    //         let el, el_v
+    //     </>
+    //     {v => { 
+    //         el_v = v 
+    //         if (!el) { 
+    //             el = <>{v}</>
+    //         } else { 
+    //             update el 
+    //         } 
+    //         return el 
+    //     }} 
+    // </>
+    //
+    // <:x(v)>
+    //  <div @ d />
+    // </>
+    //
+    // <:y>
+    //  <div @ d />
+    // </>
+    //
+    // `d` is not accessible outside of `:x` but is accessible outside of `:y`
+    //
+    // You can pass in computed/dynamic named children using spread. 
+    // The following is almost identical to `<:x(v)>{v}</>` except it creates a new closure and fragment on every update:
+    //
+    // <Foo v="hi">
+    //  {...{ x: v => <>{v}</> }}
+    // </Foo>
+    //
+    //
+    // --- WIP: unlabeled callable fragments ---
+    // - callable fragments can be used without labels, analogous to arrow function expressions
+    // - they appear as `<(...params)> </>`
+    // - cannot appear as a child of an intrinsic
+    //
+    //
+    //
+    // --- WIP: explicit (JSX) resource management ---
+    // - repurposes `using` so that disposable objects behave intuitively in JSX contexts
+    // - the behavior is slightly different based on the containing directive:
+    //    * <#run> disposers are ran in LIFO order across the entire static tree before `update` proceeds
+    //    * component body disposers are ran when the element itself is disposed. This is usually manually or via `using` itself
+    // - `using` cannot used in JSX context beyond the top-level scope of a <#run> or component bodies
+    // - any `using` binding means that the tree root becomes disposable
+    // - components used directly in the tree syntax likewise contribute a disposer if needed
+    // - will likely _not_ use `Symbol.dispose` but rather a different symbol for tree roots. 
+    //      * `using` will work on both symbols in JSX context, with the new one taking priority
+    // - adds global `drop` function for easier manual clean-up, this simply calls the dispose method 
+    // - TBD: enable `using` in JSX contexts to tolerate disposables of type `() => void`
+    //      * useful for adhoc disposers and aligns with the ecosystem convention for returning functions as disposers
+    //      * checker enforces operand evaluates into `() => void` and only `() => void` to mitigate unintentional usage e.g. a disposer with an optional param
+    //
+    //
+    // let counter = 0
+    // const x = <div>
+    //      <#component Comp() {
+    //         const id = counter++
+    //         using disposables = new DisposableStack()
+    //         disposables.defer(() => console.log(`disposed ${id}`))
+    //      }>
+    //        <div>i am {id}</div>
+    //      </>
+    //      <#run>
+    //        using c = <Comp/>
+    //      </>
+    //     {c}
+    //   </div>
+    //
+    // update x // 'disposed 0'
+    // drop(x) // 'disposed 1'
+    // 
+    // using `update` on dropped/disposed elements results in runtime exception
+    //
+    //
+    // TBD: should inference add `Disposable` to types explicitly via
+    // intersection, or should it be closer to `update` where anything
+    // that has the dispose symbol method in their type, even if optional,
+    // supports the `using` syntax?
+    //
+    // TBD: emit diagnostic for `defer` statement in immediate #run scopes?
+    
+    
+    
+    
+    {
+        // basic named component - singular child infers singular return type
+        <#component Foo(x: string)>
+            <div>{x}</div>
+        </>
+        const r1 = <Foo x="hi" />
+        // Foo is typed as (props: { x: string }) => HTMLDivElement
+    
+        // multiple children - tuple return type
+        ;<#component Bar(x: string)>
+            <div>{x}</div>
+            <div>{x}</div>
+        </>
+        const r2 = <Bar x="hi" />
+                    ~~~
+!!! error TS95200: 'Bar' returns '[HTMLDivElement, HTMLDivElement]' and cannot be used as a single JSX element. Did you mean '...Bar'?
+        // Bar returns [HTMLDivElement, HTMLDivElement]
+    
+        // explicit return type annotation
+        ;<#component Baz(x: string): HTMLDivElement>
+            <div>{x}</div>
+        </>
+        const r3 = <Baz x="hi" />
+    
+        // optional param becomes optional prop
+        ;<#component WithOpt(x: string, y?: number)>
+            <div>{x}</div>
+        </>
+        const r4a = <WithOpt x="hi" />       // ok — y is optional
+        const r4b = <WithOpt x="hi" y={1} /> // ok
+    }
+    
+    {
+        // expression form — name elided, assigned via const
+        const Expr = <#component(x: string): HTMLDivElement>
+            <div>{x}</div>
+        </>
+        // Expr is (props: { x: string }) => HTMLDivElement
+        const r5 = <Expr x="hello" />
+    }
+    
+    {
+        // component with init body
+        <#component WithBody(x: string) {
+            const y = `hello: ${x}`
+        }>
+            <div>{y}</div>
+        </>
+        const r6 = <WithBody x="world" />
+    }
+    
+    {
+        // return in init body is a diagnostic
+        <#component BadReturn(x: string) {
+            return x // error: return not allowed in component body
+            ~~~~~~
+!!! error TS95205: Return statement is not allowed in component directive body
+        }>
+            <div>{x}</div>
+        </>
+    }
+    
+    {
+        // component declares `children` as a typed record; caller provides labeled fragments
+    
+        // plain labeled fragment — caller passes named children as record
+        <#component Foo(children: { content: [string, string] })>
+            <div>{...children.content}</div>
+        </>
+        const r_lf1 = <Foo>
+            <:content>hi{'there'}</>
+        </Foo>
+    
+        // callable labeled fragment — label maps to a function in the children record
+        ;<#component Bar(children: { item: (val: string) => [HTMLSpanElement] })>
+            <div>{...children.item("test")}</div>
+        </>
+        const r_lf2 = <Bar>
+            <:item(val: string)><span>{val}</span></>
+        </Bar>
+    
+        // contextual typing: unannotated params infer type from parent component's children declaration
+        ;<#component Ctx(children: { slot: (n: number, s: string) => [HTMLDivElement] })>
+            <div>{...children.slot(1, 'hi')}</div>
+        </>
+        const r_ctx = <Ctx>
+            <:slot(n, s)><div>{n.toFixed()}{s.toUpperCase()}</div></>
+        </Ctx>
+    
+        ;<#component Ctx2(children: { slot: (s: string) => [string] })>
+            <div>{...children.slot('hi')}</div>
+        </>
+        const r_ctx2 = <Ctx2>
+            <:slot(s)>{s}</>
+        </Ctx2>
+    
+    
+        // duplicate label at call site — error
+        const r_dup = <Foo>
+            <:content>hi{'there'}</>
+            <:content>oh{'no'}</>
+              ~~~~~~~
+!!! error TS95207: Duplicate labeled fragment ':content'.
+        </Foo>
+    
+        // all-or-nothing violation at call site — error
+        const r_mix = <Foo>
+            <div>hi</div>
+            ~~~~~~~~~~~~~
+!!! error TS95206: Named children must be used consistently: either all children must be labeled fragments or none.
+            <:content>there{'!'}</>
+        </Foo>
+    }
     
     // /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a
     

@@ -21,8 +21,9 @@ import {
     isImportSpecifier,
     isInfinityOrNaNString,
     isJsxAttribute,
-    isJsxBlock,
+    isJsxRunDirective,
     isJsxElement,
+    JsxLabeledFragment,
     isJsxExpression,
     isJsxOpeningLikeElement,
     isJsxSelfClosingElement,
@@ -155,16 +156,25 @@ function collectTokens(program: Program, sourceFile: SourceFile, span: TextSpan,
             return;
         }
         
-        if (isJsxExpression(node) || isJsxBlock(node)) {
+        if (isJsxExpression(node) || isJsxRunDirective(node)) {
+            const prevInJSX = inJSX;
             const prevInJSXElement = inJSXElement;
+            inJSX = true;
             inJSXElement = false;
             forEachChild(node, visit);
+            inJSX = prevInJSX;
             inJSXElement = prevInJSXElement;
             return;
         }
 
         if (inJSXElement && isIdentifier(node)) {
-            if (isJsxOpeningLikeElement(node.parent)) {
+            if (node.parent.kind === SyntaxKind.JsxLabeledFragment && (node.parent as JsxLabeledFragment).label === node) {
+                if ((node.parent as JsxLabeledFragment).parameters) {
+                    return collector(node, TokenType.function, 1 << TokenModifier.local);
+                }
+                return;
+            }
+            else if (isJsxOpeningLikeElement(node.parent)) {
                 if (node.parent.name === node) {
                     return collector(node, TokenType.variable, (1 << TokenModifier.local) | (1 << TokenModifier.readonly));
                 }
@@ -366,4 +376,5 @@ const tokenFromDeclarationMapping = new Map<SyntaxKind, TokenType>([
     [SyntaxKind.PropertyAssignment, TokenType.property],
     [SyntaxKind.ShorthandPropertyAssignment, TokenType.property],
     [SyntaxKind.JsxNamespacedName, TokenType.property],
+    [SyntaxKind.JsxComponentDirective, TokenType.class],
 ]);

@@ -34,7 +34,8 @@ import {
     isTupleTypeNode,
     isVariableStatement,
     JsxAttributes,
-    JsxBlock,
+    JsxRunDirective,
+    JsxComponentDirective,
     JsxElement,
     JsxElseDirective,
     JsxFragment,
@@ -298,8 +299,10 @@ function getOutliningSpanForNode(n: Node, sourceFile: SourceFile): OutliningSpan
             return spanForJsxIfDirective(n as JsxIfDirective);
         case SyntaxKind.JsxElseDirective:
             return spanForJsxElseDirective(n as JsxElseDirective);
-        case SyntaxKind.JsxBlock:
-            return spanForJsxBlock(n as JsxBlock);
+        case SyntaxKind.JsxRunDirective:
+            return spanForJsxRunDirective(n as JsxRunDirective);
+        case SyntaxKind.JsxComponentDirective:
+            return spanForJsxComponentDirective(n as JsxComponentDirective);
         case SyntaxKind.JsxSelfClosingElement:
         case SyntaxKind.JsxOpeningElement:
             return spanForJSXAttributes((n as JsxOpeningLikeElement).attributes);
@@ -377,9 +380,15 @@ function getOutliningSpanForNode(n: Node, sourceFile: SourceFile): OutliningSpan
         return createOutliningSpan(textSpan, OutliningSpanKind.Code, textSpan, /*autoCollapse*/ false, "<#else>...</>");
     }
 
-    function spanForJsxBlock(node: JsxBlock): OutliningSpan | undefined {
+    function spanForJsxRunDirective(node: JsxRunDirective): OutliningSpan | undefined {
         const textSpan = createTextSpanFromBounds(node.getStart(sourceFile), node.getEnd());
-        return createOutliningSpan(textSpan, OutliningSpanKind.Code, textSpan, /*autoCollapse*/ false, "<#block>...</>");
+        return createOutliningSpan(textSpan, OutliningSpanKind.Code, textSpan, /*autoCollapse*/ false, "<#run>...</>");
+    }
+
+    function spanForJsxComponentDirective(node: JsxComponentDirective): OutliningSpan | undefined {
+        const textSpan = createTextSpanFromBounds(node.getStart(sourceFile), node.getEnd());
+        const label = node.name ? `<#component ${node.name.text}>...</>` : `<#component>...</>`;
+        return createOutliningSpan(textSpan, OutliningSpanKind.Code, textSpan, /*autoCollapse*/ false, label);
     }
 
     function spanForJSXAttributes(node: JsxAttributes): OutliningSpan | undefined {

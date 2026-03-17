@@ -1889,7 +1889,7 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
 
                 case SyntaxKind.JsxIfDirective:
                 case SyntaxKind.JsxElseDirective:
-                case SyntaxKind.JsxBlock:
+                case SyntaxKind.JsxRunDirective:
                     return;
 
                 // Transformation nodes
@@ -2001,7 +2001,7 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
                     return emitJsxFragment(node as JsxFragment);
                 case SyntaxKind.JsxIfDirective:
                 case SyntaxKind.JsxElseDirective:
-                case SyntaxKind.JsxBlock:
+                case SyntaxKind.JsxRunDirective:
                     return;
 
                 // Synthesized list

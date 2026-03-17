@@ -348,12 +348,12 @@ import {
     UserPreferences,
     VariableDeclaration,
     JsxElseDirective,
-    isJsxElseDirective,
     JsxIfDirective,
-    isJsxIfDirective,
     JsxOpeningElement,
-    isJsxBlock,
-    JsxBlock,
+    JsxRunDirective,
+    JsxComponentDirective,
+    JsxLabeledFragment,
+    isJsxDirectiveLike,
 } from "./_namespaces/ts.js";
 import * as NavigateTo from "./_namespaces/ts.NavigateTo.js";
 import * as NavigationBar from "./_namespaces/ts.NavigationBar.js";
@@ -2823,7 +2823,7 @@ export function createLanguageService(
         }
         if (
             token.kind === SyntaxKind.GreaterThanToken &&
-            (isJsxIfDirective(token.parent) || isJsxElseDirective(token.parent) || isJsxBlock(token.parent)) &&
+            isJsxDirectiveLike(token.parent) &&
             isUnclosedDirectiveOrFragment(token.parent)
         ) {
             return { newText: "</>" };
@@ -3137,14 +3137,14 @@ export function createLanguageService(
             isJsxElement(parent) && tagNamesAreEquivalent(openingElement.tagName, parent.openingElement.tagName) && isUnclosedTag(parent);
     }
 
-    function isUnclosedDirectiveOrFragment(element: JsxIfDirective | JsxElseDirective | JsxFragment | JsxBlock): boolean {
+    function isUnclosedDirectiveOrFragment(element: JsxIfDirective | JsxElseDirective | JsxFragment | JsxRunDirective | JsxComponentDirective | JsxLabeledFragment): boolean {
         if (element.kind === SyntaxKind.JsxFragment) {
             if (!!(element.closingFragment.flags & NodeFlags.ThisNodeHasError)) return true;
         } else {
             if (!!(element.flags & NodeFlags.ThisNodeHasError)) return true;
         }
         if (element.parent) {
-            if (isJsxFragment(element.parent) || isJsxIfDirective(element.parent) || isJsxElseDirective(element.parent) || isJsxBlock(element.parent)) {
+            if (isJsxFragment(element.parent) || isJsxDirectiveLike(element.parent)) {
                 return isUnclosedDirectiveOrFragment(element.parent);
             }
         }

@@ -987,9 +987,9 @@ export function getNonAssignedNameOfDeclaration(declaration: Declaration | Expre
             return isIdentifier(expression) ? expression : undefined;
         }
         case SyntaxKind.JsxElement:
-            return (declaration as JsxElement).openingElement?.name
+            return (declaration as JsxElement).openingElement?.name;
         case SyntaxKind.JsxSelfClosingElement:
-            return (declaration as JsxSelfClosingElement)?.name
+            return (declaration as JsxSelfClosingElement)?.name;
         case SyntaxKind.JsxOpeningElement:
             return undefined;
         case SyntaxKind.ElementAccessExpression:
@@ -2337,6 +2337,8 @@ export function canHaveLocals(node: Node): node is HasLocals {
         case SyntaxKind.JsxFragment:
         case SyntaxKind.JsxIfDirective:
         case SyntaxKind.JsxElseDirective:
+        case SyntaxKind.JsxComponentDirective:
+        case SyntaxKind.JsxLabeledFragment:
             return true;
         default:
             return false;
@@ -2500,7 +2502,9 @@ export function isJsxChild(node: Node): node is JsxChild {
         || kind === SyntaxKind.JsxText
         || kind === SyntaxKind.JsxFragment
         || kind === SyntaxKind.JsxIfDirective
-        || kind === SyntaxKind.JsxBlock;
+        || kind === SyntaxKind.JsxRunDirective
+        || kind === SyntaxKind.JsxComponentDirective
+        || kind === SyntaxKind.JsxLabeledFragment;
 }
 
 export function isJsxContainer(node: Node): node is JsxContainer {
@@ -2508,7 +2512,8 @@ export function isJsxContainer(node: Node): node is JsxContainer {
     return kind === SyntaxKind.JsxElement
         || kind === SyntaxKind.JsxFragment
         || kind === SyntaxKind.JsxIfDirective
-        || kind === SyntaxKind.JsxElseDirective;
+        || kind === SyntaxKind.JsxElseDirective
+        || kind === SyntaxKind.JsxComponentDirective;
 }
 
 export function isJsxAttributeLike(node: Node): node is JsxAttributeLike {

@@ -132,6 +132,7 @@ import {
     JsxRunDirective,
     JsxComponentDirective,
     JsxLabeledFragment,
+    UnwindStatement,
     JsxExpression,
     JsxElseDirective,
     JsxFragment,
@@ -996,6 +997,10 @@ export function isJsxComponentDirective(node: Node): node is JsxComponentDirecti
 
 export function isJsxLabeledFragment(node: Node): node is JsxLabeledFragment {
     return node.kind === SyntaxKind.JsxLabeledFragment;
+}
+
+export function isUnwindStatement(node: Node): node is UnwindStatement {
+    return node.kind === SyntaxKind.UnwindStatement;
 }
 
 export function isJsxDirectiveLike(node: Node): node is JsxIfDirective | JsxElseDirective | JsxRunDirective | JsxComponentDirective | JsxLabeledFragment {

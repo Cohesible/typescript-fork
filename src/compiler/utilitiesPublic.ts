@@ -2418,6 +2418,8 @@ function isStatementKindButNotDeclarationKind(kind: SyntaxKind) {
         || kind === SyntaxKind.VariableStatement
         || kind === SyntaxKind.WhileStatement
         || kind === SyntaxKind.WithStatement
+        || kind === SyntaxKind.DeferStatement
+        || kind === SyntaxKind.UnwindStatement
         || kind === SyntaxKind.NotEmittedStatement;
 }
 
@@ -2447,8 +2449,7 @@ export function isStatement(node: Node): node is Statement {
     const kind = node.kind;
     return isStatementKindButNotDeclarationKind(kind)
         || isDeclarationStatementKind(kind)
-        || isBlockStatement(node)
-        || kind === SyntaxKind.DeferStatement;
+        || isBlockStatement(node);
 }
 
 function isBlockStatement(node: Node): node is Block {
@@ -2471,8 +2472,7 @@ export function isStatementOrBlock(node: Node): node is Statement | Block {
     const kind = node.kind;
     return isStatementKindButNotDeclarationKind(kind)
         || isDeclarationStatementKind(kind)
-        || kind === SyntaxKind.Block
-        || kind === SyntaxKind.DeferStatement;
+        || kind === SyntaxKind.Block;
 }
 
 // Module references
@@ -2513,6 +2513,7 @@ export function isJsxContainer(node: Node): node is JsxContainer {
         || kind === SyntaxKind.JsxFragment
         || kind === SyntaxKind.JsxIfDirective
         || kind === SyntaxKind.JsxElseDirective
+        || kind === SyntaxKind.JsxLabeledFragment
         || kind === SyntaxKind.JsxComponentDirective;
 }
 

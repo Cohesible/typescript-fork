@@ -224,6 +224,7 @@ export const enum SyntaxKind {
     OverrideKeyword,
     OfKeyword,
     DeferKeyword,
+    UnwindKeyword,
     FallthroughKeyword,
     UpdateKeyword,
     ReifyKeyword, // LastKeyword and LastToken and LastContextualKeyword
@@ -385,6 +386,7 @@ export const enum SyntaxKind {
     JsxRunDirective,
     JsxComponentDirective,
     JsxLabeledFragment,
+    UnwindStatement,
 
     // Clauses
     CaseClause,
@@ -676,6 +678,7 @@ export type KeywordSyntaxKind =
     | SyntaxKind.UndefinedKeyword
     | SyntaxKind.UniqueKeyword
     | SyntaxKind.UnknownKeyword
+    | SyntaxKind.UnwindKeyword
     | SyntaxKind.UpdateKeyword
     | SyntaxKind.UsingKeyword
     | SyntaxKind.VarKeyword
@@ -1171,6 +1174,7 @@ export type HasChildren =
     | SwitchStatement
     | LabeledStatement
     | DeferStatement
+    | UnwindStatement
     | ThrowStatement
     | TryStatement
     | VariableDeclaration
@@ -3363,6 +3367,11 @@ export interface JsxLabeledFragment extends PrimaryExpression, LocalsContainer {
     readonly parameters?: NodeArray<ParameterDeclaration>;
     readonly children: NodeArray<JsxChild>;
     /** @internal */ symbol: Symbol;
+}
+
+export interface UnwindStatement extends Statement, FlowContainer {
+    readonly kind: SyntaxKind.UnwindStatement;
+    readonly statement: Block;
 }
 
 /// The opening element of a <>...</> JsxFragment
@@ -9405,6 +9414,8 @@ export interface NodeFactory {
     updateJsxComponentDirective(node: JsxComponentDirective, name: Identifier | undefined, typeParameters: readonly TypeParameterDeclaration[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode | undefined, body: Block | undefined, children: readonly JsxChild[]): JsxComponentDirective;
     createJsxLabeledFragment(label: Identifier, parameters: readonly ParameterDeclaration[] | undefined, children: readonly JsxChild[]): JsxLabeledFragment;
     updateJsxLabeledFragment(node: JsxLabeledFragment, label: Identifier, parameters: readonly ParameterDeclaration[] | undefined, children: readonly JsxChild[]): JsxLabeledFragment;
+    createUnwindStatement(statement: Block): UnwindStatement;
+    updateUnwindStatement(node: UnwindStatement, statement: Block): UnwindStatement;
 
     //
     // Clauses

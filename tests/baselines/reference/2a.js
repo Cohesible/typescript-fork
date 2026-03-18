@@ -1038,84 +1038,65 @@ const d4 = <div><#if (cond)></></div>
 //
 //
 // --- WIP: explicit (JSX) resource management ---
-// - repurposes `using` so that disposable objects behave intuitively in JSX contexts
-// - the behavior is slightly different based on the containing directive:
-//    * <#run> disposers are ran in LIFO order across the entire static tree before `update` proceeds
-//    * component body disposers are ran when the element itself is disposed. This is usually manually or via `using` itself
-// - `using` cannot used in JSX context beyond the top-level scope of a <#run> or component bodies
-// - any `using` binding means that the tree root becomes disposable
-// - components used directly in the tree syntax likewise contribute a disposer if needed
-// - will likely _not_ use `Symbol.dispose` but rather a different symbol for tree roots. 
-//      * `using` will work on both symbols in JSX context, with the new one taking priority
-// - adds global `drop` function for easier manual clean-up, this simply calls the dispose method 
-// - TBD: enable `using` in JSX contexts to tolerate disposables of type `() => void`
-//      * useful for adhoc disposers and aligns with the ecosystem convention for returning functions as disposers
-//      * checker enforces operand evaluates into `() => void` and only `() => void` to mitigate unintentional usage e.g. a disposer with an optional param
-//
-//
-// let counter = 0
-// const x = <div>
-//      <#component Comp() {
-//         const id = counter++
-//         using disposables = new DisposableStack()
-//         disposables.defer(() => console.log(`disposed ${id}`))
+// - `unwind { ... }` inside #run or #component body: registers cleanup to run when the component is cleaned up
+//      <#component Foo(w: HTMLElement) {
 //      }>
-//        <div>i am {id}</div>
+//          <#run>
+//              function onKeyPress(ev) {}
+//              w.addEventListener('keypress', onKeyPress)
+//              unwind { w.removeEventListener('keypress', onKeyPress) }
+//          </>
 //      </>
-//      <#run>
-//        using c = <Comp/>
-//      </>
-//     {c}
-//   </div>
 //
-// update x // 'disposed 0'
-// drop(x) // 'disposed 1'
-// 
-// using `update` on dropped/disposed elements results in runtime exception
+// - the block form is required (statement must be a block); may be lifted later
+// - when it executes is component-defined ("unwind"), not block-exit like `defer`
 //
 //
 // TBD: should inference add `Disposable` to types explicitly via
 // intersection, or should it be closer to `update` where anything
-// that has the dispose symbol method in their type, even if optional,
-// supports the `using` syntax?
+// that has the dispose symbol method in their type, even if optional?
 //
-// TBD: emit diagnostic for `defer` statement in immediate #run scopes?
-
+// type LooseDisposable = intrinsic // strips off StrictDisposable when used in AsExpression _or_ in an intersection type
+// type StrictDisposable = intrinsic // this is a branded Disposable alias
 
 
 
 {
-    // basic named component - singular child infers singular return type
     <#component Foo(x: string)>
         <div>{x}</div>
     </>
     const r1 = <Foo x="hi" />
     // Foo is typed as (props: { x: string }) => HTMLDivElement
 
-    // multiple children - tuple return type
     ;<#component Bar(x: string)>
         <div>{x}</div>
         <div>{x}</div>
     </>
     const r2 = <Bar x="hi" />
-    // Bar returns [HTMLDivElement, HTMLDivElement]
 
-    // explicit return type annotation
     ;<#component Baz(x: string): HTMLDivElement>
         <div>{x}</div>
     </>
     const r3 = <Baz x="hi" />
 
-    // optional param becomes optional prop
-    ;<#component WithOpt(x: string, y?: number)>
+    <#component WithOpt(x: string, y?: number)>
         <div>{x}</div>
     </>
-    const r4a = <WithOpt x="hi" />       // ok — y is optional
+    const r4a = <WithOpt x="hi" />       // ok
     const r4b = <WithOpt x="hi" y={1} /> // ok
+
+    // Foo used as a type — aliases ComponentNode<HTMLDivElement, { x: string }>
+    const r1_typed: Foo = r1
+    // Baz also usable as a type
+    const r3_typed: Baz = r3
+    // same props shape — structurally compatible
+    const r_cross: Foo = r3
+    // { x, y? } assignable to { x } — ok
+    const r_cross2: Foo = r4a
 }
 
 {
-    // expression form — name elided, assigned via const
+    // expression form
     const Expr = <#component(x: string): HTMLDivElement>
         <div>{x}</div>
     </>
@@ -1134,18 +1115,15 @@ const d4 = <div><#if (cond)></></div>
 }
 
 {
-    // return in init body is a diagnostic
     <#component BadReturn(x: string) {
-        return x // error: return not allowed in component body
+        return x
     }>
         <div>{x}</div>
     </>
 }
 
 {
-    // component declares `children` as a typed record; caller provides labeled fragments
-
-    // plain labeled fragment — caller passes named children as record
+    // plain labeled fragment
     <#component Foo(children: { content: [string, string] })>
         <div>{...children.content}</div>
     </>
@@ -1153,7 +1131,7 @@ const d4 = <div><#if (cond)></></div>
         <:content>hi{'there'}</>
     </Foo>
 
-    // callable labeled fragment — label maps to a function in the children record
+    // callable labeled fragment
     ;<#component Bar(children: { item: (val: string) => [HTMLSpanElement] })>
         <div>{...children.item("test")}</div>
     </>
@@ -1161,7 +1139,7 @@ const d4 = <div><#if (cond)></></div>
         <:item(val: string)><span>{val}</span></>
     </Bar>
 
-    // contextual typing: unannotated params infer type from parent component's children declaration
+    // contextual typingg
     ;<#component Ctx(children: { slot: (n: number, s: string) => [HTMLDivElement] })>
         <div>{...children.slot(1, 'hi')}</div>
     </>
@@ -1176,18 +1154,64 @@ const d4 = <div><#if (cond)></></div>
         <:slot(s)>{s}</>
     </Ctx2>
 
+    const r_ctx3 = <Ctx2>
+        {...{
+            slot: s => <>{s}</>
+        }}
+    </Ctx2>
 
-    // duplicate label at call site — error
     const r_dup = <Foo>
         <:content>hi{'there'}</>
         <:content>oh{'no'}</>
     </Foo>
 
-    // all-or-nothing violation at call site — error
     const r_mix = <Foo>
         <div>hi</div>
         <:content>there{'!'}</>
     </Foo>
+
+    <#component OptChildren(children: { slot?: (s: string) => [string] })>
+        <div>{...(children.slot?.('hi') ?? [])}</div>
+    </>
+
+    const opt_cond = true as boolean
+    const opt_1 = <OptChildren>
+        <#if (opt_cond)>
+            <:slot(v2)>
+                {v2}
+            </>
+        </>
+    </OptChildren>
+    const opt_2 = <OptChildren>
+        <#if (opt_cond)>
+            <:slot(v2)>
+                {v2}
+            </>
+        </><#else>
+            <:slot(v2)>
+                {v2}{v2}
+            </>
+        </>
+    </OptChildren>
+
+}
+
+{
+    <#component EventComp(w: HTMLElement) {
+        function onKeyPress(ev: KeyboardEvent) {}
+        w.addEventListener('keypress', onKeyPress)
+        unwind {
+            w.removeEventListener('keypress', onKeyPress)
+        }
+    }>
+        <div></div>
+        <#run>
+            const el = document.createElement('div')
+            unwind {
+                el.remove()
+            }
+        </>
+    </>
 }
 
 // /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a

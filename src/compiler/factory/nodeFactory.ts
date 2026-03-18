@@ -280,6 +280,7 @@ import {
     JsxRunDirective,
     JsxComponentDirective,
     JsxLabeledFragment,
+    UnwindStatement,
     JsxElseDirective,
     JsxIfDirective,
     JsxNamespacedName,
@@ -1023,6 +1024,8 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         updateJsxComponentDirective,
         createJsxLabeledFragment,
         updateJsxLabeledFragment,
+        createUnwindStatement,
+        updateUnwindStatement,
         createCaseClause,
         updateCaseClause,
         createCaseIsClause,
@@ -6096,6 +6099,21 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     function updateJsxLabeledFragment(node: JsxLabeledFragment, label: Identifier, parameters: readonly ParameterDeclaration[] | undefined, children: readonly JsxChild[]) {
         return node.label !== label || node.parameters !== parameters || node.children !== children
             ? update(createJsxLabeledFragment(label, parameters, children), node)
+            : node;
+    }
+
+    // @api
+    function createUnwindStatement(statement: Block) {
+        const node = createBaseNode<UnwindStatement>(SyntaxKind.UnwindStatement);
+        node.statement = statement;
+        node.transformFlags |= propagateChildFlags(node.statement);
+        return node;
+    }
+
+    // @api
+    function updateUnwindStatement(node: UnwindStatement, statement: Block) {
+        return node.statement !== statement
+            ? update(createUnwindStatement(statement), node)
             : node;
     }
 

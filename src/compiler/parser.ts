@@ -231,6 +231,7 @@ import {
     JsxRunDirective,
     JsxComponentDirective,
     JsxLabeledFragment,
+    UnwindStatement,
     JsxExpression,
     JsxFragment,
     JsxElseDirective,
@@ -1097,6 +1098,9 @@ const forEachChildTable: ForEachChildTable = {
         return visitNode(cbNode, node.label) ||
             visitNodes(cbNode, cbNodes, node.parameters) ||
             visitNodes(cbNode, cbNodes, node.children);
+    },
+    [SyntaxKind.UnwindStatement]: function forEachChildInUnwindStatement<T>(node: UnwindStatement, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+        return visitNode(cbNode, node.statement);
     },
     [SyntaxKind.OptionalType]: forEachChildInOptionalRestOrJSDocParameterModifier,
     [SyntaxKind.RestType]: forEachChildInOptionalRestOrJSDocParameterModifier,
@@ -7559,6 +7563,12 @@ namespace Parser {
         return finishNode(factory.createFallthroughStatement(), pos);
     }
 
+    function parseUnwindStatement(): UnwindStatement {
+        const pos = getNodePos();
+        parseExpected(SyntaxKind.UnwindKeyword);
+        return finishNode(factory.createUnwindStatement(parseBlock(/*ignoreMissingOpenBrace*/ false)), pos);
+    }
+
     function parseDeferStatement(): Statement {
         const pos = getNodePos();
 
@@ -7755,6 +7765,7 @@ namespace Parser {
             case SyntaxKind.SwitchKeyword:
             case SyntaxKind.ThrowKeyword:
             case SyntaxKind.TryKeyword:
+            case SyntaxKind.UnwindKeyword:
             case SyntaxKind.FallthroughKeyword:
             case SyntaxKind.DebuggerKeyword:
             // 'catch' and 'finally' do not actually indicate that the code is part of a statement,
@@ -7906,6 +7917,8 @@ namespace Parser {
                 return parseDebuggerStatement();
             case SyntaxKind.DeferKeyword:
                 return parseDeferStatement();
+            case SyntaxKind.UnwindKeyword:
+                return parseUnwindStatement();
             case SyntaxKind.AtToken:
                 return parseDeclaration();
             case SyntaxKind.FallthroughKeyword:

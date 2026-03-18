@@ -52,13 +52,16 @@ main.syn(869,26): error TS2322: Type '() => void' is not assignable to type 'Chi
 main.syn(873,26): error TS95198: Spread JSX element type 'Element' is not an array type.
 main.syn(886,8): error TS95200: 'Comp' returns 'Element[]' and cannot be used as a single JSX element. Did you mean '...Comp'?
 main.syn(916,1): error TS1005: '>' expected.
-main.syn(1097,17): error TS95200: 'Bar' returns '[HTMLDivElement, HTMLDivElement]' and cannot be used as a single JSX element. Did you mean '...Bar'?
-main.syn(1136,9): error TS95205: Return statement is not allowed in component directive body
-main.syn(1180,11): error TS95207: Duplicate labeled fragment ':content'.
-main.syn(1185,9): error TS95206: Named children must be used consistently: either all children must be labeled fragments or none.
+main.syn(1072,17): error TS95200: 'Bar' returns '[HTMLDivElement, HTMLDivElement]' and cannot be used as a single JSX element. Did you mean '...Bar'?
+main.syn(1116,9): error TS95205: Return statement is not allowed in component directive body
+main.syn(1162,11): error TS95207: Duplicate labeled fragment ':content'.
+main.syn(1165,20): error TS2746: This JSX tag's 'children' prop expects a single child of type '{ content: [string, string]; }', but multiple children were provided.
+main.syn(1167,9): error TS95206: Named children must be used consistently: either all children must be labeled fragments or none.
+main.syn(1188,15): error TS2322: Type '[string, string]' is not assignable to type '[string]'.
+  Source has 2 element(s) but target allows only 1.
 
 
-==== main.syn (45 errors) ====
+==== main.syn (47 errors) ====
     function f<T>(t: reify T): T {
         switch (Type.kind(t)) {
             case "array":
@@ -1197,61 +1200,36 @@ main.syn(1185,9): error TS95206: Named children must be used consistently: eithe
     //
     //
     // --- WIP: explicit (JSX) resource management ---
-    // - repurposes `using` so that disposable objects behave intuitively in JSX contexts
-    // - the behavior is slightly different based on the containing directive:
-    //    * <#run> disposers are ran in LIFO order across the entire static tree before `update` proceeds
-    //    * component body disposers are ran when the element itself is disposed. This is usually manually or via `using` itself
-    // - `using` cannot used in JSX context beyond the top-level scope of a <#run> or component bodies
-    // - any `using` binding means that the tree root becomes disposable
-    // - components used directly in the tree syntax likewise contribute a disposer if needed
-    // - will likely _not_ use `Symbol.dispose` but rather a different symbol for tree roots. 
-    //      * `using` will work on both symbols in JSX context, with the new one taking priority
-    // - adds global `drop` function for easier manual clean-up, this simply calls the dispose method 
-    // - TBD: enable `using` in JSX contexts to tolerate disposables of type `() => void`
-    //      * useful for adhoc disposers and aligns with the ecosystem convention for returning functions as disposers
-    //      * checker enforces operand evaluates into `() => void` and only `() => void` to mitigate unintentional usage e.g. a disposer with an optional param
-    //
-    //
-    // let counter = 0
-    // const x = <div>
-    //      <#component Comp() {
-    //         const id = counter++
-    //         using disposables = new DisposableStack()
-    //         disposables.defer(() => console.log(`disposed ${id}`))
+    // - `unwind { ... }` inside #run or #component body: registers cleanup to run when the component is cleaned up
+    //      <#component Foo(w: HTMLElement) {
     //      }>
-    //        <div>i am {id}</div>
+    //          <#run>
+    //              function onKeyPress(ev) {}
+    //              w.addEventListener('keypress', onKeyPress)
+    //              unwind { w.removeEventListener('keypress', onKeyPress) }
+    //          </>
     //      </>
-    //      <#run>
-    //        using c = <Comp/>
-    //      </>
-    //     {c}
-    //   </div>
     //
-    // update x // 'disposed 0'
-    // drop(x) // 'disposed 1'
-    // 
-    // using `update` on dropped/disposed elements results in runtime exception
+    // - the block form is required (statement must be a block); may be lifted later
+    // - when it executes is component-defined ("unwind"), not block-exit like `defer`
     //
     //
     // TBD: should inference add `Disposable` to types explicitly via
     // intersection, or should it be closer to `update` where anything
-    // that has the dispose symbol method in their type, even if optional,
-    // supports the `using` syntax?
+    // that has the dispose symbol method in their type, even if optional?
     //
-    // TBD: emit diagnostic for `defer` statement in immediate #run scopes?
-    
+    // type LooseDisposable = intrinsic // strips off StrictDisposable when used in AsExpression _or_ in an intersection type
+    // type StrictDisposable = intrinsic // this is a branded Disposable alias
     
     
     
     {
-        // basic named component - singular child infers singular return type
         <#component Foo(x: string)>
             <div>{x}</div>
         </>
         const r1 = <Foo x="hi" />
         // Foo is typed as (props: { x: string }) => HTMLDivElement
     
-        // multiple children - tuple return type
         ;<#component Bar(x: string)>
             <div>{x}</div>
             <div>{x}</div>
@@ -1259,24 +1237,30 @@ main.syn(1185,9): error TS95206: Named children must be used consistently: eithe
         const r2 = <Bar x="hi" />
                     ~~~
 !!! error TS95200: 'Bar' returns '[HTMLDivElement, HTMLDivElement]' and cannot be used as a single JSX element. Did you mean '...Bar'?
-        // Bar returns [HTMLDivElement, HTMLDivElement]
     
-        // explicit return type annotation
         ;<#component Baz(x: string): HTMLDivElement>
             <div>{x}</div>
         </>
         const r3 = <Baz x="hi" />
     
-        // optional param becomes optional prop
-        ;<#component WithOpt(x: string, y?: number)>
+        <#component WithOpt(x: string, y?: number)>
             <div>{x}</div>
         </>
-        const r4a = <WithOpt x="hi" />       // ok — y is optional
+        const r4a = <WithOpt x="hi" />       // ok
         const r4b = <WithOpt x="hi" y={1} /> // ok
+    
+        // Foo used as a type — aliases ComponentNode<HTMLDivElement, { x: string }>
+        const r1_typed: Foo = r1
+        // Baz also usable as a type
+        const r3_typed: Baz = r3
+        // same props shape — structurally compatible
+        const r_cross: Foo = r3
+        // { x, y? } assignable to { x } — ok
+        const r_cross2: Foo = r4a
     }
     
     {
-        // expression form — name elided, assigned via const
+        // expression form
         const Expr = <#component(x: string): HTMLDivElement>
             <div>{x}</div>
         </>
@@ -1295,9 +1279,8 @@ main.syn(1185,9): error TS95206: Named children must be used consistently: eithe
     }
     
     {
-        // return in init body is a diagnostic
         <#component BadReturn(x: string) {
-            return x // error: return not allowed in component body
+            return x
             ~~~~~~
 !!! error TS95205: Return statement is not allowed in component directive body
         }>
@@ -1306,9 +1289,7 @@ main.syn(1185,9): error TS95206: Named children must be used consistently: eithe
     }
     
     {
-        // component declares `children` as a typed record; caller provides labeled fragments
-    
-        // plain labeled fragment — caller passes named children as record
+        // plain labeled fragment
         <#component Foo(children: { content: [string, string] })>
             <div>{...children.content}</div>
         </>
@@ -1316,7 +1297,7 @@ main.syn(1185,9): error TS95206: Named children must be used consistently: eithe
             <:content>hi{'there'}</>
         </Foo>
     
-        // callable labeled fragment — label maps to a function in the children record
+        // callable labeled fragment
         ;<#component Bar(children: { item: (val: string) => [HTMLSpanElement] })>
             <div>{...children.item("test")}</div>
         </>
@@ -1324,7 +1305,7 @@ main.syn(1185,9): error TS95206: Named children must be used consistently: eithe
             <:item(val: string)><span>{val}</span></>
         </Bar>
     
-        // contextual typing: unannotated params infer type from parent component's children declaration
+        // contextual typingg
         ;<#component Ctx(children: { slot: (n: number, s: string) => [HTMLDivElement] })>
             <div>{...children.slot(1, 'hi')}</div>
         </>
@@ -1339,8 +1320,12 @@ main.syn(1185,9): error TS95206: Named children must be used consistently: eithe
             <:slot(s)>{s}</>
         </Ctx2>
     
+        const r_ctx3 = <Ctx2>
+            {...{
+                slot: s => <>{s}</>
+            }}
+        </Ctx2>
     
-        // duplicate label at call site — error
         const r_dup = <Foo>
             <:content>hi{'there'}</>
             <:content>oh{'no'}</>
@@ -1348,13 +1333,60 @@ main.syn(1185,9): error TS95206: Named children must be used consistently: eithe
 !!! error TS95207: Duplicate labeled fragment ':content'.
         </Foo>
     
-        // all-or-nothing violation at call site — error
         const r_mix = <Foo>
+                       ~~~
+!!! error TS2746: This JSX tag's 'children' prop expects a single child of type '{ content: [string, string]; }', but multiple children were provided.
             <div>hi</div>
-            ~~~~~~~~~~~~~
-!!! error TS95206: Named children must be used consistently: either all children must be labeled fragments or none.
             <:content>there{'!'}</>
+            ~~~~~~~~~~~~~~~~~~~~~~~
+!!! error TS95206: Named children must be used consistently: either all children must be labeled fragments or none.
         </Foo>
+    
+        <#component OptChildren(children: { slot?: (s: string) => [string] })>
+            <div>{...(children.slot?.('hi') ?? [])}</div>
+        </>
+    
+        const opt_cond = true as boolean
+        const opt_1 = <OptChildren>
+            <#if (opt_cond)>
+                <:slot(v2)>
+                    {v2}
+                </>
+            </>
+        </OptChildren>
+        const opt_2 = <OptChildren>
+            <#if (opt_cond)>
+                <:slot(v2)>
+                    {v2}
+                </>
+            </><#else>
+                <:slot(v2)>
+                  ~~~~
+!!! error TS2322: Type '[string, string]' is not assignable to type '[string]'.
+!!! error TS2322:   Source has 2 element(s) but target allows only 1.
+                    {v2}{v2}
+                </>
+            </>
+        </OptChildren>
+    
+    }
+    
+    {
+        <#component EventComp(w: HTMLElement) {
+            function onKeyPress(ev: KeyboardEvent) {}
+            w.addEventListener('keypress', onKeyPress)
+            unwind {
+                w.removeEventListener('keypress', onKeyPress)
+            }
+        }>
+            <div></div>
+            <#run>
+                const el = document.createElement('div')
+                unwind {
+                    el.remove()
+                }
+            </>
+        </>
     }
     
     // /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a

@@ -53,6 +53,7 @@ import {
     JsxRunDirective,
     JsxComponentDirective,
     JsxLabeledFragment,
+    UnwindStatement,
     isJsxClosingElement,
     isJsxClosingFragment,
     JsxElseDirective,
@@ -1756,6 +1757,12 @@ const visitEachChildTable: VisitEachChildTable = {
             Debug.checkDefined(nodeVisitor((node as JsxLabeledFragment).label, visitor, isIdentifier)),
             nodesVisitor((node as JsxLabeledFragment).parameters, visitor, isParameter),
             nodesVisitor((node as JsxLabeledFragment).children, visitor, isJsxChild),
+        );
+    },
+    [SyntaxKind.UnwindStatement]: function visitEachChildOfUnwindStatement(node, visitor, _context, _nodesVisitor, nodeVisitor, _tokenVisitor) {
+        return _context.factory.updateUnwindStatement(
+            node as UnwindStatement,
+            Debug.checkDefined(nodeVisitor((node as UnwindStatement).statement, visitor, isBlock)),
         );
     },
 

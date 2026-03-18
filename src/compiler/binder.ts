@@ -132,6 +132,7 @@ import {
     JsxRunDirective,
     JsxComponentDirective,
     JsxElseDirective,
+    UnwindStatement,
     JsxIfDirective,
     InternalSymbolName,
     isAliasableExpression,
@@ -1197,6 +1198,9 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                 break;
             case SyntaxKind.DeferStatement:
                 bindDeferStatement(node as DeferStatement);
+                break;
+            case SyntaxKind.UnwindStatement:
+                bind((node as UnwindStatement).statement);
                 break;
             case SyntaxKind.SwitchStatement:
                 bindSwitchStatement(node as SwitchStatement);
@@ -3166,7 +3170,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                 return bindFunctionDeclaration(node as FunctionDeclaration);
             case SyntaxKind.JsxComponentDirective:
                 if ((node as JsxComponentDirective).name) {
-                    bindBlockScopedDeclaration(node as unknown as Declaration, SymbolFlags.Function, SymbolFlags.FunctionExcludes);
+                    bindBlockScopedDeclaration(node as unknown as Declaration, SymbolFlags.Function | SymbolFlags.TypeAlias, SymbolFlags.FunctionExcludes | SymbolFlags.TypeAliasExcludes);
                 }
                 return;
             case SyntaxKind.Constructor:

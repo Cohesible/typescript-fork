@@ -5077,9 +5077,9 @@ export function getJsxElementNameContainer(node: Node): Node | undefined {
             case SyntaxKind.JsxElement:
             case SyntaxKind.JsxFragment:
             case SyntaxKind.JsxSelfClosingElement:
+            case SyntaxKind.JsxComponentDirective:
                 el = n
                 break;
-            case SyntaxKind.JsxComponentDirective:
             case SyntaxKind.JsxIfDirective:
             case SyntaxKind.JsxElseDirective:
             case SyntaxKind.SourceFile:

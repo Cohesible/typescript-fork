@@ -97,17 +97,21 @@ declare class Wire<T> {
 	convert<U>(fn: (value: T) => U): Wire<U>
 }
 
+interface ComponentNode<
+	T extends ChildNode = ChildNode,
+	U extends Record<string, unknown> = Record<string, unknown>
+> extends ChildNode, Updatable {
+	readonly root: T
+	readonly props: U
+}
+
 declare namespace JSX {
 	type Booleanish = boolean | 'true' | 'false';
 
 	type Child = ChildNode | string | number;
 	type Children = Child[];
 
-	type NodeLike = string | number | ChildNode | Wire<string | number>
-
-	interface ComponentNode<T extends () => ChildNode = () => ChildNode> extends ChildNode, Updatable {
-		readonly root: ReturnType<T>
-	}
+	type NodeLike = string | number | ChildNode | Wire<string | number | ChildNode>
 
 	type Element = globalThis.Element;
 

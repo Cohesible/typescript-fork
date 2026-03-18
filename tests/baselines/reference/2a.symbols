@@ -2249,316 +2249,328 @@ const d4 = <div><#if (cond)></></div>
 //
 //
 // --- WIP: explicit (JSX) resource management ---
-// - repurposes `using` so that disposable objects behave intuitively in JSX contexts
-// - the behavior is slightly different based on the containing directive:
-//    * <#run> disposers are ran in LIFO order across the entire static tree before `update` proceeds
-//    * component body disposers are ran when the element itself is disposed. This is usually manually or via `using` itself
-// - `using` cannot used in JSX context beyond the top-level scope of a <#run> or component bodies
-// - any `using` binding means that the tree root becomes disposable
-// - components used directly in the tree syntax likewise contribute a disposer if needed
-// - will likely _not_ use `Symbol.dispose` but rather a different symbol for tree roots. 
-//      * `using` will work on both symbols in JSX context, with the new one taking priority
-// - adds global `drop` function for easier manual clean-up, this simply calls the dispose method 
-// - TBD: enable `using` in JSX contexts to tolerate disposables of type `() => void`
-//      * useful for adhoc disposers and aligns with the ecosystem convention for returning functions as disposers
-//      * checker enforces operand evaluates into `() => void` and only `() => void` to mitigate unintentional usage e.g. a disposer with an optional param
-//
-//
-// let counter = 0
-// const x = <div>
-//      <#component Comp() {
-//         const id = counter++
-//         using disposables = new DisposableStack()
-//         disposables.defer(() => console.log(`disposed ${id}`))
+// - `unwind { ... }` inside #run or #component body: registers cleanup to run when the component is cleaned up
+//      <#component Foo(w: HTMLElement) {
 //      }>
-//        <div>i am {id}</div>
+//          <#run>
+//              function onKeyPress(ev) {}
+//              w.addEventListener('keypress', onKeyPress)
+//              unwind { w.removeEventListener('keypress', onKeyPress) }
+//          </>
 //      </>
-//      <#run>
-//        using c = <Comp/>
-//      </>
-//     {c}
-//   </div>
 //
-// update x // 'disposed 0'
-// drop(x) // 'disposed 1'
-// 
-// using `update` on dropped/disposed elements results in runtime exception
+// - the block form is required (statement must be a block); may be lifted later
+// - when it executes is component-defined ("unwind"), not block-exit like `defer`
 //
 //
 // TBD: should inference add `Disposable` to types explicitly via
 // intersection, or should it be closer to `update` where anything
-// that has the dispose symbol method in their type, even if optional,
-// supports the `using` syntax?
+// that has the dispose symbol method in their type, even if optional?
 //
-// TBD: emit diagnostic for `defer` statement in immediate #run scopes?
-
+// type LooseDisposable = intrinsic // strips off StrictDisposable when used in AsExpression _or_ in an intersection type
+// type StrictDisposable = intrinsic // this is a branded Disposable alias
 
 
 
 {
-    // basic named component - singular child infers singular return type
     <#component Foo(x: string)>
->x : Symbol(x, Decl(main.syn, 1085, 20))
+>x : Symbol(x, Decl(main.syn, 1061, 20))
 
         <div>{x}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->x : Symbol(x, Decl(main.syn, 1085, 20))
+>x : Symbol(x, Decl(main.syn, 1061, 20))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
     const r1 = <Foo x="hi" />
->r1 : Symbol(r1, Decl(main.syn, 1088, 9))
->Foo : Symbol(Foo, Decl(main.syn, 1083, 1))
->x : Symbol(x, Decl(main.syn, 1088, 19))
+>r1 : Symbol(r1, Decl(main.syn, 1064, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 1060, 1))
+>x : Symbol(x, Decl(main.syn, 1064, 19))
 
     // Foo is typed as (props: { x: string }) => HTMLDivElement
 
-    // multiple children - tuple return type
     ;<#component Bar(x: string)>
->x : Symbol(x, Decl(main.syn, 1092, 21))
+>x : Symbol(x, Decl(main.syn, 1067, 21))
 
         <div>{x}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->x : Symbol(x, Decl(main.syn, 1092, 21))
+>x : Symbol(x, Decl(main.syn, 1067, 21))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         <div>{x}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->x : Symbol(x, Decl(main.syn, 1092, 21))
+>x : Symbol(x, Decl(main.syn, 1067, 21))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
     const r2 = <Bar x="hi" />
->r2 : Symbol(r2, Decl(main.syn, 1096, 9))
->Bar : Symbol(Bar, Decl(main.syn, 1092, 5))
->x : Symbol(x, Decl(main.syn, 1096, 19))
+>r2 : Symbol(r2, Decl(main.syn, 1071, 9))
+>Bar : Symbol(Bar, Decl(main.syn, 1067, 5))
+>x : Symbol(x, Decl(main.syn, 1071, 19))
 
-    // Bar returns [HTMLDivElement, HTMLDivElement]
-
-    // explicit return type annotation
     ;<#component Baz(x: string): HTMLDivElement>
->x : Symbol(x, Decl(main.syn, 1100, 21))
+>x : Symbol(x, Decl(main.syn, 1073, 21))
 >HTMLDivElement : Symbol(HTMLDivElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
 
         <div>{x}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->x : Symbol(x, Decl(main.syn, 1100, 21))
+>x : Symbol(x, Decl(main.syn, 1073, 21))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
     const r3 = <Baz x="hi" />
->r3 : Symbol(r3, Decl(main.syn, 1103, 9))
->Baz : Symbol(Baz, Decl(main.syn, 1100, 5))
->x : Symbol(x, Decl(main.syn, 1103, 19))
+>r3 : Symbol(r3, Decl(main.syn, 1076, 9))
+>Baz : Symbol(Baz, Decl(main.syn, 1073, 5))
+>x : Symbol(x, Decl(main.syn, 1076, 19))
 
-    // optional param becomes optional prop
-    ;<#component WithOpt(x: string, y?: number)>
->x : Symbol(x, Decl(main.syn, 1106, 25))
->y : Symbol(y, Decl(main.syn, 1106, 35))
+    <#component WithOpt(x: string, y?: number)>
+>x : Symbol(x, Decl(main.syn, 1078, 24))
+>y : Symbol(y, Decl(main.syn, 1078, 34))
 
         <div>{x}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->x : Symbol(x, Decl(main.syn, 1106, 25))
+>x : Symbol(x, Decl(main.syn, 1078, 24))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
-    const r4a = <WithOpt x="hi" />       // ok — y is optional
->r4a : Symbol(r4a, Decl(main.syn, 1109, 9))
->WithOpt : Symbol(WithOpt, Decl(main.syn, 1106, 5))
->x : Symbol(x, Decl(main.syn, 1109, 24))
+    const r4a = <WithOpt x="hi" />       // ok
+>r4a : Symbol(r4a, Decl(main.syn, 1081, 9))
+>WithOpt : Symbol(WithOpt, Decl(main.syn, 1076, 29))
+>x : Symbol(x, Decl(main.syn, 1081, 24))
 
     const r4b = <WithOpt x="hi" y={1} /> // ok
->r4b : Symbol(r4b, Decl(main.syn, 1110, 9))
->WithOpt : Symbol(WithOpt, Decl(main.syn, 1106, 5))
->x : Symbol(x, Decl(main.syn, 1110, 24))
->y : Symbol(y, Decl(main.syn, 1110, 31))
+>r4b : Symbol(r4b, Decl(main.syn, 1082, 9))
+>WithOpt : Symbol(WithOpt, Decl(main.syn, 1076, 29))
+>x : Symbol(x, Decl(main.syn, 1082, 24))
+>y : Symbol(y, Decl(main.syn, 1082, 31))
+
+    // Foo used as a type — aliases ComponentNode<HTMLDivElement, { x: string }>
+    const r1_typed: Foo = r1
+>r1_typed : Symbol(r1_typed, Decl(main.syn, 1085, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 1060, 1))
+>r1 : Symbol(r1, Decl(main.syn, 1064, 9))
+
+    // Baz also usable as a type
+    const r3_typed: Baz = r3
+>r3_typed : Symbol(r3_typed, Decl(main.syn, 1087, 9))
+>Baz : Symbol(Baz, Decl(main.syn, 1073, 5))
+>r3 : Symbol(r3, Decl(main.syn, 1076, 9))
+
+    // same props shape — structurally compatible
+    const r_cross: Foo = r3
+>r_cross : Symbol(r_cross, Decl(main.syn, 1089, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 1060, 1))
+>r3 : Symbol(r3, Decl(main.syn, 1076, 9))
+
+    // { x, y? } assignable to { x } — ok
+    const r_cross2: Foo = r4a
+>r_cross2 : Symbol(r_cross2, Decl(main.syn, 1091, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 1060, 1))
+>r4a : Symbol(r4a, Decl(main.syn, 1081, 9))
 }
 
 {
-    // expression form — name elided, assigned via const
+    // expression form
     const Expr = <#component(x: string): HTMLDivElement>
->Expr : Symbol(Expr, Decl(main.syn, 1115, 9))
->x : Symbol(x, Decl(main.syn, 1115, 29))
+>Expr : Symbol(Expr, Decl(main.syn, 1096, 9))
+>x : Symbol(x, Decl(main.syn, 1096, 29))
 >HTMLDivElement : Symbol(HTMLDivElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
 
         <div>{x}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->x : Symbol(x, Decl(main.syn, 1115, 29))
+>x : Symbol(x, Decl(main.syn, 1096, 29))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
     // Expr is (props: { x: string }) => HTMLDivElement
     const r5 = <Expr x="hello" />
->r5 : Symbol(r5, Decl(main.syn, 1119, 9))
->Expr : Symbol(Expr, Decl(main.syn, 1115, 9))
->x : Symbol(x, Decl(main.syn, 1119, 20))
+>r5 : Symbol(r5, Decl(main.syn, 1100, 9))
+>Expr : Symbol(Expr, Decl(main.syn, 1096, 9))
+>x : Symbol(x, Decl(main.syn, 1100, 20))
 }
 
 {
     // component with init body
     <#component WithBody(x: string) {
->x : Symbol(x, Decl(main.syn, 1124, 25))
+>x : Symbol(x, Decl(main.syn, 1105, 25))
 
         const y = `hello: ${x}`
->y : Symbol(y, Decl(main.syn, 1125, 13))
->x : Symbol(x, Decl(main.syn, 1124, 25))
+>y : Symbol(y, Decl(main.syn, 1106, 13))
+>x : Symbol(x, Decl(main.syn, 1105, 25))
 
     }>
         <div>{y}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->y : Symbol(y, Decl(main.syn, 1125, 13))
+>y : Symbol(y, Decl(main.syn, 1106, 13))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
     const r6 = <WithBody x="world" />
->r6 : Symbol(r6, Decl(main.syn, 1129, 9))
->WithBody : Symbol(WithBody, Decl(main.syn, 1122, 1))
->x : Symbol(x, Decl(main.syn, 1129, 24))
+>r6 : Symbol(r6, Decl(main.syn, 1110, 9))
+>WithBody : Symbol(WithBody, Decl(main.syn, 1103, 1))
+>x : Symbol(x, Decl(main.syn, 1110, 24))
 }
 
 {
-    // return in init body is a diagnostic
     <#component BadReturn(x: string) {
->x : Symbol(x, Decl(main.syn, 1134, 26))
+>x : Symbol(x, Decl(main.syn, 1114, 26))
 
-        return x // error: return not allowed in component body
->x : Symbol(x, Decl(main.syn, 1134, 26))
+        return x
+>x : Symbol(x, Decl(main.syn, 1114, 26))
 
     }>
         <div>{x}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->x : Symbol(x, Decl(main.syn, 1134, 26))
+>x : Symbol(x, Decl(main.syn, 1114, 26))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
 }
 
 {
-    // component declares `children` as a typed record; caller provides labeled fragments
-
-    // plain labeled fragment — caller passes named children as record
+    // plain labeled fragment
     <#component Foo(children: { content: [string, string] })>
->children : Symbol(children, Decl(main.syn, 1145, 20))
->content : Symbol(content, Decl(main.syn, 1145, 31))
+>children : Symbol(children, Decl(main.syn, 1123, 20))
+>content : Symbol(content, Decl(main.syn, 1123, 31))
 
         <div>{...children.content}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->children.content : Symbol(content, Decl(main.syn, 1145, 31))
->children : Symbol(children, Decl(main.syn, 1145, 20))
->content : Symbol(content, Decl(main.syn, 1145, 31))
+>children.content : Symbol(content, Decl(main.syn, 1123, 31))
+>children : Symbol(children, Decl(main.syn, 1123, 20))
+>content : Symbol(content, Decl(main.syn, 1123, 31))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
     const r_lf1 = <Foo>
->r_lf1 : Symbol(r_lf1, Decl(main.syn, 1148, 9))
->Foo : Symbol(Foo, Decl(main.syn, 1141, 1))
+>r_lf1 : Symbol(r_lf1, Decl(main.syn, 1126, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 1121, 1))
 
         <:content>hi{'there'}</>
-    </Foo>
->Foo : Symbol(Foo, Decl(main.syn, 1141, 1))
+>content : Symbol(content)
 
-    // callable labeled fragment — label maps to a function in the children record
+    </Foo>
+>Foo : Symbol(Foo, Decl(main.syn, 1121, 1))
+
+    // callable labeled fragment
     ;<#component Bar(children: { item: (val: string) => [HTMLSpanElement] })>
->children : Symbol(children, Decl(main.syn, 1153, 21))
->item : Symbol(item, Decl(main.syn, 1153, 32))
->val : Symbol(val, Decl(main.syn, 1153, 40))
+>children : Symbol(children, Decl(main.syn, 1131, 21))
+>item : Symbol(item, Decl(main.syn, 1131, 32))
+>val : Symbol(val, Decl(main.syn, 1131, 40))
 >HTMLSpanElement : Symbol(HTMLSpanElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
 
         <div>{...children.item("test")}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->children.item : Symbol(item, Decl(main.syn, 1153, 32))
->children : Symbol(children, Decl(main.syn, 1153, 21))
->item : Symbol(item, Decl(main.syn, 1153, 32))
+>children.item : Symbol(item, Decl(main.syn, 1131, 32))
+>children : Symbol(children, Decl(main.syn, 1131, 21))
+>item : Symbol(item, Decl(main.syn, 1131, 32))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
     const r_lf2 = <Bar>
->r_lf2 : Symbol(r_lf2, Decl(main.syn, 1156, 9))
->Bar : Symbol(Bar, Decl(main.syn, 1153, 5))
+>r_lf2 : Symbol(r_lf2, Decl(main.syn, 1134, 9))
+>Bar : Symbol(Bar, Decl(main.syn, 1131, 5))
 
         <:item(val: string)><span>{val}</span></>
->val : Symbol(val, Decl(main.syn, 1157, 15))
+>item : Symbol(item)
+>val : Symbol(val, Decl(main.syn, 1135, 15))
 >span : Symbol(JSX.IntrinsicElements.span, Decl(lib.jsx.d.ts, --, --))
->val : Symbol(val, Decl(main.syn, 1157, 15))
+>val : Symbol(val, Decl(main.syn, 1135, 15))
 >span : Symbol(JSX.IntrinsicElements.span, Decl(lib.jsx.d.ts, --, --))
 
     </Bar>
->Bar : Symbol(Bar, Decl(main.syn, 1153, 5))
+>Bar : Symbol(Bar, Decl(main.syn, 1131, 5))
 
-    // contextual typing: unannotated params infer type from parent component's children declaration
+    // contextual typingg
     ;<#component Ctx(children: { slot: (n: number, s: string) => [HTMLDivElement] })>
->children : Symbol(children, Decl(main.syn, 1161, 21))
->slot : Symbol(slot, Decl(main.syn, 1161, 32))
->n : Symbol(n, Decl(main.syn, 1161, 40))
->s : Symbol(s, Decl(main.syn, 1161, 50))
+>children : Symbol(children, Decl(main.syn, 1139, 21))
+>slot : Symbol(slot, Decl(main.syn, 1139, 32))
+>n : Symbol(n, Decl(main.syn, 1139, 40))
+>s : Symbol(s, Decl(main.syn, 1139, 50))
 >HTMLDivElement : Symbol(HTMLDivElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
 
         <div>{...children.slot(1, 'hi')}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->children.slot : Symbol(slot, Decl(main.syn, 1161, 32))
->children : Symbol(children, Decl(main.syn, 1161, 21))
->slot : Symbol(slot, Decl(main.syn, 1161, 32))
+>children.slot : Symbol(slot, Decl(main.syn, 1139, 32))
+>children : Symbol(children, Decl(main.syn, 1139, 21))
+>slot : Symbol(slot, Decl(main.syn, 1139, 32))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
     const r_ctx = <Ctx>
->r_ctx : Symbol(r_ctx, Decl(main.syn, 1164, 9))
->Ctx : Symbol(Ctx, Decl(main.syn, 1161, 5))
+>r_ctx : Symbol(r_ctx, Decl(main.syn, 1142, 9))
+>Ctx : Symbol(Ctx, Decl(main.syn, 1139, 5))
 
         <:slot(n, s)><div>{n.toFixed()}{s.toUpperCase()}</div></>
->n : Symbol(n, Decl(main.syn, 1165, 15))
->s : Symbol(s, Decl(main.syn, 1165, 17))
+>slot : Symbol(slot)
+>n : Symbol(n, Decl(main.syn, 1143, 15))
+>s : Symbol(s, Decl(main.syn, 1143, 17))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >n.toFixed : Symbol(Number.toFixed, Decl(lib.es5.d.ts, --, --))
->n : Symbol(n, Decl(main.syn, 1165, 15))
+>n : Symbol(n, Decl(main.syn, 1143, 15))
 >toFixed : Symbol(Number.toFixed, Decl(lib.es5.d.ts, --, --))
 >s.toUpperCase : Symbol(String.toUpperCase, Decl(lib.es5.d.ts, --, --))
->s : Symbol(s, Decl(main.syn, 1165, 17))
+>s : Symbol(s, Decl(main.syn, 1143, 17))
 >toUpperCase : Symbol(String.toUpperCase, Decl(lib.es5.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </Ctx>
->Ctx : Symbol(Ctx, Decl(main.syn, 1161, 5))
+>Ctx : Symbol(Ctx, Decl(main.syn, 1139, 5))
 
     ;<#component Ctx2(children: { slot: (s: string) => [string] })>
->children : Symbol(children, Decl(main.syn, 1168, 22))
->slot : Symbol(slot, Decl(main.syn, 1168, 33))
->s : Symbol(s, Decl(main.syn, 1168, 41))
+>children : Symbol(children, Decl(main.syn, 1146, 22))
+>slot : Symbol(slot, Decl(main.syn, 1146, 33))
+>s : Symbol(s, Decl(main.syn, 1146, 41))
 
         <div>{...children.slot('hi')}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->children.slot : Symbol(slot, Decl(main.syn, 1168, 33))
->children : Symbol(children, Decl(main.syn, 1168, 22))
->slot : Symbol(slot, Decl(main.syn, 1168, 33))
+>children.slot : Symbol(slot, Decl(main.syn, 1146, 33))
+>children : Symbol(children, Decl(main.syn, 1146, 22))
+>slot : Symbol(slot, Decl(main.syn, 1146, 33))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
     const r_ctx2 = <Ctx2>
->r_ctx2 : Symbol(r_ctx2, Decl(main.syn, 1171, 9))
->Ctx2 : Symbol(Ctx2, Decl(main.syn, 1168, 5))
+>r_ctx2 : Symbol(r_ctx2, Decl(main.syn, 1149, 9))
+>Ctx2 : Symbol(Ctx2, Decl(main.syn, 1146, 5))
 
         <:slot(s)>{s}</>
->s : Symbol(s, Decl(main.syn, 1172, 15))
->s : Symbol(s, Decl(main.syn, 1172, 15))
+>slot : Symbol(slot)
+>s : Symbol(s, Decl(main.syn, 1150, 15))
+>s : Symbol(s, Decl(main.syn, 1150, 15))
 
     </Ctx2>
->Ctx2 : Symbol(Ctx2, Decl(main.syn, 1168, 5))
+>Ctx2 : Symbol(Ctx2, Decl(main.syn, 1146, 5))
 
+    const r_ctx3 = <Ctx2>
+>r_ctx3 : Symbol(r_ctx3, Decl(main.syn, 1153, 9))
+>Ctx2 : Symbol(Ctx2, Decl(main.syn, 1146, 5))
 
-    // duplicate label at call site — error
+        {...{
+            slot: s => <>{s}</>
+>slot : Symbol(slot, Decl(main.syn, 1154, 13))
+>s : Symbol(s, Decl(main.syn, 1155, 17))
+>s : Symbol(s, Decl(main.syn, 1155, 17))
+
+        }}
+    </Ctx2>
+>Ctx2 : Symbol(Ctx2, Decl(main.syn, 1146, 5))
+
     const r_dup = <Foo>
->r_dup : Symbol(r_dup, Decl(main.syn, 1177, 9))
->Foo : Symbol(Foo, Decl(main.syn, 1141, 1))
+>r_dup : Symbol(r_dup, Decl(main.syn, 1159, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 1121, 1))
 
         <:content>hi{'there'}</>
-        <:content>oh{'no'}</>
-    </Foo>
->Foo : Symbol(Foo, Decl(main.syn, 1141, 1))
+>content : Symbol(content)
 
-    // all-or-nothing violation at call site — error
+        <:content>oh{'no'}</>
+>content : Symbol(content)
+
+    </Foo>
+>Foo : Symbol(Foo, Decl(main.syn, 1121, 1))
+
     const r_mix = <Foo>
->r_mix : Symbol(r_mix, Decl(main.syn, 1183, 9))
->Foo : Symbol(Foo, Decl(main.syn, 1141, 1))
+>r_mix : Symbol(r_mix, Decl(main.syn, 1164, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 1121, 1))
 
         <div>hi</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
@@ -2566,7 +2578,118 @@ const d4 = <div><#if (cond)></></div>
 
         <:content>there{'!'}</>
     </Foo>
->Foo : Symbol(Foo, Decl(main.syn, 1141, 1))
+>Foo : Symbol(Foo, Decl(main.syn, 1121, 1))
+
+    <#component OptChildren(children: { slot?: (s: string) => [string] })>
+>children : Symbol(children, Decl(main.syn, 1169, 28))
+>slot : Symbol(slot, Decl(main.syn, 1169, 39))
+>s : Symbol(s, Decl(main.syn, 1169, 48))
+
+        <div>{...(children.slot?.('hi') ?? [])}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>children.slot : Symbol(slot, Decl(main.syn, 1169, 39))
+>children : Symbol(children, Decl(main.syn, 1169, 28))
+>slot : Symbol(slot, Decl(main.syn, 1169, 39))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+
+    const opt_cond = true as boolean
+>opt_cond : Symbol(opt_cond, Decl(main.syn, 1173, 9))
+
+    const opt_1 = <OptChildren>
+>opt_1 : Symbol(opt_1, Decl(main.syn, 1174, 9))
+>OptChildren : Symbol(OptChildren, Decl(main.syn, 1167, 10))
+
+        <#if (opt_cond)>
+>opt_cond : Symbol(opt_cond, Decl(main.syn, 1173, 9))
+
+            <:slot(v2)>
+>slot : Symbol(slot)
+>v2 : Symbol(v2, Decl(main.syn, 1176, 19))
+
+                {v2}
+>v2 : Symbol(v2, Decl(main.syn, 1176, 19))
+
+            </>
+        </>
+    </OptChildren>
+>OptChildren : Symbol(OptChildren, Decl(main.syn, 1167, 10))
+
+    const opt_2 = <OptChildren>
+>opt_2 : Symbol(opt_2, Decl(main.syn, 1181, 9))
+>OptChildren : Symbol(OptChildren, Decl(main.syn, 1167, 10))
+
+        <#if (opt_cond)>
+>opt_cond : Symbol(opt_cond, Decl(main.syn, 1173, 9))
+
+            <:slot(v2)>
+>slot : Symbol(slot)
+>v2 : Symbol(v2, Decl(main.syn, 1183, 19))
+
+                {v2}
+>v2 : Symbol(v2, Decl(main.syn, 1183, 19))
+
+            </>
+        </><#else>
+            <:slot(v2)>
+>slot : Symbol(slot)
+>v2 : Symbol(v2, Decl(main.syn, 1187, 19))
+
+                {v2}{v2}
+>v2 : Symbol(v2, Decl(main.syn, 1187, 19))
+>v2 : Symbol(v2, Decl(main.syn, 1187, 19))
+
+            </>
+        </>
+    </OptChildren>
+>OptChildren : Symbol(OptChildren, Decl(main.syn, 1167, 10))
+
+}
+
+{
+    <#component EventComp(w: HTMLElement) {
+>w : Symbol(w, Decl(main.syn, 1196, 26))
+>HTMLElement : Symbol(HTMLElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+
+        function onKeyPress(ev: KeyboardEvent) {}
+>onKeyPress : Symbol(onKeyPress, Decl(main.syn, 1196, 43))
+>ev : Symbol(ev, Decl(main.syn, 1197, 28))
+>KeyboardEvent : Symbol(KeyboardEvent, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+
+        w.addEventListener('keypress', onKeyPress)
+>w.addEventListener : Symbol(HTMLElement.addEventListener, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+>w : Symbol(w, Decl(main.syn, 1196, 26))
+>addEventListener : Symbol(HTMLElement.addEventListener, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+>onKeyPress : Symbol(onKeyPress, Decl(main.syn, 1196, 43))
+
+        unwind {
+            w.removeEventListener('keypress', onKeyPress)
+>w.removeEventListener : Symbol(HTMLElement.removeEventListener, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+>w : Symbol(w, Decl(main.syn, 1196, 26))
+>removeEventListener : Symbol(HTMLElement.removeEventListener, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+>onKeyPress : Symbol(onKeyPress, Decl(main.syn, 1196, 43))
+        }
+    }>
+        <div></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <#run>
+            const el = document.createElement('div')
+>el : Symbol(el, Decl(main.syn, 1205, 17))
+>document.createElement : Symbol(Document.createElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+>document : Symbol(document, Decl(lib.dom.d.ts, --, --))
+>createElement : Symbol(Document.createElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+
+            unwind {
+                el.remove()
+>el.remove : Symbol(ChildNode.remove, Decl(lib.dom.d.ts, --, --))
+>el : Symbol(el, Decl(main.syn, 1205, 17))
+>remove : Symbol(ChildNode.remove, Decl(lib.dom.d.ts, --, --))
+            }
+        </>
+    </>
 }
 
 // /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a

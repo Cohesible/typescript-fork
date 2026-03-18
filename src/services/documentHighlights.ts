@@ -16,7 +16,6 @@ import {
     createTextSpanFromNode,
     Debug,
     DefaultClause,
-    DeferStatement,
     find,
     FindAllReferences,
     findAncestor,

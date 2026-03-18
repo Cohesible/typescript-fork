@@ -3057,6 +3057,10 @@
         "category": "Error",
         "code": 95208
     },
+    "Labeled fragment may only appear as a direct JSX child.": {
+        "category": "Error",
+        "code": 95209
+    },
     "'{0}' is defined as an accessor in class '{1}', but is overridden here in '{2}' as an instance property.": {
         "category": "Error",
         "code": 2610

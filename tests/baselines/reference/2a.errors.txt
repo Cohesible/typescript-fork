@@ -18,50 +18,62 @@ main.syn(469,17): error TS2322: Type '{ children: [string, ...number[]]; }' is n
 main.syn(477,20): error TS2882: This JSX tag's 'children' prop expects type 'Element[] | undefined', but the child has array type 'Element[]'. Did you mean to spread it with '{...}'?
 main.syn(481,28): error TS2747: 'FooOpt' components don't accept text as child elements. Text in JSX has the type 'string', but the expected type of 'children' is 'Element[] | undefined'.
   Type 'string' is not assignable to type 'Element'.
+main.syn(502,16): error TS2322: Type '{ children: []; onClick: () => void; }' is not assignable to type 'HTMLAttributes<HTMLDivElement>'.
+  Property 'onClick' does not exist on type 'HTMLAttributes<HTMLDivElement>'. Did you mean '"on:click"'?
 main.syn(530,12): error TS2345: Argument of type 'Element | null' is not assignable to parameter of type 'Updatable'.
   Type 'null' is not assignable to type 'Updatable'.
 main.syn(545,9): error TS95201: update has no effect: this element contains no dynamic expressions
 main.syn(595,9): error TS95202: Possibly redundant 'update': 'x1' was already updated above with no intervening changes.
 main.syn(599,9): error TS95202: Possibly redundant 'update': 'x1' was already updated above with no intervening changes.
-main.syn(626,10): error TS2345: Argument of type 'string | Err1 | Err2' is not assignable to parameter of type 'string'.
+main.syn(624,12): error TS95210: 'update' block has no plausible effect on 'xa': the block does not reference any variable that 'xa' depends on.
+main.syn(629,20): error TS1005: ';' expected.
+main.syn(655,16): error TS95210: 'update' block has no plausible effect on 'x': the block does not reference any variable that 'x' depends on.
+main.syn(669,15): error TS2451: Cannot redeclare block-scoped variable 'd'.
+main.syn(670,15): error TS2451: Cannot redeclare block-scoped variable 'counter'.
+main.syn(670,32): error TS2451: Cannot redeclare block-scoped variable 'counter'.
+main.syn(671,20): error TS2451: Cannot redeclare block-scoped variable 'd'.
+main.syn(718,10): error TS2345: Argument of type 'string | Err1 | Err2' is not assignable to parameter of type 'string'.
   Type 'Err1' is not assignable to type 'string'.
-main.syn(627,11): error TS2322: Type 'string | Err1 | Err2' is not assignable to type 'string'.
+main.syn(719,11): error TS2322: Type 'string | Err1 | Err2' is not assignable to type 'string'.
   Type 'Err1' is not assignable to type 'string'.
-main.syn(634,11): error TS2345: Argument of type 'string | Err1 | Err2' is not assignable to parameter of type 'string | number'.
+main.syn(726,11): error TS2345: Argument of type 'string | Err1 | Err2' is not assignable to parameter of type 'string | number'.
   Type 'Err1' is not assignable to type 'string | number'.
-main.syn(637,11): error TS2322: Type 'string | Err1 | Err2' is not assignable to type 'boolean'.
+main.syn(729,11): error TS2322: Type 'string | Err1 | Err2' is not assignable to type 'boolean'.
   Type 'string' is not assignable to type 'boolean'.
-main.syn(640,28): error TS2322: Type 'string | Err1 | Err2' is not assignable to type 'string'.
+main.syn(732,28): error TS2322: Type 'string | Err1 | Err2' is not assignable to type 'string'.
   Type 'Err1' is not assignable to type 'string'.
-main.syn(644,20): error TS2884: 'try' has no effect because the expression cannot be an 'Error'.
-main.syn(648,20): error TS2885: 'try' will always throw because the expression always returns an 'Error'.
-main.syn(655,5): error TS2886: This expression returns 'void | Error'. Use 'try' to throw on error, or 'void' to discard the result.
-main.syn(672,5): error TS2886: This expression returns 'Err<"bad"> | undefined'. Use 'try' to throw on error, or 'void' to discard the result.
-main.syn(752,20): error TS95204: Async call to 'foo' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
-main.syn(754,9): error TS95204: Async call to 'foo' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
-main.syn(772,8): error TS95203: 'bar' returns 'Promise<number>' which is also directly assignable to the expected type. Use 'await' or 'as async'.
-main.syn(779,11): error TS95204: Async call to 'bar' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
-main.syn(779,18): error TS95204: Async call to 'bar' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
-main.syn(786,20): error TS95204: Async call to 'bar' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
-main.syn(813,15): error TS2322: Type 'number' is not assignable to type 'Promise<number>'.
-main.syn(852,20): error TS2304: Cannot find name 'b'.
-main.syn(862,29): error TS95200: 'Comp' returns 'Element[]' and cannot be used as a single JSX element. Did you mean '...Comp'?
-main.syn(865,26): error TS95198: Spread JSX element type 'HTMLDivElement' is not an array type.
-main.syn(866,26): error TS95198: Spread JSX element type 'HTMLDivElement' is not an array type.
-main.syn(869,26): error TS2322: Type '() => void' is not assignable to type 'Child'.
-main.syn(873,26): error TS95198: Spread JSX element type 'Element' is not an array type.
-main.syn(886,8): error TS95200: 'Comp' returns 'Element[]' and cannot be used as a single JSX element. Did you mean '...Comp'?
-main.syn(916,1): error TS1005: '>' expected.
-main.syn(1072,17): error TS95200: 'Bar' returns '[HTMLDivElement, HTMLDivElement]' and cannot be used as a single JSX element. Did you mean '...Bar'?
-main.syn(1116,9): error TS95205: Return statement is not allowed in component directive body
-main.syn(1162,11): error TS95207: Duplicate labeled fragment ':content'.
-main.syn(1165,20): error TS2746: This JSX tag's 'children' prop expects a single child of type '{ content: [string, string]; }', but multiple children were provided.
-main.syn(1167,9): error TS95206: Named children must be used consistently: either all children must be labeled fragments or none.
-main.syn(1188,15): error TS2322: Type '[string, string]' is not assignable to type '[string]'.
+main.syn(736,20): error TS2884: 'try' has no effect because the expression cannot be an 'Error'.
+main.syn(740,20): error TS2885: 'try' will always throw because the expression always returns an 'Error'.
+main.syn(747,5): error TS2886: This expression returns 'void | Error'. Use 'try' to throw on error, or 'void' to discard the result.
+main.syn(764,5): error TS2886: This expression returns 'Err<"bad"> | undefined'. Use 'try' to throw on error, or 'void' to discard the result.
+main.syn(844,20): error TS95204: Async call to 'foo' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+main.syn(846,9): error TS95204: Async call to 'foo' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+main.syn(864,8): error TS95203: 'bar' returns 'Promise<number>' which is also directly assignable to the expected type. Use 'await' or 'as async'.
+main.syn(871,11): error TS95204: Async call to 'bar' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+main.syn(871,18): error TS95204: Async call to 'bar' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+main.syn(878,20): error TS95204: Async call to 'bar' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+main.syn(905,15): error TS2322: Type 'number' is not assignable to type 'Promise<number>'.
+main.syn(944,20): error TS2304: Cannot find name 'b'.
+main.syn(954,29): error TS95200: 'Comp' returns 'Element[]' and cannot be used as a single JSX element. Did you mean '...Comp'?
+main.syn(957,26): error TS95198: Spread JSX element type 'HTMLDivElement' is not an array type.
+main.syn(958,26): error TS95198: Spread JSX element type 'HTMLDivElement' is not an array type.
+main.syn(961,26): error TS2322: Type '() => void' is not assignable to type 'NodeLike'.
+main.syn(965,26): error TS95198: Spread JSX element type 'Element' is not an array type.
+main.syn(978,8): error TS95200: 'Comp' returns 'Element[]' and cannot be used as a single JSX element. Did you mean '...Comp'?
+main.syn(1008,1): error TS1005: '>' expected.
+main.syn(1164,17): error TS95200: 'Bar' returns '[HTMLDivElement, HTMLDivElement]' and cannot be used as a single JSX element. Did you mean '...Bar'?
+main.syn(1208,9): error TS95205: Return statement is not allowed in component directive body
+main.syn(1254,11): error TS95207: Duplicate labeled fragment ':content'.
+main.syn(1257,20): error TS2746: This JSX tag's 'children' prop expects a single child of type '{ content: [string, string]; }', but multiple children were provided.
+main.syn(1259,9): error TS95206: Named children must be used consistently: either all children must be labeled fragments or none.
+main.syn(1280,15): error TS2322: Type '[string, string]' is not assignable to type '[string]'.
   Source has 2 element(s) but target allows only 1.
+main.syn(1321,16): error TS2739: Type '{ o: { x: string; y: string; }; }' is missing the following properties from type '{ x: string; y: string; }': x, y
+main.syn(1321,16): error TS95200: 'Foo' returns '[]' and cannot be used as a single JSX element. Did you mean '...Foo'?
+main.syn(1321,20): error TS95211: JSX shorthand attribute 'o' has an object type; did you mean to spread it with '{{...o}}'?
 
 
-==== main.syn (47 errors) ====
+==== main.syn (58 errors) ====
     function f<T>(t: reify T): T {
         switch (Type.kind(t)) {
             case "array":
@@ -599,6 +611,9 @@ main.syn(1188,15): error TS2322: Type '[string, string]' is not assignable to ty
     // update expression
     declare const el: Element;
     const d = <div onClick={() => {
+                   ~~~~~~~
+!!! error TS2322: Type '{ children: []; onClick: () => void; }' is not assignable to type 'HTMLAttributes<HTMLDivElement>'.
+!!! error TS2322:   Property 'onClick' does not exist on type 'HTMLAttributes<HTMLDivElement>'. Did you mean '"on:click"'?
         update el
     }}></div>
     
@@ -708,6 +723,112 @@ main.syn(1188,15): error TS2322: Type '[string, string]' is not assignable to ty
         }
     }
     
+    // update block form
+    {
+        let y = 0
+        const x = <div>{y}</div>
+    
+        update x {
+            y = 1
+        }
+    
+        update x
+    
+        let a = 0
+        let b = ''
+        const xa = <div>{a}</div>
+        const xb = <span>{b}</span>
+    
+        update xa, xb {
+            a = 1
+            b = 'hi'
+        }
+    
+        update xa, xb {
+               ~~
+!!! error TS95210: 'update' block has no plausible effect on 'xa': the block does not reference any variable that 'xa' depends on.
+            b = 'only b'
+        }
+    
+        declare const unknown: Element
+        update unknown {
+                       ~
+!!! error TS1005: ';' expected.
+            y = 2
+        }
+    }
+    
+    {
+        // transitive analysis inside #component: calling a local function counts
+        <#component Reactive(v: number) {
+            let count = v
+    
+            function increment() {
+                count++  // mutates `count`, which x depends on
+            }
+    
+            function unrelated() {
+                console.log('hi')
+            }
+    
+            const x = <div>{count}</div>
+    
+            // ok — increment() mutates count (x's dep) even though block doesn't reference count directly
+            update x {
+                increment()
+            }
+    
+            // error — unrelated() doesn't touch count
+            update x {
+                   ~
+!!! error TS95210: 'update' block has no plausible effect on 'x': the block does not reference any variable that 'x' depends on.
+                unrelated()
+            }
+        }>
+            <div></div>
+        </>
+    }
+    
+    {
+        // update depending on #run directive: rate is referenced inside <#run>, so counter depends on it
+        <#component Timer(n: number) {
+            let active = true
+            let rate = n
+            let c = 0
+            const d = <div>{c}</div>
+                  ~
+!!! error TS2451: Cannot redeclare block-scoped variable 'd'.
+            const counter = <div @ counter>
+                  ~~~~~~~
+!!! error TS2451: Cannot redeclare block-scoped variable 'counter'.
+                                   ~~~~~~~
+!!! error TS2451: Cannot redeclare block-scoped variable 'counter'.
+                <div @ d>
+                       ~
+!!! error TS2451: Cannot redeclare block-scoped variable 'd'.
+                    count: {c}
+                </div>
+                <#run>
+                    if (active) {
+                        const id = setInterval(() => {
+                            update d {
+                                c += 1
+                            }
+                        }, rate)
+                        unwind { clearInterval(id) }
+                    }
+                </>
+            </div>
+    
+            // ok — rate is in the #run body which is a dep of counter
+            update counter {
+                rate = n
+            }
+        }>
+            <div></div>
+        </>
+    }
+    
     // !T (FallibleType) and try expr
     // { ok: false; code: string } is also considered an error
     // this is a lightweight error
@@ -735,12 +856,12 @@ main.syn(1188,15): error TS2322: Type '[string, string]' is not assignable to ty
              ~~~~~~~~~
 !!! error TS2345: Argument of type 'string | Err1 | Err2' is not assignable to parameter of type 'string'.
 !!! error TS2345:   Type 'Err1' is not assignable to type 'string'.
-!!! related TS2883 main.syn:626:10: Did you forget to use 'try'? The expression returns a fallible type.
+!!! related TS2883 main.syn:718:10: Did you forget to use 'try'? The expression returns a fallible type.
         const z2: string = mayFail()
               ~~
 !!! error TS2322: Type 'string | Err1 | Err2' is not assignable to type 'string'.
 !!! error TS2322:   Type 'Err1' is not assignable to type 'string'.
-!!! related TS2883 main.syn:627:24: Did you forget to use 'try'? The expression returns a fallible type.
+!!! related TS2883 main.syn:719:24: Did you forget to use 'try'? The expression returns a fallible type.
     
         // no hint: target already accepts the full union
         const z3: string | Err1 | Err2 = mayFail()
@@ -751,7 +872,7 @@ main.syn(1188,15): error TS2322: Type '[string, string]' is not assignable to ty
               ~~~~~~~~~
 !!! error TS2345: Argument of type 'string | Err1 | Err2' is not assignable to parameter of type 'string | number'.
 !!! error TS2345:   Type 'Err1' is not assignable to type 'string | number'.
-!!! related TS2883 main.syn:634:11: Did you forget to use 'try'? The expression returns a fallible type.
+!!! related TS2883 main.syn:726:11: Did you forget to use 'try'? The expression returns a fallible type.
     
         // no hint: string is not assignable to boolean — unrelated mismatch
         const z4: boolean = mayFail()
@@ -764,7 +885,7 @@ main.syn(1188,15): error TS2322: Type '[string, string]' is not assignable to ty
                                ~~~~~~
 !!! error TS2322: Type 'string | Err1 | Err2' is not assignable to type 'string'.
 !!! error TS2322:   Type 'Err1' is not assignable to type 'string'.
-!!! related TS2883 main.syn:640:35: Did you forget to use 'try'? The expression returns a fallible type.
+!!! related TS2883 main.syn:732:35: Did you forget to use 'try'? The expression returns a fallible type.
     
         // never error
         const foo = () => ''
@@ -1025,7 +1146,7 @@ main.syn(1188,15): error TS2322: Type '[string, string]' is not assignable to ty
         declare function Comp2(): (() => void)[];
         const spread4 = <div><...Comp2 /></div>  // error, intrinsics want something Element-like
                              ~~~~~~~~~~~~
-!!! error TS2322: Type '() => void' is not assignable to type 'Child'.
+!!! error TS2322: Type '() => void' is not assignable to type 'NodeLike'.
     
         declare function Comp3(): Element;
         const noSpread2 = <div><Comp3 /></div> // ok
@@ -1387,6 +1508,30 @@ main.syn(1188,15): error TS2322: Type '[string, string]' is not assignable to ty
                 }
             </>
         </>
+    }
+    
+    // numeric literals as JSX attribute values (no braces needed)
+    {
+        const a = <input min=0 max=100 step=5 />
+        const b = <input value=3.14 />
+        const c = <input min=-10 />
+    }
+    
+    // JSX shorthand attribute — proper AST node (not desugared)
+    {
+        const value = 'hello'
+        const d = <input {value} />
+    
+        // object type => should suggest spread
+        <#component Foo(x: string, y: string)></>
+        const o = { x: '1', y: '1' }
+        const e = <Foo {o} />
+                   ~~~
+!!! error TS2739: Type '{ o: { x: string; y: string; }; }' is missing the following properties from type '{ x: string; y: string; }': x, y
+                   ~~~
+!!! error TS95200: 'Foo' returns '[]' and cannot be used as a single JSX element. Did you mean '...Foo'?
+                       ~~~
+!!! error TS95211: JSX shorthand attribute 'o' has an object type; did you mean to spread it with '{{...o}}'?
     }
     
     // /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a

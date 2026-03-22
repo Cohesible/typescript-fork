@@ -607,6 +607,93 @@ const d4 = <div><#if (cond)></></div>
     }
 }
 
+// update block form
+{
+    let y = 0
+    const x = <div>{y}</div>
+
+    update x {
+        y = 1
+    }
+
+    update x
+
+    let a = 0
+    let b = ''
+    const xa = <div>{a}</div>
+    const xb = <span>{b}</span>
+
+    update xa, xb {
+        a = 1
+        b = 'hi'
+    }
+
+    update xa, xb {
+        b = 'only b'
+    }
+
+    declare const unknown: Element
+    update unknown {
+        y = 2
+    }
+}
+
+{
+    <#component Reactive(v: number) {
+        let count = v
+
+        function increment() {
+            count++  // mutates `count`, which x depends on
+        }
+
+        function unrelated() {
+            console.log('hi')
+        }
+
+        const x = <div>{count}</div>
+
+        update x {
+            increment()
+        }
+
+        update x {
+            unrelated()
+        }
+    }>
+        <div></div>
+    </>
+}
+
+{
+    <#component Timer(n: number) {
+        let active = true
+        let rate = n
+        let c = 0
+        const d = <div>{c}</div>
+        const counter = <div @ counter>
+            <div @ d>
+                count: {c}
+            </div>
+            <#run>
+                if (active) {
+                    const id = setInterval(() => {
+                        update d {
+                            c += 1
+                        }
+                    }, rate)
+                    unwind { clearInterval(id) }
+                }
+            </>
+        </div>
+
+        update counter {
+            rate = n
+        }
+    }>
+        <div></div>
+    </>
+}
+
 // !T (FallibleType) and try expr
 // { ok: false; code: string } is also considered an error
 // this is a lightweight error
@@ -873,7 +960,7 @@ const d4 = <div><#if (cond)></></div>
     const spread3 = <div><...div></div></div>
 
     declare function Comp2(): (() => void)[];
-    const spread4 = <div><...Comp2 /></div>  // error, intrinsics want something Element-like
+    const spread4 = <div><...Comp2 /></div>  // error, intrinsics want something NodeLike
 
     declare function Comp3(): Element;
     const noSpread2 = <div><Comp3 /></div> // ok
@@ -1089,13 +1176,9 @@ const d4 = <div><#if (cond)></></div>
     const r4a = <WithOpt x="hi" />       // ok
     const r4b = <WithOpt x="hi" y={1} /> // ok
 
-    // Foo used as a type — aliases ComponentNode<HTMLDivElement, { x: string }>
     const r1_typed: Foo = r1
-    // Baz also usable as a type
     const r3_typed: Baz = r3
-    // same props shape — structurally compatible
     const r_cross: Foo = r3
-    // { x, y? } assignable to { x } — ok
     const r_cross2: Foo = r4a
 }
 
@@ -1218,7 +1301,26 @@ const d4 = <div><#if (cond)></></div>
     </>
 }
 
-// /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a
+{
+    const a = <input min=0 max=100 step=5 />
+    const b = <input value=3.14 />
+    const c = <input min=-10 />
+}
 
-// ^(\s*)on(.*)\?:
-// $1on\L$2?:
+{
+    const value = 'hello'
+    const d = <input {value} />
+
+    <#component Foo(x: string, y: string)></>
+    const o = { x: '1', y: '1' }
+    const e = <Foo {o} />
+}
+
+{
+    ;<div .foo/>
+    ;<div .foo></div>
+    // class attributes should not conflict with normal attributes
+    ;<input .min min=500></input>
+}
+
+// /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a

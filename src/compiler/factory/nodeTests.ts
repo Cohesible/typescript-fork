@@ -131,8 +131,10 @@ import {
     JsxElement,
     JsxRunDirective,
     JsxComponentDirective,
+    JsxStyleDirective,
     JsxLabeledFragment,
     UnwindStatement,
+    UpdateBlockStatement,
     JsxExpression,
     JsxElseDirective,
     JsxFragment,
@@ -142,6 +144,8 @@ import {
     JsxOpeningFragment,
     JsxSelfClosingElement,
     JsxSpreadAttribute,
+    JsxShorthandAttribute,
+    JsxClassAttribute,
     JsxText,
     LabeledStatement,
     LiteralTypeNode,
@@ -971,6 +975,14 @@ export function isJsxSpreadAttribute(node: Node): node is JsxSpreadAttribute {
     return node.kind === SyntaxKind.JsxSpreadAttribute;
 }
 
+export function isJsxShorthandAttribute(node: Node): node is JsxShorthandAttribute {
+    return node.kind === SyntaxKind.JsxShorthandAttribute;
+}
+
+export function isJsxClassAttribute(node: Node): node is JsxClassAttribute {
+    return node.kind === SyntaxKind.JsxClassAttribute;
+}
+
 export function isJsxExpression(node: Node): node is JsxExpression {
     return node.kind === SyntaxKind.JsxExpression;
 }
@@ -995,6 +1007,10 @@ export function isJsxComponentDirective(node: Node): node is JsxComponentDirecti
     return node.kind === SyntaxKind.JsxComponentDirective;
 }
 
+export function isJsxStyleDirective(node: Node): node is JsxStyleDirective {
+    return node.kind === SyntaxKind.JsxStyleDirective;
+}
+
 export function isJsxLabeledFragment(node: Node): node is JsxLabeledFragment {
     return node.kind === SyntaxKind.JsxLabeledFragment;
 }
@@ -1003,12 +1019,17 @@ export function isUnwindStatement(node: Node): node is UnwindStatement {
     return node.kind === SyntaxKind.UnwindStatement;
 }
 
-export function isJsxDirectiveLike(node: Node): node is JsxIfDirective | JsxElseDirective | JsxRunDirective | JsxComponentDirective | JsxLabeledFragment {
+export function isUpdateBlockStatement(node: Node): node is UpdateBlockStatement {
+    return node.kind === SyntaxKind.UpdateBlockStatement;
+}
+
+export function isJsxDirectiveLike(node: Node): node is JsxIfDirective | JsxElseDirective | JsxRunDirective | JsxComponentDirective | JsxLabeledFragment | JsxStyleDirective {
     return node.kind === SyntaxKind.JsxIfDirective
         || node.kind === SyntaxKind.JsxElseDirective
         || node.kind === SyntaxKind.JsxRunDirective
         || node.kind === SyntaxKind.JsxComponentDirective
-        || node.kind === SyntaxKind.JsxLabeledFragment;
+        || node.kind === SyntaxKind.JsxLabeledFragment
+        || node.kind === SyntaxKind.JsxStyleDirective;
 }
 
 // Clauses

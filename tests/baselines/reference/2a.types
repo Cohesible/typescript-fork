@@ -1991,10 +1991,8 @@ const d2 = <input {value}/>
 >                 : ^^^^^^^^^^^^^^^^
 >input : any
 >      : ^^^
->value : string
->      : ^^^^^^
->value : ""
->      : ^^
+>value : any
+>      : ^^^
 
 const d3 = <div>
 >d3 : HTMLDivElement
@@ -2414,6 +2412,361 @@ const d4 = <div><#if (cond)></></div>
 >x1 : HTMLDivElement
 >   : ^^^^^^^^^^^^^^
     }
+}
+
+// update block form
+{
+    let y = 0
+>y : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+    const x = <div>{y}</div>
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div>{y}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>y : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+    update x {
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+        y = 1
+>y = 1 : 1
+>      : ^
+>y : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+    }
+
+    update x
+>update x : HTMLDivElement
+>         : ^^^^^^^^^^^^^^
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+    let a = 0
+>a : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+    let b = ''
+>b : string
+>  : ^^^^^^
+>'' : ""
+>   : ^^
+
+    const xa = <div>{a}</div>
+>xa : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div>{a}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+    const xb = <span>{b}</span>
+>xb : HTMLSpanElement
+>   : ^^^^^^^^^^^^^^^
+><span>{b}</span> : HTMLSpanElement
+>                 : ^^^^^^^^^^^^^^^
+>span : any
+>     : ^^^
+>b : string
+>  : ^^^^^^
+>span : any
+>     : ^^^
+
+    update xa, xb {
+>xa : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+>xb : HTMLSpanElement
+>   : ^^^^^^^^^^^^^^^
+
+        a = 1
+>a = 1 : 1
+>      : ^
+>a : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+
+        b = 'hi'
+>b = 'hi' : "hi"
+>         : ^^^^
+>b : string
+>  : ^^^^^^
+>'hi' : "hi"
+>     : ^^^^
+    }
+
+    update xa, xb {
+>xa : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+>xb : HTMLSpanElement
+>   : ^^^^^^^^^^^^^^^
+
+        b = 'only b'
+>b = 'only b' : "only b"
+>             : ^^^^^^^^
+>b : string
+>  : ^^^^^^
+>'only b' : "only b"
+>         : ^^^^^^^^
+    }
+
+    declare const unknown: Element
+>unknown : Element
+>        : ^^^^^^^
+
+    update unknown {
+>update unknown : Element
+>               : ^^^^^^^
+>unknown : Element
+>        : ^^^^^^^
+
+        y = 2
+>y = 2 : 2
+>      : ^
+>y : number
+>  : ^^^^^^
+>2 : 2
+>  : ^
+    }
+}
+
+{
+    // transitive analysis inside #component: calling a local function counts
+    <#component Reactive(v: number) {
+>Reactive : any
+>         : ^^^
+>v : number
+>  : ^^^^^^
+
+        let count = v
+>count : number
+>      : ^^^^^^
+>v : number
+>  : ^^^^^^
+
+        function increment() {
+>increment : () => void
+>          : ^^^^^^^^^^
+
+            count++  // mutates `count`, which x depends on
+>count++ : number
+>        : ^^^^^^
+>count : number
+>      : ^^^^^^
+        }
+
+        function unrelated() {
+>unrelated : () => void
+>          : ^^^^^^^^^^
+
+            console.log('hi')
+>console.log('hi') : void
+>                  : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>'hi' : "hi"
+>     : ^^^^
+        }
+
+        const x = <div>{count}</div>
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div>{count}</div> : HTMLDivElement
+>                   : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>count : number
+>      : ^^^^^^
+>div : any
+>    : ^^^
+
+        // ok — increment() mutates count (x's dep) even though block doesn't reference count directly
+        update x {
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+            increment()
+>increment() : void
+>            : ^^^^
+>increment : () => void
+>          : ^^^^^^^^^^
+        }
+
+        // error — unrelated() doesn't touch count
+        update x {
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+            unrelated()
+>unrelated() : void
+>            : ^^^^
+>unrelated : () => void
+>          : ^^^^^^^^^^
+        }
+    }>
+        <div></div>
+><div></div> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+    </>
+}
+
+{
+    // update depending on #run directive: rate is referenced inside <#run>, so counter depends on it
+    <#component Timer(n: number) {
+>Timer : any
+>      : ^^^
+>n : number
+>  : ^^^^^^
+
+        let active = true
+>active : boolean
+>       : ^^^^^^^
+>true : true
+>     : ^^^^
+
+        let rate = n
+>rate : number
+>     : ^^^^^^
+>n : number
+>  : ^^^^^^
+
+        let c = 0
+>c : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+        const d = <div>{c}</div>
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div>{c}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>c : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+        const counter = <div @ counter>
+>counter : HTMLDivElement
+>        : ^^^^^^^^^^^^^^
+><div @ counter>            <div @ d>                count: {c}            </div>            <#run>                if (active) {                    const id = setInterval(() => {                        update d {                            c += 1                        }                    }, rate)                    unwind { clearInterval(id) }                }            </>        </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                                                                                                                                         : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>counter : HTMLDivElement
+>        : ^^^^^^^^^^^^^^
+
+            <div @ d>
+><div @ d>                count: {c}            </div> : HTMLDivElement
+>                                                      : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+                count: {c}
+>c : number
+>  : ^^^^^^
+
+            </div>
+>div : any
+>    : ^^^
+
+            <#run>
+                if (active) {
+>active : true
+>       : ^^^^
+
+                    const id = setInterval(() => {
+>id : number
+>   : ^^^^^^
+>setInterval(() => {                        update d {                            c += 1                        }                    }, rate) : number
+>                                                                                                                                             : ^^^^^^
+>setInterval : (handler: TimerHandler, timeout?: number, ...arguments: any[]) => number
+>            : ^       ^^            ^^       ^^^      ^^^^^         ^^     ^^^^^      
+>() => {                        update d {                            c += 1                        }                    } : () => void
+>                                                                                                                          : ^^^^^^^^^^
+
+                        update d {
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+                            c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+                        }
+                    }, rate)
+>rate : number
+>     : ^^^^^^
+
+                    unwind { clearInterval(id) }
+>clearInterval(id) : void
+>                  : ^^^^
+>clearInterval : (id: number | undefined) => void
+>              : ^  ^^                  ^^^^^    
+>id : number
+>   : ^^^^^^
+                }
+            </>
+        </div>
+>div : any
+>    : ^^^
+
+        // ok — rate is in the #run body which is a dep of counter
+        update counter {
+>counter : HTMLDivElement
+>        : ^^^^^^^^^^^^^^
+
+            rate = n
+>rate = n : number
+>         : ^^^^^^
+>rate : number
+>     : ^^^^^^
+>n : number
+>  : ^^^^^^
+        }
+    }>
+        <div></div>
+><div></div> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+    </>
 }
 
 // !T (FallibleType) and try expr
@@ -4676,6 +5029,99 @@ const d4 = <div><#if (cond)></></div>
             }
         </>
     </>
+}
+
+// numeric literals as JSX attribute values (no braces needed)
+{
+    const a = <input min=0 max=100 step=5 />
+>a : HTMLInputElement
+>  : ^^^^^^^^^^^^^^^^
+><input min=0 max=100 step=5 /> : HTMLInputElement
+>                               : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>min : number
+>    : ^^^^^^
+>max : number
+>    : ^^^^^^
+>step : number
+>     : ^^^^^^
+
+    const b = <input value=3.14 />
+>b : HTMLInputElement
+>  : ^^^^^^^^^^^^^^^^
+><input value=3.14 /> : HTMLInputElement
+>                     : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>value : number
+>      : ^^^^^^
+
+    const c = <input min=-10 />
+>c : HTMLInputElement
+>  : ^^^^^^^^^^^^^^^^
+><input min=-10 /> : HTMLInputElement
+>                  : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>min : number
+>    : ^^^^^^
+>-10 : -10
+>    : ^^^
+>10 : 10
+>   : ^^
+}
+
+// JSX shorthand attribute — proper AST node (not desugared)
+{
+    const value = 'hello'
+>value : "hello"
+>      : ^^^^^^^
+>'hello' : "hello"
+>        : ^^^^^^^
+
+    const d = <input {value} />
+>d : HTMLInputElement
+>  : ^^^^^^^^^^^^^^^^
+><input {value} /> : HTMLInputElement
+>                  : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>value : any
+>      : ^^^
+
+    // object type => should suggest spread
+    <#component Foo(x: string, y: string)></>
+>Foo : any
+>    : ^^^
+>x : string
+>  : ^^^^^^
+>y : string
+>  : ^^^^^^
+
+    const o = { x: '1', y: '1' }
+>o : { x: string; y: string; }
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^
+>{ x: '1', y: '1' } : { x: string; y: string; }
+>                   : ^^^^^^^^^^^^^^^^^^^^^^^^^
+>x : string
+>  : ^^^^^^
+>'1' : "1"
+>    : ^^^
+>y : string
+>  : ^^^^^^
+>'1' : "1"
+>    : ^^^
+
+    const e = <Foo {o} />
+>e : ComponentNode<[], { x: string; y: string; }>
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+><Foo {o} /> : ComponentNode<[], { x: string; y: string; }>
+>            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>Foo : (props: { x: string; y: string; }) => []
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>o : any
+>  : ^^^
 }
 
 // /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a

@@ -647,6 +647,7 @@ export interface LanguageService {
     getLinkedEditingRangeAtPosition(fileName: string, position: number): LinkedEditingInfo | undefined;
 
     getSpanOfEnclosingComment(fileName: string, position: number, onlyMultiLine: boolean): TextSpan | undefined;
+    getJsxStyleRegions(fileName: string): { regions: TextSpan[]; text: string; } | undefined;
 
     toLineColumnOffset?(fileName: string, position: number): LineAndCharacter;
     /** @internal */

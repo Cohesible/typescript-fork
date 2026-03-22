@@ -277,7 +277,9 @@ import {
     JsxAttributes,
     JsxClosingElement,
     JsxElement,
+    JsxLabeledFragment,
     JsxOpeningLikeElement,
+    JsxAttributeLike,
     JsxSpreadAttribute,
     LanguageServiceHost,
     LanguageVariant,
@@ -393,6 +395,7 @@ import {
     UserPreferences,
     VariableDeclaration,
     walkUpParenthesizedExpressions,
+    isJsxShorthandAttribute,
 } from "./_namespaces/ts.js";
 
 // Exported only for tests
@@ -480,6 +483,7 @@ export const enum SymbolOriginInfoKind {
     ObjectLiteralMethod  = 1 << 7,
     Ignore               = 1 << 8,
     ComputedPropertyName = 1 << 9,
+    JsxLabelSnippet      = 1 << 10,
 
     SymbolMemberNoExport = SymbolMember,
     SymbolMemberExport   = SymbolMember | Export,
@@ -516,6 +520,12 @@ interface SymbolOriginInfoTypeOnlyImport extends SymbolOriginInfo {
 interface SymbolOriginInfoObjectLiteralMethod extends SymbolOriginInfo {
     insertText: string;
     labelDetails: CompletionEntryLabelDetails;
+    isSnippet?: true;
+}
+
+interface SymbolOriginInfoJsxLabelSnippet extends SymbolOriginInfo {
+    insertText: string;
+    replacementSpan: TextSpan;
     isSnippet?: true;
 }
 
@@ -561,6 +571,10 @@ function originIsTypeOnlyAlias(origin: SymbolOriginInfo | undefined): origin is 
 
 function originIsObjectLiteralMethod(origin: SymbolOriginInfo | undefined): origin is SymbolOriginInfoObjectLiteralMethod {
     return !!(origin && origin.kind & SymbolOriginInfoKind.ObjectLiteralMethod);
+}
+
+function originIsJsxLabelSnippet(origin: SymbolOriginInfo | undefined): origin is SymbolOriginInfoJsxLabelSnippet {
+    return !!(origin && origin.kind & SymbolOriginInfoKind.JsxLabelSnippet);
 }
 
 function originIsIgnore(origin: SymbolOriginInfo | undefined): boolean {
@@ -1834,6 +1848,10 @@ function createCompletionEntry(
         else {
             return undefined; // Skip this entry
         }
+    }
+
+    if (origin && originIsJsxLabelSnippet(origin)) {
+        ({ insertText, replacementSpan, isSnippet } = origin);
     }
 
     if (origin && originIsObjectLiteralMethod(origin)) {
@@ -3409,6 +3427,7 @@ function getCompletionData(
     let isRightOfDot = false;
     let isRightOfQuestionDot = false;
     let isRightOfOpenTag = false;
+    let isRightOfJsxLabel = false;
     let isStartingCloseTag = false;
     let isJsxInitializer: IsJsxInitializer = false;
     let isJsxIdentifierExpected = false;
@@ -3527,7 +3546,7 @@ function getCompletionData(
                 case SyntaxKind.JsxSelfClosingElement:
                     if (contextToken.kind !== SyntaxKind.GreaterThanToken) {
                         isJsxIdentifierExpected = true;
-                        if (contextToken.kind === SyntaxKind.LessThanToken) {
+                        if (contextToken.kind === SyntaxKind.LessThanToken || contextToken.kind === SyntaxKind.DotDotDotToken) {
                             isRightOfOpenTag = true;
                             location = contextToken;
                         }
@@ -3543,7 +3562,7 @@ function getCompletionData(
                 case SyntaxKind.JsxElement:
                 case SyntaxKind.JsxOpeningElement:
                     isJsxIdentifierExpected = true;
-                    if (contextToken.kind === SyntaxKind.LessThanToken) {
+                    if (contextToken.kind === SyntaxKind.LessThanToken || contextToken.kind === SyntaxKind.DotDotDotToken) {
                         isRightOfOpenTag = true;
                         location = contextToken;
                     }
@@ -3551,12 +3570,21 @@ function getCompletionData(
 
                 case SyntaxKind.JsxExpression:
                 case SyntaxKind.JsxSpreadAttribute:
+                case SyntaxKind.JsxShorthandAttribute:
                     // First case is for `<div foo={true} [||] />` or `<div foo={true} [||] ></div>`,
                     // `parent` will be `{true}` and `previousToken` will be `}`
                     // Second case is for `<div foo={true} t[||] ></div>`
                     // Second case must not match for `<div foo={undefine[||]}></div>`
                     if (previousToken.kind === SyntaxKind.CloseBraceToken || (previousToken.kind === SyntaxKind.Identifier && previousToken.parent.kind === SyntaxKind.JsxAttribute)) {
                         isJsxIdentifierExpected = true;
+                    }
+                    break;
+
+                case SyntaxKind.JsxLabeledFragment:
+                    // completing the label name in <:foo>
+                    if (contextToken.kind === SyntaxKind.ColonToken) {
+                        isRightOfJsxLabel = true;
+                        location = contextToken;
                     }
                     break;
 
@@ -3606,6 +3634,30 @@ function getCompletionData(
 
     if (isRightOfDot || isRightOfQuestionDot) {
         getTypeScriptMemberSymbols();
+    }
+    else if (isRightOfJsxLabel) {
+        const container = (location.parent as JsxLabeledFragment).parent;
+        symbols = typeChecker.getJsxLabelCompletions(container);
+        const isSnippet = preferences.includeCompletionsWithSnippetText || undefined;
+        const replacementSpan = createTextSpanFromBounds(location.parent.getStart(sourceFile), position);
+        for (let i = 0; i < symbols.length; i++) {
+            const sym = symbols[i];
+            const symName = sym.name;
+            const symType = typeChecker.getTypeOfSymbol(sym);
+            const callSigs = typeChecker.getSignaturesOfType(symType, SignatureKind.Call);
+            let insertText: string;
+            if (callSigs.length > 0) {
+                const params = callSigs[0].parameters.map(p => p.name).join(", ");
+                insertText = isSnippet ? `<:${symName}(${params})>\n\t$0\n</>` : `<:${symName}(${params})>\n\t\n</>`;
+            }
+            else {
+                insertText = isSnippet ? `<:${symName}>\n\t$0\n</>` : `<:${symName}>\n\t\n</>`;
+            }
+            const origin: SymbolOriginInfoJsxLabelSnippet = { kind: SymbolOriginInfoKind.JsxLabelSnippet, insertText, replacementSpan, isSnippet };
+            symbolToOriginInfoMap[i] = origin;
+        }
+        completionKind = CompletionKind.MemberLike;
+        keywordFilters = KeywordCompletionFilters.None;
     }
     else if (isRightOfOpenTag) {
         symbols = typeChecker.getJsxIntrinsicTagNamesAt(location);
@@ -4092,6 +4144,7 @@ function getCompletionData(
             case SyntaxKind.TemplateExpression:
             case SyntaxKind.JsxExpression:
             case SyntaxKind.Block:
+            case SyntaxKind.JsxRunDirective:
                 return true;
             default:
                 return isStatement(scopeNode);
@@ -4880,6 +4933,7 @@ function getCompletionData(
                 case SyntaxKind.PropertyAccessExpression:
                 case SyntaxKind.JsxAttributes:
                 case SyntaxKind.JsxAttribute:
+                case SyntaxKind.JsxShorthandAttribute:
                 case SyntaxKind.JsxSpreadAttribute:
                     if (parent && (parent.kind === SyntaxKind.JsxSelfClosingElement || parent.kind === SyntaxKind.JsxOpeningElement)) {
                         if (contextToken.kind === SyntaxKind.GreaterThanToken) {
@@ -4901,7 +4955,7 @@ function getCompletionData(
                 // its parent is a JsxExpression, whose parent is a JsxAttribute,
                 // whose parent is a JsxOpeningLikeElement
                 case SyntaxKind.StringLiteral:
-                    if (parent && ((parent.kind === SyntaxKind.JsxAttribute) || (parent.kind === SyntaxKind.JsxSpreadAttribute))) {
+                    if (parent && ((parent.kind === SyntaxKind.JsxAttribute) || (parent.kind === SyntaxKind.JsxSpreadAttribute) || (parent.kind === SyntaxKind.JsxShorthandAttribute))) {
                         // Currently we parse JsxOpeningLikeElement as:
                         //      JsxOpeningLikeElement
                         //          attributes: JsxAttributes
@@ -4925,7 +4979,7 @@ function getCompletionData(
                         return parent.parent.parent.parent as JsxOpeningLikeElement;
                     }
 
-                    if (parent && parent.kind === SyntaxKind.JsxSpreadAttribute) {
+                    if (parent && (parent.kind === SyntaxKind.JsxSpreadAttribute || parent.kind === SyntaxKind.JsxShorthandAttribute)) {
                         // Currently we parse JsxOpeningLikeElement as:
                         //      JsxOpeningLikeElement
                         //          attributes: JsxAttributes
@@ -5040,11 +5094,17 @@ function getCompletionData(
                     (containingNodeKind === SyntaxKind.JsxOpeningElement || containingNodeKind === SyntaxKind.JsxSelfClosingElement) &&
                     contextToken === (parent as JsxOpeningLikeElement).name
                 ) {
-                    return true;
+                    return false;
                 }
 
                 break;
             }
+
+            case SyntaxKind.AtToken:
+                return containingNodeKind === SyntaxKind.JsxOpeningElement || containingNodeKind === SyntaxKind.JsxSelfClosingElement;
+
+            case SyntaxKind.PrivateIdentifier:
+                return containingNodeKind === SyntaxKind.JsxComponentDirective;
 
             case SyntaxKind.ClassKeyword:
             case SyntaxKind.EnumKeyword:
@@ -5139,6 +5199,7 @@ function getCompletionData(
         return isDeclarationName(contextToken)
             && !isShorthandPropertyAssignment(contextToken.parent)
             && !isJsxAttribute(contextToken.parent)
+            && !isJsxShorthandAttribute(contextToken.parent)
             // Don't block completions if we're in `class C /**/`, `interface I /**/` or `<T /**/>` , because we're *past* the end of the identifier and might want to complete `extends`.
             // If `contextToken !== previousToken`, this is `class C ex/**/`, `interface I ex/**/` or `<T ex/**/>`.
             && !((isClassLike(contextToken.parent) || isInterfaceDeclaration(contextToken.parent) || isTypeParameterDeclaration(contextToken.parent)) && (contextToken !== previousToken || position > previousToken.end));
@@ -5338,7 +5399,7 @@ function getCompletionData(
      * @returns Symbols to be suggested in a JSX element, barring those whose attributes
      *          do not occur at the current position and have not otherwise been typed.
      */
-    function filterJsxAttributes(symbols: Symbol[], attributes: NodeArray<JsxAttribute | JsxSpreadAttribute>): Symbol[] {
+    function filterJsxAttributes(symbols: Symbol[], attributes: NodeArray<JsxAttributeLike>): Symbol[] {
         const seenNames = new Set<__String>();
         const membersDeclaredBySpreadAssignment = new Set<string>();
         for (const attr of attributes) {
@@ -5347,7 +5408,7 @@ function getCompletionData(
                 continue;
             }
 
-            if (attr.kind === SyntaxKind.JsxAttribute) {
+            if (attr.kind === SyntaxKind.JsxAttribute || attr.kind === SyntaxKind.JsxShorthandAttribute) {
                 seenNames.add(getEscapedTextOfJsxAttributeName(attr.name));
             }
             else if (isJsxSpreadAttribute(attr)) {

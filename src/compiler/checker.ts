@@ -649,6 +649,7 @@ import {
     isJsxOpeningLikeElement,
     isJsxSelfClosingElement,
     isJsxSpreadAttribute,
+    isJsxShorthandAttribute,
     isJSXTagName,
     isKnownSymbol,
     isLateVisibilityPaintedStatement,
@@ -848,6 +849,8 @@ import {
     JsxReferenceKind,
     JsxSelfClosingElement,
     JsxSpreadAttribute,
+    JsxShorthandAttribute,
+    JsxClassAttribute,
     JsxTagNameExpression,
     JsxText,
     KeywordTypeNode,
@@ -1144,6 +1147,7 @@ import {
     YieldExpression,
     DeferStatement,
     UnwindStatement,
+    UpdateBlockStatement,
     CatchClause,
     ReifyExpression,
     ReifiedType,
@@ -1155,6 +1159,7 @@ import {
     findJsxElseDirective,
     JsxElseDirective,
     isJsxContainer,
+    isJsxClassAttribute,
 } from "./_namespaces/ts.js";
 import * as moduleSpecifiers from "./_namespaces/ts.moduleSpecifiers.js";
 import * as performance from "./_namespaces/ts.performance.js";
@@ -1825,6 +1830,11 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         ),
         getAmbientModules,
         getJsxIntrinsicTagNamesAt,
+        getJsxLabelCompletions: nodeIn => {
+            const node = getParseTreeNode(nodeIn);
+            if (!node) return emptyArray;
+            return getJsxDeclaredLabelSymbols(node);
+        },
         isOptionalParameter: nodeIn => {
             const node = getParseTreeNode(nodeIn, isParameter);
             return node ? isOptionalParameter(node) : false;
@@ -21817,7 +21827,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     function* generateJsxAttributes(node: JsxAttributes): ElaborationIterator {
         if (!length(node.properties)) return;
         for (const prop of node.properties) {
-            if (isJsxSpreadAttribute(prop) || isHyphenatedJsxName(getTextOfJsxAttributeName(prop.name))) continue;
+            if (isJsxClassAttribute(prop) || isJsxSpreadAttribute(prop) || isJsxShorthandAttribute(prop) || isHyphenatedJsxName(getTextOfJsxAttributeName(prop.name))) continue;
             yield { errorNode: prop.name, innerExpression: prop.initializer, nameType: getStringLiteralType(getTextOfJsxAttributeName(prop.name)) };
         }
     }
@@ -21864,6 +21874,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             case SyntaxKind.JsxRunDirective:
             case SyntaxKind.JsxComponentDirective:
             case SyntaxKind.JsxLabeledFragment:
+            case SyntaxKind.JsxStyleDirective:
                 return { errorNode: child, innerExpression: undefined, nameType };
             default:
                 return Debug.assertNever(child, "Found invalid jsx child");
@@ -33075,7 +33086,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             : undefined;
     }
 
-    function getContextualTypeForJsxAttribute(attribute: JsxAttribute | JsxSpreadAttribute, contextFlags: ContextFlags | undefined): Type | undefined {
+    function getContextualTypeForJsxAttribute(attribute: JsxAttributeLike, contextFlags: ContextFlags | undefined): Type | undefined {
         // When we trying to resolve JsxOpeningLikeElement as a stateless function element, we will already give its attributes a contextual type
         // which is a type of the parameter of the signature we are trying out.
         // If there is no contextual type (e.g. we are trying to resolve stateful component), get attributes type from resolving element's tagName
@@ -33085,6 +33096,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return undefined;
             }
             return getTypeOfPropertyOfContextualType(attributesType, getEscapedTextOfJsxAttributeName(attribute.name));
+        } 
+        else if (isJsxClassAttribute(attribute)) {
+            return booleanType;
         }
         else {
             return getContextualType(attribute.parent, contextFlags);
@@ -33340,7 +33354,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return getContextualTypeForJsxExpression(parent as JsxExpression, contextFlags);
             case SyntaxKind.JsxAttribute:
             case SyntaxKind.JsxSpreadAttribute:
-                return getContextualTypeForJsxAttribute(parent as JsxAttribute | JsxSpreadAttribute, contextFlags);
+            case SyntaxKind.JsxShorthandAttribute:
+            case SyntaxKind.JsxClassAttribute:
+                return getContextualTypeForJsxAttribute(parent as JsxAttributeLike, contextFlags);
             case SyntaxKind.JsxOpeningElement:
             case SyntaxKind.JsxSelfClosingElement:
                 return getContextualJsxElementAttributesType(parent as JsxOpeningLikeElement, contextFlags);
@@ -34407,6 +34423,43 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return undefined;
     }
 
+    function getJsxDeclaredLabelSymbols(container: Node): Symbol[] {
+        // Walk up through if/else directive wrappers to the real container
+        let c: Node = container;
+        while (c.kind === SyntaxKind.JsxIfDirective || c.kind === SyntaxKind.JsxElseDirective) {
+            c = c.parent;
+        }
+
+        if (isJsxElement(c)) {
+            const openingElement = (c as JsxElement).openingElement;
+            const jsxChildrenPropertyName = getJsxElementChildrenPropertyName(getJsxNamespaceAt(openingElement));
+            if (!jsxChildrenPropertyName) return emptyArray;
+            const tagType = isJsxNamespacedName(openingElement.tagName) ? anyType : getTypeOfExpression(openingElement.tagName);
+            const callSigs = getSignaturesOfType(tagType, SignatureKind.Call);
+            if (callSigs.length === 0) return emptyArray;
+            const propsParams = callSigs[0].parameters;
+            if (propsParams.length === 0) return emptyArray;
+            const propsType = getTypeOfSymbol(propsParams[0]);
+            const childrenProp = getPropertyOfType(propsType, jsxChildrenPropertyName);
+            if (!childrenProp) return emptyArray;
+            return getPropertiesOfType(getTypeOfSymbol(childrenProp));
+        }
+
+        if (c.kind === SyntaxKind.JsxComponentDirective) {
+            const directive = c as JsxComponentDirective;
+            if (!directive.type) return emptyArray;
+            return getPropertiesOfType(getTypeFromTypeNode(directive.type));
+        }
+
+        if (c.kind === SyntaxKind.JsxLabeledFragment) {
+            const parentContextual = getContextualTypeForJsxLabeledFragment(c as JsxLabeledFragment);
+            if (!parentContextual) return emptyArray;
+            return getPropertiesOfType(parentContextual);
+        }
+
+        return emptyArray;
+    }
+
     function getJsxElementLabelContextualType(element: JsxElement, labelName: __String): Type | undefined {
         const openingElement = element.openingElement;
         const jsxChildrenPropertyName = getJsxElementChildrenPropertyName(getJsxNamespaceAt(openingElement));
@@ -34524,6 +34577,13 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             : trueType; // <Elem attr /> is sugar for <Elem attr={true} />
     }
 
+    function checkJsxClassAttribute(node: JsxClassAttribute, checkMode?: CheckMode): void {
+        if (node.initializer) {
+            const exprType = checkExpressionForMutableLocation(node.initializer, checkMode);
+            checkTypeAssignableTo(exprType, booleanType, node.initializer, Diagnostics.Class_attribute_expression_must_be_of_type_boolean);
+        }
+    }
+
     /**
      * Get attributes type of the JSX opening-like element. The result is from resolving "attributes" property of the opening-like element.
      *
@@ -34558,6 +34618,30 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     const exprType = checkJsxAttribute(attributeDecl, checkMode);
                     objectFlags |= getObjectFlags(exprType) & ObjectFlags.PropagatingFlags;
 
+                    // prop:X — forward to DOM element property validation
+                    if (isJsxNamespacedName(attributeDecl.name)
+                        && attributeDecl.name.namespace.escapedText === ("prop" as __String)
+                        && !isJsxOpenFragment
+                        && isJsxIntrinsicTagName(openingLikeElement.tagName)) {
+                        const domPropName = attributeDecl.name.name.escapedText;
+                        const intrinsicResultsType = getJsxType(JsxNames.IntrinsicElementResults, openingLikeElement);
+                        if (!isErrorType(intrinsicResultsType)) {
+                            const tagPropName = isJsxNamespacedName(openingLikeElement.tagName)
+                                ? getEscapedTextOfJsxNamespacedName(openingLikeElement.tagName)
+                                : openingLikeElement.tagName.escapedText;
+                            const elementInstanceType = getTypeOfPropertyOfType(intrinsicResultsType, tagPropName);
+                            if (elementInstanceType) {
+                                const expectedType = getTypeOfPropertyOfType(elementInstanceType, domPropName);
+                                if (expectedType) {
+                                    checkTypeAssignableTo(exprType, expectedType, attributeDecl.initializer ?? attributeDecl, Diagnostics.Type_0_is_not_assignable_to_type_1);
+                                }
+                                else {
+                                    error(attributeDecl.name.name, Diagnostics.Property_0_does_not_exist_on_type_1, unescapeLeadingUnderscores(domPropName), typeToString(elementInstanceType));
+                                }
+                            }
+                        }
+                    }
+
                     const attributeSymbol = createSymbol(SymbolFlags.Property | member.flags, member.escapedName);
                     attributeSymbol.declarations = member.declarations;
                     attributeSymbol.parent = member.parent;
@@ -34583,6 +34667,24 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                         const inferenceNode = (attributeDecl.initializer as JsxExpression).expression!;
                         addIntraExpressionInferenceSite(inferenceContext, inferenceNode, exprType);
                     }
+                }
+                else if (attributeDecl.kind === SyntaxKind.JsxClassAttribute) {
+                    checkJsxClassAttribute(attributeDecl, checkMode);
+                }
+                else if (isJsxShorthandAttribute(attributeDecl)) {
+                    const exprType = checkExpression(attributeDecl.name, checkMode);
+                    objectFlags |= getObjectFlags(exprType) & ObjectFlags.PropagatingFlags;
+                    const nameText = attributeDecl.name.escapedText;
+                    if (isValidSpreadType(exprType)) {
+                        const propExists = contextualType && getPropertyOfType(contextualType, nameText);
+                        if (!propExists) {
+                            error(attributeDecl, Diagnostics.JSX_shorthand_attribute_0_has_an_object_type_did_you_mean_to_spread_it_with_0, idText(attributeDecl.name));
+                        }
+                    }
+                    const attributeSymbol = createSymbol(SymbolFlags.Property, nameText);
+                    attributeSymbol.links.type = exprType;
+                    attributesTable.set(attributeSymbol.escapedName, attributeSymbol);
+                    allAttributesTable?.set(attributeSymbol.escapedName, attributeSymbol);
                 }
                 else {
                     Debug.assert(attributeDecl.kind === SyntaxKind.JsxSpreadAttribute);
@@ -50488,6 +50590,133 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         checkSourceElement(node.statement);
     }
 
+    function checkUpdateBlockStatement(node: UpdateBlockStatement) {
+        for (const operand of node.operands) {
+            checkExpression(operand);
+        }
+        checkSourceElement(node.block);
+
+        // Plausibility check: for each operand with a statically known JSX source,
+        // verify the block plausibly affects at least one variable that operand depends on.
+        // If we can't determine the source the check is skipped (plausibly valid).
+        //
+        // When inside a #component boundary, function calls to component-local functions
+        // are also traced transitively to account for captured state mutations.
+        const component = findEnclosingJsxComponentDirective(node);
+        for (const operand of node.operands) {
+            const jsxSource = getJsxSourceOfExpression(operand);
+            if (jsxSource === undefined) continue;
+            const deps = collectJsxExpressionIdentifiers(jsxSource);
+            if (deps.size === 0) continue;
+            if (!blockPlausiblyAffectsDeps(node.block, deps, component)) {
+                error(operand, Diagnostics.update_block_has_no_plausible_effect_on_0_Colon_the_block_does_not_reference_any_variable_that_0_depends_on, getTextOfNode(operand));
+            }
+        }
+    }
+
+    /** Walk up the parent chain to find the nearest enclosing JsxComponentDirective, if any. */
+    function findEnclosingJsxComponentDirective(node: Node): JsxComponentDirective | undefined {
+        let current = node.parent;
+        while (current) {
+            if (current.kind === SyntaxKind.JsxComponentDirective) return current as JsxComponentDirective;
+            current = current.parent;
+        }
+        return undefined;
+    }
+
+    /**
+     * Return true if `block` plausibly affects any of `deps`.
+     * When `component` is provided (inside a #component), also traces into component-local
+     * function calls to detect captured-variable mutations.
+     */
+    function blockPlausiblyAffectsDeps(block: Block, deps: Set<string>, component: JsxComponentDirective | undefined): boolean {
+        if (nodeReferencesAnyName(block, deps)) return true;
+        if (!component) return false;
+        // Deeper analysis: trace calls to functions declared within the component.
+        return !!forEachChild(block, function visitForCalls(n): boolean | undefined {
+            return transitivelyReferencesDeps(n, deps, component, new Set());
+        });
+    }
+
+    /**
+     * Return true if `node` references any dep in `deps`, or calls a component-local function
+     * whose body (transitively) references one.
+     */
+    function transitivelyReferencesDeps(node: Node, deps: Set<string>, component: JsxComponentDirective, visited: Set<Symbol>): boolean {
+        return !!forEachChild(node, function visit(n): boolean | undefined {
+            if (isIdentifier(n) && deps.has(idText(n))) return true;
+            if (isCallExpression(n) && isIdentifier(n.expression)) {
+                const sym = getResolvedSymbol(n.expression);
+                if (sym && sym !== unknownSymbol && !visited.has(sym)) {
+                    const body = getComponentLocalFunctionBody(sym, component);
+                    if (body !== undefined) {
+                        visited.add(sym);
+                        if (transitivelyReferencesDeps(body, deps, component, visited)) return true;
+                    }
+                }
+            }
+            return forEachChild(n, visit);
+        });
+    }
+
+    /**
+     * If `sym` is declared as a function-like inside the given `component`, return its body node.
+     * Returns undefined if the symbol is not component-local or has no analysable body.
+     */
+    function getComponentLocalFunctionBody(sym: Symbol, component: JsxComponentDirective): Node | undefined {
+        const decl = sym.valueDeclaration;
+        if (!decl) return undefined;
+        // Only consider declarations that live inside this component.
+        if (!isNodeDescendantOf(decl, component)) return undefined;
+        if ((isFunctionDeclaration(decl) || isFunctionExpression(decl) || isArrowFunction(decl)) && decl.body) {
+            return decl.body;
+        }
+        if (isVariableDeclaration(decl) && decl.initializer) {
+            const init = decl.initializer;
+            if ((isFunctionExpression(init) || isArrowFunction(init)) && init.body) {
+                return init.body;
+            }
+        }
+        return undefined;
+    }
+
+    /** Collect text of identifiers that appear inside JsxExpression nodes within the given JSX source. */
+    function collectJsxExpressionIdentifiers(root: Node): Set<string> {
+        const names = new Set<string>();
+        visit(root);
+        return names;
+        function visit(node: Node): void {
+            if (node.kind === SyntaxKind.JsxExpression) {
+                const expr = (node as JsxExpression).expression;
+                if (expr) collectIdentifiersInSubtree(expr, names);
+            }
+            else if (node.kind === SyntaxKind.JsxRunDirective) {
+                // #run blocks are imperative reactive code — all identifiers they reference are deps
+                for (const stmt of (node as JsxRunDirective).statements) {
+                    collectIdentifiersInSubtree(stmt, names);
+                }
+            }
+            else {
+                forEachChild(node, visit);
+            }
+        }
+    }
+
+    function collectIdentifiersInSubtree(node: Node, out: Set<string>): void {
+        if (isIdentifier(node)) {
+            out.add(idText(node));
+        }
+        forEachChild(node, n => collectIdentifiersInSubtree(n, out));
+    }
+
+    /** Return true if any identifier in `node`'s subtree has text in `names`. */
+    function nodeReferencesAnyName(node: Node, names: Set<string>): boolean {
+        return !!forEachChild(node, function visit(n): boolean | undefined {
+            if (isIdentifier(n) && names.has(idText(n))) return true;
+            return forEachChild(n, visit);
+        });
+    }
+
     function checkDeferStatement(node: DeferStatement) {
         if (node.statement.kind === SyntaxKind.CatchClause) {
             checkCatchClause(node.statement as any);
@@ -51106,6 +51335,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return checkExportAssignment(node as ExportAssignment);
             case SyntaxKind.UnwindStatement:
                 return checkUnwindStatement(node as UnwindStatement);
+            case SyntaxKind.UpdateBlockStatement:
+                return checkUpdateBlockStatement(node as UpdateBlockStatement);
             case SyntaxKind.DeferStatement:
                 return checkDeferStatement(node as DeferStatement);
             case SyntaxKind.EmptyStatement:
@@ -54500,8 +54731,16 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 continue;
             }
 
-            const { name, initializer } = attr;
-            const escapedText = getEscapedTextOfJsxAttributeName(name);
+            if (attr.kind === SyntaxKind.JsxClassAttribute) {
+                if (!isJsxIntrinsicTagName(node.tagName)) {
+                    grammarErrorOnNode(attr, Diagnostics.Class_attributes_are_not_allowed_on_components);
+                    continue;
+                }
+            }
+            
+            const name = attr.name;
+            const initializer = isJsxShorthandAttribute(attr) ? name : attr.initializer;
+            const escapedText = `${attr.kind === SyntaxKind.JsxClassAttribute ? '.' : ''}${getEscapedTextOfJsxAttributeName(name)}` as __String;
             if (!seen.get(escapedText)) {
                 seen.set(escapedText, true);
             }

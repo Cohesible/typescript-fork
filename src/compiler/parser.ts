@@ -230,8 +230,10 @@ import {
     JsxElement,
     JsxRunDirective,
     JsxComponentDirective,
+    JsxStyleDirective,
     JsxLabeledFragment,
     UnwindStatement,
+    UpdateBlockStatement,
     JsxExpression,
     JsxFragment,
     JsxElseDirective,
@@ -242,6 +244,8 @@ import {
     JsxOpeningLikeElement,
     JsxSelfClosingElement,
     JsxSpreadAttribute,
+    JsxShorthandAttribute,
+    JsxClassAttribute,
     JsxTagNameExpression,
     JsxText,
     JsxTokenSyntaxKind,
@@ -1065,6 +1069,12 @@ const forEachChildTable: ForEachChildTable = {
     [SyntaxKind.JsxSpreadAttribute]: function forEachChildInJsxSpreadAttribute<T>(node: JsxSpreadAttribute, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNode(cbNode, node.expression);
     },
+    [SyntaxKind.JsxShorthandAttribute]: function forEachChildInJsxShorthandAttribute<T>(node: JsxShorthandAttribute, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+        return visitNode(cbNode, node.name);
+    },
+    [SyntaxKind.JsxClassAttribute]: function forEachChildInJsxClassAttribute<T>(node: JsxClassAttribute, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+        return visitNode(cbNode, node.name) || visitNode(cbNode, node.initializer);
+    },
     [SyntaxKind.JsxExpression]: function forEachChildInJsxExpression<T>(node: JsxExpression, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNode(cbNode, node.dotDotDotToken) ||
             visitNode(cbNode, node.expression);
@@ -1099,8 +1109,15 @@ const forEachChildTable: ForEachChildTable = {
             visitNodes(cbNode, cbNodes, node.parameters) ||
             visitNodes(cbNode, cbNodes, node.children);
     },
+    [SyntaxKind.JsxStyleDirective]: function forEachChildInJsxStyleDirective<T>(node: JsxStyleDirective, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+        return visitNode(cbNode, node.text);
+    },
     [SyntaxKind.UnwindStatement]: function forEachChildInUnwindStatement<T>(node: UnwindStatement, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNode(cbNode, node.statement);
+    },
+    [SyntaxKind.UpdateBlockStatement]: function forEachChildInUpdateBlockStatement<T>(node: UpdateBlockStatement, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+        return visitNodes(cbNode, cbNodes, node.operands)
+            || visitNode(cbNode, node.block);
     },
     [SyntaxKind.OptionalType]: forEachChildInOptionalRestOrJSDocParameterModifier,
     [SyntaxKind.RestType]: forEachChildInOptionalRestOrJSDocParameterModifier,
@@ -3002,7 +3019,7 @@ namespace Parser {
                 }
                 return tokenIsIdentifierOrKeyword(token());
             case ParsingContext.JsxAttributes:
-                return tokenIsIdentifierOrKeyword(token()) || token() === SyntaxKind.OpenBraceToken || token() === SyntaxKind.MinusToken || token() === SyntaxKind.AtToken;
+                return tokenIsIdentifierOrKeyword(token()) || token() === SyntaxKind.OpenBraceToken || token() === SyntaxKind.MinusToken || token() === SyntaxKind.AtToken || token() === SyntaxKind.DotToken;
             case ParsingContext.JsxChildren:
                 return true;
             case ParsingContext.JSDocComment:
@@ -6481,8 +6498,9 @@ namespace Parser {
         if (isJsxNamespacedName(initialExpression)) {
             return initialExpression; // `a:b.c` is invalid syntax, don't even look for the `.` if we parse `a:b`, and let `parseAttribute` report "unexpected :" instead.
         }
+        // we must treat whitespace apart of the structure to support class attributes
         let expression: PropertyAccessExpression | Identifier | ThisExpression = initialExpression;
-        while (parseOptional(SyntaxKind.DotToken)) {
+        while (scanner.getTokenFullStart() === scanner.getTokenStart() && parseOptional(SyntaxKind.DotToken)) {
             expression = finishNode(factoryCreatePropertyAccessExpression(expression, parseRightSideOfDot(/*allowIdentifierNames*/ true, /*allowPrivateIdentifiers*/ false, /*allowUnicodeEscapeSequenceInIdentifierName*/ false)), pos);
         }
         return expression as JsxTagNameExpression;
@@ -6530,7 +6548,7 @@ namespace Parser {
         return finishNode(factory.createJsxExpression(dotDotDotToken, expression), pos);
     }
 
-    function parseJsxAttribute(): JsxAttribute | JsxSpreadAttribute {
+    function parseJsxAttribute(): JsxAttribute | JsxSpreadAttribute | JsxShorthandAttribute | JsxClassAttribute {
         if (token() === SyntaxKind.OpenBraceToken) {
             if (scriptKind !== ScriptKind.Syn) {
                 return parseJsxSpreadAttribute();
@@ -6541,14 +6559,38 @@ namespace Parser {
             return parseJsxShorthandAttribute();
         }
 
+        if (token() === SyntaxKind.DotToken) {
+            return parseJsxClassAttribute();
+        }
+
         const pos = getNodePos();
         return finishNode(factory.createJsxAttribute(parseJsxAttributeName(), parseJsxAttributeValue()), pos);
+    }
+
+    function parseJsxClassAttribute(): JsxClassAttribute {
+        const pos = getNodePos();
+        parseExpected(SyntaxKind.DotToken);
+        currentToken = scanner.scanJsxAttributeIdentifier();
+        const name = parseIdentifierNameErrorOnUnicodeEscapeSequence();
+        const initializer = parseJsxAttributeValue();
+        return finishNode(factory.createJsxClassAttribute(name, initializer), pos);
     }
 
     function parseJsxAttributeValue(): JsxAttributeValue | undefined {
         if (token() === SyntaxKind.EqualsToken) {
             if (scanJsxAttributeValue() === SyntaxKind.StringLiteral) {
                 return parseLiteralNode() as StringLiteral;
+            }
+            if (token() === SyntaxKind.NumericLiteral) {
+                return parseLiteralNode() as NumericLiteral;
+            }
+            if (token() === SyntaxKind.MinusToken) {
+                const pos = getNodePos();
+                nextToken();
+                if (token() === SyntaxKind.NumericLiteral) {
+                    return finishNode(factory.createPrefixUnaryExpression(SyntaxKind.MinusToken, parseLiteralNode() as NumericLiteral), pos);
+                }
+                parseErrorAtCurrentToken(Diagnostics.or_JSX_element_expected);
             }
             if (token() === SyntaxKind.OpenBraceToken) {
                 return parseJsxExpression(/*inExpressionContext*/ true);
@@ -6582,17 +6624,12 @@ namespace Parser {
         return finishNode(factory.createJsxSpreadAttribute(expression), pos);
     }
 
-    function parseJsxShorthandAttribute(): JsxAttribute {
-        // desugars shorthand attributes directly in the parser
+    function parseJsxShorthandAttribute(): JsxShorthandAttribute {
         const pos = getNodePos();
         parseExpected(SyntaxKind.OpenBraceToken);
         const name = parseIdentifier();
         parseExpected(SyntaxKind.CloseBraceToken);
-        const nameRef = factory.createIdentifier(idText(name));
-        setTextRange(nameRef, name);
-        const jsxExpr = factory.createJsxExpression(/*dotDotDotToken*/ undefined, nameRef);
-        setTextRange(jsxExpr, name);
-        return finishNode(factory.createJsxAttribute(name, jsxExpr), pos);
+        return finishNode(factory.createJsxShorthandAttribute(name), pos);
     }
 
     function parseJsxClosingElement(open: JsxOpeningElement, inExpressionContext: boolean): JsxClosingElement {
@@ -6689,11 +6726,28 @@ namespace Parser {
                 return n;
             }
             case '#run': {
-                const pos = getNodePos();
+                const pos = getNodePos(); // TODO: why are we shadowing `pos`?
                 parseExpected(SyntaxKind.GreaterThanToken);
                 const statements = parseList(ParsingContext.JsxRunDirectiveStatements, parseStatement);
                 const { hasError } = parseDirectiveEnd(tagName, !openingTag);
                 const n = finishNode(factory.createJsxRunDirective(statements), pos);
+                if (hasError) (n as Mutable<typeof n>).flags |= NodeFlags.ThisNodeHasError;
+                return n;
+            }
+            case '#style': {
+                parseExpected(SyntaxKind.GreaterThanToken, /*diagnosticMessage*/ undefined, /*shouldAdvance*/ false);
+                currentToken = scanner.scanJsxToken(/*skipJsxExpressions*/ true);
+                const textPos = getNodePos();
+                const isAllWhiteSpace = token() === SyntaxKind.JsxTextAllWhiteSpaces;
+                const cssText = token() === SyntaxKind.JsxText || isAllWhiteSpace
+                    ? scanner.getTokenValue()
+                    : '';
+                if (token() !== SyntaxKind.LessThanSlashToken && token() !== SyntaxKind.EndOfFileToken) {
+                    scanJsxText();
+                }
+                const textNode = finishNode(factory.createJsxText(cssText, isAllWhiteSpace), textPos);
+                const { hasError } = parseDirectiveEnd(tagName, !openingTag);
+                const n = finishNode(factory.createJsxStyleDirective(textNode), pos);
                 if (hasError) (n as Mutable<typeof n>).flags |= NodeFlags.ThisNodeHasError;
                 return n;
             }
@@ -7569,6 +7623,44 @@ namespace Parser {
         return finishNode(factory.createUnwindStatement(parseBlock(/*ignoreMissingOpenBrace*/ false)), pos);
     }
 
+    function isUpdateBlockForm(): boolean {
+        // Lookahead: skip `update`, scan comma-separated identifier/member-access chains,
+        // return true if a `{` follows. Only the block form `update x1, x2 { }` qualifies;
+        // `update expr` (expression statement) must fall through to the expression parser.
+        return lookAhead(() => {
+            nextToken(); // skip `update` keyword
+            while (true) {
+                if (token() !== SyntaxKind.Identifier) return false;
+                nextToken(); // skip identifier
+                // allow member access chains
+                while (token() === SyntaxKind.DotToken || token() === SyntaxKind.QuestionDotToken) {
+                    nextToken(); // skip . or ?.
+                    if (token() === SyntaxKind.Identifier) nextToken();
+                }
+                if (token() === SyntaxKind.OpenBraceToken) return true;
+                if (token() !== SyntaxKind.CommaToken) return false;
+                nextToken(); // skip comma
+            }
+        });
+    }
+
+    function parseUpdateBlockStatement(): UpdateBlockStatement {
+        const pos = getNodePos();
+        parseExpected(SyntaxKind.UpdateKeyword);
+        const operandsPos = getNodePos();
+        const operandsList: Expression[] = [];
+        do {
+            operandsList.push(parseAssignmentExpressionOrHigher(/*allowReturnTypeInArrowFunction*/ false));
+        } while (parseOptional(SyntaxKind.CommaToken));
+        // Use parser-local createNodeArray so the NodeArray gets proper pos/end set from
+        // source text positions. The factory's createNodeArray would leave pos=-1, which
+        // causes a Debug Failure in the language server when getChildren() tries to scan
+        // synthetic tokens at position -1.
+        const operands = createNodeArray(operandsList, operandsPos);
+        const block = parseBlock(/*ignoreMissingOpenBrace*/ false);
+        return finishNode(factory.createUpdateBlockStatement(operands, block), pos);
+    }
+
     function parseDeferStatement(): Statement {
         const pos = getNodePos();
 
@@ -7919,6 +8011,11 @@ namespace Parser {
                 return parseDeferStatement();
             case SyntaxKind.UnwindKeyword:
                 return parseUnwindStatement();
+            case SyntaxKind.UpdateKeyword:
+                if (isUpdateBlockForm()) {
+                    return parseUpdateBlockStatement();
+                }
+                break;
             case SyntaxKind.AtToken:
                 return parseDeclaration();
             case SyntaxKind.FallthroughKeyword:

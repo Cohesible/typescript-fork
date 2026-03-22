@@ -52,10 +52,14 @@ import {
     isJsxChild,
     JsxRunDirective,
     JsxComponentDirective,
+    JsxStyleDirective,
+    JsxClassAttribute,
     JsxLabeledFragment,
     UnwindStatement,
+    UpdateBlockStatement,
     isJsxClosingElement,
     isJsxClosingFragment,
+    isJsxText,
     JsxElseDirective,
     isJsxOpeningElement,
     isJsxOpeningFragment,
@@ -1759,10 +1763,23 @@ const visitEachChildTable: VisitEachChildTable = {
             nodesVisitor((node as JsxLabeledFragment).children, visitor, isJsxChild),
         );
     },
+    [SyntaxKind.JsxStyleDirective]: function visitEachChildOfJsxStyleDirective(node, visitor, context, _nodesVisitor, nodeVisitor, _tokenVisitor) {
+        return context.factory.updateJsxStyleDirective(
+            node as JsxStyleDirective,
+            Debug.checkDefined(nodeVisitor((node as JsxStyleDirective).text, visitor, isJsxText)),
+        );
+    },
     [SyntaxKind.UnwindStatement]: function visitEachChildOfUnwindStatement(node, visitor, _context, _nodesVisitor, nodeVisitor, _tokenVisitor) {
         return _context.factory.updateUnwindStatement(
             node as UnwindStatement,
             Debug.checkDefined(nodeVisitor((node as UnwindStatement).statement, visitor, isBlock)),
+        );
+    },
+    [SyntaxKind.UpdateBlockStatement]: function visitEachChildOfUpdateBlockStatement(node, visitor, context, nodesVisitor, nodeVisitor, _tokenVisitor) {
+        return context.factory.updateUpdateBlockStatement(
+            node as UpdateBlockStatement,
+            nodesVisitor((node as UpdateBlockStatement).operands, visitor, isExpression),
+            Debug.checkDefined(nodeVisitor((node as UpdateBlockStatement).block, visitor, isBlock)),
         );
     },
 
@@ -1794,6 +1811,21 @@ const visitEachChildTable: VisitEachChildTable = {
         return context.factory.updateJsxSpreadAttribute(
             node,
             Debug.checkDefined(nodeVisitor(node.expression, visitor, isExpression)),
+        );
+    },
+
+    [SyntaxKind.JsxShorthandAttribute]: function visitEachChildOfJsxShorthandAttribute(node, visitor, context, _nodesVisitor, nodeVisitor, _tokenVisitor) {
+        return context.factory.updateJsxShorthandAttribute(
+            node,
+            Debug.checkDefined(nodeVisitor(node.name, visitor, isIdentifier)),
+        );
+    },
+
+    [SyntaxKind.JsxClassAttribute]: function visitEachChildOfJsxClassAttribute(node, visitor, context, _nodesVisitor, nodeVisitor, _tokenVisitor) {
+        return context.factory.updateJsxClassAttribute(
+            node as JsxClassAttribute,
+            Debug.checkDefined(nodeVisitor((node as JsxClassAttribute).name, visitor, isIdentifier)),
+            nodeVisitor((node as JsxClassAttribute).initializer, visitor, isStringLiteralOrJsxExpression),
         );
     },
 

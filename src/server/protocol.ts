@@ -55,6 +55,7 @@ export const enum CommandTypes {
     BraceFull = "brace-full",
     BraceCompletion = "braceCompletion",
     GetSpanOfEnclosingComment = "getSpanOfEnclosingComment",
+    JsxStyleRegions = "jsxStyleRegions",
     Change = "change",
     Close = "close",
     /** @deprecated Prefer CompletionInfo -- see comment on CompletionsResponse */
@@ -417,6 +418,14 @@ export interface SpanOfEnclosingCommentRequestArgs extends FileLocationRequestAr
      * Requires that the enclosing span be a multi-line comment, or else the request returns undefined.
      */
     onlyMultiLine: boolean;
+}
+
+export interface JsxStyleRegionsRequest extends FileRequest {
+    command: CommandTypes.JsxStyleRegions;
+}
+
+export interface JsxStyleRegionsResponse extends Response {
+    body?: { regions: TextSpan[]; text: string; };
 }
 
 /**

@@ -2420,6 +2420,7 @@ function isStatementKindButNotDeclarationKind(kind: SyntaxKind) {
         || kind === SyntaxKind.WithStatement
         || kind === SyntaxKind.DeferStatement
         || kind === SyntaxKind.UnwindStatement
+        || kind === SyntaxKind.UpdateBlockStatement
         || kind === SyntaxKind.NotEmittedStatement;
 }
 
@@ -2504,6 +2505,7 @@ export function isJsxChild(node: Node): node is JsxChild {
         || kind === SyntaxKind.JsxIfDirective
         || kind === SyntaxKind.JsxRunDirective
         || kind === SyntaxKind.JsxComponentDirective
+        || kind === SyntaxKind.JsxStyleDirective
         || kind === SyntaxKind.JsxLabeledFragment;
 }
 
@@ -2520,7 +2522,9 @@ export function isJsxContainer(node: Node): node is JsxContainer {
 export function isJsxAttributeLike(node: Node): node is JsxAttributeLike {
     const kind = node.kind;
     return kind === SyntaxKind.JsxAttribute
-        || kind === SyntaxKind.JsxSpreadAttribute;
+        || kind === SyntaxKind.JsxSpreadAttribute
+        || kind === SyntaxKind.JsxShorthandAttribute
+        || kind === SyntaxKind.JsxClassAttribute;
 }
 
 export function isStringLiteralOrJsxExpression(node: Node): node is StringLiteral | JsxExpression {
@@ -2634,7 +2638,7 @@ export function hasOnlyExpressionInitializer(node: Node): node is HasExpressionI
 }
 
 export function isObjectLiteralElement(node: Node): node is ObjectLiteralElement {
-    return node.kind === SyntaxKind.JsxAttribute || node.kind === SyntaxKind.JsxSpreadAttribute || isObjectLiteralElementLike(node);
+    return node.kind === SyntaxKind.JsxAttribute || node.kind === SyntaxKind.JsxSpreadAttribute || node.kind === SyntaxKind.JsxShorthandAttribute || isObjectLiteralElementLike(node);
 }
 
 /** @internal */

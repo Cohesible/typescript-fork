@@ -316,7 +316,7 @@ export function transformJsx(context: TransformationContext): (x: SourceFile | B
         const childrenProp = children && children.length ? convertJsxChildrenToChildrenPropAssignment(children) : undefined;
         const keyAttr = find(node.attributes.properties, p => !!p.name && isIdentifier(p.name) && p.name.escapedText === "key") as JsxAttribute | undefined;
         const attrs = keyAttr ? filter(node.attributes.properties, p => p !== keyAttr) : node.attributes.properties;
-        const objectProperties = length(attrs) ? transformJsxAttributesToObjectProps(attrs, childrenProp) :
+        const objectProperties = length(attrs) ? transformJsxAttributesToObjectProps(attrs as any, childrenProp) :
             factory.createObjectLiteralExpression(childrenProp ? [childrenProp] : emptyArray); // When there are no attributes, React wants {}
         return visitJsxOpeningLikeElementOrFragmentJSX(
             tagName,
@@ -380,7 +380,7 @@ export function transformJsx(context: TransformationContext): (x: SourceFile | B
     function visitJsxOpeningLikeElementCreateElement(node: JsxOpeningLikeElement, children: readonly JsxChild[] | undefined, isChild: boolean, location: TextRange) {
         const tagName = getTagName(node);
         const attrs = node.attributes.properties;
-        const objectProperties = length(attrs) ? transformJsxAttributesToObjectProps(attrs) :
+        const objectProperties = length(attrs) ? transformJsxAttributesToObjectProps(attrs as any) :
             factory.createNull(); // When there are no attributes, React wants "null"
 
         const callee = currentFileState.importSpecifier === undefined

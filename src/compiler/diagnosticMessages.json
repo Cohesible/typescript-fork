@@ -3061,6 +3061,22 @@
         "category": "Error",
         "code": 95209
     },
+    "'update' block has no plausible effect on '{0}': the block does not reference any variable that '{0}' depends on.": {
+        "category": "Error",
+        "code": 95210
+    },
+    "JSX shorthand attribute '{0}' has an object type; did you mean to spread it with '{...{0}}'?": {
+        "category": "Error",
+        "code": 95211
+    },
+    "Class attributes are not allowed on components.": {
+        "category": "Error",
+        "code": 95212
+    },
+    "Class attribute expression must be of type 'boolean'.": {
+        "category": "Error",
+        "code": 95213
+    },
     "'{0}' is defined as an accessor in class '{1}', but is overridden here in '{2}' as an instance property.": {
         "category": "Error",
         "code": 2610

@@ -2366,6 +2366,11 @@ export class Session<TMessage = string> implements EventSender {
         return languageService.getSpanOfEnclosingComment(file, position, onlyMultiLine);
     }
 
+    private getJsxStyleRegions(args: protocol.FileRequestArgs) {
+        const { file, languageService } = this.getFileAndLanguageServiceForSyntacticOperation(args);
+        return languageService.getJsxStyleRegions(file);
+    }
+
     private getIndentation(args: protocol.IndentationRequestArgs) {
         const { file, languageService } = this.getFileAndLanguageServiceForSyntacticOperation(args);
         const position = this.getPositionInFile(args, file);
@@ -3562,6 +3567,9 @@ export class Session<TMessage = string> implements EventSender {
         },
         [protocol.CommandTypes.GetSpanOfEnclosingComment]: (request: protocol.SpanOfEnclosingCommentRequest) => {
             return this.requiredResponse(this.getSpanOfEnclosingComment(request.arguments));
+        },
+        [protocol.CommandTypes.JsxStyleRegions]: (request: protocol.JsxStyleRegionsRequest) => {
+            return this.requiredResponse(this.getJsxStyleRegions(request.arguments));
         },
         [protocol.CommandTypes.FileReferences]: (request: protocol.FileReferencesRequest) => {
             return this.requiredResponse(this.getFileReferences(request.arguments, /*simplifiedResult*/ true));

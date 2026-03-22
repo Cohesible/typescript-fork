@@ -279,8 +279,11 @@ import {
     JsxFragment,
     JsxRunDirective,
     JsxComponentDirective,
+    JsxStyleDirective,
+    JsxClassAttribute,
     JsxLabeledFragment,
     UnwindStatement,
+    UpdateBlockStatement,
     JsxElseDirective,
     JsxIfDirective,
     JsxNamespacedName,
@@ -288,6 +291,7 @@ import {
     JsxOpeningFragment,
     JsxSelfClosingElement,
     JsxSpreadAttribute,
+    JsxShorthandAttribute,
     JsxTagNameExpression,
     JsxText,
     KeywordSyntaxKind,
@@ -1010,6 +1014,10 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         updateJsxAttributes,
         createJsxSpreadAttribute,
         updateJsxSpreadAttribute,
+        createJsxShorthandAttribute,
+        updateJsxShorthandAttribute,
+        createJsxClassAttribute,
+        updateJsxClassAttribute,
         createJsxExpression,
         updateJsxExpression,
         createJsxNamespacedName,
@@ -1022,10 +1030,14 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         updateJsxRunDirective,
         createJsxComponentDirective,
         updateJsxComponentDirective,
+        createJsxStyleDirective,
+        updateJsxStyleDirective,
         createJsxLabeledFragment,
         updateJsxLabeledFragment,
         createUnwindStatement,
         updateUnwindStatement,
+        createUpdateBlockStatement,
+        updateUpdateBlockStatement,
         createCaseClause,
         updateCaseClause,
         createCaseIsClause,
@@ -5956,6 +5968,40 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     }
 
     // @api
+    function createJsxShorthandAttribute(name: Identifier) {
+        const node = createBaseNode<JsxShorthandAttribute>(SyntaxKind.JsxShorthandAttribute);
+        node.name = name;
+        node.transformFlags |= propagateChildFlags(node.name) |
+            TransformFlags.ContainsJsx;
+        return node;
+    }
+
+    // @api
+    function updateJsxShorthandAttribute(node: JsxShorthandAttribute, name: Identifier) {
+        return node.name !== name
+            ? update(createJsxShorthandAttribute(name), node)
+            : node;
+    }
+
+    // @api
+    function createJsxClassAttribute(name: Identifier, initializer: JsxAttributeValue | undefined) {
+        const node = createBaseDeclaration<JsxClassAttribute>(SyntaxKind.JsxClassAttribute);
+        node.name = name;
+        node.initializer = initializer;
+        node.transformFlags |= propagateChildFlags(node.name) |
+            propagateChildFlags(node.initializer) |
+            TransformFlags.ContainsJsx;
+        return node;
+    }
+
+    // @api
+    function updateJsxClassAttribute(node: JsxClassAttribute, name: Identifier, initializer: JsxAttributeValue | undefined) {
+        return node.name !== name || node.initializer !== initializer
+            ? update(createJsxClassAttribute(name, initializer), node)
+            : node;
+    }
+
+    // @api
     function createJsxExpression(dotDotDotToken: DotDotDotToken | undefined, expression: Expression | undefined) {
         const node = createBaseNode<JsxExpression>(SyntaxKind.JsxExpression);
         node.dotDotDotToken = dotDotDotToken;
@@ -6040,6 +6086,19 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
             : node;
     }
 
+    function createJsxStyleDirective(text: JsxText) {
+        const node = createBaseNode<JsxStyleDirective>(SyntaxKind.JsxStyleDirective);
+        node.text = text;
+        node.transformFlags |= propagateChildFlags(node.text) | TransformFlags.ContainsJsx;
+        return node;
+    }
+
+    function updateJsxStyleDirective(node: JsxStyleDirective, text: JsxText) {
+        return node.text !== text
+            ? update(createJsxStyleDirective(text), node)
+            : node;
+    }
+
     // @api
     function createJsxComponentDirective(
         name: Identifier | undefined,
@@ -6114,6 +6173,22 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     function updateUnwindStatement(node: UnwindStatement, statement: Block) {
         return node.statement !== statement
             ? update(createUnwindStatement(statement), node)
+            : node;
+    }
+
+    // @api
+    function createUpdateBlockStatement(operands: readonly Expression[], block: Block) {
+        const node = createBaseNode<UpdateBlockStatement>(SyntaxKind.UpdateBlockStatement);
+        node.operands = createNodeArray(operands);
+        node.block = block;
+        node.transformFlags |= propagateChildrenFlags(node.operands) | propagateChildFlags(node.block);
+        return node;
+    }
+
+    // @api
+    function updateUpdateBlockStatement(node: UpdateBlockStatement, operands: readonly Expression[], block: Block) {
+        return node.operands !== operands || node.block !== block
+            ? update(createUpdateBlockStatement(operands, block), node)
             : node;
     }
 

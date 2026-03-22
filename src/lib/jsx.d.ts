@@ -101,17 +101,17 @@ interface ComponentNode<
 	T extends ChildNode = ChildNode,
 	U extends Record<string, unknown> = Record<string, unknown>
 > extends ChildNode, Updatable {
-	readonly root: T
+	readonly rootNode: T
 	readonly props: U
 }
+
+type NodeLike = string | number | ChildNode | Wire<string | number | ChildNode>
 
 declare namespace JSX {
 	type Booleanish = boolean | 'true' | 'false';
 
-	type Child = ChildNode | string | number;
+	type Child = NodeLike;
 	type Children = Child[];
-
-	type NodeLike = string | number | ChildNode | Wire<string | number | ChildNode>
 
 	type Element = globalThis.Element;
 
@@ -132,6 +132,19 @@ declare namespace JSX {
 
 	interface CSSProperties extends DOMCSSProperties {
 		[key: string]: string | number | null | undefined;
+	}
+
+	// TODO: attributes with _no_ property equivalent should be mapped to empty string
+	// we likely won't emit any dynamic helpers for these, potentially meaning we should
+	// validate for spreading these as attributes
+	interface UnreflectedAttributes {
+		'attr:is'?: string
+		'attr:exportparts'?: string
+		'attr:itemid'?: string
+		'attr:itemprop'?: string
+		'attr:itemref'?: string
+		'attr:itemscope'?: string
+		'attr:itemtype'?: string
 	}
 
 	// ============================================
@@ -194,142 +207,142 @@ declare namespace JSX {
 
 	interface DOMAttributes<Target extends EventTarget> {
 		children?: Children;
+		[key: `prop:${string}`]: unknown;
 
 		// Image Events
-		onLoad?: GenericEventHandler<Target>;
-		onError?: GenericEventHandler<Target>;
+		"on:load"?: GenericEventHandler<Target>;
+		"on:error"?: GenericEventHandler<Target>;
 
 		// Clipboard Events
-		onCopy?: ClipboardEventHandler<Target>;
-		onCut?: ClipboardEventHandler<Target>;
-		onPaste?: ClipboardEventHandler<Target>;
+		"on:copy"?: ClipboardEventHandler<Target>;
+		"on:cut"?: ClipboardEventHandler<Target>;
+		"on:paste"?: ClipboardEventHandler<Target>;
 
 		// Composition Events
-		onCompositionEnd?: CompositionEventHandler<Target>;
-		onCompositionStart?: CompositionEventHandler<Target>;
-		onCompositionUpdate?: CompositionEventHandler<Target>;
+		"on:compositionend"?: CompositionEventHandler<Target>;
+		"on:compositionstart"?: CompositionEventHandler<Target>;
+		"on:compositionupdate"?: CompositionEventHandler<Target>;
 
 		// Popover Events
-		onBeforeToggle?: ToggleEventHandler<Target>;
-		onToggle?: ToggleEventHandler<Target>;
+		"on:beforetoggle"?: ToggleEventHandler<Target>;
+		"on:toggle"?: ToggleEventHandler<Target>;
 
 		// Dialog Events
-		onClose?: GenericEventHandler<Target>;
-		onCancel?: GenericEventHandler<Target>;
+		"on:close"?: GenericEventHandler<Target>;
+		"on:cancel"?: GenericEventHandler<Target>;
 
 		// Focus Events
-		onFocus?: FocusEventHandler<Target>;
-		onFocusIn?: FocusEventHandler<Target>;
-		onFocusOut?: FocusEventHandler<Target>;
-		onBlur?: FocusEventHandler<Target>;
+		"on:focus"?: FocusEventHandler<Target>;
+		"on:focusin"?: FocusEventHandler<Target>;
+		"on:focusout"?: FocusEventHandler<Target>;
+		"on:blur"?: FocusEventHandler<Target>;
 
 		// Form Events
-		onChange?: GenericEventHandler<Target>;
-		onInput?: InputEventHandler<Target>;
-		onBeforeInput?: InputEventHandler<Target>;
-		onSearch?: GenericEventHandler<Target>;
-		onSubmit?: SubmitEventHandler<Target>;
-		onInvalid?: GenericEventHandler<Target>;
-		onReset?: GenericEventHandler<Target>;
-		onFormData?: GenericEventHandler<Target>;
+		"on:change"?: GenericEventHandler<Target>;
+		"on:input"?: InputEventHandler<Target>;
+		"on:beforeinput"?: InputEventHandler<Target>;
+		"on:search"?: GenericEventHandler<Target>;
+		"on:submit"?: SubmitEventHandler<Target>;
+		"on:invalid"?: GenericEventHandler<Target>;
+		"on:reset"?: GenericEventHandler<Target>;
+		"on:formdata"?: GenericEventHandler<Target>;
 
 		// Keyboard Events
-		onKeyDown?: KeyboardEventHandler<Target>;
-		onKeyPress?: KeyboardEventHandler<Target>;
-		onKeyUp?: KeyboardEventHandler<Target>;
+		"on:keydown"?: KeyboardEventHandler<Target>;
+		"on:keypress"?: KeyboardEventHandler<Target>;
+		"on:keyup"?: KeyboardEventHandler<Target>;
 
 		// Media Events
-		onAbort?: GenericEventHandler<Target>;
-		onCanPlay?: GenericEventHandler<Target>;
-		onCanPlayThrough?: GenericEventHandler<Target>;
-		onDurationChange?: GenericEventHandler<Target>;
-		onEmptied?: GenericEventHandler<Target>;
-		onEncrypted?: GenericEventHandler<Target>;
-		onEnded?: GenericEventHandler<Target>;
-		onLoadedData?: GenericEventHandler<Target>;
-		onLoadedMetadata?: GenericEventHandler<Target>;
-		onLoadStart?: GenericEventHandler<Target>;
-		onPause?: GenericEventHandler<Target>;
-		onPlay?: GenericEventHandler<Target>;
-		onPlaying?: GenericEventHandler<Target>;
-		onProgress?: GenericEventHandler<Target>;
-		onRateChange?: GenericEventHandler<Target>;
-		onSeeked?: GenericEventHandler<Target>;
-		onSeeking?: GenericEventHandler<Target>;
-		onStalled?: GenericEventHandler<Target>;
-		onSuspend?: GenericEventHandler<Target>;
-		onTimeUpdate?: GenericEventHandler<Target>;
-		onVolumeChange?: GenericEventHandler<Target>;
-		onWaiting?: GenericEventHandler<Target>;
+		"on:abort"?: GenericEventHandler<Target>;
+		"on:canplay"?: GenericEventHandler<Target>;
+		"on:canplaythrough"?: GenericEventHandler<Target>;
+		"on:durationchange"?: GenericEventHandler<Target>;
+		"on:emptied"?: GenericEventHandler<Target>;
+		"on:encrypted"?: GenericEventHandler<Target>;
+		"on:ended"?: GenericEventHandler<Target>;
+		"on:loadeddata"?: GenericEventHandler<Target>;
+		"on:loadedmetadata"?: GenericEventHandler<Target>;
+		"on:loadstart"?: GenericEventHandler<Target>;
+		"on:pause"?: GenericEventHandler<Target>;
+		"on:play"?: GenericEventHandler<Target>;
+		"on:playing"?: GenericEventHandler<Target>;
+		"on:progress"?: GenericEventHandler<Target>;
+		"on:ratechange"?: GenericEventHandler<Target>;
+		"on:seeked"?: GenericEventHandler<Target>;
+		"on:seeking"?: GenericEventHandler<Target>;
+		"on:stalled"?: GenericEventHandler<Target>;
+		"on:suspend"?: GenericEventHandler<Target>;
+		"on:timeupdate"?: GenericEventHandler<Target>;
+		"on:volumechange"?: GenericEventHandler<Target>;
+		"on:waiting"?: GenericEventHandler<Target>;
 
 		// MouseEvents
-		onClick?: MouseEventHandler<Target>;
-		'on:click'?: MouseEventHandler<Target>;
+		"on:click"?: MouseEventHandler<Target>;
 
-		onContextMenu?: MouseEventHandler<Target>;
-		onDblClick?: MouseEventHandler<Target>;
-		onDrag?: DragEventHandler<Target>;
-		onDragEnd?: DragEventHandler<Target>;
-		onDragEnter?: DragEventHandler<Target>;
-		onDragExit?: DragEventHandler<Target>;
-		onDragLeave?: DragEventHandler<Target>;
-		onDragOver?: DragEventHandler<Target>;
-		onDragStart?: DragEventHandler<Target>;
-		onDrop?: DragEventHandler<Target>;
-		onMouseDown?: MouseEventHandler<Target>;
-		onMouseEnter?: MouseEventHandler<Target>;
-		onMouseLeave?: MouseEventHandler<Target>;
-		onMouseMove?: MouseEventHandler<Target>;
-		onMouseOut?: MouseEventHandler<Target>;
-		onMouseOver?: MouseEventHandler<Target>;
-		onMouseUp?: MouseEventHandler<Target>;
-		onAuxClick?: MouseEventHandler<Target>;
+		"on:contextmenu"?: MouseEventHandler<Target>;
+		"on:dblclick"?: MouseEventHandler<Target>;
+		"on:drag"?: DragEventHandler<Target>;
+		"on:dragend"?: DragEventHandler<Target>;
+		"on:dragenter"?: DragEventHandler<Target>;
+		"on:dragexit"?: DragEventHandler<Target>;
+		"on:dragleave"?: DragEventHandler<Target>;
+		"on:dragover"?: DragEventHandler<Target>;
+		"on:dragstart"?: DragEventHandler<Target>;
+		"on:drop"?: DragEventHandler<Target>;
+		"on:mousedown"?: MouseEventHandler<Target>;
+		"on:mouseenter"?: MouseEventHandler<Target>;
+		"on:mouseleave"?: MouseEventHandler<Target>;
+		"on:mousemove"?: MouseEventHandler<Target>;
+		"on:mouseout"?: MouseEventHandler<Target>;
+		"on:mouseover"?: MouseEventHandler<Target>;
+		"on:mouseup"?: MouseEventHandler<Target>;
+		"on:auxclick"?: MouseEventHandler<Target>;
 
 		// Selection Events
-		onSelect?: GenericEventHandler<Target>;
+		"on:select"?: GenericEventHandler<Target>;
 
 		// Touch Events
-		onTouchCancel?: TouchEventHandler<Target>;
-		onTouchEnd?: TouchEventHandler<Target>;
-		onTouchMove?: TouchEventHandler<Target>;
-		onTouchStart?: TouchEventHandler<Target>;
+		"on:touchcancel"?: TouchEventHandler<Target>;
+		"on:touchend"?: TouchEventHandler<Target>;
+		"on:touchmove"?: TouchEventHandler<Target>;
+		"on:touchstart"?: TouchEventHandler<Target>;
 
 		// Pointer Events
-		onPointerOver?: PointerEventHandler<Target>;
-		onPointerEnter?: PointerEventHandler<Target>;
-		onPointerDown?: PointerEventHandler<Target>;
-		onPointerMove?: PointerEventHandler<Target>;
-		onPointerUp?: PointerEventHandler<Target>;
-		onPointerCancel?: PointerEventHandler<Target>;
-		onPointerOut?: PointerEventHandler<Target>;
-		onPointerLeave?: PointerEventHandler<Target>;
+		"on:pointerover"?: PointerEventHandler<Target>;
+		"on:pointerenter"?: PointerEventHandler<Target>;
+		"on:pointerdown"?: PointerEventHandler<Target>;
+		"on:pointermove"?: PointerEventHandler<Target>;
+		"on:pointerup"?: PointerEventHandler<Target>;
+		"on:pointercancel"?: PointerEventHandler<Target>;
+		"on:pointerout"?: PointerEventHandler<Target>;
+		"on:pointerleave"?: PointerEventHandler<Target>;
 
 		// Scroll Events
-		onScroll?: GenericEventHandler<Target>;
-		onScrollEnd?: GenericEventHandler<Target>;
-		onScrollSnapChange?: SnapEventHandler<Target>;
-		onScrollSnapChanging?: SnapEventHandler<Target>;
+		"on:scroll"?: GenericEventHandler<Target>;
+		"on:scrollend"?: GenericEventHandler<Target>;
+		"on:scrollsnapchange"?: SnapEventHandler<Target>;
+		"on:scrollsnapchanging"?: SnapEventHandler<Target>;
 
 		// Wheel Events
-		onWheel?: WheelEventHandler<Target>;
+		"on:wheel"?: WheelEventHandler<Target>;
 
 		// Animation Events
-		onAnimationStart?: AnimationEventHandler<Target>;
-		onAnimationEnd?: AnimationEventHandler<Target>;
-		onAnimationIteration?: AnimationEventHandler<Target>;
+		"on:animationstart"?: AnimationEventHandler<Target>;
+		"on:animationend"?: AnimationEventHandler<Target>;
+		"on:animationiteration"?: AnimationEventHandler<Target>;
 
 		// Transition Events
-		onTransitionCancel?: TransitionEventHandler<Target>;
-		onTransitionEnd?: TransitionEventHandler<Target>;
-		onTransitionRun?: TransitionEventHandler<Target>;
-		onTransitionStart?: TransitionEventHandler<Target>;
+		"on:transitioncancel"?: TransitionEventHandler<Target>;
+		"on:transitionend"?: TransitionEventHandler<Target>;
+		"on:transitionrun"?: TransitionEventHandler<Target>;
+		"on:transitionstart"?: TransitionEventHandler<Target>;
 
 		// PictureInPicture Events
-		onEnterPictureInPicture?: PictureInPictureEventHandler<Target>;
-		onLeavePictureInPicture?: PictureInPictureEventHandler<Target>;
-		onResize?: PictureInPictureEventHandler<Target>;
+		"on:enterpictureinpicture"?: PictureInPictureEventHandler<Target>;
+		"on:leavepictureinpicture"?: PictureInPictureEventHandler<Target>;
+		"on:resize"?: PictureInPictureEventHandler<Target>;
 
-		onCommand?: CommandEventHandler<Target>;
+		"on:command"?: CommandEventHandler<Target>;
 	}
 
 	// ============================================
@@ -551,16 +564,11 @@ declare namespace JSX {
 			AriaAttributes {
 		// Standard HTML Attributes
 		accesskey?: string;
-		accessKey?: string;
 		autocapitalize?: 'off' | 'none' | 'on' | 'sentences' | 'words' | 'characters';
-		autoCapitalize?: 'off' | 'none' | 'on' | 'sentences' | 'words' | 'characters';
 		autocorrect?: string;
-		autoCorrect?: string;
 		autofocus?: boolean;
-		autoFocus?: boolean;
 		class?: string;
 		contenteditable?: Booleanish | '' | 'plaintext-only' | 'inherit';
-		contentEditable?: Booleanish | '' | 'plaintext-only' | 'inherit';
 		dir?: 'auto' | 'rtl' | 'ltr';
 		draggable?: boolean;
 		enterkeyhint?: 'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send';
@@ -569,7 +577,6 @@ declare namespace JSX {
 		id?: string;
 		inert?: boolean;
 		inputmode?: string;
-		inputMode?: string;
 		is?: string;
 		lang?: string;
 		nonce?: string;
@@ -579,7 +586,6 @@ declare namespace JSX {
 		spellcheck?: boolean;
 		style?: string | CSSProperties;
 		tabindex?: number;
-		tabIndex?: number;
 		title?: string;
 		translate?: boolean;
 
@@ -589,13 +595,12 @@ declare namespace JSX {
 		// Non-standard Attributes
 		disablePictureInPicture?: boolean;
 		elementtiming?: string;
-		elementTiming?: string;
 		results?: number;
 
 		// RDFa Attributes
 		about?: string;
 		datatype?: string;
-		inlist?: any;
+		inlist?: string;
 		prefix?: string;
 		property?: string;
 		resource?: string;
@@ -604,15 +609,10 @@ declare namespace JSX {
 
 		// Microdata Attributes
 		itemid?: string;
-		itemID?: string;
 		itemprop?: string;
-		itemProp?: string;
 		itemref?: string;
-		itemRef?: string;
 		itemscope?: boolean;
-		itemScope?: boolean;
 		itemtype?: string;
-		itemType?: string;
 	}
 
 	type HTMLAttributeReferrerPolicy =
@@ -635,30 +635,26 @@ declare namespace JSX {
 
 	interface AnchorHTMLAttributes<T extends EventTarget = HTMLAnchorElement>
 		extends HTMLAttributes<T> {
-		download?: any;
+		download?: string;
 		href?: string;
 		hreflang?: string;
-		hrefLang?: string;
 		media?: string;
 		ping?: string;
 		rel?: string;
 		target?: HTMLAttributeAnchorTarget;
 		type?: string;
 		referrerpolicy?: HTMLAttributeReferrerPolicy;
-		referrerPolicy?: HTMLAttributeReferrerPolicy;
 	}
 
 	interface AreaHTMLAttributes<T extends EventTarget = HTMLAreaElement>
 		extends HTMLAttributes<T> {
 		alt?: string;
 		coords?: string;
-		download?: any;
+		download?: string;
 		href?: string;
 		hreflang?: string;
-		hrefLang?: string;
 		media?: string;
 		referrerpolicy?: HTMLAttributeReferrerPolicy;
-		referrerPolicy?: HTMLAttributeReferrerPolicy;
 		rel?: string;
 		shape?: string;
 		target?: HTMLAttributeAnchorTarget;
@@ -682,24 +678,16 @@ declare namespace JSX {
 		extends HTMLAttributes<T> {
 		command?: string;
 		commandfor?: string;
-		commandFor?: string;
 		disabled?: boolean;
 		form?: string;
 		formaction?: string;
-		formAction?: string;
 		formenctype?: string;
-		formEncType?: string;
 		formmethod?: string;
-		formMethod?: string;
 		formnovalidate?: boolean;
-		formNoValidate?: boolean;
 		formtarget?: string;
-		formTarget?: string;
 		name?: string;
 		popovertarget?: string;
-		popoverTarget?: string;
 		popovertargetaction?: 'hide' | 'show' | 'toggle';
-		popoverTargetAction?: 'hide' | 'show' | 'toggle';
 		type?: 'submit' | 'reset' | 'button';
 		value?: string | number;
 	}
@@ -730,7 +718,6 @@ declare namespace JSX {
 		extends HTMLAttributes<T> {
 		cite?: string;
 		datetime?: string;
-		dateTime?: string;
 	}
 
 	interface DetailsHTMLAttributes<T extends EventTarget = HTMLDetailsElement>
@@ -741,11 +728,10 @@ declare namespace JSX {
 
 	interface DialogHTMLAttributes<T extends EventTarget = HTMLDialogElement>
 		extends HTMLAttributes<T> {
-		onCancel?: GenericEventHandler<T>;
-		onClose?: GenericEventHandler<T>;
+		"on:cancel"?: GenericEventHandler<T>;
+		"on:close"?: GenericEventHandler<T>;
 		open?: boolean;
 		closedby?: 'none' | 'closerequest' | 'any';
-		closedBy?: 'none' | 'closerequest' | 'any';
 	}
 
 	interface EmbedHTMLAttributes<T extends EventTarget = HTMLEmbedElement>
@@ -766,17 +752,13 @@ declare namespace JSX {
 	interface FormHTMLAttributes<T extends EventTarget = HTMLFormElement>
 		extends HTMLAttributes<T> {
 		'accept-charset'?: string;
-		acceptCharset?: string;
 		action?: string;
 		autocomplete?: string;
-		autoComplete?: string;
 		enctype?: string;
-		encType?: string;
 		method?: string;
 		name?: string;
 		novalidate?: boolean;
-		noValidate?: boolean;
-		rel?: string;
+		rel?: string; // reflected to relList DOMTokenList
 		target?: string;
 	}
 
@@ -784,22 +766,18 @@ declare namespace JSX {
 		extends HTMLAttributes<T> {
 		allow?: string;
 		allowFullScreen?: boolean;
-		allowTransparency?: boolean;
 		frameborder?: number | string;
-		frameBorder?: number | string;
 		height?: number | string;
 		loading?: 'eager' | 'lazy';
 		marginHeight?: number;
 		marginWidth?: number;
 		name?: string;
 		referrerpolicy?: HTMLAttributeReferrerPolicy;
-		referrerPolicy?: HTMLAttributeReferrerPolicy;
 		sandbox?: string;
 		scrolling?: string;
 		seamless?: boolean;
 		src?: string;
 		srcdoc?: string;
-		srcDoc?: string;
 		width?: number | string;
 	}
 
@@ -807,20 +785,15 @@ declare namespace JSX {
 		extends HTMLAttributes<T> {
 		alt?: string;
 		crossorigin?: HTMLAttributeCrossOrigin;
-		crossOrigin?: HTMLAttributeCrossOrigin;
 		decoding?: 'async' | 'auto' | 'sync';
 		fetchpriority?: 'high' | 'auto' | 'low';
-		fetchPriority?: 'high' | 'auto' | 'low';
 		height?: number | string;
 		loading?: 'eager' | 'lazy';
 		referrerpolicy?: HTMLAttributeReferrerPolicy;
-		referrerPolicy?: HTMLAttributeReferrerPolicy;
 		sizes?: string;
 		src?: string;
 		srcset?: string;
-		srcSet?: string;
 		usemap?: string;
-		useMap?: string;
 		width?: number | string;
 	}
 
@@ -854,7 +827,6 @@ declare namespace JSX {
 		accept?: string;
 		alt?: string;
 		autocomplete?: string;
-		autoComplete?: string;
 		capture?: 'user' | 'environment';
 		checked?: boolean;
 		defaultChecked?: boolean;
@@ -863,30 +835,22 @@ declare namespace JSX {
 		enterKeyHint?: 'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send';
 		form?: string;
 		formaction?: string;
-		formAction?: string;
 		formenctype?: string;
-		formEncType?: string;
 		formmethod?: string;
-		formMethod?: string;
 		formnovalidate?: boolean;
-		formNoValidate?: boolean;
 		formtarget?: string;
-		formTarget?: string;
 		height?: number | string;
 		indeterminate?: boolean;
 		list?: string;
 		max?: number | string;
 		maxlength?: number;
-		maxLength?: number;
 		min?: number | string;
 		minlength?: number;
-		minLength?: number;
 		multiple?: boolean;
 		name?: string;
 		pattern?: string;
 		placeholder?: string;
 		readonly?: boolean;
-		readOnly?: boolean;
 		required?: boolean;
 		size?: number;
 		src?: string;
@@ -894,31 +858,19 @@ declare namespace JSX {
 		type?: HTMLInputTypeAttribute;
 		value?: string | number;
 		width?: number | string;
-		onChange?: GenericEventHandler<T>;
+		"on:change"?: GenericEventHandler<T>;
 	}
 
 	interface InsHTMLAttributes<T extends EventTarget = HTMLModElement>
 		extends HTMLAttributes<T> {
 		cite?: string;
 		datetime?: string;
-		dateTime?: string;
-	}
-
-	interface KeygenHTMLAttributes<T extends EventTarget = HTMLUnknownElement>
-		extends HTMLAttributes<T> {
-		challenge?: string;
-		disabled?: boolean;
-		form?: string;
-		keyType?: string;
-		keyParams?: string;
-		name?: string;
 	}
 
 	interface LabelHTMLAttributes<T extends EventTarget = HTMLLabelElement>
 		extends HTMLAttributes<T> {
 		for?: string;
 		form?: string;
-		htmlFor?: string;
 	}
 
 	interface LiHTMLAttributes<T extends EventTarget = HTMLLIElement>
@@ -930,22 +882,17 @@ declare namespace JSX {
 		extends HTMLAttributes<T> {
 		as?: string;
 		crossorigin?: HTMLAttributeCrossOrigin;
-		crossOrigin?: HTMLAttributeCrossOrigin;
 		fetchpriority?: 'high' | 'low' | 'auto';
-		fetchPriority?: 'high' | 'low' | 'auto';
 		href?: string;
 		hreflang?: string;
-		hrefLang?: string;
 		integrity?: string;
 		media?: string;
-		imageSrcSet?: string;
+		imagesrcset?: string;
 		referrerpolicy?: HTMLAttributeReferrerPolicy;
-		referrerPolicy?: HTMLAttributeReferrerPolicy;
 		rel?: string;
 		sizes?: string;
 		type?: string;
 		charset?: string;
-		charSet?: string;
 	}
 
 	interface MapHTMLAttributes<T extends EventTarget = HTMLMapElement>
@@ -953,35 +900,16 @@ declare namespace JSX {
 		name?: string;
 	}
 
-	interface MarqueeHTMLAttributes<T extends EventTarget = HTMLMarqueeElement>
-		extends HTMLAttributes<T> {
-		behavior?: 'scroll' | 'slide' | 'alternate';
-		bgColor?: string;
-		direction?: 'left' | 'right' | 'up' | 'down';
-		height?: number | string;
-		hspace?: number | string;
-		loop?: number | string;
-		scrollAmount?: number | string;
-		scrollDelay?: number | string;
-		trueSpeed?: boolean;
-		vspace?: number | string;
-		width?: number | string;
-	}
-
 	interface MediaHTMLAttributes<T extends EventTarget = HTMLMediaElement>
 		extends HTMLAttributes<T> {
 		autoplay?: boolean;
-		autoPlay?: boolean;
 		controls?: boolean;
 		controlslist?: string;
-		controlsList?: string;
 		crossorigin?: HTMLAttributeCrossOrigin;
-		crossOrigin?: HTMLAttributeCrossOrigin;
 		currentTime?: number;
 		defaultMuted?: boolean;
 		defaultPlaybackRate?: number;
 		disableremoteplayback?: boolean;
-		disableRemotePlayback?: boolean;
 		loop?: boolean;
 		mediaGroup?: string;
 		muted?: boolean;
@@ -1001,10 +929,8 @@ declare namespace JSX {
 	interface MetaHTMLAttributes<T extends EventTarget = HTMLMetaElement>
 		extends HTMLAttributes<T> {
 		charset?: string;
-		charSet?: string;
 		content?: string;
 		'http-equiv'?: string;
-		httpEquiv?: string;
 		name?: string;
 		media?: string;
 	}
@@ -1022,14 +948,13 @@ declare namespace JSX {
 
 	interface ObjectHTMLAttributes<T extends EventTarget = HTMLObjectElement>
 		extends HTMLAttributes<T> {
-		classID?: string;
+		classid?: string;
 		data?: string;
 		form?: string;
 		height?: number | string;
 		name?: string;
 		type?: string;
 		usemap?: string;
-		useMap?: string;
 		width?: number | string;
 		wmode?: string;
 	}
@@ -1059,14 +984,7 @@ declare namespace JSX {
 		extends HTMLAttributes<T> {
 		for?: string;
 		form?: string;
-		htmlFor?: string;
 		name?: string;
-	}
-
-	interface ParamHTMLAttributes<T extends EventTarget = HTMLParamElement>
-		extends HTMLAttributes<T> {
-		name?: string;
-		value?: string | number;
 	}
 
 	interface ProgressHTMLAttributes<T extends EventTarget = HTMLProgressElement>
@@ -1084,15 +1002,11 @@ declare namespace JSX {
 		extends HTMLAttributes<T> {
 		async?: boolean;
 		charset?: string;
-		charSet?: string;
 		crossorigin?: HTMLAttributeCrossOrigin;
-		crossOrigin?: HTMLAttributeCrossOrigin;
 		defer?: boolean;
 		integrity?: string;
 		nomodule?: boolean;
-		noModule?: boolean;
 		referrerpolicy?: HTMLAttributeReferrerPolicy;
-		referrerPolicy?: HTMLAttributeReferrerPolicy;
 		src?: string;
 		type?: string;
 	}
@@ -1100,7 +1014,6 @@ declare namespace JSX {
 	interface SelectHTMLAttributes<T extends EventTarget = HTMLSelectElement>
 		extends HTMLAttributes<T> {
 		autocomplete?: string;
-		autoComplete?: string;
 		defaultValue?: string | number;
 		disabled?: boolean;
 		form?: string;
@@ -1109,7 +1022,7 @@ declare namespace JSX {
 		required?: boolean;
 		size?: number;
 		value?: string | number;
-		onChange?: GenericEventHandler<T>;
+		"on:change"?: GenericEventHandler<T>;
 	}
 
 	interface SlotHTMLAttributes<T extends EventTarget = HTMLSlotElement>
@@ -1124,7 +1037,6 @@ declare namespace JSX {
 		sizes?: string;
 		src?: string;
 		srcset?: string;
-		srcSet?: string;
 		type?: string;
 		width?: number | string;
 	}
@@ -1148,10 +1060,8 @@ declare namespace JSX {
 		extends HTMLAttributes<T> {
 		align?: 'left' | 'center' | 'right' | 'justify' | 'char';
 		colspan?: number;
-		colSpan?: number;
 		headers?: string;
 		rowspan?: number;
-		rowSpan?: number;
 		scope?: string;
 		abbr?: string;
 		height?: number | string;
@@ -1162,34 +1072,29 @@ declare namespace JSX {
 	interface TextareaHTMLAttributes<T extends EventTarget = HTMLTextAreaElement>
 		extends HTMLAttributes<T> {
 		autocomplete?: string;
-		autoComplete?: string;
 		cols?: number;
 		defaultValue?: string | number;
 		dirName?: string;
 		disabled?: boolean;
 		form?: string;
 		maxlength?: number;
-		maxLength?: number;
 		minlength?: number;
-		minLength?: number;
 		name?: string;
 		placeholder?: string;
-		readOnly?: boolean;
+		readonly?: boolean;
 		required?: boolean;
 		rows?: number;
 		value?: string | number;
 		wrap?: string;
-		onChange?: GenericEventHandler<T>;
+		"on:change"?: GenericEventHandler<T>;
 	}
 
 	interface ThHTMLAttributes<T extends EventTarget = HTMLTableCellElement>
 		extends HTMLAttributes<T> {
 		align?: 'left' | 'center' | 'right' | 'justify' | 'char';
 		colspan?: number;
-		colSpan?: number;
 		headers?: string;
 		rowspan?: number;
-		rowSpan?: number;
 		scope?: string;
 		abbr?: string;
 	}
@@ -1197,7 +1102,6 @@ declare namespace JSX {
 	interface TimeHTMLAttributes<T extends EventTarget = HTMLTimeElement>
 		extends HTMLAttributes<T> {
 		datetime?: string;
-		dateTime?: string;
 	}
 
 	interface TrackHTMLAttributes<T extends EventTarget = HTMLTrackElement>
@@ -1206,7 +1110,6 @@ declare namespace JSX {
 		kind?: string;
 		label?: string;
 		srclang?: string;
-		srcLang?: string;
 	}
 
 	interface VideoHTMLAttributes<T extends EventTarget = HTMLVideoElement>
@@ -1228,20 +1131,6 @@ declare namespace JSX {
 		accentHeight?: number | string;
 		accumulate?: 'none' | 'sum';
 		additive?: 'replace' | 'sum';
-		alignmentBaseline?:
-			| 'auto'
-			| 'baseline'
-			| 'before-edge'
-			| 'text-before-edge'
-			| 'middle'
-			| 'central'
-			| 'after-edge'
-			| 'text-after-edge'
-			| 'ideographic'
-			| 'alphabetic'
-			| 'hanging'
-			| 'mathematical'
-			| 'inherit';
 		'alignment-baseline'?:
 			| 'auto'
 			| 'baseline'
@@ -1265,7 +1154,6 @@ declare namespace JSX {
 		attributeType?: string;
 		azimuth?: number | string;
 		baseFrequency?: number | string;
-		baselineShift?: number | string;
 		'baseline-shift'?: number | string;
 		baseProfile?: number | string;
 		bbox?: number | string;
@@ -1275,14 +1163,10 @@ declare namespace JSX {
 		calcMode?: number | string;
 		capHeight?: number | string;
 		clip?: number | string;
-		clipPath?: string;
 		'clip-path'?: string;
 		clipPathUnits?: number | string;
-		clipRule?: number | string;
 		'clip-rule'?: number | string;
-		colorInterpolation?: number | string;
 		'color-interpolation'?: number | string;
-		colorInterpolationFilters?: 'auto' | 'sRGB' | 'linearRGB' | 'inherit';
 		'color-interpolation-filters'?: 'auto' | 'sRGB' | 'linearRGB' | 'inherit';
 		colorProfile?: number | string;
 		colorRendering?: number | string;
@@ -1298,7 +1182,6 @@ declare namespace JSX {
 		direction?: number | string;
 		display?: number | string;
 		divisor?: number | string;
-		dominantBaseline?: number | string;
 		'dominant-baseline'?: number | string;
 		dur?: number | string;
 		dx?: number | string;
@@ -1310,31 +1193,20 @@ declare namespace JSX {
 		exponent?: number | string;
 		externalResourcesRequired?: number | string;
 		fill?: string;
-		fillOpacity?: number | string;
 		'fill-opacity'?: number | string;
-		fillRule?: 'nonzero' | 'evenodd' | 'inherit';
 		'fill-rule'?: 'nonzero' | 'evenodd' | 'inherit';
 		filter?: string;
 		filterRes?: number | string;
 		filterUnits?: number | string;
-		floodColor?: number | string;
 		'flood-color'?: number | string;
-		floodOpacity?: number | string;
 		'flood-opacity'?: number | string;
 		focusable?: number | string;
-		fontFamily?: string;
 		'font-family'?: string;
-		fontSize?: number | string;
 		'font-size'?: number | string;
-		fontSizeAdjust?: number | string;
 		'font-size-adjust'?: number | string;
-		fontStretch?: number | string;
 		'font-stretch'?: number | string;
-		fontStyle?: number | string;
 		'font-style'?: number | string;
-		fontVariant?: number | string;
 		'font-variant'?: number | string;
-		fontWeight?: number | string;
 		'font-weight'?: number | string;
 		format?: number | string;
 		from?: number | string;
@@ -1354,9 +1226,7 @@ declare namespace JSX {
 		horizOriginX?: number | string;
 		href?: string;
 		hreflang?: string;
-		hrefLang?: string;
 		ideographic?: number | string;
-		imageRendering?: number | string;
 		'image-rendering'?: number | string;
 		in2?: number | string;
 		in?: string;
@@ -1373,18 +1243,13 @@ declare namespace JSX {
 		keySplines?: number | string;
 		keyTimes?: number | string;
 		lengthAdjust?: number | string;
-		letterSpacing?: number | string;
 		'letter-spacing'?: number | string;
-		lightingColor?: number | string;
 		'lighting-color'?: number | string;
 		limitingConeAngle?: number | string;
 		local?: number | string;
-		markerEnd?: string;
 		'marker-end'?: string;
 		markerHeight?: number | string;
-		markerMid?: string;
 		'marker-mid'?: string;
-		markerStart?: string;
 		'marker-start'?: string;
 		markerUnits?: number | string;
 		markerWidth?: number | string;
@@ -1404,14 +1269,12 @@ declare namespace JSX {
 		overflow?: number | string;
 		overlinePosition?: number | string;
 		overlineThickness?: number | string;
-		paintOrder?: number | string;
 		'paint-order'?: number | string;
 		panose1?: number | string;
 		pathLength?: number | string;
 		patternContentUnits?: string;
 		patternTransform?: number | string;
 		patternUnits?: string;
-		pointerEvents?: number | string;
 		'pointer-events'?: number | string;
 		points?: string;
 		pointsAtX?: number | string;
@@ -1436,7 +1299,6 @@ declare namespace JSX {
 		ry?: number | string;
 		scale?: number | string;
 		seed?: number | string;
-		shapeRendering?: number | string;
 		'shape-rendering'?: number | string;
 		slope?: number | string;
 		spacing?: number | string;
@@ -1449,43 +1311,30 @@ declare namespace JSX {
 		stemh?: number | string;
 		stemv?: number | string;
 		stitchTiles?: number | string;
-		stopColor?: string;
 		'stop-color'?: string;
-		stopOpacity?: number | string;
 		'stop-opacity'?: number | string;
 		strikethroughPosition?: number | string;
 		strikethroughThickness?: number | string;
 		string?: number | string;
 		stroke?: string;
-		strokeDasharray?: string | number;
 		'stroke-dasharray'?: string | number;
-		strokeDashoffset?: string | number;
 		'stroke-dashoffset'?: string | number;
-		strokeLinecap?: 'butt' | 'round' | 'square' | 'inherit';
 		'stroke-linecap'?: 'butt' | 'round' | 'square' | 'inherit';
-		strokeLinejoin?: 'miter' | 'round' | 'bevel' | 'inherit';
 		'stroke-linejoin'?: 'miter' | 'round' | 'bevel' | 'inherit';
-		strokeMiterlimit?: string | number;
 		'stroke-miterlimit'?: string | number;
-		strokeOpacity?: number | string;
 		'stroke-opacity'?: number | string;
-		strokeWidth?: number | string;
 		'stroke-width'?: number | string;
 		surfaceScale?: number | string;
 		systemLanguage?: number | string;
 		tableValues?: number | string;
 		targetX?: number | string;
 		targetY?: number | string;
-		textAnchor?: string;
 		'text-anchor'?: string;
-		textDecoration?: number | string;
 		'text-decoration'?: number | string;
 		textLength?: number | string;
-		textRendering?: number | string;
 		'text-rendering'?: number | string;
 		to?: number | string;
 		transform?: string;
-		transformOrigin?: string;
 		'transform-origin'?: string;
 		type?: string;
 		u1?: number | string;
@@ -1493,13 +1342,11 @@ declare namespace JSX {
 		underlinePosition?: number | string;
 		underlineThickness?: number | string;
 		unicode?: number | string;
-		unicodeBidi?: number | string;
 		'unicode-bidi'?: number | string;
 		unicodeRange?: number | string;
 		unitsPerEm?: number | string;
 		vAlphabetic?: number | string;
 		values?: string;
-		vectorEffect?: number | string;
 		'vector-effect'?: number | string;
 		version?: string;
 		vertAdvY?: number | string;
@@ -1512,36 +1359,24 @@ declare namespace JSX {
 		visibility?: number | string;
 		vMathematical?: number | string;
 		width?: number | string;
-		wordSpacing?: number | string;
 		'word-spacing'?: number | string;
-		writingMode?: number | string;
 		'writing-mode'?: number | string;
 		x1?: number | string;
 		x2?: number | string;
 		x?: number | string;
 		xChannelSelector?: string;
 		xHeight?: number | string;
-		xlinkActuate?: string;
 		'xlink:actuate'?: string;
-		xlinkArcrole?: string;
 		'xlink:arcrole'?: string;
-		xlinkHref?: string;
 		'xlink:href'?: string;
-		xlinkRole?: string;
 		'xlink:role'?: string;
-		xlinkShow?: string;
 		'xlink:show'?: string;
-		xlinkTitle?: string;
 		'xlink:title'?: string;
-		xlinkType?: string;
 		'xlink:type'?: string;
-		xmlBase?: string;
 		'xml:base'?: string;
-		xmlLang?: string;
 		'xml:lang'?: string;
 		xmlns?: string;
 		xmlnsXlink?: string;
-		xmlSpace?: string;
 		'xml:space'?: string;
 		y1?: number | string;
 		y2?: number | string;
@@ -1892,7 +1727,6 @@ declare namespace JSX {
 		base: BaseHTMLAttributes<HTMLBaseElement>;
 		bdi: HTMLAttributes<HTMLElement>;
 		bdo: HTMLAttributes<HTMLElement>;
-		big: HTMLAttributes<HTMLElement>;
 		blockquote: BlockquoteHTMLAttributes<HTMLQuoteElement>;
 		body: HTMLAttributes<HTMLBodyElement>;
 		br: HTMLAttributes<HTMLBRElement>;
@@ -1937,7 +1771,6 @@ declare namespace JSX {
 		input: InputHTMLAttributes<HTMLInputElement>;
 		ins: InsHTMLAttributes<HTMLModElement>;
 		kbd: HTMLAttributes<HTMLElement>;
-		keygen: KeygenHTMLAttributes<HTMLUnknownElement>;
 		label: LabelHTMLAttributes<HTMLLabelElement>;
 		legend: HTMLAttributes<HTMLLegendElement>;
 		li: LiHTMLAttributes<HTMLLIElement>;
@@ -1945,7 +1778,6 @@ declare namespace JSX {
 		main: HTMLAttributes<HTMLElement>;
 		map: MapHTMLAttributes<HTMLMapElement>;
 		mark: HTMLAttributes<HTMLElement>;
-		marquee: MarqueeHTMLAttributes<HTMLMarqueeElement>;
 		menu: MenuHTMLAttributes<HTMLMenuElement>;
 		menuitem: HTMLAttributes<HTMLUnknownElement>;
 		meta: MetaHTMLAttributes<HTMLMetaElement>;
@@ -1958,7 +1790,6 @@ declare namespace JSX {
 		option: OptionHTMLAttributes<HTMLOptionElement>;
 		output: OutputHTMLAttributes<HTMLOutputElement>;
 		p: HTMLAttributes<HTMLParagraphElement>;
-		param: ParamHTMLAttributes<HTMLParamElement>;
 		picture: HTMLAttributes<HTMLPictureElement>;
 		pre: HTMLAttributes<HTMLPreElement>;
 		progress: ProgressHTMLAttributes<HTMLProgressElement>;
@@ -2003,4 +1834,144 @@ declare namespace JSX {
 	type IntrinsicElementResults = HTMLElementTagNameMap
 		& Omit<SVGElementTagNameMap, keyof HTMLElementTagNameMap>
 		& Omit<MathMLElementTagNameMap, keyof HTMLElementTagNameMap | keyof SVGElementTagNameMap>;
+
+	// empty string means there is no property to reflect to
+	type HtmlAttrAliases = {
+		'*': {
+			'accesskey': 'accessKey';
+			'autocapitalize': 'autoCapitalize';
+			'autocorrect': 'autoCorrect';
+			'autofocus': 'autoFocus';
+			'class': 'className',
+			'contenteditable': 'contentEditable';
+			'elementtiming': 'elementTiming';
+			'inputmode': 'inputMode';
+			'tabindex': 'tabIndex';
+			'itemid': '';
+			'itemprop': '';
+			'itemref': '';
+			'itemscope': '';
+			'itemtype': '';
+		};
+		'a': {
+			'hreflang': 'hrefLang';
+			'referrerpolicy': 'referrerPolicy';
+		};
+		'area': {
+			'hreflang': 'hrefLang';
+			'referrerpolicy': 'referrerPolicy';
+		};
+		'audio': {
+			'autoplay': 'autoPlay';
+			'controlslist': 'controlsList';
+			'crossorigin': 'crossOrigin';
+			'disableremoteplayback': 'disableRemotePlayback';
+		};
+		'button': {
+			'commandfor': 'commandFor';
+			'formaction': 'formAction';
+			'formenctype': 'formEncType';
+			'formmethod': 'formMethod';
+			'formnovalidate': 'formNoValidate';
+			'formtarget': 'formTarget';
+			'popovertarget': 'popoverTarget';
+			'popovertargetaction': 'popoverTargetAction';
+		};
+		'del': {
+			'datetime': 'dateTime';
+		};
+		'dialog': {
+			'closedby': 'closedBy';
+		};
+		'form': {
+			'accept-charset': 'acceptCharset';
+			'autocomplete': 'autoComplete';
+			'novalidate': 'noValidate';
+		};
+		'iframe': {
+			'frameborder': 'frameBorder';
+			'referrerpolicy': 'referrerPolicy';
+			'srcdoc': 'srcDoc';
+		};
+		'img': {
+			'crossorigin': 'crossOrigin';
+			'fetchpriority': 'fetchPriority';
+			'referrerpolicy': 'referrerPolicy';
+			'srcset': 'srcSet';
+			'usemap': 'useMap';
+		};
+		'input': {
+			'autocomplete': 'autoComplete';
+			'formaction': 'formAction';
+			'formenctype': 'formEncType';
+			'formmethod': 'formMethod';
+			'formnovalidate': 'formNoValidate';
+			'formtarget': 'formTarget';
+			'maxlength': 'maxLength';
+			'minlength': 'minLength';
+			'readonly': 'readOnly';
+		};
+		'ins': {
+			'datetime': 'dateTime';
+		};
+		'label': {
+			'for': 'htmlFor',
+		},
+		'link': {
+			'charset': 'charSet';
+			'crossorigin': 'crossOrigin';
+			'fetchpriority': 'fetchPriority';
+			'hreflang': 'hrefLang';
+			'imagesrcset': 'imageSrcset';
+			'referrerpolicy': 'referrerPolicy';
+		};
+		'meta': {
+			'charset': 'charSet';
+			'http-equiv': 'httpEquiv';
+		};
+		'object': {
+			'usemap': 'useMap';
+		};
+		'output': {
+			'for': 'htmlFor';
+		},
+		'script': {
+			'charset': 'charSet';
+			'crossorigin': 'crossOrigin';
+			'nomodule': 'noModule';
+			'referrerpolicy': 'referrerPolicy';
+		};
+		'select': {
+			'autocomplete': 'autoComplete';
+		};
+		'source': {
+			'srcset': 'srcSet';
+		};
+		'td': {
+			'colspan': 'colSpan';
+			'rowspan': 'rowSpan';
+		};
+		'textarea': {
+			'autocomplete': 'autoComplete';
+			'maxlength': 'maxLength';
+			'minlength': 'minLength';
+			'readonly': 'readOnly';
+		};
+		'th': {
+			'colspan': 'colSpan';
+			'rowspan': 'rowSpan';
+		};
+		'time': {
+			'datetime': 'dateTime';
+		};
+		'track': {
+			'srclang': 'srcLang';
+		};
+		'video': {
+			'autoplay': 'autoPlay';
+			'controlslist': 'controlsList';
+			'crossorigin': 'crossOrigin';
+			'disableremoteplayback': 'disableRemotePlayback';
+		};
+	};
 }

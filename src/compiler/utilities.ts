@@ -610,6 +610,7 @@ import {
     YieldExpression,
     isJsxOpeningElement,
     isJsxSelfClosingElement,
+    UpdateBlockStatement,
 } from "./_namespaces/ts.js";
 
 /** @internal */
@@ -3698,9 +3699,12 @@ export function isInExpressionContext(node: Node): boolean {
         case SyntaxKind.Decorator:
         case SyntaxKind.JsxExpression:
         case SyntaxKind.JsxSpreadAttribute:
+        case SyntaxKind.JsxShorthandAttribute:
         case SyntaxKind.JsxIfDirective:
         case SyntaxKind.SpreadAssignment:
             return true;
+        case SyntaxKind.UpdateBlockStatement:
+            return (node.parent as UpdateBlockStatement).block !== node;
         case SyntaxKind.ExpressionWithTypeArguments:
             return (parent as ExpressionWithTypeArguments).expression === node && !isPartOfTypeNode(parent);
         case SyntaxKind.ShorthandPropertyAssignment:

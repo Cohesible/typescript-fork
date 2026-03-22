@@ -352,6 +352,7 @@ import {
     JsxOpeningElement,
     JsxRunDirective,
     JsxComponentDirective,
+    JsxStyleDirective,
     JsxLabeledFragment,
     isJsxDirectiveLike,
 } from "./_namespaces/ts.js";
@@ -3137,7 +3138,7 @@ export function createLanguageService(
             isJsxElement(parent) && tagNamesAreEquivalent(openingElement.tagName, parent.openingElement.tagName) && isUnclosedTag(parent);
     }
 
-    function isUnclosedDirectiveOrFragment(element: JsxIfDirective | JsxElseDirective | JsxFragment | JsxRunDirective | JsxComponentDirective | JsxLabeledFragment): boolean {
+    function isUnclosedDirectiveOrFragment(element: JsxIfDirective | JsxElseDirective | JsxFragment | JsxRunDirective | JsxComponentDirective | JsxLabeledFragment | JsxStyleDirective): boolean {
         if (element.kind === SyntaxKind.JsxFragment) {
             if (!!(element.closingFragment.flags & NodeFlags.ThisNodeHasError)) return true;
         } else {
@@ -3155,6 +3156,69 @@ export function createLanguageService(
         const sourceFile = syntaxTreeCache.getCurrentSourceFile(fileName);
         const range = formatting.getRangeOfEnclosingComment(sourceFile, position);
         return range && (!onlyMultiLine || range.kind === SyntaxKind.MultiLineCommentTrivia) ? createTextSpanFromRange(range) : undefined;
+    }
+
+    function getJsxStyleRegions(fileName: string) {
+        const sourceFile = syntaxTreeCache.getCurrentSourceFile(fileName);
+        if (!sourceFile.containsJsx) return;
+
+        function appendSpaces(result: string, n: number, str = ' '): string {
+            while (n > 0) {
+                if (n & 1) {
+                    result += str;
+                }
+                n >>= 1;
+                str += str;
+            }
+            return result;
+        }
+
+        const regions: TextSpan[] = [];
+        let text = ''
+        let pos = 0;
+
+        function visit(node: Node) {
+            switch (node.kind) {
+                case SyntaxKind.JsxComponentDirective:
+                case SyntaxKind.JsxIfDirective:
+                case SyntaxKind.JsxElseDirective:
+                case SyntaxKind.JsxFragment:
+                case SyntaxKind.JsxElement:
+                case SyntaxKind.JsxLabeledFragment:
+                    for (const child of (node as JsxElement).children) {
+                        if (child.kind === SyntaxKind.JsxStyleDirective) {
+                            const source = sourceFile.text;
+                            const span = getSpanFromStyleDirective(sourceFile, child as JsxStyleDirective);
+                            let acc = 0;
+                            for (let i = pos; i < span.start; i++) {
+                                const ch = source[i];
+                                if (ch === '\n' || ch === '\r') {
+                                    acc = 0;
+                                    text += ch;
+                                } else {
+                                    acc += 1;
+                                }
+                            }
+                            text = appendSpaces(text, acc);
+                            pos = span.start + span.length;
+                            text += source.slice(span.start, pos);
+                            regions.push(span);
+                            continue;
+                        }
+                        forEachChild(child, visit);
+                    }
+                    return;
+            }
+            forEachChild(node, visit);
+        }
+
+        visit(sourceFile);
+
+        return { regions, text };
+    }
+
+    function getSpanFromStyleDirective(_sourceFile: SourceFile, directive: JsxStyleDirective) {
+        return createTextSpanFromBounds(directive.text.getStart(), directive.text.end);
     }
 
     function getTodoComments(fileName: string, descriptors: TodoCommentDescriptor[]): TodoComment[] {
@@ -3474,6 +3538,7 @@ export function createLanguageService(
         getJsxClosingTagAtPosition,
         getLinkedEditingRangeAtPosition,
         getSpanOfEnclosingComment,
+        getJsxStyleRegions,
         getCodeFixesAtPosition,
         getCombinedCodeFix,
         applyCodeActionCommand,

@@ -760,6 +760,10 @@ export class SessionClient implements LanguageService {
         return notImplemented();
     }
 
+    getJsxStyleRegions(_fileName: string): { regions: TextSpan[]; text: string; } | undefined {
+        return notImplemented();
+    }
+
     getCodeFixesAtPosition(file: string, start: number, end: number, errorCodes: readonly number[]): readonly CodeFixAction[] {
         const args: protocol.CodeFixRequestArgs = { ...this.createFileRangeRequestArgs(file, start, end), errorCodes };
 

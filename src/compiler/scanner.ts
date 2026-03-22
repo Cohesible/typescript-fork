@@ -94,7 +94,7 @@ export interface Scanner {
     reScanHashToken(): SyntaxKind;
     reScanQuestionToken(): SyntaxKind;
     reScanInvalidIdentifier(): SyntaxKind;
-    scanJsxToken(): JsxTokenSyntaxKind;
+    scanJsxToken(skipJsxExpressions?: boolean): JsxTokenSyntaxKind;
     scanJsDocToken(): JSDocSyntaxKind;
     /** @internal */
     scanJSDocCommentTextToken(inBackticks: boolean): JSDocSyntaxKind | SyntaxKind.JSDocCommentTextToken;
@@ -3704,7 +3704,7 @@ export function createScanner(
 
     function reScanJsxToken(allowMultilineJsxText = true): JsxTokenSyntaxKind {
         pos = tokenStart = fullStartPos;
-        return token = scanJsxToken(allowMultilineJsxText);
+        return token = scanJsxToken(/*skipJsxExpressions*/ false, allowMultilineJsxText);
     }
 
     function reScanLessThanToken(): SyntaxKind {
@@ -3729,7 +3729,7 @@ export function createScanner(
         return token = SyntaxKind.QuestionToken;
     }
 
-    function scanJsxToken(allowMultilineJsxText = true): JsxTokenSyntaxKind {
+    function scanJsxToken(skipJsxExpressions = false, allowMultilineJsxText = true): JsxTokenSyntaxKind {
         fullStartPos = tokenStart = pos;
 
         if (pos >= end) {
@@ -3746,7 +3746,7 @@ export function createScanner(
             return token = SyntaxKind.LessThanToken;
         }
 
-        if (char === CharacterCodes.openBrace) {
+        if (!skipJsxExpressions && char === CharacterCodes.openBrace) {
             pos++;
             return token = SyntaxKind.OpenBraceToken;
         }
@@ -3759,7 +3759,7 @@ export function createScanner(
 
         while (pos < end) {
             char = charCodeUnchecked(pos);
-            if (char === CharacterCodes.openBrace) {
+            if (!skipJsxExpressions && char === CharacterCodes.openBrace) {
                 break;
             }
             if (char === CharacterCodes.lessThan) {
@@ -3772,7 +3772,7 @@ export function createScanner(
             if (char === CharacterCodes.greaterThan) {
                 error(Diagnostics.Unexpected_token_Did_you_mean_or_gt, pos, 1);
             }
-            if (char === CharacterCodes.closeBrace) {
+            if (!skipJsxExpressions && char === CharacterCodes.closeBrace) {
                 error(Diagnostics.Unexpected_token_Did_you_mean_or_rbrace, pos, 1);
             }
 

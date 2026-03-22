@@ -1918,6 +1918,9 @@ export function isInJSXText(sourceFile: SourceFile, position: number): boolean {
     if (isJsxText(token)) {
         return true;
     }
+    if (token.kind === SyntaxKind.JsxStyleDirective) {
+        return true;
+    }
     if (token.kind === SyntaxKind.OpenBraceToken && isJsxExpression(token.parent) && isJsxElement(token.parent.parent)) {
         return true;
     }

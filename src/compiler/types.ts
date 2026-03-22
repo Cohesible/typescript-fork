@@ -379,14 +379,18 @@ export const enum SyntaxKind {
     JsxAttribute,
     JsxAttributes,
     JsxSpreadAttribute,
+    JsxShorthandAttribute,
+    JsxClassAttribute,
     JsxExpression,
     JsxNamespacedName,
     JsxIfDirective,
     JsxElseDirective,
     JsxRunDirective,
     JsxComponentDirective,
+    JsxStyleDirective,
     JsxLabeledFragment,
     UnwindStatement,
+    UpdateBlockStatement,
 
     // Clauses
     CaseClause,
@@ -1175,6 +1179,7 @@ export type HasChildren =
     | LabeledStatement
     | DeferStatement
     | UnwindStatement
+    | UpdateBlockStatement
     | ThrowStatement
     | TryStatement
     | VariableDeclaration
@@ -1212,12 +1217,15 @@ export type HasChildren =
     | JsxAttribute
     | JsxAttributes
     | JsxSpreadAttribute
+    | JsxShorthandAttribute
+    | JsxClassAttribute
     | JsxExpression
     | JsxNamespacedName
     | JsxIfDirective
     | JsxElseDirective
     | JsxRunDirective
     | JsxComponentDirective
+    | JsxStyleDirective
     | JsxLabeledFragment
     | CaseClause
     | CaseIsClause
@@ -3276,7 +3284,9 @@ export type JsxCallLike =
 
 export type JsxAttributeLike =
     | JsxAttribute
-    | JsxSpreadAttribute;
+    | JsxSpreadAttribute
+    | JsxShorthandAttribute
+    | JsxClassAttribute;
 
 export type JsxAttributeName =
     | Identifier
@@ -3361,6 +3371,11 @@ export interface JsxComponentDirective extends PrimaryExpression, LocalsContaine
     /** @internal */ symbol: Symbol; // set by binder when named
 }
 
+export interface JsxStyleDirective extends PrimaryExpression {
+    readonly kind: SyntaxKind.JsxStyleDirective;
+    readonly text: JsxText;
+}
+
 export interface JsxLabeledFragment extends PrimaryExpression, LocalsContainer {
     readonly kind: SyntaxKind.JsxLabeledFragment;
     readonly label: Identifier;
@@ -3372,6 +3387,12 @@ export interface JsxLabeledFragment extends PrimaryExpression, LocalsContainer {
 export interface UnwindStatement extends Statement, FlowContainer {
     readonly kind: SyntaxKind.UnwindStatement;
     readonly statement: Block;
+}
+
+export interface UpdateBlockStatement extends Statement {
+    readonly kind: SyntaxKind.UpdateBlockStatement;
+    readonly operands: NodeArray<Expression>;
+    readonly block: Block;
 }
 
 /// The opening element of a <>...</> JsxFragment
@@ -3396,6 +3417,8 @@ export interface JsxAttribute extends Declaration {
 
 export type JsxAttributeValue =
     | StringLiteral
+    | NumericLiteral
+    | PrefixUnaryExpression // must be numeric literal
     | JsxExpression
     | JsxElement
     | JsxSelfClosingElement
@@ -3405,6 +3428,19 @@ export interface JsxSpreadAttribute extends ObjectLiteralElement {
     readonly kind: SyntaxKind.JsxSpreadAttribute;
     readonly parent: JsxAttributes;
     readonly expression: Expression;
+}
+
+export interface JsxShorthandAttribute extends ObjectLiteralElement {
+    readonly kind: SyntaxKind.JsxShorthandAttribute;
+    readonly name: Identifier;
+    readonly parent: JsxAttributes;
+}
+
+export interface JsxClassAttribute extends Declaration {
+    readonly kind: SyntaxKind.JsxClassAttribute;
+    readonly parent: JsxAttributes;
+    readonly name: Identifier;
+    readonly initializer?: JsxAttributeValue;
 }
 
 export interface JsxClosingElement extends Node {
@@ -3436,6 +3472,7 @@ export type JsxChild =
     | JsxElseDirective
     | JsxRunDirective
     | JsxComponentDirective
+    | JsxStyleDirective
     | JsxLabeledFragment;
 
 export type JsxContainer =
@@ -5383,7 +5420,8 @@ export interface TypeChecker {
     /** @internal */ getContextualType(node: Expression, contextFlags?: ContextFlags): Type | undefined; // eslint-disable-line @typescript-eslint/unified-signatures
     /** @internal */ getContextualTypeForObjectLiteralElement(element: ObjectLiteralElementLike): Type | undefined;
     /** @internal */ getContextualTypeForArgumentAtIndex(call: CallLikeExpression, argIndex: number): Type | undefined;
-    /** @internal */ getContextualTypeForJsxAttribute(attribute: JsxAttribute | JsxSpreadAttribute): Type | undefined;
+    /** @internal */ getContextualTypeForJsxAttribute(attribute: JsxAttributeLike): Type | undefined;
+    /** @internal */ getJsxLabelCompletions(container: Node): Symbol[];
     /** @internal */ isContextSensitive(node: Expression | MethodDeclaration | ObjectLiteralElementLike | JsxAttributeLike): boolean;
     /** @internal */ getTypeOfPropertyOfContextualType(type: Type, name: __String): Type | undefined;
 
@@ -9400,6 +9438,10 @@ export interface NodeFactory {
     updateJsxAttributes(node: JsxAttributes, properties: readonly JsxAttributeLike[]): JsxAttributes;
     createJsxSpreadAttribute(expression: Expression): JsxSpreadAttribute;
     updateJsxSpreadAttribute(node: JsxSpreadAttribute, expression: Expression): JsxSpreadAttribute;
+    createJsxShorthandAttribute(name: Identifier): JsxShorthandAttribute;
+    updateJsxShorthandAttribute(node: JsxShorthandAttribute, name: Identifier): JsxShorthandAttribute;
+    createJsxClassAttribute(name: Identifier, initializer: JsxAttributeValue | undefined): JsxClassAttribute;
+    updateJsxClassAttribute(node: JsxClassAttribute, name: Identifier, initializer: JsxAttributeValue | undefined): JsxClassAttribute;
     createJsxExpression(dotDotDotToken: DotDotDotToken | undefined, expression: Expression | undefined): JsxExpression;
     updateJsxExpression(node: JsxExpression, expression: Expression | undefined): JsxExpression;
     createJsxNamespacedName(namespace: Identifier, name: Identifier): JsxNamespacedName;
@@ -9412,10 +9454,14 @@ export interface NodeFactory {
     updateJsxRunDirective(node: JsxRunDirective, statements: readonly Statement[]): JsxRunDirective;
     createJsxComponentDirective(name: Identifier | undefined, typeParameters: readonly TypeParameterDeclaration[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode | undefined, body: Block | undefined, children: readonly JsxChild[]): JsxComponentDirective;
     updateJsxComponentDirective(node: JsxComponentDirective, name: Identifier | undefined, typeParameters: readonly TypeParameterDeclaration[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode | undefined, body: Block | undefined, children: readonly JsxChild[]): JsxComponentDirective;
+    createJsxStyleDirective(text: JsxText): JsxStyleDirective;
+    updateJsxStyleDirective(node: JsxStyleDirective, text: JsxText): JsxStyleDirective;
     createJsxLabeledFragment(label: Identifier, parameters: readonly ParameterDeclaration[] | undefined, children: readonly JsxChild[]): JsxLabeledFragment;
     updateJsxLabeledFragment(node: JsxLabeledFragment, label: Identifier, parameters: readonly ParameterDeclaration[] | undefined, children: readonly JsxChild[]): JsxLabeledFragment;
     createUnwindStatement(statement: Block): UnwindStatement;
     updateUnwindStatement(node: UnwindStatement, statement: Block): UnwindStatement;
+    createUpdateBlockStatement(operands: readonly Expression[], block: Block): UpdateBlockStatement;
+    updateUpdateBlockStatement(node: UpdateBlockStatement, operands: readonly Expression[], block: Block): UpdateBlockStatement;
 
     //
     // Clauses

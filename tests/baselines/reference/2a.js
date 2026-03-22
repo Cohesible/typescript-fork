@@ -603,6 +603,98 @@ const d4 = <div><#if (cond)></></div>
     }
 }
 
+// update block form
+{
+    let y = 0
+    const x = <div>{y}</div>
+
+    update x {
+        y = 1
+    }
+
+    update x
+
+    let a = 0
+    let b = ''
+    const xa = <div>{a}</div>
+    const xb = <span>{b}</span>
+
+    update xa, xb {
+        a = 1
+        b = 'hi'
+    }
+
+    update xa, xb {
+        b = 'only b'
+    }
+
+    declare const unknown: Element
+    update unknown {
+        y = 2
+    }
+}
+
+{
+    // transitive analysis inside #component: calling a local function counts
+    <#component Reactive(v: number) {
+        let count = v
+
+        function increment() {
+            count++  // mutates `count`, which x depends on
+        }
+
+        function unrelated() {
+            console.log('hi')
+        }
+
+        const x = <div>{count}</div>
+
+        // ok — increment() mutates count (x's dep) even though block doesn't reference count directly
+        update x {
+            increment()
+        }
+
+        // error — unrelated() doesn't touch count
+        update x {
+            unrelated()
+        }
+    }>
+        <div></div>
+    </>
+}
+
+{
+    // update depending on #run directive: rate is referenced inside <#run>, so counter depends on it
+    <#component Timer(n: number) {
+        let active = true
+        let rate = n
+        let c = 0
+        const d = <div>{c}</div>
+        const counter = <div @ counter>
+            <div @ d>
+                count: {c}
+            </div>
+            <#run>
+                if (active) {
+                    const id = setInterval(() => {
+                        update d {
+                            c += 1
+                        }
+                    }, rate)
+                    unwind { clearInterval(id) }
+                }
+            </>
+        </div>
+
+        // ok — rate is in the #run body which is a dep of counter
+        update counter {
+            rate = n
+        }
+    }>
+        <div></div>
+    </>
+}
+
 // !T (FallibleType) and try expr
 // { ok: false; code: string } is also considered an error
 // this is a lightweight error
@@ -1212,6 +1304,24 @@ const d4 = <div><#if (cond)></></div>
             }
         </>
     </>
+}
+
+// numeric literals as JSX attribute values (no braces needed)
+{
+    const a = <input min=0 max=100 step=5 />
+    const b = <input value=3.14 />
+    const c = <input min=-10 />
+}
+
+// JSX shorthand attribute — proper AST node (not desugared)
+{
+    const value = 'hello'
+    const d = <input {value} />
+
+    // object type => should suggest spread
+    <#component Foo(x: string, y: string)></>
+    const o = { x: '1', y: '1' }
+    const e = <Foo {o} />
 }
 
 // /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a

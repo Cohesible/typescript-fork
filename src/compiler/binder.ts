@@ -133,6 +133,7 @@ import {
     JsxComponentDirective,
     JsxElseDirective,
     UnwindStatement,
+    UpdateBlockStatement,
     JsxIfDirective,
     InternalSymbolName,
     isAliasableExpression,
@@ -1201,6 +1202,10 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                 break;
             case SyntaxKind.UnwindStatement:
                 bind((node as UnwindStatement).statement);
+                break;
+            case SyntaxKind.UpdateBlockStatement:
+                forEach((node as UpdateBlockStatement).operands, bind);
+                bind((node as UpdateBlockStatement).block);
                 break;
             case SyntaxKind.SwitchStatement:
                 bindSwitchStatement(node as SwitchStatement);

@@ -192,7 +192,6 @@ function collectTokens(program: Program, sourceFile: SourceFile, span: TextSpan,
                 }
                 return;
             }
-
         }
         if (inJSXElement && node.kind === SyntaxKind.JsxNamespacedName) {
             let symbol = getSymbolAtLocationForQuickInfo(node, typeChecker);
@@ -212,7 +211,7 @@ function collectTokens(program: Program, sourceFile: SourceFile, span: TextSpan,
         if (isIdentifier(node) && !inJSXElement && !inImportClause(node) && !isInfinityOrNaNString(node.escapedText) && node.escapedText !== 'async') {
             let symbol = typeChecker.getSymbolAtLocation(node);
             if (symbol) {
-                if (inJSX && symbol.valueDeclaration && (symbol.valueDeclaration.kind === SyntaxKind.JsxElement || symbol.valueDeclaration.kind == SyntaxKind.JsxSelfClosingElement)) {
+                if (symbol.flags & SymbolFlags.JsxElement) {
                     return collector(node, TokenType.variable, (1 << TokenModifier.local) | (1 << TokenModifier.readonly));
                 }
                 if (symbol.flags & SymbolFlags.Alias) {

@@ -281,6 +281,7 @@ import {
     JsxComponentDirective,
     JsxStyleDirective,
     JsxClassAttribute,
+    JsxClassList,
     JsxLabeledFragment,
     UnwindStatement,
     UpdateBlockStatement,
@@ -1018,6 +1019,8 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         updateJsxShorthandAttribute,
         createJsxClassAttribute,
         updateJsxClassAttribute,
+        createJsxClassList,
+        updateJsxClassList,
         createJsxExpression,
         updateJsxExpression,
         createJsxNamespacedName,
@@ -4464,8 +4467,7 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         typeParameters: readonly TypeParameterDeclaration[] | undefined,
         parameters: readonly ParameterDeclaration[],
         type: TypeNode | undefined,
-        body: Block | undefined,
-        satisfiesType?: TypeNode | undefined,
+        body: Block | undefined
     ) {
         const node = createBaseDeclaration<FunctionDeclaration>(SyntaxKind.FunctionDeclaration);
         node.modifiers = asNodeArray(modifiers);
@@ -4475,7 +4477,6 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         node.parameters = createNodeArray(parameters);
         node.type = type;
         node.body = body;
-        (node as Mutable<FunctionDeclaration>).satisfiesType = satisfiesType;
 
         if (!node.body || modifiersToFlags(node.modifiers) & ModifierFlags.Ambient) {
             node.transformFlags = TransformFlags.ContainsTypeScript;
@@ -4492,12 +4493,11 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
                 propagateChildrenFlags(node.parameters) |
                 propagateChildFlags(node.type) |
                 (propagateChildFlags(node.body) & ~TransformFlags.ContainsPossibleTopLevelAwait) |
-                propagateChildFlags(node.satisfiesType) |
                 (isAsyncGenerator ? TransformFlags.ContainsES2018 :
                     isAsync ? TransformFlags.ContainsES2017 :
                     isGenerator ? TransformFlags.ContainsGenerator :
                     TransformFlags.None) |
-                (node.typeParameters || node.type || node.satisfiesType ? TransformFlags.ContainsTypeScript : TransformFlags.None) |
+                (node.typeParameters || node.type ? TransformFlags.ContainsTypeScript : TransformFlags.None) |
                 TransformFlags.ContainsHoistedDeclarationOrCompletion;
         }
 
@@ -4520,7 +4520,6 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         parameters: readonly ParameterDeclaration[],
         type: TypeNode | undefined,
         body: Block | undefined,
-        satisfiesType?: TypeNode | undefined,
     ) {
         return node.modifiers !== modifiers
                 || node.asteriskToken !== asteriskToken
@@ -4529,8 +4528,7 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
                 || node.parameters !== parameters
                 || node.type !== type
                 || node.body !== body
-                || node.satisfiesType !== satisfiesType
-            ? finishUpdateFunctionDeclaration(createFunctionDeclaration(modifiers, asteriskToken, name, typeParameters, parameters, type, body, satisfiesType), node)
+            ? finishUpdateFunctionDeclaration(createFunctionDeclaration(modifiers, asteriskToken, name, typeParameters, parameters, type, body), node)
             : node;
     }
 
@@ -5786,18 +5784,20 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     }
 
     // @api
-    function createJsxSelfClosingElement(dotDotDotToken: Token<SyntaxKind.DotDotDotToken> | undefined, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes) {
+    function createJsxSelfClosingElement(dotDotDotToken: Token<SyntaxKind.DotDotDotToken> | undefined, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes, classList: JsxClassList | undefined) {
         const node = createBaseNode<JsxSelfClosingElement>(SyntaxKind.JsxSelfClosingElement);
         node.dotDotDotToken = dotDotDotToken;
         node.tagName = tagName;
         node.typeArguments = asNodeArray(typeArguments);
         node.name = identifier;
         node.attributes = attributes;
+        node.classList = classList;
         node.transformFlags |= propagateChildFlags(node.dotDotDotToken) |
             propagateChildFlags(node.tagName) |
             propagateChildrenFlags(node.typeArguments) |
             propagateChildFlags(node.name) |
             propagateChildFlags(node.attributes) |
+            propagateChildFlags(node.classList) |
             TransformFlags.ContainsJsx;
         if (node.typeArguments) {
             node.transformFlags |= TransformFlags.ContainsTypeScript;
@@ -5806,29 +5806,32 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     }
 
     // @api
-    function updateJsxSelfClosingElement(node: JsxSelfClosingElement, dotDotDotToken: Token<SyntaxKind.DotDotDotToken> | undefined, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes) {
+    function updateJsxSelfClosingElement(node: JsxSelfClosingElement, dotDotDotToken: Token<SyntaxKind.DotDotDotToken> | undefined, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes, classList: JsxClassList | undefined) {
         return node.dotDotDotToken !== dotDotDotToken
                 || node.tagName !== tagName
                 || node.typeArguments !== typeArguments
                 || node.name !== identifier
                 || node.attributes !== attributes
-            ? update(createJsxSelfClosingElement(dotDotDotToken, tagName, typeArguments, identifier, attributes), node)
+                || node.classList !== classList
+            ? update(createJsxSelfClosingElement(dotDotDotToken, tagName, typeArguments, identifier, attributes, classList), node)
             : node;
     }
 
     // @api
-    function createJsxOpeningElement(dotDotDotToken: Token<SyntaxKind.DotDotDotToken> | undefined, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes) {
+    function createJsxOpeningElement(dotDotDotToken: Token<SyntaxKind.DotDotDotToken> | undefined, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes, classList: JsxClassList | undefined) {
         const node = createBaseNode<JsxOpeningElement>(SyntaxKind.JsxOpeningElement);
         node.dotDotDotToken = dotDotDotToken;
         node.tagName = tagName;
         node.typeArguments = asNodeArray(typeArguments);
         node.name = identifier;
         node.attributes = attributes;
+        node.classList = classList;
         node.transformFlags |= propagateChildFlags(node.dotDotDotToken) |
             propagateChildFlags(node.tagName) |
             propagateChildrenFlags(node.typeArguments) |
             propagateChildFlags(node.name) |
             propagateChildFlags(node.attributes) |
+            propagateChildFlags(node.classList) |
             TransformFlags.ContainsJsx;
         if (typeArguments) {
             node.transformFlags |= TransformFlags.ContainsTypeScript;
@@ -5837,13 +5840,14 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     }
 
     // @api
-    function updateJsxOpeningElement(node: JsxOpeningElement, dotDotDotToken: Token<SyntaxKind.DotDotDotToken> | undefined, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes) {
+    function updateJsxOpeningElement(node: JsxOpeningElement, dotDotDotToken: Token<SyntaxKind.DotDotDotToken> | undefined, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes, classList: JsxClassList | undefined) {
         return node.dotDotDotToken !== dotDotDotToken
                 || node.tagName !== tagName
                 || node.typeArguments !== typeArguments
                 || node.name !== identifier
                 || node.attributes !== attributes
-            ? update(createJsxOpeningElement(dotDotDotToken, tagName, typeArguments, identifier, attributes), node)
+                || node.classList !== classList
+            ? update(createJsxOpeningElement(dotDotDotToken, tagName, typeArguments, identifier, attributes, classList), node)
             : node;
     }
 
@@ -5984,20 +5988,36 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     }
 
     // @api
-    function createJsxClassAttribute(name: Identifier, initializer: JsxAttributeValue | undefined) {
-        const node = createBaseDeclaration<JsxClassAttribute>(SyntaxKind.JsxClassAttribute);
-        node.name = name;
+    function createJsxClassAttribute(names: readonly Identifier[], initializer: JsxExpression | undefined) {
+        const node = createBaseNode<JsxClassAttribute>(SyntaxKind.JsxClassAttribute);
+        node.names = createNodeArray(names);
         node.initializer = initializer;
-        node.transformFlags |= propagateChildFlags(node.name) |
+        node.transformFlags |= propagateChildrenFlags(node.names) |
             propagateChildFlags(node.initializer) |
             TransformFlags.ContainsJsx;
         return node;
     }
 
     // @api
-    function updateJsxClassAttribute(node: JsxClassAttribute, name: Identifier, initializer: JsxAttributeValue | undefined) {
-        return node.name !== name || node.initializer !== initializer
-            ? update(createJsxClassAttribute(name, initializer), node)
+    function updateJsxClassAttribute(node: JsxClassAttribute, names: readonly Identifier[], initializer: JsxExpression | undefined) {
+        return node.names !== names || node.initializer !== initializer
+            ? update(createJsxClassAttribute(names, initializer), node)
+            : node;
+    }
+
+    // @api
+    function createJsxClassList(attributes: readonly (JsxClassAttribute | JsxSpreadAttribute)[]) {
+        const node = createBaseNode<JsxClassList>(SyntaxKind.JsxClassList);
+        node.attributes = createNodeArray(attributes);
+        node.transformFlags |= propagateChildrenFlags(node.attributes) |
+            TransformFlags.ContainsJsx;
+        return node;
+    }
+
+    // @api
+    function updateJsxClassList(node: JsxClassList, attributes: readonly (JsxClassAttribute | JsxSpreadAttribute)[]) {
+        return node.attributes !== attributes
+            ? update(createJsxClassList(attributes), node)
             : node;
     }
 

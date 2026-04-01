@@ -5084,6 +5084,11 @@ export function getJsxElementNameContainer(node: Node): Node | undefined {
             case SyntaxKind.JsxComponentDirective:
                 el = n
                 break;
+            case SyntaxKind.Block:
+                if (isFunctionLike(node.parent) || isClassStaticBlockDeclaration(node.parent) || node.parent.kind === SyntaxKind.JsxComponentDirective) {
+                    break
+                }
+                // fallsthrough
             case SyntaxKind.JsxIfDirective:
             case SyntaxKind.JsxElseDirective:
             case SyntaxKind.SourceFile:

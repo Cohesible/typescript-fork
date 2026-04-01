@@ -246,6 +246,7 @@ import {
     JsxSpreadAttribute,
     JsxShorthandAttribute,
     JsxClassAttribute,
+    JsxClassList,
     JsxTagNameExpression,
     JsxText,
     JsxTokenSyntaxKind,
@@ -654,8 +655,7 @@ const forEachChildTable: ForEachChildTable = {
             visitNodes(cbNode, cbNodes, node.typeParameters) ||
             visitNodes(cbNode, cbNodes, node.parameters) ||
             visitNode(cbNode, node.type) ||
-            visitNode(cbNode, node.body) ||
-            visitNode(cbNode, node.satisfiesType);
+            visitNode(cbNode, node.body);
     },
     [SyntaxKind.FunctionExpression]: function forEachChildInFunctionExpression<T>(node: FunctionExpression, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNodes(cbNode, cbNodes, node.modifiers) ||
@@ -1072,8 +1072,11 @@ const forEachChildTable: ForEachChildTable = {
     [SyntaxKind.JsxShorthandAttribute]: function forEachChildInJsxShorthandAttribute<T>(node: JsxShorthandAttribute, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNode(cbNode, node.name);
     },
-    [SyntaxKind.JsxClassAttribute]: function forEachChildInJsxClassAttribute<T>(node: JsxClassAttribute, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
-        return visitNode(cbNode, node.name) || visitNode(cbNode, node.initializer);
+    [SyntaxKind.JsxClassAttribute]: function forEachChildInJsxClassAttribute<T>(node: JsxClassAttribute, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+        return visitNodes(cbNode, cbNodes, node.names) || visitNode(cbNode, node.initializer);
+    },
+    [SyntaxKind.JsxClassList]: function forEachChildInJsxClassList<T>(node: JsxClassList, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+        return visitNodes(cbNode, cbNodes, node.attributes);
     },
     [SyntaxKind.JsxExpression]: function forEachChildInJsxExpression<T>(node: JsxExpression, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNode(cbNode, node.dotDotDotToken) ||
@@ -1272,6 +1275,7 @@ function forEachChildInJsxOpeningOrSelfClosingElement<T>(node: JsxOpeningLikeEle
     return visitNode(cbNode, node.dotDotDotToken) ||
         visitNode(cbNode, node.tagName) ||
         visitNodes(cbNode, cbNodes, node.typeArguments) ||
+        visitNode(cbNode, node.classList) ||
         visitNode(cbNode, node.name) ||
         visitNode(cbNode, node.attributes);
 }
@@ -3019,7 +3023,7 @@ namespace Parser {
                 }
                 return tokenIsIdentifierOrKeyword(token());
             case ParsingContext.JsxAttributes:
-                return tokenIsIdentifierOrKeyword(token()) || token() === SyntaxKind.OpenBraceToken || token() === SyntaxKind.MinusToken || token() === SyntaxKind.AtToken || token() === SyntaxKind.DotToken;
+                return tokenIsIdentifierOrKeyword(token()) || token() === SyntaxKind.OpenBraceToken || token() === SyntaxKind.MinusToken || token() === SyntaxKind.MinusMinusToken || token() === SyntaxKind.AtToken || token() === SyntaxKind.DotToken || token() === SyntaxKind.OpenParenToken;
             case ParsingContext.JsxChildren:
                 return true;
             case ParsingContext.JSDocComment:
@@ -6420,9 +6424,9 @@ namespace Parser {
         return parseIdentifier();
     }
 
-    function parseJsxAttributes(): JsxAttributes {
+    function parseJsxAttributes(hasClassList: boolean): JsxAttributes {
         const pos = getNodePos();
-        return finishNode(factory.createJsxAttributes(parseList(ParsingContext.JsxAttributes, parseJsxAttribute)), pos);
+        return finishNode(factory.createJsxAttributes(parseList(ParsingContext.JsxAttributes, () => parseJsxAttribute(hasClassList))), pos);
     }
 
     function parseJsxOpeningOrSelfClosingElementOrOpeningFragment(inExpressionContext: boolean): JsxOpeningElement | JsxSelfClosingElement | JsxOpeningFragment {
@@ -6439,27 +6443,22 @@ namespace Parser {
         const tagName = parseJsxElementName();
         const typeArguments = (contextFlags & NodeFlags.JavaScriptFile) === 0 ? tryParseTypeArguments() : undefined;
         let identifier = token() === SyntaxKind.AtToken ? parseJsxElementIdentifier() : undefined;
-        let attributes = parseJsxAttributes();
-
-        // try parsing out trailing `@ ident` as a binding
-        if (!identifier) {
-            const props = attributes.properties;
-            if (props.length >= 2) {
-                const last = props[props.length - 1];
-                const secondToLast = props[props.length - 2];
-                if (
-                    secondToLast.kind === SyntaxKind.JsxAttribute && !(secondToLast as JsxAttribute).initializer &&
-                    isIdentifierNode((secondToLast as JsxAttribute).name) && idText((secondToLast as JsxAttribute).name as Identifier) === "@" &&
-                    last.kind === SyntaxKind.JsxAttribute && !(last as JsxAttribute).initializer &&
-                    isIdentifierNode((last as JsxAttribute).name)
-                ) {
-                    identifier = (last as JsxAttribute).name as Identifier;
-                    const trimmed = props.slice(0, -2);
-                    const attrsPos = attributes.pos;
-                    attributes = finishNode(factory.createJsxAttributes(createNodeArray(trimmed, attrsPos, attributes.end)), attrsPos);
-                }
+        let classList: JsxClassList | undefined;
+        if (scriptKind === ScriptKind.Syn && (token() === SyntaxKind.DotToken || token() === SyntaxKind.OpenParenToken)) {
+            const list = parseJsxClassList();
+            if (identifier) {
+                parseErrorAtRange(list, Diagnostics.An_element_s_class_list_must_appear_before_its_binding_name);
+            }
+            else {
+                classList = list;
             }
         }
+
+        if (classList && token() === SyntaxKind.AtToken) {
+            identifier = parseJsxElementIdentifier();
+        }
+
+        let attributes = parseJsxAttributes(!!classList);
 
         let node: JsxOpeningLikeElement;
 
@@ -6468,7 +6467,7 @@ namespace Parser {
             // of regular scanning to avoid treating illegal characters (e.g. '#') as immediate
             // scanning errors
             scanJsxText();
-            node = factory.createJsxOpeningElement(dotDotDotToken, tagName, typeArguments, identifier, attributes);
+            node = factory.createJsxOpeningElement(dotDotDotToken, tagName, typeArguments, identifier, attributes, classList);
         }
         else {
             parseExpected(SyntaxKind.SlashToken);
@@ -6481,7 +6480,7 @@ namespace Parser {
                     scanJsxText();
                 }
             }
-            node = factory.createJsxSelfClosingElement(dotDotDotToken, tagName, typeArguments, identifier, attributes);
+            node = factory.createJsxSelfClosingElement(dotDotDotToken, tagName, typeArguments, identifier, attributes, classList);
         }
 
         return finishNode(node, pos);
@@ -6548,7 +6547,7 @@ namespace Parser {
         return finishNode(factory.createJsxExpression(dotDotDotToken, expression), pos);
     }
 
-    function parseJsxAttribute(): JsxAttribute | JsxSpreadAttribute | JsxShorthandAttribute | JsxClassAttribute {
+    function parseJsxAttribute(hasClassList: boolean): JsxAttribute | JsxSpreadAttribute | JsxShorthandAttribute {
         if (token() === SyntaxKind.OpenBraceToken) {
             if (scriptKind !== ScriptKind.Syn) {
                 return parseJsxSpreadAttribute();
@@ -6559,21 +6558,94 @@ namespace Parser {
             return parseJsxShorthandAttribute();
         }
 
-        if (token() === SyntaxKind.DotToken) {
-            return parseJsxClassAttribute();
+        if (token() === SyntaxKind.DotToken || token() === SyntaxKind.OpenParenToken) {
+            const pos = getNodePos();
+            const list = parseJsxClassList();
+            if (hasClassList) {
+                parseErrorAtRange(list, Diagnostics.Class_attributes_must_be_placed_inside_a_single_class_list);
+            } else {
+                parseErrorAtRange(list, Diagnostics.An_element_s_class_list_must_appear_before_its_attributes);
+            }
+            const n = finishNode(factory.createJsxAttribute(createMissingNode(SyntaxKind.Identifier, false), undefined), pos);
+            ;(n as Mutable<typeof n>).flags |= NodeFlags.ThisNodeHasError;
+            return n;
         }
 
         const pos = getNodePos();
         return finishNode(factory.createJsxAttribute(parseJsxAttributeName(), parseJsxAttributeValue()), pos);
     }
 
-    function parseJsxClassAttribute(): JsxClassAttribute {
+    function parseJsxClassAttribute(insideParens = false, errorRecoveryStart?: number): JsxClassAttribute {
+        let hasError = false;
         const pos = getNodePos();
-        parseExpected(SyntaxKind.DotToken);
-        currentToken = scanner.scanJsxAttributeIdentifier();
-        const name = parseIdentifierNameErrorOnUnicodeEscapeSequence();
-        const initializer = parseJsxAttributeValue();
-        return finishNode(factory.createJsxClassAttribute(name, initializer), pos);
+        const names: Identifier[] = [];
+        do {
+            if (!hasError && names.length && scanner.getTokenFullStart() < scanner.getTokenStart()) {
+                if (insideParens && !errorRecoveryStart) {
+                    parseErrorAtPosition(scanner.getTokenFullStart(), 1, Diagnostics._0_expected, tokenToString(SyntaxKind.CommaToken));
+                } else {
+                    hasError = true;
+                }
+            }
+            parseExpected(SyntaxKind.DotToken);
+            currentToken = scanner.scanJsxAttributeIdentifier();
+            names.push(parseIdentifierNameErrorOnUnicodeEscapeSequence());
+        }
+        while (
+            token() === SyntaxKind.DotToken && 
+            lookAhead(() => { nextToken(); return token() !== SyntaxKind.DotToken; })
+        );
+        const namesList = createNodeArray(names, pos);
+        let initializer: JsxExpression | undefined;
+        if (token() === SyntaxKind.EqualsToken) {
+            nextToken();
+            parseExpected(SyntaxKind.OpenBraceToken, undefined, false);
+            initializer = parseJsxExpression(/*inExpressionContext*/ true) as JsxExpression;
+        }
+        const n = finishNode(factory.createJsxClassAttribute(namesList, initializer), pos);
+        if (hasError || errorRecoveryStart) {
+            if (initializer || errorRecoveryStart) {
+                if (token() === SyntaxKind.DotToken) {
+                    parseJsxClassAttribute(false, pos);
+                } else if (errorRecoveryStart) {
+                    parseErrorAtPosition(errorRecoveryStart, n.end - errorRecoveryStart, Diagnostics.Multiple_classes_must_be_enclosed_in_and_separated_by_commas);
+                } else {
+                    parseErrorAtRange(n, Diagnostics.Multiple_classes_must_be_enclosed_in_and_separated_by_commas);
+                }
+            }
+            else {
+                const groupedNames = names.map(idText);
+                parseErrorAtRange(n, Diagnostics.Multiple_classes_must_be_enclosed_in_and_separated_by_commas_Did_you_mean_0, "." + groupedNames.join("."));
+            }
+        }
+        return n;
+    }
+
+    function parseJsxClassList(): JsxClassList {
+        const pos = getNodePos();
+        let attributes: NodeArray<(JsxClassAttribute | JsxSpreadAttribute)>
+        if (token() === SyntaxKind.OpenParenToken) {
+            nextToken();
+            const start = getNodePos()
+            const elements: (JsxClassAttribute | JsxSpreadAttribute)[] = [];
+            while (token() !== SyntaxKind.CloseParenToken && token() !== SyntaxKind.EndOfFileToken) {
+                if (token() === SyntaxKind.OpenBraceToken) {
+                    elements.push(parseJsxSpreadAttribute());
+                }
+                else {
+                    elements.push(parseJsxClassAttribute(true));
+                }
+                if (token() !== SyntaxKind.CloseParenToken) {
+                    parseExpected(SyntaxKind.CommaToken);
+                }
+            }
+            attributes = createNodeArray(elements, start);
+            parseExpected(SyntaxKind.CloseParenToken);
+        }
+        else {
+            attributes = createNodeArray([parseJsxClassAttribute()], pos);
+        }
+        return finishNode(factory.createJsxClassList(attributes), pos);
     }
 
     function parseJsxAttributeValue(): JsxAttributeValue | undefined {
@@ -6767,7 +6839,7 @@ namespace Parser {
             }
         }
         // error node
-        const open = finishNode(factory.createJsxOpeningElement(undefined, factory.createIdentifier(name), undefined, undefined, factory.createJsxAttributes([])), pos);
+        const open = finishNode(factory.createJsxOpeningElement(undefined, factory.createIdentifier(name), undefined, undefined, factory.createJsxAttributes([]), undefined), pos);
         const { children, endPos } = parseJsxDirectiveBody(pos, tagName, openingTag);
         const close = finishNode(factory.createJsxClosingElement(factory.createIdentifier("")), endPos);
         return factory.createJsxElement(open, children, close);
@@ -7531,7 +7603,7 @@ namespace Parser {
         const hasJSDoc = hasPrecedingJSDocComment();
         parseExpected(SyntaxKind.SwitchKeyword);
         parseExpected(SyntaxKind.OpenParenToken);
-        // Syn: switch (const v = expr) { ... }
+        // switch (const v = expr) { ... }
         const expression = scriptKind === ScriptKind.Syn && (token() === SyntaxKind.ConstKeyword || token() === SyntaxKind.LetKeyword)
             ? parseVariableDeclarationList(false)
             : allowInAnd(parseExpression);
@@ -7624,22 +7696,18 @@ namespace Parser {
     }
 
     function isUpdateBlockForm(): boolean {
-        // Lookahead: skip `update`, scan comma-separated identifier/member-access chains,
-        // return true if a `{` follows. Only the block form `update x1, x2 { }` qualifies;
-        // `update expr` (expression statement) must fall through to the expression parser.
         return lookAhead(() => {
-            nextToken(); // skip `update` keyword
+            nextToken();
             while (true) {
                 if (token() !== SyntaxKind.Identifier) return false;
-                nextToken(); // skip identifier
-                // allow member access chains
+                nextToken();
                 while (token() === SyntaxKind.DotToken || token() === SyntaxKind.QuestionDotToken) {
-                    nextToken(); // skip . or ?.
+                    nextToken();
                     if (token() === SyntaxKind.Identifier) nextToken();
                 }
                 if (token() === SyntaxKind.OpenBraceToken) return true;
                 if (token() !== SyntaxKind.CommaToken) return false;
-                nextToken(); // skip comma
+                nextToken();
             }
         });
     }
@@ -7652,10 +7720,6 @@ namespace Parser {
         do {
             operandsList.push(parseAssignmentExpressionOrHigher(/*allowReturnTypeInArrowFunction*/ false));
         } while (parseOptional(SyntaxKind.CommaToken));
-        // Use parser-local createNodeArray so the NodeArray gets proper pos/end set from
-        // source text positions. The factory's createNodeArray would leave pos=-1, which
-        // causes a Debug Failure in the language server when getChildren() tries to scan
-        // synthetic tokens at position -1.
         const operands = createNodeArray(operandsList, operandsPos);
         const block = parseBlock(/*ignoreMissingOpenBrace*/ false);
         return finishNode(factory.createUpdateBlockStatement(operands, block), pos);
@@ -8331,9 +8395,8 @@ namespace Parser {
         const parameters = parseParameters(isGenerator | isAsync);
         const type = parseReturnType(SyntaxKind.ColonToken, /*isType*/ false);
         const body = parseFunctionBlockOrSemicolon(isGenerator | isAsync, Diagnostics.or_expected);
-        const satisfiesType = scriptKind === ScriptKind.Syn && parseOptional(SyntaxKind.SatisfiesKeyword) ? parseType() : undefined;
         setAwaitContext(savedAwaitContext);
-        const node = factory.createFunctionDeclaration(modifiers, asteriskToken, name, typeParameters, parameters, type, body, satisfiesType);
+        const node = factory.createFunctionDeclaration(modifiers, asteriskToken, name, typeParameters, parameters, type, body);
         return withJSDoc(finishNode(node, pos), hasJSDoc);
     }
 

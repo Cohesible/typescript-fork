@@ -760,7 +760,11 @@ export class SessionClient implements LanguageService {
         return notImplemented();
     }
 
-    getJsxStyleRegions(_fileName: string): { regions: TextSpan[]; text: string; } | undefined {
+    getJsxStyleRegions(_fileName: string): { regions: TextSpan[]; text: string; classAttributes: { span: TextSpan; }[]; } | undefined {
+        return notImplemented();
+    }
+
+    jsxFindScopedStyles(_fileName: string, _position: number): TextSpan[] {
         return notImplemented();
     }
 

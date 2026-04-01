@@ -849,8 +849,8 @@ import {
     JsxReferenceKind,
     JsxSelfClosingElement,
     JsxSpreadAttribute,
-    JsxShorthandAttribute,
     JsxClassAttribute,
+    JsxClassList,
     JsxTagNameExpression,
     JsxText,
     KeywordTypeNode,
@@ -1159,7 +1159,9 @@ import {
     findJsxElseDirective,
     JsxElseDirective,
     isJsxContainer,
+    isJsxChild,
     isJsxClassAttribute,
+    isJsxClassList,
 } from "./_namespaces/ts.js";
 import * as moduleSpecifiers from "./_namespaces/ts.moduleSpecifiers.js";
 import * as performance from "./_namespaces/ts.performance.js";
@@ -13627,7 +13629,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     function tryGetDeclaredTypeOfSymbol(symbol: Symbol): Type | undefined {
         // TODO: add symbol flag for this instead and put this check near the bottom
         if (symbol.valueDeclaration?.kind === SyntaxKind.JsxComponentDirective) {
-            return getJsxComponentNodeTypeFromSymbol(symbol);
+            return getJsxComponentNodeTypeFromSymbol(symbol, true);
         }
         if (symbol.flags & (SymbolFlags.Class | SymbolFlags.Interface)) {
             return getDeclaredTypeOfClassOrInterface(symbol);
@@ -21869,12 +21871,13 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 }
                 // child is of type JSX.Element
                 return { errorNode: child, innerExpression: child, nameType };
-            case SyntaxKind.JsxIfDirective:
-            case SyntaxKind.JsxElseDirective:
             case SyntaxKind.JsxRunDirective:
             case SyntaxKind.JsxComponentDirective:
-            case SyntaxKind.JsxLabeledFragment:
             case SyntaxKind.JsxStyleDirective:
+                break; // ignore
+            case SyntaxKind.JsxIfDirective:
+            case SyntaxKind.JsxElseDirective:
+            case SyntaxKind.JsxLabeledFragment:
                 return { errorNode: child, innerExpression: undefined, nameType };
             default:
                 return Debug.assertNever(child, "Found invalid jsx child");
@@ -21936,8 +21939,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             }
             else {
                 const child = validChildren[0];
-                // In Syn mode, if the single child is an array expression and the children type doesn't match,
-                // emit the spread suggestion diagnostic regardless of whether the target is array-like or not.
+                // emit the spread suggestion diagnostic regardless of whether the target is array-like or not
                 const isSynFile = getSourceFileOfNode(containingElement)?.scriptKind === ScriptKind.Syn;
                 const childExprType = isSynFile && child.kind === SyntaxKind.JsxExpression && (child as JsxExpression).expression
                     ? checkExpression((child as JsxExpression).expression!)
@@ -30735,7 +30737,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             isFunctionLike(node) && !getImmediatelyInvokedFunctionExpression(node) ||
             node.kind === SyntaxKind.ModuleBlock ||
             node.kind === SyntaxKind.SourceFile ||
-            node.kind === SyntaxKind.PropertyDeclaration)!;
+            node.kind === SyntaxKind.PropertyDeclaration ||
+            node.kind === SyntaxKind.JsxComponentDirective)!;
     }
 
     // Check if a parameter, catch variable, or mutable local variable is assigned anywhere definitely
@@ -32424,21 +32427,6 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             return;
         }
         if (!isContextSensitiveFunctionOrObjectLiteralMethod(func)) {
-            // Check if this is a function declaration with a satisfies type
-            if (func.kind === SyntaxKind.FunctionDeclaration && (func as FunctionDeclaration).satisfiesType) {
-                const satisfiesTypeNode = (func as FunctionDeclaration).satisfiesType!;
-                // Get the type from the satisfies clause to provide contextual typing
-                const satisfiesType = getTypeFromTypeNode(satisfiesTypeNode);
-                if (satisfiesType && !isErrorType(satisfiesType)) {
-                    const signature = getSignaturesOfType(satisfiesType, SignatureKind.Call)[0];
-                    if (signature) {
-                        const index = func.parameters.indexOf(parameter) - (getThisParameter(func) ? 1 : 0);
-                        return parameter.dotDotDotToken && lastOrUndefined(func.parameters) === parameter ?
-                            getRestTypeAtPosition(signature, index) :
-                            tryGetTypeAtPosition(signature, index);
-                    }
-                }
-            }
             return undefined;
         }
         const iife = getImmediatelyInvokedFunctionExpression(func);
@@ -33093,7 +33081,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         if (isJsxAttribute(attribute)) {
             const attributesType = getApparentTypeOfContextualType(attribute.parent, contextFlags);
             if (!attributesType || isTypeAny(attributesType)) {
-                return undefined;
+                return;
             }
             return getTypeOfPropertyOfContextualType(attributesType, getEscapedTextOfJsxAttributeName(attribute.name));
         } 
@@ -33101,6 +33089,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             return booleanType;
         }
         else {
+            if (isJsxClassList(attribute.parent)) {
+                return;
+            }
             return getContextualType(attribute.parent, contextFlags);
         }
     }
@@ -34245,7 +34236,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         checkJsxOpeningLikeElementOrOpeningFragment(node);
     }
 
-    function getJsxComponentNodeTypeFromSymbol(symbol: Symbol): Type | undefined {
+    function getJsxComponentNodeTypeFromSymbol(symbol: Symbol, useWrapper = false): Type | undefined {
         const componentNodeType = getGlobalComponentNodeType();
         if (!componentNodeType) return undefined;
         const decl = symbol.valueDeclaration as unknown as JsxComponentDirective;
@@ -34254,11 +34245,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         if (sigs.length === 0) return createTypeReference(componentNodeType, /*typeArguments*/ undefined);
         const sig = sigs[0];
         const returnType = getReturnTypeOfSignature(sig);
+        if (!useWrapper) return returnType;
         const propsType = sig.parameters.length > 0 ? getTypeOfSymbol(sig.parameters[0]) : emptyObjectType;
         const nodeType = createTypeReference(componentNodeType, [returnType, propsType]);
-        if (!nodeType.aliasSymbol) {
-            nodeType.aliasSymbol = symbol;
-        }
         return nodeType;
     }
 
@@ -34277,8 +34266,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         if (!sym || sym === unknownSymbol) return undefined;
 
         if (!sym.valueDeclaration || sym.valueDeclaration.kind !== SyntaxKind.JsxComponentDirective) return undefined;
-
-        return getJsxComponentNodeTypeFromSymbol(sym);
+        const isChildNode = isJsxContainer(node.parent);
+        return getJsxComponentNodeTypeFromSymbol(sym, !isChildNode);
     }
 
     function checkJsxSelfClosingElement(node: JsxSelfClosingElement, _checkMode: CheckMode | undefined): Type {
@@ -34338,19 +34327,19 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 checkSourceElement(s);
             }
         }
-        // Infer return type from children
         const childrenTuple = getJsxChildrenType(node);
         const returnType = node.type
             ? getTypeFromTypeNode(node.type)
             : simplifySingularJsxTuple(childrenTuple);
-        // Build props type: { x: T1, y?: T2, ... }
+
+        if (node.type) {
+            checkTypeRelatedTo(returnType, simplifySingularJsxTuple(childrenTuple), assignableRelation, node.type);
+        }
+
         const propsType = buildComponentPropsType(node.parameters);
-        // Build type params
         const typeParams = node.typeParameters
             ? map(node.typeParameters, tp => getDeclaredTypeOfTypeParameter(getSymbolOfDeclaration(tp)))
             : undefined;
-        // Create (props: PropsType) => ReturnType signature.
-        // If no parameters were declared, props is optional (minArgumentCount=0).
         const propsSymbol = createParameter("props" as __String, propsType);
         const sig = createSignature(
             /*declaration*/ undefined,
@@ -34391,8 +34380,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return createAnonymousType(/*symbol*/ undefined, members, emptyArray, emptyArray, emptyArray);
     }
 
-    function checkJsxComponentDirective(node: JsxComponentDirective, _checkMode: CheckMode | undefined): Type {
-        return getJsxComponentDirectiveType(node);
+    function checkJsxComponentDirective(node: JsxComponentDirective, _checkMode: CheckMode | undefined): void {
+        addLazyDiagnostic(() => {
+            getJsxComponentDirectiveType(node);
+        });
     }
 
     function getContextualTypeForJsxLabeledFragment(node: JsxLabeledFragment): Type | undefined {
@@ -34424,7 +34415,6 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function getJsxDeclaredLabelSymbols(container: Node): Symbol[] {
-        // Walk up through if/else directive wrappers to the real container
         let c: Node = container;
         while (c.kind === SyntaxKind.JsxIfDirective || c.kind === SyntaxKind.JsxElseDirective) {
             c = c.parent;
@@ -34584,6 +34574,143 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
     }
 
+    function checkJsxClassList(node: JsxClassList): void {
+        // condKey: undefined = unconditional; string = identifier condition; null = complex
+        type Occurrence = { errorNode: Identifier | JsxSpreadAttribute; condKey: string | null | undefined; displayName: string; };
+        const seen = new Map<__String, Occurrence[]>();
+
+        for (const attr of node.attributes) {
+            if (isJsxSpreadAttribute(attr)) {
+                const exprType = getReducedType(checkExpression(attr.expression));
+                if (checkTypeAssignableTo(exprType, createArrayType(stringType, true), attr.expression)) {
+                    const literals = isArrayLiteralExpression(attr.expression)
+                        ? extractArrayLiteralStringLiterals(attr.expression)
+                        : extractClassSpreadStringLiterals(exprType);
+                    if (literals) {
+                        for (const lit of literals) {
+                            const key = escapeLeadingUnderscores(lit) as __String;
+                            let list = seen.get(key);
+                            if (!list) seen.set(key, list = []);
+                            list.push({ errorNode: attr, condKey: undefined, displayName: lit });
+                        }
+                    }
+                }
+            }
+            else {
+                const condKey = getClassAttrCondKey(attr);
+                for (const name of attr.names) {
+                    let list = seen.get(name.escapedText);
+                    if (!list) seen.set(name.escapedText, list = []);
+                    list.push({ errorNode: name, condKey, displayName: idText(name) });
+                }
+            }
+        }
+
+        for (const [, occurrences] of seen) {
+            if (occurrences.length <= 1) continue;
+
+            const unconditional = occurrences.filter(o => o.condKey === undefined);
+
+            if (unconditional.length > 0) {
+                for (const occ of occurrences) {
+                    if (occ.condKey === undefined) {
+                        if (unconditional.length > 1) {
+                            error(occ.errorNode, Diagnostics.Duplicate_class_name_0, occ.displayName);
+                        }
+                    }
+                    else {
+                        error(occ.errorNode, Diagnostics.Class_name_0_is_always_added_unconditionally_this_conditional_application_is_redundant, occ.displayName);
+                    }
+                }
+            }
+            else {
+                const byCondKey = new Map<string, Occurrence[]>();
+                for (const occ of occurrences) {
+                    if (occ.condKey === null) continue;
+                    let group = byCondKey.get(occ.condKey!);
+                    if (!group) byCondKey.set(occ.condKey!, group = []);
+                    group.push(occ);
+                }
+                for (const [, group] of byCondKey) {
+                    if (group.length > 1) {
+                        for (const occ of group) {
+                            error(occ.errorNode, Diagnostics.Duplicate_class_name_0, occ.displayName);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    function extractClassSpreadStringLiterals(type: Type): string[] | undefined {
+        if (!isTupleType(type)) return undefined;
+        const elementTypes = getTypeArguments(type as TypeReference);
+        const result: string[] = [];
+        for (const elem of elementTypes) {
+            if (!(elem.flags & TypeFlags.StringLiteral)) return undefined;
+            result.push((elem as StringLiteralType).value);
+        }
+        return result;
+    }
+
+    function extractArrayLiteralStringLiterals(node: ArrayLiteralExpression): string[] | undefined {
+        const result: string[] = [];
+        for (const elem of node.elements) {
+            const type = getRegularTypeOfLiteralType(checkExpression(elem));
+            if (!extractStringLiteralsFromType(type, result)) return undefined;
+        }
+        return result;
+    }
+
+    function extractStringLiteralsFromType(type: Type, out: string[]): boolean {
+        if (type.flags & TypeFlags.StringLiteral) {
+            out.push((type as StringLiteralType).value);
+            return true;
+        }
+        if (type.flags & TypeFlags.Union) {
+            for (const t of (type as UnionType).types) {
+                if (!extractStringLiteralsFromType(t, out)) return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    function getClassAttrCondKey(attr: JsxClassAttribute): string | null | undefined {
+        if (!attr.initializer) return undefined; // implicit true
+        const expr = attr.initializer.expression;
+        if (expr && isIdentifier(expr)) return idText(expr);
+        return null; // complex expr
+    }
+
+    function checkJsxAttributeSpreadsForStringArraySuggestion(node: JsxOpeningLikeElement): void {
+        for (const attr of node.attributes.properties) {
+            if (!isJsxSpreadAttribute(attr)) continue;
+            const exprType = getReducedType(getTypeOfExpression(attr.expression));
+            if (isArrayOrTupleLikeType(exprType)) {
+                const sf = getSourceFileOfNode(attr.expression);
+                error(attr, Diagnostics.Type_0_is_being_spread_as_attributes_Did_you_mean_to_use_a_class_list, typeToString(exprType));
+            }
+        }
+    }
+
+    function checkJsxClassListClassAttrConflict(node: JsxOpeningLikeElement): void {
+        for (const attr of node.attributes.properties) {
+            if (isJsxAttribute(attr) || isJsxShorthandAttribute(attr)) {
+                const name = isJsxShorthandAttribute(attr) ? attr.name : attr.name;
+                if (getEscapedTextOfJsxAttributeName(name) === ("class" as __String)) {
+                    error(name, Diagnostics.class_attribute_will_always_overwrite_the_class_list);
+                }
+            }
+            else if (isJsxSpreadAttribute(attr)) {
+                const exprType = getReducedType(checkExpression(attr.expression));
+                if (getPropertyOfType(exprType, "class" as __String)) {
+                    error(attr, Diagnostics.class_attribute_will_always_overwrite_the_class_list);
+                }
+            }
+        }
+    }
+
     /**
      * Get attributes type of the JSX opening-like element. The result is from resolving "attributes" property of the opening-like element.
      *
@@ -34613,12 +34740,15 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             attributeParent = attributes;
             const contextualType = getContextualType(attributes, ContextFlags.None);
             for (const attributeDecl of attributes.properties) {
+                // parser already reported these as errors
+                if (attributeDecl.name && isIdentifier(attributeDecl.name) && attributeDecl.name.escapedText === '' && (attributeDecl.flags & NodeFlags.ThisNodeHasError)) {
+                    continue;
+                }
                 const member = attributeDecl.symbol;
                 if (isJsxAttribute(attributeDecl)) {
                     const exprType = checkJsxAttribute(attributeDecl, checkMode);
                     objectFlags |= getObjectFlags(exprType) & ObjectFlags.PropagatingFlags;
 
-                    // prop:X — forward to DOM element property validation
                     if (isJsxNamespacedName(attributeDecl.name)
                         && attributeDecl.name.namespace.escapedText === ("prop" as __String)
                         && !isJsxOpenFragment
@@ -34667,9 +34797,6 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                         const inferenceNode = (attributeDecl.initializer as JsxExpression).expression!;
                         addIntraExpressionInferenceSite(inferenceContext, inferenceNode, exprType);
                     }
-                }
-                else if (attributeDecl.kind === SyntaxKind.JsxClassAttribute) {
-                    checkJsxClassAttribute(attributeDecl, checkMode);
                 }
                 else if (isJsxShorthandAttribute(attributeDecl)) {
                     const exprType = checkExpression(attributeDecl.name, checkMode);
@@ -34738,37 +34865,28 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
                 const contextualType = isJsxOpeningElement(openingLikeElement) ? getApparentTypeOfContextualType(openingLikeElement.attributes, /*contextFlags*/ undefined) : undefined;
                 const childrenContextualType = contextualType && getTypeOfPropertyOfContextualType(contextualType, jsxChildrenPropertyName);
-                // For a Syn empty element (<Foo></Foo>), only synthesize children if the component declares a children prop.
-                // This prevents <F1></F1> (where F1 has no children prop) from getting a spurious error.
-                if (isSynJsxElement && semanticChildCount === 0 && !childrenContextualType) {
-                    // Component doesn't declare a children prop — skip synthesis entirely.
+                const skipCreateChildren = isSynJsxElement && semanticChildCount === 0 && !childrenContextualType;
+                if (!skipCreateChildren) {
+                    const childrenPropSymbol = createSymbol(SymbolFlags.Property, jsxChildrenPropertyName);
+                    if (isSynJsxElement) {
+                        childrenPropSymbol.links.type = childrenType;
+                    }
+                    else if (semanticChildCount === 1) {
+                        childrenPropSymbol.links.type = getTypeArguments(childrenType as TypeReference)[0];
+                    }
+                    else {
+                        const typeArgs = getTypeArguments(childrenType as TypeReference);
+                        childrenPropSymbol.links.type = childrenContextualType && someType(childrenContextualType, isTupleLikeType)
+                            ? childrenType
+                            : createArrayType(getUnionType(typeArgs));
+                    }
+                    childrenPropSymbol.valueDeclaration = factory.createPropertySignature(/*modifiers*/ undefined, unescapeLeadingUnderscores(jsxChildrenPropertyName), /*questionToken*/ undefined, /*type*/ undefined);
+                    setParent(childrenPropSymbol.valueDeclaration, attributeParent);
+                    childrenPropSymbol.valueDeclaration.symbol = childrenPropSymbol;
+                    const childPropMap = createSymbolTable();
+                    childPropMap.set(jsxChildrenPropertyName, childrenPropSymbol);
+                    spread = getSpreadType(spread, createAnonymousType(attributesSymbol, childPropMap, emptyArray, emptyArray, emptyArray), attributesSymbol, objectFlags, /*readonly*/ false);
                 }
-                else {
-                // If there are children in the body of JSX element, create dummy attribute "children" with the union of children types so that it will pass the attribute checking process
-                const childrenPropSymbol = createSymbol(SymbolFlags.Property, jsxChildrenPropertyName);
-                if (isSynJsxElement) {
-                    // Syn: children type is already the correct tuple/array type from checkJsxChildren
-                    childrenPropSymbol.links.type = childrenType;
-                }
-                else if (semanticChildCount === 1) {
-                    // Non-Syn single child: extract the element type from the single-element tuple
-                    childrenPropSymbol.links.type = getTypeArguments(childrenType as TypeReference)[0];
-                }
-                else {
-                    // Non-Syn multiple children: tuple if contextual expects it, otherwise array of union
-                    const typeArgs = getTypeArguments(childrenType as TypeReference);
-                    childrenPropSymbol.links.type = childrenContextualType && someType(childrenContextualType, isTupleLikeType)
-                        ? childrenType
-                        : createArrayType(getUnionType(typeArgs));
-                }
-                // Fake up a property declaration for the children
-                childrenPropSymbol.valueDeclaration = factory.createPropertySignature(/*modifiers*/ undefined, unescapeLeadingUnderscores(jsxChildrenPropertyName), /*questionToken*/ undefined, /*type*/ undefined);
-                setParent(childrenPropSymbol.valueDeclaration, attributeParent);
-                childrenPropSymbol.valueDeclaration.symbol = childrenPropSymbol;
-                const childPropMap = createSymbolTable();
-                childPropMap.set(jsxChildrenPropertyName, childrenPropSymbol);
-                spread = getSpreadType(spread, createAnonymousType(attributesSymbol, childPropMap, emptyArray, emptyArray, emptyArray), attributesSymbol, objectFlags, /*readonly*/ false);
-                } // end else (component declares children)
             }
         }
 
@@ -35015,17 +35133,6 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     if (!isSpreadableArrayLikeType(spreadType)) {
                         error(child, Diagnostics.Spread_JSX_element_type_0_is_not_an_array_type, typeToString(spreadType));
                         resolvedSpreadType = createArrayType(anyType);
-                    }
-                    else {
-                        const childConstraint = getJsxType(JsxNames.Child, child);
-                        if (!isErrorType(childConstraint)) {
-                            for (const elementType of getSpreadElementTypes(spreadType)) {
-                                if (!checkTypeAssignableTo(elementType, childConstraint, child)) {
-                                    resolvedSpreadType = createArrayType(anyType); // suppress cascading errors
-                                    break;
-                                }
-                            }
-                        }
                     }
                     elementTypes.push(resolvedSpreadType);
                     elementFlags.push(ElementFlags.Variadic);
@@ -35440,6 +35547,14 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
         if (isNodeOpeningLikeElement) {
             checkGrammarJsxElement(node);
+            checkJsxAttributeSpreadsForStringArraySuggestion(node);
+            if (node.classList) {
+                for (const attr of node.classList.attributes) {
+                    if (isJsxClassAttribute(attr)) checkJsxClassAttribute(attr);
+                }
+                checkJsxClassList(node.classList);
+                checkJsxClassListClassAttrConflict(node);
+            }
         }
 
         checkJsxPreconditions(node);
@@ -43420,14 +43535,14 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return checkJsxFragment(node as JsxFragment);
             case SyntaxKind.JsxIfDirective:
                 return checkJsxIfDirective(node as unknown as JsxIfDirective, checkMode);
-            case SyntaxKind.JsxRunDirective:
-                return voidType;
             case SyntaxKind.JsxComponentDirective:
-                return checkJsxComponentDirective(node as JsxComponentDirective, checkMode);
+                return getJsxComponentDirectiveType(node as JsxComponentDirective);
             case SyntaxKind.JsxLabeledFragment:
                 return checkJsxLabeledFragment(node as JsxLabeledFragment, checkMode);
             case SyntaxKind.JsxAttributes:
                 return checkJsxAttributes(node as JsxAttributes, checkMode);
+            case SyntaxKind.JsxRunDirective:
+                Debug.fail("Shouldn't ever directly check a JsxRunDirective");
             case SyntaxKind.JsxOpeningElement:
                 Debug.fail("Shouldn't ever directly check a JsxOpeningElement");
         }
@@ -45627,22 +45742,6 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             checkFunctionOrMethodDeclaration(node);
             checkGrammarForGenerator(node);
             checkCollisionsForDeclarationName(node, node.name);
-
-            // Check satisfies clause if present
-            if (node.satisfiesType) {
-                checkSourceElement(node.satisfiesType);
-                const funcType = getTypeOfSymbol(getSymbolOfDeclaration(node));
-                const satisfiesType = getTypeFromTypeNode(node.satisfiesType);
-                if (!isErrorType(satisfiesType)) {
-                    checkTypeRelatedTo(
-                        funcType,
-                        satisfiesType,
-                        assignableRelation,
-                        node.satisfiesType,
-                        Diagnostics.Type_0_does_not_satisfy_the_expected_type_1
-                    );
-                }
-            }
         }
     }
 
@@ -50596,25 +50695,235 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
         checkSourceElement(node.block);
 
-        // Plausibility check: for each operand with a statically known JSX source,
-        // verify the block plausibly affects at least one variable that operand depends on.
-        // If we can't determine the source the check is skipped (plausibly valid).
-        //
-        // When inside a #component boundary, function calls to component-local functions
-        // are also traced transitively to account for captured state mutations.
-        const component = findEnclosingJsxComponentDirective(node);
-        for (const operand of node.operands) {
-            const jsxSource = getJsxSourceOfExpression(operand);
-            if (jsxSource === undefined) continue;
-            const deps = collectJsxExpressionIdentifiers(jsxSource);
-            if (deps.size === 0) continue;
-            if (!blockPlausiblyAffectsDeps(node.block, deps, component)) {
-                error(operand, Diagnostics.update_block_has_no_plausible_effect_on_0_Colon_the_block_does_not_reference_any_variable_that_0_depends_on, getTextOfNode(operand));
+        addLazyDiagnostic(checkUpdateBlockStatementDeferred);
+        function checkUpdateBlockStatementDeferred() {
+            // plausibility check
+            const component = findEnclosingJsxComponentDirective(node);
+            for (const operand of node.operands) {
+                const jsxSource = getJsxSourceOfExpression(operand);
+                if (jsxSource === undefined) continue;
+                // any dynamic update is plausible
+                if (containsJsxDynamicUpdateExpression(jsxSource)) continue;
+                const deps = collectJsxExpressionIdentifiers(jsxSource);
+                if (deps.size === 0) continue;
+                if (!blockPlausiblyAffectsDeps(node.block, deps, component)) {
+                    error(operand, Diagnostics.update_has_no_plausible_effect_on_0_the_block_does_not_reference_any_variable_that_0_depends_on, getTextOfNode(operand));
+                }
+            }
+
+            // recursion detection
+            for (const operand of node.operands) {
+                const jsxSource = getJsxSourceOfExpression(operand);
+                if (!jsxSource || !isJsxElement(jsxSource)) continue;
+                if (!isNodeDescendantOf(node, jsxSource)) continue;
+                if (!isUpdateUnderConditional(node, jsxSource)) {
+                    error(operand, Diagnostics.This_update_runs_unconditionally_and_is_possibly_infinite);
+                }
+            }
+
+            // redundant operand
+            for (let i = 0; i < node.operands.length; i++) {
+                const src = getJsxSourceOfExpression(node.operands[i]);
+                if (!src) continue;
+                for (let j = 0; j < node.operands.length; j++) {
+                    if (i === j) continue;
+                    const otherSrc = getJsxSourceOfExpression(node.operands[j]);
+                    if (otherSrc && isNodeDescendantOf(src, otherSrc)) {
+                        error(node.operands[i], Diagnostics._0_is_already_covered_by_1_in_this_update,
+                            getTextOfNode(node.operands[i]), getTextOfNode(node.operands[j]));
+                        break;
+                    }
+                }
+            }
+
+            // missing dependent 
+            const mutatedVars = collectMutatedIdentifiers(node.block);
+            if (mutatedVars.size > 0) {
+                const skipAttributesFor = new Set<Node>();
+                const ignoredElement = getJsxContainingElementOfCallback(node);
+                if (ignoredElement) {
+                    // we want to skip self coherence checks when inside a callback
+                    skipAttributesFor.add(ignoredElement);
+                }
+                const coveredSources: (JsxElement | JsxSelfClosingElement | JsxFragment)[] = [];
+                for (const operand of node.operands) {
+                    const src = getJsxSourceOfExpression(operand);
+                    if (src) coveredSources.push(src);
+                }
+                const covers = (candidate: Node) =>
+                    coveredSources.some(src => candidate === src || isNodeDescendantOf(candidate, src));
+                const reported = new Set<Node>();
+                for (const operand of node.operands) {
+                    const jsxSource = getJsxSourceOfExpression(operand);
+                    if (!jsxSource) continue;
+                    const parent = findAncestor(jsxSource.parent, p => {
+                        if (getJsxOpeningLikeElementName(p)) return true;
+                        return p.parent?.kind === SyntaxKind.JsxComponentDirective;
+                    });
+                    if (!parent || !(isJsxElement(parent) || isJsxFragment(parent))) continue;
+                    let parentSuggested = false;
+                    if (isJsxElement(parent) && parent.openingElement.name && !reported.has(parent) && !covers(parent)) {
+                        const ownDeps = collectOwnJsxExpressionIdentifiers(parent, skipAttributesFor);
+                        if ([...ownDeps].some(d => mutatedVars.has(d))) {
+                            reported.add(parent);
+                            error(node, Diagnostics._0_depends_on_these_changes_and_covers_1_use_update_0_instead,
+                                getTextOfNode(parent.openingElement.name!), getTextOfNode(operand));
+                            parentSuggested = true;
+                        }
+                    }
+                    if (!parentSuggested) {
+                        for (const sibling of collectNamedJsxChildren(parent as JsxElement | JsxFragment)) {
+                            if (reported.has(sibling) || covers(sibling)) continue;
+                            const deps = collectJsxExpressionIdentifiers(sibling, skipAttributesFor);
+                            if ([...deps].some(d => mutatedVars.has(d))) {
+                                reported.add(sibling);
+                                error(node, Diagnostics._0_depends_on_these_changes_but_is_not_included_in_this_update,
+                                    getTextOfNode(getJsxOpeningLikeElementName(sibling)!));
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 
-    /** Walk up the parent chain to find the nearest enclosing JsxComponentDirective, if any. */
+    function getJsxOpeningLikeElementName(node: Node) {
+        if (isJsxElement(node)) {
+            return node.openingElement.name;
+        }
+        if (isJsxSelfClosingElement(node)) {
+            return node.name;
+        }
+    }
+
+    function getJsxContainingElementOfCallback(node: Node) {
+        const fn = findAncestor(node, p => {
+           return p.kind === SyntaxKind.ArrowFunction || p.kind === SyntaxKind.FunctionExpression;
+        });
+        if (!fn?.parent) return;
+        if (fn.parent.kind === SyntaxKind.JsxExpression && fn.parent.parent.kind === SyntaxKind.JsxAttribute && (fn.parent.parent as JsxAttribute).initializer === fn.parent) {
+            const attr = fn.parent.parent as JsxAttribute;
+            return attr.parent.parent;
+        }
+    }
+
+    function collectMutatedIdentifiers(node: Node): Set<Symbol> {
+        const syms = new Set<Symbol>();
+        visit(node);
+        return syms;
+        function visit(n: Node): void {
+            if (isBinaryExpression(n) && isAssignmentOperator(n.operatorToken.kind)) {
+                collectMutatedLhs(n.left, syms);
+            }
+            else if ((n.kind === SyntaxKind.PrefixUnaryExpression || n.kind === SyntaxKind.PostfixUnaryExpression) &&
+                ((n as PrefixUnaryExpression | PostfixUnaryExpression).operator === SyntaxKind.PlusPlusToken ||
+                 (n as PrefixUnaryExpression | PostfixUnaryExpression).operator === SyntaxKind.MinusMinusToken)) {
+                collectMutatedLhs((n as PrefixUnaryExpression | PostfixUnaryExpression).operand, syms);
+            }
+            forEachChild(n, visit);
+        }
+    }
+
+    function collectMutatedLhs(node: Node, out: Set<Symbol>): void {
+        if (isIdentifier(node)) {
+            const sym = getResolvedSymbol(node);
+            if (sym !== unknownSymbol) out.add(sym);
+            return;
+        }
+        if (node.kind === SyntaxKind.PropertyAccessExpression) {
+            collectMutatedLhs((node as PropertyAccessExpression).expression, out);
+            return;
+        }
+        forEachChild(node, n => collectMutatedLhs(n, out));
+    }
+
+    function collectNamedJsxChildren(parent: JsxElement | JsxFragment): (JsxElement | JsxSelfClosingElement)[] {
+        const result: (JsxElement | JsxSelfClosingElement)[] = [];
+        for (const child of parent.children) {
+            if (!isJsxElement(child) && !isJsxSelfClosingElement(child)) continue;
+            if (getJsxOpeningLikeElementName(child)) {
+                result.push(child);
+            }
+            else if (isJsxElement(child)) {
+                result.push(...collectNamedJsxChildren(child));
+            }
+        }
+        return result;
+    }
+
+    function collectOwnJsxExpressionIdentifiers(element: JsxElement | JsxSelfClosingElement, skipAttributesFor?: Set<Node>): Set<Symbol> {
+        const syms = new Set<Symbol>();
+        const visitedComponents = new Set<Symbol>();
+        let openingLikeElement: JsxOpeningLikeElement
+        if (element.kind === SyntaxKind.JsxElement) {
+            for (const child of element.children) {
+                if (getJsxOpeningLikeElementName(child)) {
+                    continue;
+                }
+                visit(child);
+            }
+            openingLikeElement = element.openingElement;
+        } else {
+            openingLikeElement = element;
+        }
+        if (openingLikeElement.classList) {
+            visit(openingLikeElement.classList);
+        }
+        if (openingLikeElement.attributes && !skipAttributesFor?.has(openingLikeElement)) {
+            visit(openingLikeElement.attributes);
+        }
+        return syms;
+        function visit(node: Node): void {
+            if (node.kind === SyntaxKind.JsxExpression) {
+                const expr = (node as JsxExpression).expression;
+                if (expr) collectJsxStateDeps(expr, syms);
+            }
+            else if (getJsxOpeningLikeElementName(node)) {
+                return;
+            }
+            else if (node.kind === SyntaxKind.JsxIfDirective) {
+                const el = node as JsxIfDirective;
+                collectJsxStateDeps(el.condition, syms);
+                el.children.forEach(visit);
+            }
+            else if (skipAttributesFor?.has(node)) {
+                const element = node as JsxOpeningLikeElement;
+                if (element.classList) {
+                    forEachChild(element.classList, visit);
+                }
+            }
+            else {
+                if (!tryInlineComponentDeps(node, syms, visitedComponents)) {
+                    forEachChild(node, visit);
+                }
+            }
+        }
+    }
+
+    function isUpdateUnderConditional(node: Node, ancestor: Node): boolean {
+        let current: Node = node;
+        while (current !== ancestor && current.parent) {
+            const parent = current.parent;
+            if (parent.kind === SyntaxKind.IfStatement &&
+                ((parent as IfStatement).thenStatement === current || (parent as IfStatement).elseStatement === current)) return true;
+            if (parent.kind === SyntaxKind.ConditionalExpression &&
+                ((parent as ConditionalExpression).whenTrue === current || (parent as ConditionalExpression).whenFalse === current)) return true;
+            if (parent.kind === SyntaxKind.CaseClause || parent.kind === SyntaxKind.DefaultClause) return true;
+            if (parent.kind === SyntaxKind.WhileStatement || parent.kind === SyntaxKind.ForStatement ||
+                parent.kind === SyntaxKind.ForInStatement || parent.kind === SyntaxKind.ForOfStatement ||
+                parent.kind === SyntaxKind.DoStatement) return true;
+            if (parent.kind === SyntaxKind.FunctionExpression || parent.kind === SyntaxKind.ArrowFunction) {
+                const gp = parent.parent;
+                const isIIFE = gp?.kind === SyntaxKind.CallExpression && (gp as CallExpression).expression === parent;
+                if (!isIIFE) return true;
+            }
+            if (parent.kind === SyntaxKind.FunctionDeclaration || parent.kind === SyntaxKind.MethodDeclaration ||
+                parent.kind === SyntaxKind.GetAccessor || parent.kind === SyntaxKind.SetAccessor) return true;
+            current = parent;
+        }
+        return false;
+    }
+
     function findEnclosingJsxComponentDirective(node: Node): JsxComponentDirective | undefined {
         let current = node.parent;
         while (current) {
@@ -50624,30 +50933,29 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return undefined;
     }
 
-    /**
-     * Return true if `block` plausibly affects any of `deps`.
-     * When `component` is provided (inside a #component), also traces into component-local
-     * function calls to detect captured-variable mutations.
-     */
-    function blockPlausiblyAffectsDeps(block: Block, deps: Set<string>, component: JsxComponentDirective | undefined): boolean {
-        if (nodeReferencesAnyName(block, deps)) return true;
+    function blockPlausiblyAffectsDeps(block: Block, deps: Set<Symbol>, component: JsxComponentDirective | undefined): boolean {
+        if (nodeReferencesAnySymbol(block, deps)) return true;
         if (!component) return false;
-        // Deeper analysis: trace calls to functions declared within the component.
         return !!forEachChild(block, function visitForCalls(n): boolean | undefined {
             return transitivelyReferencesDeps(n, deps, component, new Set());
         });
     }
 
-    /**
-     * Return true if `node` references any dep in `deps`, or calls a component-local function
-     * whose body (transitively) references one.
-     */
-    function transitivelyReferencesDeps(node: Node, deps: Set<string>, component: JsxComponentDirective, visited: Set<Symbol>): boolean {
+    function transitivelyReferencesDeps(node: Node, deps: Set<Symbol>, component: JsxComponentDirective, visited: Set<Symbol>): boolean {
         return !!forEachChild(node, function visit(n): boolean | undefined {
-            if (isIdentifier(n) && deps.has(idText(n))) return true;
+            if (isIdentifier(n)) {
+                if (!isDeclarationName(n)) {
+                    const sym = getResolvedSymbol(n);
+                    if (sym !== unknownSymbol && deps.has(sym)) return true;
+                }
+                return;
+            }
+            if (n.kind === SyntaxKind.PropertyAccessExpression) {
+                return visit((n as PropertyAccessExpression).expression);
+            }
             if (isCallExpression(n) && isIdentifier(n.expression)) {
                 const sym = getResolvedSymbol(n.expression);
-                if (sym && sym !== unknownSymbol && !visited.has(sym)) {
+                if (sym !== unknownSymbol && !visited.has(sym)) {
                     const body = getComponentLocalFunctionBody(sym, component);
                     if (body !== undefined) {
                         visited.add(sym);
@@ -50659,15 +50967,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         });
     }
 
-    /**
-     * If `sym` is declared as a function-like inside the given `component`, return its body node.
-     * Returns undefined if the symbol is not component-local or has no analysable body.
-     */
     function getComponentLocalFunctionBody(sym: Symbol, component: JsxComponentDirective): Node | undefined {
         const decl = sym.valueDeclaration;
-        if (!decl) return undefined;
-        // Only consider declarations that live inside this component.
-        if (!isNodeDescendantOf(decl, component)) return undefined;
+        if (!decl) return;
+        if (!isNodeDescendantOf(decl, component)) return;
         if ((isFunctionDeclaration(decl) || isFunctionExpression(decl) || isArrowFunction(decl)) && decl.body) {
             return decl.body;
         }
@@ -50677,42 +50980,102 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return init.body;
             }
         }
-        return undefined;
+        return;
     }
 
-    /** Collect text of identifiers that appear inside JsxExpression nodes within the given JSX source. */
-    function collectJsxExpressionIdentifiers(root: Node): Set<string> {
-        const names = new Set<string>();
+    function containsJsxDynamicUpdateExpression(node: Node): boolean | undefined {
+        function visit(node: Node): boolean | undefined {
+            if (node.kind === SyntaxKind.UpdateExpressionExpression) return true;
+            if (node.kind === SyntaxKind.JsxComponentDirective) return;
+            return forEachChild(node, visit);
+        }
+        return forEachChild(node, visit);
+    }
+
+    function collectJsxExpressionIdentifiers(root: Node, skipAttributesFor?: Set<Node>): Set<Symbol> {
+        const syms = new Set<Symbol>();
+        collectJsxExpressionIdentifiersInto(root, syms, new Set(), skipAttributesFor);
+        return syms;
+    }
+
+    function collectJsxExpressionIdentifiersInto(root: Node, syms: Set<Symbol>, visitedComponents: Set<Symbol>, skipAttributesFor?: Set<Node>): void {
         visit(root);
-        return names;
         function visit(node: Node): void {
             if (node.kind === SyntaxKind.JsxExpression) {
                 const expr = (node as JsxExpression).expression;
-                if (expr) collectIdentifiersInSubtree(expr, names);
+                if (expr) collectJsxStateDeps(expr, syms);
             }
             else if (node.kind === SyntaxKind.JsxRunDirective) {
-                // #run blocks are imperative reactive code — all identifiers they reference are deps
                 for (const stmt of (node as JsxRunDirective).statements) {
-                    collectIdentifiersInSubtree(stmt, names);
+                    collectJsxStateDeps(stmt, syms);
+                }
+            }
+            else if (node.kind === SyntaxKind.JsxIfDirective) {
+                const el = node as JsxIfDirective;
+                collectJsxStateDeps(el.condition, syms);
+                el.children.forEach(visit);
+            }
+            else if (skipAttributesFor?.has(node)) {
+                const element = node as JsxOpeningLikeElement;
+                if (element.classList) {
+                    forEachChild(element.classList, visit);
                 }
             }
             else {
-                forEachChild(node, visit);
+                if (!tryInlineComponentDeps(node, syms, visitedComponents)) {
+                    forEachChild(node, visit);
+                }
             }
         }
     }
 
-    function collectIdentifiersInSubtree(node: Node, out: Set<string>): void {
-        if (isIdentifier(node)) {
-            out.add(idText(node));
+    function tryInlineComponentDeps(node: Node, syms: Set<Symbol>, visitedComponents: Set<Symbol>): boolean {
+        if (!isJsxSelfClosingElement(node) && !isJsxElement(node)) return false;
+        const tagName = isJsxSelfClosingElement(node)
+            ? (node as JsxSelfClosingElement).tagName
+            : (node as JsxElement).openingElement.tagName;
+        if (!isIdentifier(tagName) || isDeclarationName(tagName)) return false;        
+        if (isJsxIntrinsicTagName(tagName)) return false;
+        const sym = getResolvedSymbol(tagName);
+        if (sym === unknownSymbol || sym.valueDeclaration?.kind !== SyntaxKind.JsxComponentDirective) return false;
+        if (visitedComponents.has(sym)) return true;
+        visitedComponents.add(sym);
+        const compDecl = sym.valueDeclaration as unknown as JsxComponentDirective;
+        for (const child of compDecl.children) {
+            collectJsxExpressionIdentifiersInto(child, syms, visitedComponents);
         }
-        forEachChild(node, n => collectIdentifiersInSubtree(n, out));
+        return true;
     }
 
-    /** Return true if any identifier in `node`'s subtree has text in `names`. */
-    function nodeReferencesAnyName(node: Node, names: Set<string>): boolean {
+    function collectJsxStateDeps(node: Node, out: Set<Symbol>): void {
+        if (isIdentifier(node)) {
+            if (!isDeclarationName(node)) {
+                const sym = getResolvedSymbol(node);
+                if (sym !== unknownSymbol) out.add(sym);
+            }
+            return;
+        }
+        if (node.kind === SyntaxKind.PropertyAccessExpression) {
+            collectJsxStateDeps((node as PropertyAccessExpression).expression, out);
+            return;
+        }
+        if (node.kind === SyntaxKind.FunctionExpression || node.kind === SyntaxKind.ArrowFunction ||
+            node.kind === SyntaxKind.FunctionDeclaration || node.kind === SyntaxKind.MethodDeclaration) return;
+        forEachChild(node, n => collectJsxStateDeps(n, out));
+    }
+
+    function nodeReferencesAnySymbol(node: Node, names: Set<Symbol>): boolean {
         return !!forEachChild(node, function visit(n): boolean | undefined {
-            if (isIdentifier(n) && names.has(idText(n))) return true;
+            if (isIdentifier(n)) {
+                if (!isDeclarationName(n)) {
+                    const sym = getResolvedSymbol(n);
+                    if (sym !== unknownSymbol && names.has(sym)) return true;
+                }
+                return;
+            }
+            if (n.kind === SyntaxKind.PropertyAccessExpression) {
+                return visit((n as PropertyAccessExpression).expression);
+            }
             return forEachChild(n, visit);
         });
     }
@@ -54724,6 +55087,11 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     function checkGrammarJsxElement(node: JsxOpeningLikeElement) {
         checkGrammarJsxName(node.tagName);
         checkGrammarTypeArguments(node, node.typeArguments);
+
+        if (node.classList && !isJsxIntrinsicTagName(node.tagName)) {
+            grammarErrorOnNode(node.classList, Diagnostics.Class_attributes_are_not_allowed_on_components);
+        }
+
         const seen = new Map<__String, boolean>();
 
         for (const attr of node.attributes.properties) {
@@ -54731,16 +55099,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 continue;
             }
 
-            if (attr.kind === SyntaxKind.JsxClassAttribute) {
-                if (!isJsxIntrinsicTagName(node.tagName)) {
-                    grammarErrorOnNode(attr, Diagnostics.Class_attributes_are_not_allowed_on_components);
-                    continue;
-                }
-            }
-            
             const name = attr.name;
             const initializer = isJsxShorthandAttribute(attr) ? name : attr.initializer;
-            const escapedText = `${attr.kind === SyntaxKind.JsxClassAttribute ? '.' : ''}${getEscapedTextOfJsxAttributeName(name)}` as __String;
+            const escapedText = getEscapedTextOfJsxAttributeName(name) as __String;
             if (!seen.get(escapedText)) {
                 seen.set(escapedText, true);
             }

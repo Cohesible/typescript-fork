@@ -146,6 +146,7 @@ import {
     JsxSpreadAttribute,
     JsxShorthandAttribute,
     JsxClassAttribute,
+    JsxClassList,
     JsxText,
     LabeledStatement,
     LiteralTypeNode,
@@ -981,6 +982,10 @@ export function isJsxShorthandAttribute(node: Node): node is JsxShorthandAttribu
 
 export function isJsxClassAttribute(node: Node): node is JsxClassAttribute {
     return node.kind === SyntaxKind.JsxClassAttribute;
+}
+
+export function isJsxClassList(node: Node): node is JsxClassList {
+    return node.kind === SyntaxKind.JsxClassList;
 }
 
 export function isJsxExpression(node: Node): node is JsxExpression {

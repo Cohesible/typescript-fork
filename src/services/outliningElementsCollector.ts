@@ -301,6 +301,8 @@ function getOutliningSpanForNode(n: Node, sourceFile: SourceFile): OutliningSpan
             return spanForJsxElseDirective(n as JsxElseDirective);
         case SyntaxKind.JsxRunDirective:
             return spanForJsxRunDirective(n as JsxRunDirective);
+        case SyntaxKind.JsxStyleDirective:
+            return spanForJsxStyleDirective(n);
         case SyntaxKind.JsxComponentDirective:
             return spanForJsxComponentDirective(n as JsxComponentDirective);
         case SyntaxKind.JsxSelfClosingElement:
@@ -360,6 +362,7 @@ function getOutliningSpanForNode(n: Node, sourceFile: SourceFile): OutliningSpan
     function spanForJSXElement(node: JsxElement): OutliningSpan | undefined {
         const textSpan = createTextSpanFromBounds(node.openingElement.getStart(sourceFile), node.closingElement.getEnd());
         const tagName = node.openingElement.tagName.getText(sourceFile);
+        // TODO: perhaps include class names: .a, .b.c, .d?
         const bannerText = "<" + tagName + ">...</" + tagName + ">";
         return createOutliningSpan(textSpan, OutliningSpanKind.Code, textSpan, /*autoCollapse*/ false, bannerText);
     }
@@ -383,6 +386,11 @@ function getOutliningSpanForNode(n: Node, sourceFile: SourceFile): OutliningSpan
     function spanForJsxRunDirective(node: JsxRunDirective): OutliningSpan | undefined {
         const textSpan = createTextSpanFromBounds(node.getStart(sourceFile), node.getEnd());
         return createOutliningSpan(textSpan, OutliningSpanKind.Code, textSpan, /*autoCollapse*/ false, "<#run>...</>");
+    }
+
+    function spanForJsxStyleDirective(node: Node): OutliningSpan | undefined {
+        const textSpan = createTextSpanFromBounds(node.getStart(sourceFile), node.getEnd());
+        return createOutliningSpan(textSpan, OutliningSpanKind.Code, textSpan, /*autoCollapse*/ false, "<#style>...</>");
     }
 
     function spanForJsxComponentDirective(node: JsxComponentDirective): OutliningSpan | undefined {

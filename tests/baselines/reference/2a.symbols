@@ -568,55 +568,10 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 }
 
 {
-    // satisfies postfix on function declarations
-    type Bar = (a: number) => number
->Bar : Symbol(Bar, Decl(main.syn, 238, 1))
->a : Symbol(a, Decl(main.syn, 240, 16))
-
-    function bar(a) {
->bar : Symbol(bar, Decl(main.syn, 240, 36))
->a : Symbol(a, Decl(main.syn, 241, 17))
-
-        return a // should be a number
->a : Symbol(a, Decl(main.syn, 241, 17))
-
-    } satisfies Bar
->Bar : Symbol(Bar, Decl(main.syn, 238, 1))
-
-    type Bar2 = (a: number, ...rest: number[]) => number
->Bar2 : Symbol(Bar2, Decl(main.syn, 243, 19))
->a : Symbol(a, Decl(main.syn, 245, 17))
->rest : Symbol(rest, Decl(main.syn, 245, 27))
-
-    function bar2(a, ...arr) {
->bar2 : Symbol(bar2, Decl(main.syn, 245, 56))
->a : Symbol(a, Decl(main.syn, 246, 18))
->arr : Symbol(arr, Decl(main.syn, 246, 20))
-
-        return arr[1] + a // should be a number
->arr : Symbol(arr, Decl(main.syn, 246, 20))
->a : Symbol(a, Decl(main.syn, 246, 18))
-
-    } satisfies Bar2
->Bar2 : Symbol(Bar2, Decl(main.syn, 243, 19))
-
-    function bar3({ a }) {
->bar3 : Symbol(bar3, Decl(main.syn, 248, 20))
->a : Symbol(a, Decl(main.syn, 250, 19))
-
-        return a // should be a number
->a : Symbol(a, Decl(main.syn, 250, 19))
-
-    } satisfies (arg: { a: number }) => number
->arg : Symbol(arg, Decl(main.syn, 252, 17))
->a : Symbol(a, Decl(main.syn, 252, 23))
-}
-
-{
     // JSX should parse
     // TODO: auto include `jsx` lib if project includes JSX 
     const y = <div></div>
->y : Symbol(y, Decl(main.syn, 258, 9))
+>y : Symbol(y, Decl(main.syn, 241, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 }
@@ -624,22 +579,22 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 {
     // This expression is not callable. Not all constituents of type '(() => T) | (T & Function)' are callable. Type 'T & Function' has no call signatures.(2349)
     type Initializer<T> = T | (() => T)
->Initializer : Symbol(Initializer, Decl(main.syn, 261, 1))
->T : Symbol(T, Decl(main.syn, 263, 21))
->T : Symbol(T, Decl(main.syn, 263, 21))
->T : Symbol(T, Decl(main.syn, 263, 21))
+>Initializer : Symbol(Initializer, Decl(main.syn, 244, 1))
+>T : Symbol(T, Decl(main.syn, 246, 21))
+>T : Symbol(T, Decl(main.syn, 246, 21))
+>T : Symbol(T, Decl(main.syn, 246, 21))
 
     function correct<T>(arg: Initializer<T>) {
->correct : Symbol(correct, Decl(main.syn, 263, 39))
->T : Symbol(T, Decl(main.syn, 264, 21))
->arg : Symbol(arg, Decl(main.syn, 264, 24))
->Initializer : Symbol(Initializer, Decl(main.syn, 261, 1))
->T : Symbol(T, Decl(main.syn, 264, 21))
+>correct : Symbol(correct, Decl(main.syn, 246, 39))
+>T : Symbol(T, Decl(main.syn, 247, 21))
+>arg : Symbol(arg, Decl(main.syn, 247, 24))
+>Initializer : Symbol(Initializer, Decl(main.syn, 244, 1))
+>T : Symbol(T, Decl(main.syn, 247, 21))
 
         return typeof arg === 'function' ? arg() : arg // FIXME: should not error
->arg : Symbol(arg, Decl(main.syn, 264, 24))
->arg : Symbol(arg, Decl(main.syn, 264, 24))
->arg : Symbol(arg, Decl(main.syn, 264, 24))
+>arg : Symbol(arg, Decl(main.syn, 247, 24))
+>arg : Symbol(arg, Decl(main.syn, 247, 24))
+>arg : Symbol(arg, Decl(main.syn, 247, 24))
     }
 }
 
@@ -648,77 +603,77 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
     // likewise, using an object as a string should be flagged if the
     // object does not have an explicit `toString` method
     const o = {} as object
->o : Symbol(o, Decl(main.syn, 273, 9))
+>o : Symbol(o, Decl(main.syn, 256, 9))
 
     o.toString // checker error, `toString` isn't known to the checker
 >o.toString : Symbol(Object.toString, Decl(lib.es5.d.ts, --, --))
->o : Symbol(o, Decl(main.syn, 273, 9))
+>o : Symbol(o, Decl(main.syn, 256, 9))
 >toString : Symbol(Object.toString, Decl(lib.es5.d.ts, --, --))
 
     ;`${o}` // error
->o : Symbol(o, Decl(main.syn, 273, 9))
+>o : Symbol(o, Decl(main.syn, 256, 9))
 
     const o2 = {} as { toString(): string }
->o2 : Symbol(o2, Decl(main.syn, 278, 9))
->toString : Symbol(toString, Decl(main.syn, 278, 22))
+>o2 : Symbol(o2, Decl(main.syn, 261, 9))
+>toString : Symbol(toString, Decl(main.syn, 261, 22))
 
     ;`${o2}` // OK
->o2 : Symbol(o2, Decl(main.syn, 278, 9))
+>o2 : Symbol(o2, Decl(main.syn, 261, 9))
 }
 
 {
     const o: { n: number } | undefined = { n: 1 }
->o : Symbol(o, Decl(main.syn, 283, 9))
->n : Symbol(n, Decl(main.syn, 283, 14))
->n : Symbol(n, Decl(main.syn, 283, 42))
+>o : Symbol(o, Decl(main.syn, 266, 9))
+>n : Symbol(n, Decl(main.syn, 266, 14))
+>n : Symbol(n, Decl(main.syn, 266, 42))
 
     // should all be OK, we will support optional chaining for assignments
     o?.n = 1 
->o?.n : Symbol(n, Decl(main.syn, 283, 14))
->o : Symbol(o, Decl(main.syn, 283, 9))
->n : Symbol(n, Decl(main.syn, 283, 14))
+>o?.n : Symbol(n, Decl(main.syn, 266, 14))
+>o : Symbol(o, Decl(main.syn, 266, 9))
+>n : Symbol(n, Decl(main.syn, 266, 14))
 
     o?.n++
->o?.n : Symbol(n, Decl(main.syn, 283, 14))
->o : Symbol(o, Decl(main.syn, 283, 9))
->n : Symbol(n, Decl(main.syn, 283, 14))
+>o?.n : Symbol(n, Decl(main.syn, 266, 14))
+>o : Symbol(o, Decl(main.syn, 266, 9))
+>n : Symbol(n, Decl(main.syn, 266, 14))
 
     const exp1 = o?.n === 10        // boolean | undefined
->exp1 : Symbol(exp1, Decl(main.syn, 287, 9))
->o?.n : Symbol(n, Decl(main.syn, 283, 14))
->o : Symbol(o, Decl(main.syn, 283, 9))
->n : Symbol(n, Decl(main.syn, 283, 14))
+>exp1 : Symbol(exp1, Decl(main.syn, 270, 9))
+>o?.n : Symbol(n, Decl(main.syn, 266, 14))
+>o : Symbol(o, Decl(main.syn, 266, 9))
+>n : Symbol(n, Decl(main.syn, 266, 14))
 
     const o2: { n: number } | undefined = { n: 1 }
->o2 : Symbol(o2, Decl(main.syn, 289, 9))
->n : Symbol(n, Decl(main.syn, 289, 15))
->n : Symbol(n, Decl(main.syn, 289, 43))
+>o2 : Symbol(o2, Decl(main.syn, 272, 9))
+>n : Symbol(n, Decl(main.syn, 272, 15))
+>n : Symbol(n, Decl(main.syn, 272, 43))
 
     const exp2 = o?.n === o2?.n     // boolean | undefined
->exp2 : Symbol(exp2, Decl(main.syn, 290, 9))
->o?.n : Symbol(n, Decl(main.syn, 283, 14))
->o : Symbol(o, Decl(main.syn, 283, 9))
->n : Symbol(n, Decl(main.syn, 283, 14))
->o2?.n : Symbol(n, Decl(main.syn, 289, 15))
->o2 : Symbol(o2, Decl(main.syn, 289, 9))
->n : Symbol(n, Decl(main.syn, 289, 15))
+>exp2 : Symbol(exp2, Decl(main.syn, 273, 9))
+>o?.n : Symbol(n, Decl(main.syn, 266, 14))
+>o : Symbol(o, Decl(main.syn, 266, 9))
+>n : Symbol(n, Decl(main.syn, 266, 14))
+>o2?.n : Symbol(n, Decl(main.syn, 272, 15))
+>o2 : Symbol(o2, Decl(main.syn, 272, 9))
+>n : Symbol(n, Decl(main.syn, 272, 15))
 
     // --> short circuit whole thing if o or o2 is nullish
 
     // should not error
     const exp3 = o2?.n > 10         // boolean | undefined
->exp3 : Symbol(exp3, Decl(main.syn, 294, 9))
->o2?.n : Symbol(n, Decl(main.syn, 289, 15))
->o2 : Symbol(o2, Decl(main.syn, 289, 9))
->n : Symbol(n, Decl(main.syn, 289, 15))
+>exp3 : Symbol(exp3, Decl(main.syn, 277, 9))
+>o2?.n : Symbol(n, Decl(main.syn, 272, 15))
+>o2 : Symbol(o2, Decl(main.syn, 272, 9))
+>n : Symbol(n, Decl(main.syn, 272, 15))
 
     if (o2?.n !== 0) {
->o2?.n : Symbol(n, Decl(main.syn, 289, 15))
->o2 : Symbol(o2, Decl(main.syn, 289, 9))
->n : Symbol(n, Decl(main.syn, 289, 15))
+>o2?.n : Symbol(n, Decl(main.syn, 272, 15))
+>o2 : Symbol(o2, Decl(main.syn, 272, 9))
+>n : Symbol(n, Decl(main.syn, 272, 15))
 
         o2 // should narrow to be non-nullish
->o2 : Symbol(o2, Decl(main.syn, 289, 9))
+>o2 : Symbol(o2, Decl(main.syn, 272, 9))
     }
 
     // const o3: { n: number | undefined } | undefined = { n: 1 }
@@ -733,134 +688,134 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 
 {
     const f = (): 1 | 2 => 1
->f : Symbol(f, Decl(main.syn, 311, 9))
+>f : Symbol(f, Decl(main.syn, 294, 9))
 
     switch (const v = f()) {
->v : Symbol(v, Decl(main.syn, 312, 17))
->f : Symbol(f, Decl(main.syn, 311, 9))
+>v : Symbol(v, Decl(main.syn, 295, 17))
+>f : Symbol(f, Decl(main.syn, 294, 9))
 
         case 1: console.log('got 1', v)
 >console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
 >console : Symbol(console, Decl(lib.dom.d.ts, --, --))
 >log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
->v : Symbol(v, Decl(main.syn, 312, 17))
+>v : Symbol(v, Decl(main.syn, 295, 17))
 
         case 2: console.log('got 2', v)
 >console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
 >console : Symbol(console, Decl(lib.dom.d.ts, --, --))
 >log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
->v : Symbol(v, Decl(main.syn, 312, 17))
+>v : Symbol(v, Decl(main.syn, 295, 17))
     }
 
     const x: string | number = 1
->x : Symbol(x, Decl(main.syn, 317, 9))
+>x : Symbol(x, Decl(main.syn, 300, 9))
 
     switch (x) {
->x : Symbol(x, Decl(main.syn, 317, 9))
+>x : Symbol(x, Decl(main.syn, 300, 9))
 
         case is string:
             console.log('got string', x)
 >console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
 >console : Symbol(console, Decl(lib.dom.d.ts, --, --))
 >log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
->x : Symbol(x, Decl(main.syn, 317, 9))
+>x : Symbol(x, Decl(main.syn, 300, 9))
 
         case is number:
             console.log('got number', x)
 >console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
 >console : Symbol(console, Decl(lib.dom.d.ts, --, --))
 >log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
->x : Symbol(x, Decl(main.syn, 317, 9))
+>x : Symbol(x, Decl(main.syn, 300, 9))
     }
 
     const x2: unknown = {}
->x2 : Symbol(x2, Decl(main.syn, 325, 9))
+>x2 : Symbol(x2, Decl(main.syn, 308, 9))
 
     switch (x2) {
->x2 : Symbol(x2, Decl(main.syn, 325, 9))
+>x2 : Symbol(x2, Decl(main.syn, 308, 9))
 
         case is { y: number }:
->y : Symbol(y, Decl(main.syn, 327, 17))
+>y : Symbol(y, Decl(main.syn, 310, 17))
 
             console.log('y', x2.y)
 >console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
 >console : Symbol(console, Decl(lib.dom.d.ts, --, --))
 >log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
->x2.y : Symbol(y, Decl(main.syn, 327, 17))
->x2 : Symbol(x2, Decl(main.syn, 325, 9))
->y : Symbol(y, Decl(main.syn, 327, 17))
+>x2.y : Symbol(y, Decl(main.syn, 310, 17))
+>x2 : Symbol(x2, Decl(main.syn, 308, 9))
+>y : Symbol(y, Decl(main.syn, 310, 17))
 
         case is 1:
         case is 2:
             fallthrough
         case is 3:
             x2 // 1 | 2 | 3
->x2 : Symbol(x2, Decl(main.syn, 325, 9))
+>x2 : Symbol(x2, Decl(main.syn, 308, 9))
     }
 
     const x3: string | 10 = 10
->x3 : Symbol(x3, Decl(main.syn, 336, 9))
+>x3 : Symbol(x3, Decl(main.syn, 319, 9))
 
     switch (x3) {
->x3 : Symbol(x3, Decl(main.syn, 336, 9))
+>x3 : Symbol(x3, Decl(main.syn, 319, 9))
 
         case 10: console.log(x3)
 >console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
 >console : Symbol(console, Decl(lib.dom.d.ts, --, --))
 >log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
->x3 : Symbol(x3, Decl(main.syn, 336, 9))
+>x3 : Symbol(x3, Decl(main.syn, 319, 9))
 
         case is string: console.log(x3)
 >console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
 >console : Symbol(console, Decl(lib.dom.d.ts, --, --))
 >log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
->x3 : Symbol(x3, Decl(main.syn, 336, 9))
+>x3 : Symbol(x3, Decl(main.syn, 319, 9))
     }
 }
 
 {
     type F = { x: number } | { y: string }
->F : Symbol(F, Decl(main.syn, 343, 1))
->x : Symbol(x, Decl(main.syn, 344, 14))
->y : Symbol(y, Decl(main.syn, 344, 30))
+>F : Symbol(F, Decl(main.syn, 326, 1))
+>x : Symbol(x, Decl(main.syn, 327, 14))
+>y : Symbol(y, Decl(main.syn, 327, 30))
 
         function x(f: F) {
->x : Symbol(x, Decl(main.syn, 344, 42))
->f : Symbol(f, Decl(main.syn, 345, 19))
->F : Symbol(F, Decl(main.syn, 343, 1))
+>x : Symbol(x, Decl(main.syn, 327, 42))
+>f : Symbol(f, Decl(main.syn, 328, 19))
+>F : Symbol(F, Decl(main.syn, 326, 1))
 
         if (f is { x: number }) {
->f : Symbol(f, Decl(main.syn, 345, 19))
->x : Symbol(x, Decl(main.syn, 346, 18))
+>f : Symbol(f, Decl(main.syn, 328, 19))
+>x : Symbol(x, Decl(main.syn, 329, 18))
 
             return f.x
->f.x : Symbol(x, Decl(main.syn, 344, 14))
->f : Symbol(f, Decl(main.syn, 345, 19))
->x : Symbol(x, Decl(main.syn, 344, 14))
+>f.x : Symbol(x, Decl(main.syn, 327, 14))
+>f : Symbol(f, Decl(main.syn, 328, 19))
+>x : Symbol(x, Decl(main.syn, 327, 14))
         }
         return f.y
->f.y : Symbol(y, Decl(main.syn, 344, 30))
->f : Symbol(f, Decl(main.syn, 345, 19))
->y : Symbol(y, Decl(main.syn, 344, 30))
+>f.y : Symbol(y, Decl(main.syn, 327, 30))
+>f : Symbol(f, Decl(main.syn, 328, 19))
+>y : Symbol(y, Decl(main.syn, 327, 30))
     }
 }
 
 {
     try {} catch (e) {}
->e : Symbol(e, Decl(main.syn, 354, 18))
+>e : Symbol(e, Decl(main.syn, 337, 18))
 
     try {} catch (e: Error) {}
->e : Symbol(e, Decl(main.syn, 355, 18))
+>e : Symbol(e, Decl(main.syn, 338, 18))
 >Error : Symbol(Error, Decl(lib.es5.d.ts, --, --), Decl(lib.es5.d.ts, --, --))
 }
 
 {
     const x = <A>(x: A) => x
->x : Symbol(x, Decl(main.syn, 359, 9))
->A : Symbol(A, Decl(main.syn, 359, 15))
->x : Symbol(x, Decl(main.syn, 359, 18))
->A : Symbol(A, Decl(main.syn, 359, 15))
->x : Symbol(x, Decl(main.syn, 359, 18))
+>x : Symbol(x, Decl(main.syn, 342, 9))
+>A : Symbol(A, Decl(main.syn, 342, 15))
+>x : Symbol(x, Decl(main.syn, 342, 18))
+>A : Symbol(A, Decl(main.syn, 342, 15))
+>x : Symbol(x, Decl(main.syn, 342, 18))
 }
 
 {
@@ -897,16 +852,16 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
     // Allow narrowing of unions discriminated by numeric literals using > < etc #61770
     // FIXME: rt should be `number`
     function example1(...args: [number] | []) {
->example1 : Symbol(example1, Decl(main.syn, 392, 1))
->args : Symbol(args, Decl(main.syn, 395, 22))
+>example1 : Symbol(example1, Decl(main.syn, 375, 1))
+>args : Symbol(args, Decl(main.syn, 378, 22))
 
         if (args.length > 0) {
 >args.length : Symbol(length)
->args : Symbol(args, Decl(main.syn, 395, 22))
+>args : Symbol(args, Decl(main.syn, 378, 22))
 >length : Symbol(length)
 
             return args[0];
->args : Symbol(args, Decl(main.syn, 395, 22))
+>args : Symbol(args, Decl(main.syn, 378, 22))
         }
     }
 }
@@ -963,193 +918,194 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 
 {
     const elements: Element[] = []
->elements : Symbol(elements, Decl(main.syn, 453, 9))
+>elements : Symbol(elements, Decl(main.syn, 436, 9))
 >Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
 
     function Foo(props: { children: Element[] }) {
->Foo : Symbol(Foo, Decl(main.syn, 453, 34))
->props : Symbol(props, Decl(main.syn, 454, 17))
->children : Symbol(children, Decl(main.syn, 454, 25))
+>Foo : Symbol(Foo, Decl(main.syn, 436, 34))
+>props : Symbol(props, Decl(main.syn, 437, 17))
+>children : Symbol(children, Decl(main.syn, 437, 25))
 >Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
 
         return <div>{...props.children}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->props.children : Symbol(children, Decl(main.syn, 454, 25))
->props : Symbol(props, Decl(main.syn, 454, 17))
->children : Symbol(children, Decl(main.syn, 454, 25))
+>props.children : Symbol(children, Decl(main.syn, 437, 25))
+>props : Symbol(props, Decl(main.syn, 437, 17))
+>children : Symbol(children, Decl(main.syn, 437, 25))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
     }
     const f = <Foo>{...elements}</Foo>
->f : Symbol(f, Decl(main.syn, 457, 9))
->Foo : Symbol(Foo, Decl(main.syn, 453, 34))
->elements : Symbol(elements, Decl(main.syn, 453, 9))
->Foo : Symbol(Foo, Decl(main.syn, 453, 34))
+>f : Symbol(f, Decl(main.syn, 440, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 436, 34))
+>elements : Symbol(elements, Decl(main.syn, 436, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 436, 34))
 
     const y = <Foo>{elements}</Foo> // error
->y : Symbol(y, Decl(main.syn, 458, 9))
->Foo : Symbol(Foo, Decl(main.syn, 453, 34))
->elements : Symbol(elements, Decl(main.syn, 453, 9))
->Foo : Symbol(Foo, Decl(main.syn, 453, 34))
+>y : Symbol(y, Decl(main.syn, 441, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 436, 34))
+>elements : Symbol(elements, Decl(main.syn, 436, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 436, 34))
 
     const x0 = <Foo></Foo> // no error
->x0 : Symbol(x0, Decl(main.syn, 459, 9))
->Foo : Symbol(Foo, Decl(main.syn, 453, 34))
->Foo : Symbol(Foo, Decl(main.syn, 453, 34))
+>x0 : Symbol(x0, Decl(main.syn, 442, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 436, 34))
+>Foo : Symbol(Foo, Decl(main.syn, 436, 34))
 
     const x1 = <Foo><div/></Foo> // no error
->x1 : Symbol(x1, Decl(main.syn, 460, 9))
->Foo : Symbol(Foo, Decl(main.syn, 453, 34))
+>x1 : Symbol(x1, Decl(main.syn, 443, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 436, 34))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->Foo : Symbol(Foo, Decl(main.syn, 453, 34))
+>Foo : Symbol(Foo, Decl(main.syn, 436, 34))
 
     const x2 = <Foo><div/><div/></Foo> // no error
->x2 : Symbol(x2, Decl(main.syn, 461, 9))
->Foo : Symbol(Foo, Decl(main.syn, 453, 34))
+>x2 : Symbol(x2, Decl(main.syn, 444, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 436, 34))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->Foo : Symbol(Foo, Decl(main.syn, 453, 34))
+>Foo : Symbol(Foo, Decl(main.syn, 436, 34))
 
     const x3 = <Foo>a</Foo> // error
->x3 : Symbol(x3, Decl(main.syn, 462, 9))
->Foo : Symbol(Foo, Decl(main.syn, 453, 34))
->Foo : Symbol(Foo, Decl(main.syn, 453, 34))
+>x3 : Symbol(x3, Decl(main.syn, 445, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 436, 34))
+>Foo : Symbol(Foo, Decl(main.syn, 436, 34))
 
     const x4 = <Foo/> // error (this is explictly no elements)
->x4 : Symbol(x4, Decl(main.syn, 463, 9))
->Foo : Symbol(Foo, Decl(main.syn, 453, 34))
+>x4 : Symbol(x4, Decl(main.syn, 446, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 436, 34))
 
     function Foo2(props: { children: [string, number] }) {
->Foo2 : Symbol(Foo2, Decl(main.syn, 463, 21))
->props : Symbol(props, Decl(main.syn, 465, 18))
->children : Symbol(children, Decl(main.syn, 465, 26))
+>Foo2 : Symbol(Foo2, Decl(main.syn, 446, 21))
+>props : Symbol(props, Decl(main.syn, 448, 18))
+>children : Symbol(children, Decl(main.syn, 448, 26))
 
         return <div></div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
     }
     const f2 = <Foo2>{'hi'}{...([1,2] as number[])}</Foo2> // error
->f2 : Symbol(f2, Decl(main.syn, 468, 9))
->Foo2 : Symbol(Foo2, Decl(main.syn, 463, 21))
->Foo2 : Symbol(Foo2, Decl(main.syn, 463, 21))
+>f2 : Symbol(f2, Decl(main.syn, 451, 9))
+>Foo2 : Symbol(Foo2, Decl(main.syn, 446, 21))
+>Foo2 : Symbol(Foo2, Decl(main.syn, 446, 21))
 
     const f3 = <Foo2>{'hi'}{...([1] as [number])}</Foo2> // no error
->f3 : Symbol(f3, Decl(main.syn, 469, 9))
->Foo2 : Symbol(Foo2, Decl(main.syn, 463, 21))
->Foo2 : Symbol(Foo2, Decl(main.syn, 463, 21))
+>f3 : Symbol(f3, Decl(main.syn, 452, 9))
+>Foo2 : Symbol(Foo2, Decl(main.syn, 446, 21))
+>Foo2 : Symbol(Foo2, Decl(main.syn, 446, 21))
 
     function FooOpt(props: { children?: Element[] }) {
->FooOpt : Symbol(FooOpt, Decl(main.syn, 469, 56))
->props : Symbol(props, Decl(main.syn, 471, 20))
->children : Symbol(children, Decl(main.syn, 471, 28))
+>FooOpt : Symbol(FooOpt, Decl(main.syn, 452, 56))
+>props : Symbol(props, Decl(main.syn, 454, 20))
+>children : Symbol(children, Decl(main.syn, 454, 28))
 >Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
 
         return <div>{...(props.children ?? [])}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->props.children : Symbol(children, Decl(main.syn, 471, 28))
->props : Symbol(props, Decl(main.syn, 471, 20))
->children : Symbol(children, Decl(main.syn, 471, 28))
+>props.children : Symbol(children, Decl(main.syn, 454, 28))
+>props : Symbol(props, Decl(main.syn, 454, 20))
+>children : Symbol(children, Decl(main.syn, 454, 28))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
     }
     {
         const f = <FooOpt>{...elements}</FooOpt> // no error
->f : Symbol(f, Decl(main.syn, 475, 13))
->FooOpt : Symbol(FooOpt, Decl(main.syn, 469, 56))
->elements : Symbol(elements, Decl(main.syn, 453, 9))
->FooOpt : Symbol(FooOpt, Decl(main.syn, 469, 56))
+>f : Symbol(f, Decl(main.syn, 458, 13))
+>FooOpt : Symbol(FooOpt, Decl(main.syn, 452, 56))
+>elements : Symbol(elements, Decl(main.syn, 436, 9))
+>FooOpt : Symbol(FooOpt, Decl(main.syn, 452, 56))
 
         const y = <FooOpt>{elements}</FooOpt> // error
->y : Symbol(y, Decl(main.syn, 476, 13))
->FooOpt : Symbol(FooOpt, Decl(main.syn, 469, 56))
->elements : Symbol(elements, Decl(main.syn, 453, 9))
->FooOpt : Symbol(FooOpt, Decl(main.syn, 469, 56))
+>y : Symbol(y, Decl(main.syn, 459, 13))
+>FooOpt : Symbol(FooOpt, Decl(main.syn, 452, 56))
+>elements : Symbol(elements, Decl(main.syn, 436, 9))
+>FooOpt : Symbol(FooOpt, Decl(main.syn, 452, 56))
 
         const x0 = <FooOpt></FooOpt> // no error
->x0 : Symbol(x0, Decl(main.syn, 477, 13))
->FooOpt : Symbol(FooOpt, Decl(main.syn, 469, 56))
->FooOpt : Symbol(FooOpt, Decl(main.syn, 469, 56))
+>x0 : Symbol(x0, Decl(main.syn, 460, 13))
+>FooOpt : Symbol(FooOpt, Decl(main.syn, 452, 56))
+>FooOpt : Symbol(FooOpt, Decl(main.syn, 452, 56))
 
         const x1 = <FooOpt><div/></FooOpt> // no error
->x1 : Symbol(x1, Decl(main.syn, 478, 13))
->FooOpt : Symbol(FooOpt, Decl(main.syn, 469, 56))
+>x1 : Symbol(x1, Decl(main.syn, 461, 13))
+>FooOpt : Symbol(FooOpt, Decl(main.syn, 452, 56))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->FooOpt : Symbol(FooOpt, Decl(main.syn, 469, 56))
+>FooOpt : Symbol(FooOpt, Decl(main.syn, 452, 56))
 
         const x2 = <FooOpt><div/><div/></FooOpt> // no error
->x2 : Symbol(x2, Decl(main.syn, 479, 13))
->FooOpt : Symbol(FooOpt, Decl(main.syn, 469, 56))
+>x2 : Symbol(x2, Decl(main.syn, 462, 13))
+>FooOpt : Symbol(FooOpt, Decl(main.syn, 452, 56))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->FooOpt : Symbol(FooOpt, Decl(main.syn, 469, 56))
+>FooOpt : Symbol(FooOpt, Decl(main.syn, 452, 56))
 
         const x3 = <FooOpt>a</FooOpt> // error
->x3 : Symbol(x3, Decl(main.syn, 480, 13))
->FooOpt : Symbol(FooOpt, Decl(main.syn, 469, 56))
->FooOpt : Symbol(FooOpt, Decl(main.syn, 469, 56))
+>x3 : Symbol(x3, Decl(main.syn, 463, 13))
+>FooOpt : Symbol(FooOpt, Decl(main.syn, 452, 56))
+>FooOpt : Symbol(FooOpt, Decl(main.syn, 452, 56))
 
         const x4 = <FooOpt/> // no error
->x4 : Symbol(x4, Decl(main.syn, 481, 13))
->FooOpt : Symbol(FooOpt, Decl(main.syn, 469, 56))
+>x4 : Symbol(x4, Decl(main.syn, 464, 13))
+>FooOpt : Symbol(FooOpt, Decl(main.syn, 452, 56))
     }
 
     {
         function F1(props: { v: string }) {
->F1 : Symbol(F1, Decl(main.syn, 484, 5))
->props : Symbol(props, Decl(main.syn, 485, 20))
->v : Symbol(v, Decl(main.syn, 485, 28))
+>F1 : Symbol(F1, Decl(main.syn, 467, 5))
+>props : Symbol(props, Decl(main.syn, 468, 20))
+>v : Symbol(v, Decl(main.syn, 468, 28))
 
             return <span>{props.v}</span>
 >span : Symbol(JSX.IntrinsicElements.span, Decl(lib.jsx.d.ts, --, --))
->props.v : Symbol(v, Decl(main.syn, 485, 28))
->props : Symbol(props, Decl(main.syn, 485, 20))
->v : Symbol(v, Decl(main.syn, 485, 28))
+>props.v : Symbol(v, Decl(main.syn, 468, 28))
+>props : Symbol(props, Decl(main.syn, 468, 20))
+>v : Symbol(v, Decl(main.syn, 468, 28))
 >span : Symbol(JSX.IntrinsicElements.span, Decl(lib.jsx.d.ts, --, --))
         }
         function Main() {
->Main : Symbol(Main, Decl(main.syn, 487, 9))
+>Main : Symbol(Main, Decl(main.syn, 470, 9))
 
             const v = 'aaa'
->v : Symbol(v, Decl(main.syn, 489, 17))
+>v : Symbol(v, Decl(main.syn, 472, 17))
 
             return <F1 v={v}></F1> // no error
->F1 : Symbol(F1, Decl(main.syn, 484, 5))
->v : Symbol(v, Decl(main.syn, 490, 22))
->v : Symbol(v, Decl(main.syn, 489, 17))
->F1 : Symbol(F1, Decl(main.syn, 484, 5))
+>F1 : Symbol(F1, Decl(main.syn, 467, 5))
+>v : Symbol(v, Decl(main.syn, 473, 22))
+>v : Symbol(v, Decl(main.syn, 472, 17))
+>F1 : Symbol(F1, Decl(main.syn, 467, 5))
         }
     }
 
     {
         const x = <>aaa{1}</>
->x : Symbol(x, Decl(main.syn, 495, 13))
+>x : Symbol(x, Decl(main.syn, 478, 13))
     }
 }
 
 // update expression
 declare const el: Element;
->el : Symbol(el, Decl(main.syn, 500, 13))
+>el : Symbol(el, Decl(main.syn, 483, 13))
 >Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
 
 const d = <div onClick={() => {
->d : Symbol(d, Decl(main.syn, 501, 5))
+>d : Symbol(d, Decl(main.syn, 484, 5))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->onClick : Symbol(onClick, Decl(main.syn, 501, 14))
+>onClick : Symbol(onClick, Decl(main.syn, 484, 14))
 
     update el
->el : Symbol(el, Decl(main.syn, 500, 13))
+>el : Symbol(el, Decl(main.syn, 483, 13))
 
 }}></div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
 // shorthand_jsx_attribute
 const value = ''
->value : Symbol(value, Decl(main.syn, 506, 5))
+>value : Symbol(value, Decl(main.syn, 489, 5))
 
 const d2 = <input {value}/>
->d2 : Symbol(d2, Decl(main.syn, 507, 5))
+>d2 : Symbol(d2, Decl(main.syn, 490, 5))
 >input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
+>value : Symbol(value, Decl(main.syn, 489, 5))
 
 const d3 = <div>
->d3 : Symbol(d3, Decl(main.syn, 508, 5))
+>d3 : Symbol(d3, Decl(main.syn, 491, 5))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
   <#if (true)>
@@ -1162,33 +1118,33 @@ const d3 = <div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
 const cond = true
->cond : Symbol(cond, Decl(main.syn, 514, 5))
+>cond : Symbol(cond, Decl(main.syn, 497, 5))
 
 const d4 = <div><#if (cond)></></div>
->d4 : Symbol(d4, Decl(main.syn, 515, 5))
+>d4 : Symbol(d4, Decl(main.syn, 498, 5))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->cond : Symbol(cond, Decl(main.syn, 514, 5))
+>cond : Symbol(cond, Decl(main.syn, 497, 5))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
 {
     // cfa should work inside <#if>
     let v = undefined as { x: () => number } | undefined
->v : Symbol(v, Decl(main.syn, 519, 7))
+>v : Symbol(v, Decl(main.syn, 502, 7))
 >undefined : Symbol(undefined)
->x : Symbol(x, Decl(main.syn, 519, 26))
+>x : Symbol(x, Decl(main.syn, 502, 26))
 
     const d = <div>
->d : Symbol(d, Decl(main.syn, 520, 9))
+>d : Symbol(d, Decl(main.syn, 503, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         <#if (v)>
->v : Symbol(v, Decl(main.syn, 519, 7))
+>v : Symbol(v, Decl(main.syn, 502, 7))
 
           <div>{v.x()}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->v.x : Symbol(x, Decl(main.syn, 519, 26))
->v : Symbol(v, Decl(main.syn, 519, 7))
->x : Symbol(x, Decl(main.syn, 519, 26))
+>v.x : Symbol(x, Decl(main.syn, 502, 26))
+>v : Symbol(v, Decl(main.syn, 502, 7))
+>x : Symbol(x, Decl(main.syn, 502, 26))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         </>
@@ -1204,107 +1160,107 @@ const d4 = <div><#if (cond)></></div>
 >querySelector : Symbol(ParentNode.querySelector, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
 
     if (const x = document.querySelector('.a')) {
->x : Symbol(x, Decl(main.syn, 531, 13))
+>x : Symbol(x, Decl(main.syn, 514, 13))
 >document.querySelector : Symbol(ParentNode.querySelector, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
 >document : Symbol(document, Decl(lib.dom.d.ts, --, --))
 >querySelector : Symbol(ParentNode.querySelector, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
 
         // ok
         update x
->x : Symbol(x, Decl(main.syn, 531, 13))
+>x : Symbol(x, Decl(main.syn, 514, 13))
     }
 
     {
         let y = 0
->y : Symbol(y, Decl(main.syn, 537, 11))
+>y : Symbol(y, Decl(main.syn, 520, 11))
 
         const x = <div>{y}</div>
->x : Symbol(x, Decl(main.syn, 538, 13))
+>x : Symbol(x, Decl(main.syn, 521, 13))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->y : Symbol(y, Decl(main.syn, 537, 11))
+>y : Symbol(y, Decl(main.syn, 520, 11))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         update x // ok
->x : Symbol(x, Decl(main.syn, 538, 13))
+>x : Symbol(x, Decl(main.syn, 521, 13))
     }
 
     {
         const x = <div>hi</div>
->x : Symbol(x, Decl(main.syn, 543, 13))
+>x : Symbol(x, Decl(main.syn, 526, 13))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         update x // error, `x` has no updatable expressions
->x : Symbol(x, Decl(main.syn, 543, 13))
+>x : Symbol(x, Decl(main.syn, 526, 13))
     }
 
     { 
         let y = 0
->y : Symbol(y, Decl(main.syn, 548, 11))
+>y : Symbol(y, Decl(main.syn, 531, 11))
 
         const x = <div><div>{y}</div></div>
->x : Symbol(x, Decl(main.syn, 549, 13))
+>x : Symbol(x, Decl(main.syn, 532, 13))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->y : Symbol(y, Decl(main.syn, 548, 11))
+>y : Symbol(y, Decl(main.syn, 531, 11))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         update x // ok
->x : Symbol(x, Decl(main.syn, 549, 13))
+>x : Symbol(x, Decl(main.syn, 532, 13))
     }
 
     { 
         let y = '0'
->y : Symbol(y, Decl(main.syn, 554, 11))
+>y : Symbol(y, Decl(main.syn, 537, 11))
 
         const x = <div><div id={y}></div></div>
->x : Symbol(x, Decl(main.syn, 555, 13))
+>x : Symbol(x, Decl(main.syn, 538, 13))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->id : Symbol(id, Decl(main.syn, 555, 27))
->y : Symbol(y, Decl(main.syn, 554, 11))
+>id : Symbol(id, Decl(main.syn, 538, 27))
+>y : Symbol(y, Decl(main.syn, 537, 11))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         update x // ok
->x : Symbol(x, Decl(main.syn, 555, 13))
+>x : Symbol(x, Decl(main.syn, 538, 13))
     }
 
     { 
         let y = '0'
->y : Symbol(y, Decl(main.syn, 560, 11))
+>y : Symbol(y, Decl(main.syn, 543, 11))
 
         const x = <div id={y}></div>
->x : Symbol(x, Decl(main.syn, 561, 13))
+>x : Symbol(x, Decl(main.syn, 544, 13))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->id : Symbol(id, Decl(main.syn, 561, 22))
->y : Symbol(y, Decl(main.syn, 560, 11))
+>id : Symbol(id, Decl(main.syn, 544, 22))
+>y : Symbol(y, Decl(main.syn, 543, 11))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         update x // ok
->x : Symbol(x, Decl(main.syn, 561, 13))
+>x : Symbol(x, Decl(main.syn, 544, 13))
     }
 
     {
         // components can always be updated
         function Comp() { return <div></div> }
->Comp : Symbol(Comp, Decl(main.syn, 565, 5))
+>Comp : Symbol(Comp, Decl(main.syn, 548, 5))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         const el = <Comp/>
->el : Symbol(el, Decl(main.syn, 568, 13))
->Comp : Symbol(Comp, Decl(main.syn, 565, 5))
+>el : Symbol(el, Decl(main.syn, 551, 13))
+>Comp : Symbol(Comp, Decl(main.syn, 548, 5))
 
         update el // ok
->el : Symbol(el, Decl(main.syn, 568, 13))
+>el : Symbol(el, Decl(main.syn, 551, 13))
     }
 
     {
         // expressions and blocks always make the element updatable
         const el = <div>
->el : Symbol(el, Decl(main.syn, 574, 13))
+>el : Symbol(el, Decl(main.syn, 557, 13))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
             {<span>hi</span>}
@@ -1315,11 +1271,11 @@ const d4 = <div><#if (cond)></></div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         update el // ok
->el : Symbol(el, Decl(main.syn, 574, 13))
+>el : Symbol(el, Decl(main.syn, 557, 13))
 
         // do 
         const el2 = <div>
->el2 : Symbol(el2, Decl(main.syn, 580, 13))
+>el2 : Symbol(el2, Decl(main.syn, 563, 13))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
             <#run>
@@ -1333,131 +1289,130 @@ const d4 = <div><#if (cond)></></div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         update el2 // ok
->el2 : Symbol(el2, Decl(main.syn, 580, 13))
+>el2 : Symbol(el2, Decl(main.syn, 563, 13))
     }
 
     {
         // TODO
         let y = 0
->y : Symbol(y, Decl(main.syn, 590, 11))
+>y : Symbol(y, Decl(main.syn, 573, 11))
 
         const x1 = <div>{y}</div>
->x1 : Symbol(x1, Decl(main.syn, 591, 13))
+>x1 : Symbol(x1, Decl(main.syn, 574, 13))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->y : Symbol(y, Decl(main.syn, 590, 11))
+>y : Symbol(y, Decl(main.syn, 573, 11))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         const x2 = <div>{y}</div>
->x2 : Symbol(x2, Decl(main.syn, 592, 13))
+>x2 : Symbol(x2, Decl(main.syn, 575, 13))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->y : Symbol(y, Decl(main.syn, 590, 11))
+>y : Symbol(y, Decl(main.syn, 573, 11))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         update x1
->x1 : Symbol(x1, Decl(main.syn, 591, 13))
+>x1 : Symbol(x1, Decl(main.syn, 574, 13))
 
         update x1 // error: possibly redundant update, did you mean x2?
->x1 : Symbol(x1, Decl(main.syn, 591, 13))
+>x1 : Symbol(x1, Decl(main.syn, 574, 13))
 
         let z = 0
->z : Symbol(z, Decl(main.syn, 596, 11))
+>z : Symbol(z, Decl(main.syn, 579, 11))
 
         z += 1
->z : Symbol(z, Decl(main.syn, 596, 11))
+>z : Symbol(z, Decl(main.syn, 579, 11))
 
         update x1 // error: possibly redundant update, did you mean x2?
->x1 : Symbol(x1, Decl(main.syn, 591, 13))
+>x1 : Symbol(x1, Decl(main.syn, 574, 13))
     }
 }
 
 // update block form
 {
     let y = 0
->y : Symbol(y, Decl(main.syn, 604, 7))
+>y : Symbol(y, Decl(main.syn, 587, 7))
 
     const x = <div>{y}</div>
->x : Symbol(x, Decl(main.syn, 605, 9))
+>x : Symbol(x, Decl(main.syn, 588, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->y : Symbol(y, Decl(main.syn, 604, 7))
+>y : Symbol(y, Decl(main.syn, 587, 7))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     update x {
->x : Symbol(x, Decl(main.syn, 605, 9))
+>x : Symbol(x, Decl(main.syn, 588, 9))
 
         y = 1
->y : Symbol(y, Decl(main.syn, 604, 7))
+>y : Symbol(y, Decl(main.syn, 587, 7))
     }
 
     update x
->x : Symbol(x, Decl(main.syn, 605, 9))
+>x : Symbol(x, Decl(main.syn, 588, 9))
 
     let a = 0
->a : Symbol(a, Decl(main.syn, 613, 7))
+>a : Symbol(a, Decl(main.syn, 596, 7))
 
     let b = ''
->b : Symbol(b, Decl(main.syn, 614, 7))
+>b : Symbol(b, Decl(main.syn, 597, 7))
 
     const xa = <div>{a}</div>
->xa : Symbol(xa, Decl(main.syn, 615, 9))
+>xa : Symbol(xa, Decl(main.syn, 598, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->a : Symbol(a, Decl(main.syn, 613, 7))
+>a : Symbol(a, Decl(main.syn, 596, 7))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     const xb = <span>{b}</span>
->xb : Symbol(xb, Decl(main.syn, 616, 9))
+>xb : Symbol(xb, Decl(main.syn, 599, 9))
 >span : Symbol(JSX.IntrinsicElements.span, Decl(lib.jsx.d.ts, --, --))
->b : Symbol(b, Decl(main.syn, 614, 7))
+>b : Symbol(b, Decl(main.syn, 597, 7))
 >span : Symbol(JSX.IntrinsicElements.span, Decl(lib.jsx.d.ts, --, --))
 
     update xa, xb {
->xa : Symbol(xa, Decl(main.syn, 615, 9))
->xb : Symbol(xb, Decl(main.syn, 616, 9))
+>xa : Symbol(xa, Decl(main.syn, 598, 9))
+>xb : Symbol(xb, Decl(main.syn, 599, 9))
 
         a = 1
->a : Symbol(a, Decl(main.syn, 613, 7))
+>a : Symbol(a, Decl(main.syn, 596, 7))
 
         b = 'hi'
->b : Symbol(b, Decl(main.syn, 614, 7))
+>b : Symbol(b, Decl(main.syn, 597, 7))
     }
 
     update xa, xb {
->xa : Symbol(xa, Decl(main.syn, 615, 9))
->xb : Symbol(xb, Decl(main.syn, 616, 9))
+>xa : Symbol(xa, Decl(main.syn, 598, 9))
+>xb : Symbol(xb, Decl(main.syn, 599, 9))
 
         b = 'only b'
->b : Symbol(b, Decl(main.syn, 614, 7))
+>b : Symbol(b, Decl(main.syn, 597, 7))
     }
 
     declare const unknown: Element
->unknown : Symbol(unknown, Decl(main.syn, 627, 17))
+>unknown : Symbol(unknown, Decl(main.syn, 610, 17))
 >Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
 
     update unknown {
->unknown : Symbol(unknown, Decl(main.syn, 627, 17))
+>unknown : Symbol(unknown, Decl(main.syn, 610, 17))
 
         y = 2
->y : Symbol(y, Decl(main.syn, 604, 7))
+>y : Symbol(y, Decl(main.syn, 587, 7))
     }
 }
 
 {
-    // transitive analysis inside #component: calling a local function counts
     <#component Reactive(v: number) {
->v : Symbol(v, Decl(main.syn, 635, 25))
+>v : Symbol(v, Decl(main.syn, 617, 25))
 
         let count = v
->count : Symbol(count, Decl(main.syn, 636, 11))
->v : Symbol(v, Decl(main.syn, 635, 25))
+>count : Symbol(count, Decl(main.syn, 618, 11))
+>v : Symbol(v, Decl(main.syn, 617, 25))
 
         function increment() {
->increment : Symbol(increment, Decl(main.syn, 636, 21))
+>increment : Symbol(increment, Decl(main.syn, 618, 21))
 
-            count++  // mutates `count`, which x depends on
->count : Symbol(count, Decl(main.syn, 636, 11))
+            count++  // x depends on
+>count : Symbol(count, Decl(main.syn, 618, 11))
         }
 
         function unrelated() {
->unrelated : Symbol(unrelated, Decl(main.syn, 640, 9))
+>unrelated : Symbol(unrelated, Decl(main.syn, 622, 9))
 
             console.log('hi')
 >console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
@@ -1466,25 +1421,23 @@ const d4 = <div><#if (cond)></></div>
         }
 
         const x = <div>{count}</div>
->x : Symbol(x, Decl(main.syn, 646, 13))
+>x : Symbol(x, Decl(main.syn, 628, 13))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->count : Symbol(count, Decl(main.syn, 636, 11))
+>count : Symbol(count, Decl(main.syn, 618, 11))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
-        // ok — increment() mutates count (x's dep) even though block doesn't reference count directly
         update x {
->x : Symbol(x, Decl(main.syn, 646, 13))
+>x : Symbol(x, Decl(main.syn, 628, 13))
 
             increment()
->increment : Symbol(increment, Decl(main.syn, 636, 21))
+>increment : Symbol(increment, Decl(main.syn, 618, 21))
         }
 
-        // error — unrelated() doesn't touch count
         update x {
->x : Symbol(x, Decl(main.syn, 646, 13))
+>x : Symbol(x, Decl(main.syn, 628, 13))
 
             unrelated()
->unrelated : Symbol(unrelated, Decl(main.syn, 640, 9))
+>unrelated : Symbol(unrelated, Decl(main.syn, 622, 9))
         }
     }>
         <div></div>
@@ -1495,73 +1448,293 @@ const d4 = <div><#if (cond)></></div>
 }
 
 {
-    // update depending on #run directive: rate is referenced inside <#run>, so counter depends on it
+    // catch reentrant (recursive) updates
+    // these only make sense if they're under branching control flow
+    let c = 0
+>c : Symbol(c, Decl(main.syn, 645, 7))
+
+    ;<div @ root>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>root : Symbol(root, Decl(main.syn, 646, 5))
+
+        {c}
+>c : Symbol(c, Decl(main.syn, 645, 7))
+
+        <#run>
+            update root {
+>root : Symbol(root, Decl(main.syn, 646, 5))
+
+                c += 1
+>c : Symbol(c, Decl(main.syn, 645, 7))
+            }
+            if (c < 10) {
+>c : Symbol(c, Decl(main.syn, 645, 7))
+
+                // ok
+                update root {
+>root : Symbol(root, Decl(main.syn, 646, 5))
+
+                    c += 1
+>c : Symbol(c, Decl(main.syn, 645, 7))
+                }
+            }
+        </>
+        <div @ d>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>d : Symbol(d, Decl(main.syn, 659, 8))
+
+            <#run>
+                update root {
+>root : Symbol(root, Decl(main.syn, 646, 5))
+
+                    c += 1
+>c : Symbol(c, Decl(main.syn, 645, 7))
+                }
+            </>
+        </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    ;<div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <#run>
+            // error (use-before-init)
+            update d { c += 1 }
+>d : Symbol(d, Decl(main.syn, 673, 8))
+>c : Symbol(c, Decl(main.syn, 645, 7))
+
+        </>
+        <div @ d>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>d : Symbol(d, Decl(main.syn, 673, 8))
+
+            {c}
+>c : Symbol(c, Decl(main.syn, 645, 7))
+
+        </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+}
+
+{
+    let c = 0
+>c : Symbol(c, Decl(main.syn, 680, 7))
+
+    ;<div @ root>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>root : Symbol(root, Decl(main.syn, 681, 5))
+
+        <div @ d1>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>d1 : Symbol(d1, Decl(main.syn, 682, 8))
+
+            {c}
+>c : Symbol(c, Decl(main.syn, 680, 7))
+
+        </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <div @ d2>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>d2 : Symbol(d2, Decl(main.syn, 685, 8))
+
+            {c}
+>c : Symbol(c, Decl(main.syn, 680, 7))
+
+        </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <button on:click={() => {
+>button : Symbol(JSX.IntrinsicElements.button, Decl(lib.jsx.d.ts, --, --))
+>on:click : Symbol(on:click, Decl(main.syn, 688, 15))
+
+            // ok
+            update root {
+>root : Symbol(root, Decl(main.syn, 681, 5))
+
+                c += 1
+>c : Symbol(c, Decl(main.syn, 680, 7))
+            }
+            // ok
+            update d1, d2 {
+>d1 : Symbol(d1, Decl(main.syn, 682, 8))
+>d2 : Symbol(d2, Decl(main.syn, 685, 8))
+
+                c += 1
+>c : Symbol(c, Decl(main.syn, 680, 7))
+            }
+            // error
+            update d1 {
+>d1 : Symbol(d1, Decl(main.syn, 682, 8))
+
+                c += 1
+>c : Symbol(c, Decl(main.syn, 680, 7))
+            }
+        }}>
+          Increment
+        </button>
+>button : Symbol(JSX.IntrinsicElements.button, Decl(lib.jsx.d.ts, --, --))
+
+    </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+}
+
+{
+    let c = 0
+>c : Symbol(c, Decl(main.syn, 708, 7))
+
+    ;<div @ root>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>root : Symbol(root, Decl(main.syn, 709, 5))
+
+        <div @ d1>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>d1 : Symbol(d1, Decl(main.syn, 710, 8))
+
+            {c}
+>c : Symbol(c, Decl(main.syn, 708, 7))
+
+        </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        {c}
+>c : Symbol(c, Decl(main.syn, 708, 7))
+
+        <button on:click={() => {
+>button : Symbol(JSX.IntrinsicElements.button, Decl(lib.jsx.d.ts, --, --))
+>on:click : Symbol(on:click, Decl(main.syn, 714, 15))
+
+            update d1, root {
+>d1 : Symbol(d1, Decl(main.syn, 710, 8))
+>root : Symbol(root, Decl(main.syn, 709, 5))
+
+                c += 1
+>c : Symbol(c, Decl(main.syn, 708, 7))
+            }
+            update d1 {
+>d1 : Symbol(d1, Decl(main.syn, 710, 8))
+
+                c += 1
+>c : Symbol(c, Decl(main.syn, 708, 7))
+            }
+        }}>
+          Increment
+        </button>
+>button : Symbol(JSX.IntrinsicElements.button, Decl(lib.jsx.d.ts, --, --))
+
+    </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+}
+
+{
+    let c = 0
+>c : Symbol(c, Decl(main.syn, 728, 7))
+
+    ;<div @ root>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>root : Symbol(root, Decl(main.syn, 729, 5))
+
+        <div @ d>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>d : Symbol(d, Decl(main.syn, 730, 8))
+
+            {c}
+>c : Symbol(c, Decl(main.syn, 728, 7))
+
+        </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <button on:click={() => {
+>button : Symbol(JSX.IntrinsicElements.button, Decl(lib.jsx.d.ts, --, --))
+>on:click : Symbol(on:click, Decl(main.syn, 733, 15))
+
+            // (TODO, maybe) suggestion - a more specific update target exists
+            update root {
+>root : Symbol(root, Decl(main.syn, 729, 5))
+
+                c += 1
+>c : Symbol(c, Decl(main.syn, 728, 7))
+            }
+        }}>
+          Increment
+        </button>
+>button : Symbol(JSX.IntrinsicElements.button, Decl(lib.jsx.d.ts, --, --))
+
+    </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+}
+
+{
     <#component Timer(n: number) {
->n : Symbol(n, Decl(main.syn, 664, 22))
+>n : Symbol(n, Decl(main.syn, 745, 22))
 
         let active = true
->active : Symbol(active, Decl(main.syn, 665, 11))
+>active : Symbol(active, Decl(main.syn, 746, 11))
 
         let rate = n
->rate : Symbol(rate, Decl(main.syn, 666, 11))
->n : Symbol(n, Decl(main.syn, 664, 22))
+>rate : Symbol(rate, Decl(main.syn, 747, 11))
+>n : Symbol(n, Decl(main.syn, 745, 22))
 
         let c = 0
->c : Symbol(c, Decl(main.syn, 667, 11))
+>c : Symbol(c, Decl(main.syn, 748, 11))
 
         const d = <div>{c}</div>
->d : Symbol(d, Decl(main.syn, 668, 13))
+>d : Symbol(d, Decl(main.syn, 749, 13))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->c : Symbol(c, Decl(main.syn, 667, 11))
+>c : Symbol(c, Decl(main.syn, 748, 11))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         const counter = <div @ counter>
->counter : Symbol(counter, Decl(main.syn, 669, 13))
+>counter : Symbol(counter, Decl(main.syn, 750, 13))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->counter : Symbol(counter, Decl(main.syn, 669, 23))
+>counter : Symbol(counter, Decl(main.syn, 750, 23))
 
             <div @ d>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->d : Symbol(d, Decl(main.syn, 670, 12))
+>d : Symbol(d, Decl(main.syn, 751, 12))
 
                 count: {c}
->c : Symbol(c, Decl(main.syn, 667, 11))
+>c : Symbol(c, Decl(main.syn, 748, 11))
 
             </div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
             <#run>
                 if (active) {
->active : Symbol(active, Decl(main.syn, 665, 11))
+>active : Symbol(active, Decl(main.syn, 746, 11))
 
                     const id = setInterval(() => {
->id : Symbol(id, Decl(main.syn, 675, 25))
+>id : Symbol(id, Decl(main.syn, 756, 25))
 >setInterval : Symbol(setInterval, Decl(lib.dom.d.ts, --, --))
 
                         update d {
->d : Symbol(d, Decl(main.syn, 668, 13))
+>d : Symbol(d, Decl(main.syn, 751, 12))
 
                             c += 1
->c : Symbol(c, Decl(main.syn, 667, 11))
+>c : Symbol(c, Decl(main.syn, 748, 11))
                         }
                     }, rate)
->rate : Symbol(rate, Decl(main.syn, 666, 11))
+>rate : Symbol(rate, Decl(main.syn, 747, 11))
 
                     unwind { clearInterval(id) }
 >clearInterval : Symbol(clearInterval, Decl(lib.dom.d.ts, --, --))
->id : Symbol(id, Decl(main.syn, 675, 25))
+>id : Symbol(id, Decl(main.syn, 756, 25))
                 }
             </>
         </div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
-        // ok — rate is in the #run body which is a dep of counter
         update counter {
->counter : Symbol(counter, Decl(main.syn, 669, 13))
+>counter : Symbol(counter, Decl(main.syn, 750, 23))
 
             rate = n
->rate : Symbol(rate, Decl(main.syn, 666, 11))
->n : Symbol(n, Decl(main.syn, 664, 22))
+>rate : Symbol(rate, Decl(main.syn, 747, 11))
+>n : Symbol(n, Decl(main.syn, 745, 22))
         }
     }>
         <div></div>
@@ -1569,6 +1742,117 @@ const d4 = <div><#if (cond)></></div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
+}
+
+{
+    let c = 0
+>c : Symbol(c, Decl(main.syn, 775, 7))
+
+    function noop() {}
+>noop : Symbol(noop, Decl(main.syn, 775, 13))
+
+    <#component Inner() {}>
+        <div>{c}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>c : Symbol(c, Decl(main.syn, 775, 7))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    ;<div @ root>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>root : Symbol(root, Decl(main.syn, 780, 5))
+
+        <Inner />
+>Inner : Symbol(Inner, Decl(main.syn, 776, 22))
+
+    </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    update root {
+>root : Symbol(root, Decl(main.syn, 780, 5))
+
+        c += 1  // ok
+>c : Symbol(c, Decl(main.syn, 775, 7))
+    }
+    // TODO: the no-effect case should suggest to use the expression form (?)
+    update root {
+>root : Symbol(root, Decl(main.syn, 780, 5))
+
+        noop()  // error, no effect
+>noop : Symbol(noop, Decl(main.syn, 775, 13))
+    }
+}
+
+{
+    let c = 0
+>c : Symbol(c, Decl(main.syn, 793, 7))
+
+    <#component InnerB() {}>
+        <div>{c}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>c : Symbol(c, Decl(main.syn, 793, 7))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    ;<div @ root>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>root : Symbol(root, Decl(main.syn, 797, 5))
+
+        <InnerB @ d1 />
+>InnerB : Symbol(InnerB, Decl(main.syn, 793, 13))
+>d1 : Symbol(d1, Decl(main.syn, 798, 8))
+
+        <div @ d2>{c}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>d2 : Symbol(d2, Decl(main.syn, 799, 8))
+>c : Symbol(c, Decl(main.syn, 793, 7))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <#run>
+            setTimeout(() => {
+>setTimeout : Symbol(setTimeout, Decl(lib.dom.d.ts, --, --))
+
+                update d1 {
+>d1 : Symbol(d1, Decl(main.syn, 798, 8))
+
+                    c += 1
+>c : Symbol(c, Decl(main.syn, 793, 7))
+                }
+                update d2 {
+>d2 : Symbol(d2, Decl(main.syn, 799, 8))
+
+                    c += 1
+>c : Symbol(c, Decl(main.syn, 793, 7))
+                }
+            })
+        </>
+    </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+}
+
+{
+    let c = 0
+>c : Symbol(c, Decl(main.syn, 814, 7))
+
+    declare const External: any
+>External : Symbol(External, Decl(main.syn, 815, 17))
+
+    ;<div @ root>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>root : Symbol(root, Decl(main.syn, 816, 5))
+
+        <External />
+>External : Symbol(External, Decl(main.syn, 815, 17))
+
+    </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    update root {
+>root : Symbol(root, Decl(main.syn, 816, 5))
+
+        c += 1 
+>c : Symbol(c, Decl(main.syn, 814, 7))
+    }
 }
 
 // !T (FallibleType) and try expr
@@ -1577,162 +1861,162 @@ const d4 = <div><#if (cond)></></div>
 // the callee frame is not preserved because the caller constructs the error
 {
     class Err1 extends Error { override name = "Err1" as const }
->Err1 : Symbol(Err1, Decl(main.syn, 698, 1))
+>Err1 : Symbol(Err1, Decl(main.syn, 828, 1))
 >Error : Symbol(Error, Decl(lib.es5.d.ts, --, --), Decl(lib.es5.d.ts, --, --))
->name : Symbol(Err1.name, Decl(main.syn, 699, 30))
+>name : Symbol(Err1.name, Decl(main.syn, 829, 30))
 >const : Symbol(const)
 
     class Err2 extends Error { override name = "Err2" as const }
->Err2 : Symbol(Err2, Decl(main.syn, 699, 64))
+>Err2 : Symbol(Err2, Decl(main.syn, 829, 64))
 >Error : Symbol(Error, Decl(lib.es5.d.ts, --, --), Decl(lib.es5.d.ts, --, --))
->name : Symbol(Err2.name, Decl(main.syn, 700, 30))
+>name : Symbol(Err2.name, Decl(main.syn, 830, 30))
 >const : Symbol(const)
 
     function mayFail(): !string {
->mayFail : Symbol(mayFail, Decl(main.syn, 700, 64))
+>mayFail : Symbol(mayFail, Decl(main.syn, 830, 64))
 
         if (Math.random() > 0.5) return new Err1()
 >Math.random : Symbol(Math.random, Decl(lib.es5.d.ts, --, --))
 >Math : Symbol(Math, Decl(lib.es5.d.ts, --, --), Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.core.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 >random : Symbol(Math.random, Decl(lib.es5.d.ts, --, --))
->Err1 : Symbol(Err1, Decl(main.syn, 698, 1))
+>Err1 : Symbol(Err1, Decl(main.syn, 828, 1))
 
         if (Math.random() > 0.3) return new Err2()
 >Math.random : Symbol(Math.random, Decl(lib.es5.d.ts, --, --))
 >Math : Symbol(Math, Decl(lib.es5.d.ts, --, --), Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.core.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 >random : Symbol(Math.random, Decl(lib.es5.d.ts, --, --))
->Err2 : Symbol(Err2, Decl(main.syn, 699, 64))
+>Err2 : Symbol(Err2, Decl(main.syn, 829, 64))
 
         return 'hello'
     }
 
     // callers see the full error union
     const x: string | Err1 | Err2 = mayFail()
->x : Symbol(x, Decl(main.syn, 709, 9))
->Err1 : Symbol(Err1, Decl(main.syn, 698, 1))
->Err2 : Symbol(Err2, Decl(main.syn, 699, 64))
->mayFail : Symbol(mayFail, Decl(main.syn, 700, 64))
+>x : Symbol(x, Decl(main.syn, 839, 9))
+>Err1 : Symbol(Err1, Decl(main.syn, 828, 1))
+>Err2 : Symbol(Err2, Decl(main.syn, 829, 64))
+>mayFail : Symbol(mayFail, Decl(main.syn, 830, 64))
 
     // ReturnType should also capture errors
     const y: ReturnType<typeof mayFail> = '' as typeof x
->y : Symbol(y, Decl(main.syn, 711, 9))
+>y : Symbol(y, Decl(main.syn, 841, 9))
 >ReturnType : Symbol(ReturnType, Decl(lib.es5.d.ts, --, --))
->mayFail : Symbol(mayFail, Decl(main.syn, 700, 64))
->x : Symbol(x, Decl(main.syn, 709, 9))
+>mayFail : Symbol(mayFail, Decl(main.syn, 830, 64))
+>x : Symbol(x, Decl(main.syn, 839, 9))
 
     // try unwraps: throws error, returns string
     const z: string = try mayFail()
->z : Symbol(z, Decl(main.syn, 713, 9))
->mayFail : Symbol(mayFail, Decl(main.syn, 700, 64))
+>z : Symbol(z, Decl(main.syn, 843, 9))
+>mayFail : Symbol(mayFail, Decl(main.syn, 830, 64))
 
     // each of the following cases should report 'Did you forget `try`?' in addition to the normal issue
     function test(_x: string): void {}
->test : Symbol(test, Decl(main.syn, 713, 35))
->_x : Symbol(_x, Decl(main.syn, 716, 18))
+>test : Symbol(test, Decl(main.syn, 843, 35))
+>_x : Symbol(_x, Decl(main.syn, 846, 18))
 
     test(mayFail())
->test : Symbol(test, Decl(main.syn, 713, 35))
->mayFail : Symbol(mayFail, Decl(main.syn, 700, 64))
+>test : Symbol(test, Decl(main.syn, 843, 35))
+>mayFail : Symbol(mayFail, Decl(main.syn, 830, 64))
 
     const z2: string = mayFail()
->z2 : Symbol(z2, Decl(main.syn, 718, 9))
->mayFail : Symbol(mayFail, Decl(main.syn, 700, 64))
+>z2 : Symbol(z2, Decl(main.syn, 848, 9))
+>mayFail : Symbol(mayFail, Decl(main.syn, 830, 64))
 
     // no hint: target already accepts the full union
     const z3: string | Err1 | Err2 = mayFail()
->z3 : Symbol(z3, Decl(main.syn, 721, 9))
->Err1 : Symbol(Err1, Decl(main.syn, 698, 1))
->Err2 : Symbol(Err2, Decl(main.syn, 699, 64))
->mayFail : Symbol(mayFail, Decl(main.syn, 700, 64))
+>z3 : Symbol(z3, Decl(main.syn, 851, 9))
+>Err1 : Symbol(Err1, Decl(main.syn, 828, 1))
+>Err2 : Symbol(Err2, Decl(main.syn, 829, 64))
+>mayFail : Symbol(mayFail, Decl(main.syn, 830, 64))
 
     // hint: string is assignable to string | number after stripping errors
     function test2(_x: string | number): void {}
->test2 : Symbol(test2, Decl(main.syn, 721, 46))
->_x : Symbol(_x, Decl(main.syn, 724, 19))
+>test2 : Symbol(test2, Decl(main.syn, 851, 46))
+>_x : Symbol(_x, Decl(main.syn, 854, 19))
 
     test2(mayFail())
->test2 : Symbol(test2, Decl(main.syn, 721, 46))
->mayFail : Symbol(mayFail, Decl(main.syn, 700, 64))
+>test2 : Symbol(test2, Decl(main.syn, 851, 46))
+>mayFail : Symbol(mayFail, Decl(main.syn, 830, 64))
 
     // no hint: string is not assignable to boolean — unrelated mismatch
     const z4: boolean = mayFail()
->z4 : Symbol(z4, Decl(main.syn, 728, 9))
->mayFail : Symbol(mayFail, Decl(main.syn, 700, 64))
+>z4 : Symbol(z4, Decl(main.syn, 858, 9))
+>mayFail : Symbol(mayFail, Decl(main.syn, 830, 64))
 
     // should have hint
     function f(): string { return mayFail() }
->f : Symbol(f, Decl(main.syn, 728, 33))
->mayFail : Symbol(mayFail, Decl(main.syn, 700, 64))
+>f : Symbol(f, Decl(main.syn, 858, 33))
+>mayFail : Symbol(mayFail, Decl(main.syn, 830, 64))
 
     // never error
     const foo = () => ''
->foo : Symbol(foo, Decl(main.syn, 734, 9))
+>foo : Symbol(foo, Decl(main.syn, 864, 9))
 
     const z5 = try foo()
->z5 : Symbol(z5, Decl(main.syn, 735, 9))
->foo : Symbol(foo, Decl(main.syn, 734, 9))
+>z5 : Symbol(z5, Decl(main.syn, 865, 9))
+>foo : Symbol(foo, Decl(main.syn, 864, 9))
 
     // always error
     const foo2 = () => new Error()
->foo2 : Symbol(foo2, Decl(main.syn, 738, 9))
+>foo2 : Symbol(foo2, Decl(main.syn, 868, 9))
 >Error : Symbol(Error, Decl(lib.es5.d.ts, --, --), Decl(lib.es5.d.ts, --, --))
 
     const z6 = try foo2()  
->z6 : Symbol(z6, Decl(main.syn, 739, 9))
->foo2 : Symbol(foo2, Decl(main.syn, 738, 9))
+>z6 : Symbol(z6, Decl(main.syn, 869, 9))
+>foo2 : Symbol(foo2, Decl(main.syn, 868, 9))
 
     function effect(cond = true): !void {
->effect : Symbol(effect, Decl(main.syn, 739, 25))
->cond : Symbol(cond, Decl(main.syn, 741, 20))
+>effect : Symbol(effect, Decl(main.syn, 869, 25))
+>cond : Symbol(cond, Decl(main.syn, 871, 20))
 
         if (cond) return new Error()
->cond : Symbol(cond, Decl(main.syn, 741, 20))
+>cond : Symbol(cond, Decl(main.syn, 871, 20))
 >Error : Symbol(Error, Decl(lib.es5.d.ts, --, --), Decl(lib.es5.d.ts, --, --))
     }
 
     // hint: unhandled fallible return type: void | Error
     effect()
->effect : Symbol(effect, Decl(main.syn, 739, 25))
+>effect : Symbol(effect, Decl(main.syn, 869, 25))
 
     try effect() // ok
->effect : Symbol(effect, Decl(main.syn, 739, 25))
+>effect : Symbol(effect, Decl(main.syn, 869, 25))
 
     void effect() // ok
->effect : Symbol(effect, Decl(main.syn, 739, 25))
+>effect : Symbol(effect, Decl(main.syn, 869, 25))
 
     const z7 = effect() // ok
->z7 : Symbol(z7, Decl(main.syn, 752, 9))
->effect : Symbol(effect, Decl(main.syn, 739, 25))
+>z7 : Symbol(z7, Decl(main.syn, 882, 9))
+>effect : Symbol(effect, Decl(main.syn, 869, 25))
 
     function wrapsEffect() {
->wrapsEffect : Symbol(wrapsEffect, Decl(main.syn, 752, 23))
+>wrapsEffect : Symbol(wrapsEffect, Decl(main.syn, 882, 23))
 
         return effect() // ok
->effect : Symbol(effect, Decl(main.syn, 739, 25))
+>effect : Symbol(effect, Decl(main.syn, 869, 25))
     }
 
     function effect2(cond = true) {
->effect2 : Symbol(effect2, Decl(main.syn, 756, 5))
->cond : Symbol(cond, Decl(main.syn, 758, 21))
+>effect2 : Symbol(effect2, Decl(main.syn, 886, 5))
+>cond : Symbol(cond, Decl(main.syn, 888, 21))
 
         if (cond) return err('bad')
->cond : Symbol(cond, Decl(main.syn, 758, 21))
+>cond : Symbol(cond, Decl(main.syn, 888, 21))
 >err : Symbol(err, Decl(lib.es5.d.ts, --, --))
     }
 
     // hint: unhandled fallible return type: void | Err<'bad'>
     effect2()
->effect2 : Symbol(effect2, Decl(main.syn, 756, 5))
+>effect2 : Symbol(effect2, Decl(main.syn, 886, 5))
 }
 
 {
     type MyPromise = Promise<number>
->MyPromise : Symbol(MyPromise, Decl(main.syn, 766, 1))
+>MyPromise : Symbol(MyPromise, Decl(main.syn, 896, 1))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 
     function aliased(): MyPromise {
->aliased : Symbol(aliased, Decl(main.syn, 767, 36))
->MyPromise : Symbol(MyPromise, Decl(main.syn, 766, 1))
+>aliased : Symbol(aliased, Decl(main.syn, 897, 36))
+>MyPromise : Symbol(MyPromise, Decl(main.syn, 896, 1))
 
         return Promise.resolve(1)
 >Promise.resolve : Symbol(PromiseConstructor.resolve, Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --))
@@ -1741,123 +2025,123 @@ const d4 = <div><#if (cond)></></div>
     }
 
     async function f1() {
->f1 : Symbol(f1, Decl(main.syn, 770, 5))
+>f1 : Symbol(f1, Decl(main.syn, 900, 5))
 
         const n = aliased() // number
->n : Symbol(n, Decl(main.syn, 773, 13))
->aliased : Symbol(aliased, Decl(main.syn, 767, 36))
+>n : Symbol(n, Decl(main.syn, 903, 13))
+>aliased : Symbol(aliased, Decl(main.syn, 897, 36))
     }
 
     const m1 = new Map<number, MyPromise>()
->m1 : Symbol(m1, Decl(main.syn, 776, 9))
+>m1 : Symbol(m1, Decl(main.syn, 906, 9))
 >Map : Symbol(Map, Decl(lib.es2015.collection.d.ts, --, --), Decl(lib.es2015.collection.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
->MyPromise : Symbol(MyPromise, Decl(main.syn, 766, 1))
+>MyPromise : Symbol(MyPromise, Decl(main.syn, 896, 1))
 
     const m2 = new Map<number, Promise<number>>()
->m2 : Symbol(m2, Decl(main.syn, 777, 9))
+>m2 : Symbol(m2, Decl(main.syn, 907, 9))
 >Map : Symbol(Map, Decl(lib.es2015.collection.d.ts, --, --), Decl(lib.es2015.collection.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 
     async function f2() {
->f2 : Symbol(f2, Decl(main.syn, 777, 49))
+>f2 : Symbol(f2, Decl(main.syn, 907, 49))
 
         const n1 = m1.get(0) // Promise<number> | undefined
->n1 : Symbol(n1, Decl(main.syn, 779, 13))
+>n1 : Symbol(n1, Decl(main.syn, 909, 13))
 >m1.get : Symbol(Map.get, Decl(lib.es2015.collection.d.ts, --, --))
->m1 : Symbol(m1, Decl(main.syn, 776, 9))
+>m1 : Symbol(m1, Decl(main.syn, 906, 9))
 >get : Symbol(Map.get, Decl(lib.es2015.collection.d.ts, --, --))
 
         const n2 = m2.get(0) // Promise<number> | undefined
->n2 : Symbol(n2, Decl(main.syn, 780, 13))
+>n2 : Symbol(n2, Decl(main.syn, 910, 13))
 >m2.get : Symbol(Map.get, Decl(lib.es2015.collection.d.ts, --, --))
->m2 : Symbol(m2, Decl(main.syn, 777, 9))
+>m2 : Symbol(m2, Decl(main.syn, 907, 9))
 >get : Symbol(Map.get, Decl(lib.es2015.collection.d.ts, --, --))
     }
 
     function f3(): Promise<number> | undefined {
->f3 : Symbol(f3, Decl(main.syn, 781, 5))
+>f3 : Symbol(f3, Decl(main.syn, 911, 5))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 
         return m1.get(0)
 >m1.get : Symbol(Map.get, Decl(lib.es2015.collection.d.ts, --, --))
->m1 : Symbol(m1, Decl(main.syn, 776, 9))
+>m1 : Symbol(m1, Decl(main.syn, 906, 9))
 >get : Symbol(Map.get, Decl(lib.es2015.collection.d.ts, --, --))
     }
 
     async function f4() {
->f4 : Symbol(f4, Decl(main.syn, 785, 5))
+>f4 : Symbol(f4, Decl(main.syn, 915, 5))
 
         const n = f3() // Promise<number> | undefined
->n : Symbol(n, Decl(main.syn, 788, 13))
->f3 : Symbol(f3, Decl(main.syn, 781, 5))
+>n : Symbol(n, Decl(main.syn, 918, 13))
+>f3 : Symbol(f3, Decl(main.syn, 911, 5))
     }
 
     class Box<T> {
->Box : Symbol(Box, Decl(main.syn, 789, 5))
->T : Symbol(T, Decl(main.syn, 791, 14))
+>Box : Symbol(Box, Decl(main.syn, 919, 5))
+>T : Symbol(T, Decl(main.syn, 921, 14))
 
         get(): T {
->get : Symbol(Box.get, Decl(main.syn, 791, 18))
->T : Symbol(T, Decl(main.syn, 791, 14))
+>get : Symbol(Box.get, Decl(main.syn, 921, 18))
+>T : Symbol(T, Decl(main.syn, 921, 14))
 
             throw ""
         }
     }
 
     const b: Box<Promise<number>> = new Box()
->b : Symbol(b, Decl(main.syn, 797, 9))
->Box : Symbol(Box, Decl(main.syn, 789, 5))
+>b : Symbol(b, Decl(main.syn, 927, 9))
+>Box : Symbol(Box, Decl(main.syn, 919, 5))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
->Box : Symbol(Box, Decl(main.syn, 789, 5))
+>Box : Symbol(Box, Decl(main.syn, 919, 5))
 
     async function f5() {
->f5 : Symbol(f5, Decl(main.syn, 797, 45))
+>f5 : Symbol(f5, Decl(main.syn, 927, 45))
 
         const n = b.get() // Promise<number>
->n : Symbol(n, Decl(main.syn, 799, 13))
->b.get : Symbol(Box.get, Decl(main.syn, 791, 18))
->b : Symbol(b, Decl(main.syn, 797, 9))
->get : Symbol(Box.get, Decl(main.syn, 791, 18))
+>n : Symbol(n, Decl(main.syn, 929, 13))
+>b.get : Symbol(Box.get, Decl(main.syn, 921, 18))
+>b : Symbol(b, Decl(main.syn, 927, 9))
+>get : Symbol(Box.get, Decl(main.syn, 921, 18))
     }
 
     // special case: promise chains
     // the end result is auto-awaited, not the initial call
     async function f6() {
->f6 : Symbol(f6, Decl(main.syn, 800, 5))
+>f6 : Symbol(f6, Decl(main.syn, 930, 5))
 
         // number | void
         const n = foo().then(x => x + 1).catch(e => {})
->n : Symbol(n, Decl(main.syn, 806, 13))
+>n : Symbol(n, Decl(main.syn, 936, 13))
 >foo().then(x => x + 1).catch : Symbol(Promise.catch, Decl(lib.es5.d.ts, --, --))
 >foo().then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
 >foo : Symbol(foo, Decl(main.syn, 11, 32))
 >then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
->x : Symbol(x, Decl(main.syn, 806, 29))
->x : Symbol(x, Decl(main.syn, 806, 29))
+>x : Symbol(x, Decl(main.syn, 936, 29))
+>x : Symbol(x, Decl(main.syn, 936, 29))
 >catch : Symbol(Promise.catch, Decl(lib.es5.d.ts, --, --))
->e : Symbol(e, Decl(main.syn, 806, 47))
+>e : Symbol(e, Decl(main.syn, 936, 47))
 
         // Promise<number | void>
         const n2 = foo().then(x => x + 1).catch(e => {}) as async
->n2 : Symbol(n2, Decl(main.syn, 808, 13))
+>n2 : Symbol(n2, Decl(main.syn, 938, 13))
 >foo().then(x => x + 1).catch : Symbol(Promise.catch, Decl(lib.es5.d.ts, --, --))
 >foo().then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
 >foo : Symbol(foo, Decl(main.syn, 11, 32))
 >then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
->x : Symbol(x, Decl(main.syn, 808, 30))
->x : Symbol(x, Decl(main.syn, 808, 30))
+>x : Symbol(x, Decl(main.syn, 938, 30))
+>x : Symbol(x, Decl(main.syn, 938, 30))
 >catch : Symbol(Promise.catch, Decl(lib.es5.d.ts, --, --))
->e : Symbol(e, Decl(main.syn, 808, 48))
+>e : Symbol(e, Decl(main.syn, 938, 48))
 >async : Symbol(async)
 
         const n3 = foo().then(x => x + 1).toFixed(1) // string
->n3 : Symbol(n3, Decl(main.syn, 809, 13))
+>n3 : Symbol(n3, Decl(main.syn, 939, 13))
 >foo().then(x => x + 1).toFixed : Symbol(Number.toFixed, Decl(lib.es5.d.ts, --, --))
 >foo().then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
 >foo : Symbol(foo, Decl(main.syn, 11, 32))
 >then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
->x : Symbol(x, Decl(main.syn, 809, 30))
->x : Symbol(x, Decl(main.syn, 809, 30))
+>x : Symbol(x, Decl(main.syn, 939, 30))
+>x : Symbol(x, Decl(main.syn, 939, 30))
 >toFixed : Symbol(Number.toFixed, Decl(lib.es5.d.ts, --, --))
     }
 
@@ -1868,39 +2152,39 @@ const d4 = <div><#if (cond)></></div>
     // however, Promise may have more methods in the future, so such a check
     // could eventually be needed anyway to avoid needless avoid code churn
     class Catchable {
->Catchable : Symbol(Catchable, Decl(main.syn, 810, 5))
+>Catchable : Symbol(Catchable, Decl(main.syn, 940, 5))
 
         // normal ts checks that `then` methods are erroneous in an async ctx
         // then() { return '0' }
         catch() { return 0 }
->catch : Symbol(Catchable.catch, Decl(main.syn, 818, 21))
+>catch : Symbol(Catchable.catch, Decl(main.syn, 948, 21))
 
         finally() { return 0 }
->finally : Symbol(Catchable.finally, Decl(main.syn, 821, 28))
+>finally : Symbol(Catchable.finally, Decl(main.syn, 951, 28))
     }
 
     async function f7() {
->f7 : Symbol(f7, Decl(main.syn, 823, 5))
+>f7 : Symbol(f7, Decl(main.syn, 953, 5))
 
         const f = async () => new Catchable()
->f : Symbol(f, Decl(main.syn, 826, 13))
->Catchable : Symbol(Catchable, Decl(main.syn, 810, 5))
+>f : Symbol(f, Decl(main.syn, 956, 13))
+>Catchable : Symbol(Catchable, Decl(main.syn, 940, 5))
 
         f().catch() // number
 >f().catch : Symbol(Promise.catch, Decl(lib.es5.d.ts, --, --))
->f : Symbol(f, Decl(main.syn, 826, 13))
+>f : Symbol(f, Decl(main.syn, 956, 13))
 >catch : Symbol(Promise.catch, Decl(lib.es5.d.ts, --, --))
 
         f().finally() // number
->f().finally : Symbol(Catchable.finally, Decl(main.syn, 821, 28))
->f : Symbol(f, Decl(main.syn, 826, 13))
->finally : Symbol(Catchable.finally, Decl(main.syn, 821, 28))
+>f().finally : Symbol(Catchable.finally, Decl(main.syn, 951, 28))
+>f : Symbol(f, Decl(main.syn, 956, 13))
+>finally : Symbol(Catchable.finally, Decl(main.syn, 951, 28))
 
         // error, emits as `(await f().catch()).then()` because we must materialize after `.catch`
         f().catch().then() 
 >f().catch().then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
 >f().catch : Symbol(Promise.catch, Decl(lib.es5.d.ts, --, --))
->f : Symbol(f, Decl(main.syn, 826, 13))
+>f : Symbol(f, Decl(main.syn, 956, 13))
 >catch : Symbol(Promise.catch, Decl(lib.es5.d.ts, --, --))
 >then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
     }
@@ -1909,96 +2193,96 @@ const d4 = <div><#if (cond)></></div>
 
 {
     async function foo() {
->foo : Symbol(foo, Decl(main.syn, 836, 1))
+>foo : Symbol(foo, Decl(main.syn, 966, 1))
 
         return 1 as number
     }
 
     function sync() {
->sync : Symbol(sync, Decl(main.syn, 839, 5))
+>sync : Symbol(sync, Decl(main.syn, 969, 5))
 
         const p = foo() as async // OK
->p : Symbol(p, Decl(main.syn, 842, 13))
->foo : Symbol(foo, Decl(main.syn, 836, 1))
+>p : Symbol(p, Decl(main.syn, 972, 13))
+>foo : Symbol(foo, Decl(main.syn, 966, 1))
 >async : Symbol(async)
 
         const p2 = foo() // checker error
->p2 : Symbol(p2, Decl(main.syn, 843, 13))
->foo : Symbol(foo, Decl(main.syn, 836, 1))
+>p2 : Symbol(p2, Decl(main.syn, 973, 13))
+>foo : Symbol(foo, Decl(main.syn, 966, 1))
 
         foo() as async // OK
->foo : Symbol(foo, Decl(main.syn, 836, 1))
+>foo : Symbol(foo, Decl(main.syn, 966, 1))
 >async : Symbol(async)
 
         foo() // checker error
->foo : Symbol(foo, Decl(main.syn, 836, 1))
+>foo : Symbol(foo, Decl(main.syn, 966, 1))
 
         // `await` is still an error inside sync context
         await p
->p : Symbol(p, Decl(main.syn, 842, 13))
+>p : Symbol(p, Decl(main.syn, 972, 13))
     }
 
     async function _async() {
->_async : Symbol(_async, Decl(main.syn, 849, 5))
+>_async : Symbol(_async, Decl(main.syn, 979, 5))
 
         const v = foo()
->v : Symbol(v, Decl(main.syn, 852, 13))
->foo : Symbol(foo, Decl(main.syn, 836, 1))
+>v : Symbol(v, Decl(main.syn, 982, 13))
+>foo : Symbol(foo, Decl(main.syn, 966, 1))
 
         await v // await without a Promise in the type is treated as a possible mistake 
->v : Symbol(v, Decl(main.syn, 852, 13))
+>v : Symbol(v, Decl(main.syn, 982, 13))
 
         // but superfluous awaits are OK
         await foo()
->foo : Symbol(foo, Decl(main.syn, 836, 1))
+>foo : Symbol(foo, Decl(main.syn, 966, 1))
     }
 
     async function bar() {
->bar : Symbol(bar, Decl(main.syn, 856, 5))
+>bar : Symbol(bar, Decl(main.syn, 986, 5))
 
         return 2
     }
 
     function f8<T>(p: Promise<T> | T): void {}
->f8 : Symbol(f8, Decl(main.syn, 860, 5))
->T : Symbol(T, Decl(main.syn, 862, 16))
->p : Symbol(p, Decl(main.syn, 862, 19))
+>f8 : Symbol(f8, Decl(main.syn, 990, 5))
+>T : Symbol(T, Decl(main.syn, 992, 16))
+>p : Symbol(p, Decl(main.syn, 992, 19))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
->T : Symbol(T, Decl(main.syn, 862, 16))
->T : Symbol(T, Decl(main.syn, 862, 16))
+>T : Symbol(T, Decl(main.syn, 992, 16))
+>T : Symbol(T, Decl(main.syn, 992, 16))
 
     f8(bar()) // error, ambiguous, use `await` or `as async`
->f8 : Symbol(f8, Decl(main.syn, 860, 5))
->bar : Symbol(bar, Decl(main.syn, 856, 5))
+>f8 : Symbol(f8, Decl(main.syn, 990, 5))
+>bar : Symbol(bar, Decl(main.syn, 986, 5))
 
     function f9() {
->f9 : Symbol(f9, Decl(main.syn, 863, 13))
+>f9 : Symbol(f9, Decl(main.syn, 993, 13))
 
         function f(p1: Promise<number>, p2: Promise<number>) {}
->f : Symbol(f, Decl(main.syn, 865, 19))
->p1 : Symbol(p1, Decl(main.syn, 866, 19))
+>f : Symbol(f, Decl(main.syn, 995, 19))
+>p1 : Symbol(p1, Decl(main.syn, 996, 19))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
->p2 : Symbol(p2, Decl(main.syn, 866, 39))
+>p2 : Symbol(p2, Decl(main.syn, 996, 39))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 
         // both calls require `as async`
         // we do not consider parameter types to be "explicitly typed" for auto-await
         // because then the callee signature influences caller behavior, possibly interleaving calls
         f(bar(), bar()) 
->f : Symbol(f, Decl(main.syn, 865, 19))
->bar : Symbol(bar, Decl(main.syn, 856, 5))
->bar : Symbol(bar, Decl(main.syn, 856, 5))
+>f : Symbol(f, Decl(main.syn, 995, 19))
+>bar : Symbol(bar, Decl(main.syn, 986, 5))
+>bar : Symbol(bar, Decl(main.syn, 986, 5))
     }
 
     // this one is subtle: we require `as async` regardless of the return type annotation
     // adding `async` to the fn declaration would otherwise catch rejections
     function foo2(): Promise<number>  {
->foo2 : Symbol(foo2, Decl(main.syn, 871, 5))
+>foo2 : Symbol(foo2, Decl(main.syn, 1001, 5))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 
         try {
             return bar() // error, needs `as async`
->bar : Symbol(bar, Decl(main.syn, 856, 5))
+>bar : Symbol(bar, Decl(main.syn, 986, 5))
 
         } catch {
             return Promise.resolve(0)
@@ -2009,18 +2293,18 @@ const d4 = <div><#if (cond)></></div>
     }
 
     async function foo3() {
->foo3 : Symbol(foo3, Decl(main.syn, 881, 5))
+>foo3 : Symbol(foo3, Decl(main.syn, 1011, 5))
 
         // we (unfortunately) special-case `Promise.resolve` and `Promise.resolve` for auto-await
         // they should not be awaited because they are, effectively, constructors
         const x1 = Promise.resolve(0) // Promise<number>
->x1 : Symbol(x1, Decl(main.syn, 886, 13))
+>x1 : Symbol(x1, Decl(main.syn, 1016, 13))
 >Promise.resolve : Symbol(PromiseConstructor.resolve, Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 >resolve : Symbol(PromiseConstructor.resolve, Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --))
 
         const x2 = Promise.reject(0) // Promise<number>
->x2 : Symbol(x2, Decl(main.syn, 887, 13))
+>x2 : Symbol(x2, Decl(main.syn, 1017, 13))
 >Promise.reject : Symbol(PromiseConstructor.reject, Decl(lib.es2015.promise.d.ts, --, --))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 >reject : Symbol(PromiseConstructor.reject, Decl(lib.es2015.promise.d.ts, --, --))
@@ -2029,109 +2313,109 @@ const d4 = <div><#if (cond)></></div>
 
 {
     async function getValue() { return 42 }
->getValue : Symbol(getValue, Decl(main.syn, 891, 1))
+>getValue : Symbol(getValue, Decl(main.syn, 1021, 1))
 
     async function testAutoAwait() {
->testAutoAwait : Symbol(testAutoAwait, Decl(main.syn, 892, 43))
+>testAutoAwait : Symbol(testAutoAwait, Decl(main.syn, 1022, 43))
 
         const v = getValue()  // number
->v : Symbol(v, Decl(main.syn, 894, 13))
->getValue : Symbol(getValue, Decl(main.syn, 891, 1))
+>v : Symbol(v, Decl(main.syn, 1024, 13))
+>getValue : Symbol(getValue, Decl(main.syn, 1021, 1))
     }
 
     declare function fetchNum(): Promise<number>
->fetchNum : Symbol(fetchNum, Decl(main.syn, 895, 5))
+>fetchNum : Symbol(fetchNum, Decl(main.syn, 1025, 5))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 
     async function testDeclared() {
->testDeclared : Symbol(testDeclared, Decl(main.syn, 897, 48))
+>testDeclared : Symbol(testDeclared, Decl(main.syn, 1027, 48))
 
         const n = fetchNum()  // number
->n : Symbol(n, Decl(main.syn, 899, 13))
->fetchNum : Symbol(fetchNum, Decl(main.syn, 895, 5))
+>n : Symbol(n, Decl(main.syn, 1029, 13))
+>fetchNum : Symbol(fetchNum, Decl(main.syn, 1025, 5))
     }
 
     declare function passThrough<T>(x: T): T
->passThrough : Symbol(passThrough, Decl(main.syn, 900, 5))
->T : Symbol(T, Decl(main.syn, 902, 33))
->x : Symbol(x, Decl(main.syn, 902, 36))
->T : Symbol(T, Decl(main.syn, 902, 33))
->T : Symbol(T, Decl(main.syn, 902, 33))
+>passThrough : Symbol(passThrough, Decl(main.syn, 1030, 5))
+>T : Symbol(T, Decl(main.syn, 1032, 33))
+>x : Symbol(x, Decl(main.syn, 1032, 36))
+>T : Symbol(T, Decl(main.syn, 1032, 33))
+>T : Symbol(T, Decl(main.syn, 1032, 33))
 
     async function testPassThrough() {
->testPassThrough : Symbol(testPassThrough, Decl(main.syn, 902, 44))
+>testPassThrough : Symbol(testPassThrough, Decl(main.syn, 1032, 44))
 
         const p: Promise<number> = Promise.resolve(1)
->p : Symbol(p, Decl(main.syn, 904, 13))
+>p : Symbol(p, Decl(main.syn, 1034, 13))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 >Promise.resolve : Symbol(PromiseConstructor.resolve, Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 >resolve : Symbol(PromiseConstructor.resolve, Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --))
 
         const r = passThrough(p)  // Promise<number>, not number
->r : Symbol(r, Decl(main.syn, 905, 13))
->passThrough : Symbol(passThrough, Decl(main.syn, 900, 5))
->p : Symbol(p, Decl(main.syn, 904, 13))
+>r : Symbol(r, Decl(main.syn, 1035, 13))
+>passThrough : Symbol(passThrough, Decl(main.syn, 1030, 5))
+>p : Symbol(p, Decl(main.syn, 1034, 13))
     }
 
     declare function memoize<T extends () => any>(fn: T): T
->memoize : Symbol(memoize, Decl(main.syn, 906, 5))
->T : Symbol(T, Decl(main.syn, 908, 29))
->fn : Symbol(fn, Decl(main.syn, 908, 50))
->T : Symbol(T, Decl(main.syn, 908, 29))
->T : Symbol(T, Decl(main.syn, 908, 29))
+>memoize : Symbol(memoize, Decl(main.syn, 1036, 5))
+>T : Symbol(T, Decl(main.syn, 1038, 29))
+>fn : Symbol(fn, Decl(main.syn, 1038, 50))
+>T : Symbol(T, Decl(main.syn, 1038, 29))
+>T : Symbol(T, Decl(main.syn, 1038, 29))
 
     async function testMemoize() {
->testMemoize : Symbol(testMemoize, Decl(main.syn, 908, 59))
+>testMemoize : Symbol(testMemoize, Decl(main.syn, 1038, 59))
 
         async function inner() { return 1 }
->inner : Symbol(inner, Decl(main.syn, 909, 34))
+>inner : Symbol(inner, Decl(main.syn, 1039, 34))
 
         const m = memoize(inner)
->m : Symbol(m, Decl(main.syn, 911, 13))
->memoize : Symbol(memoize, Decl(main.syn, 906, 5))
->inner : Symbol(inner, Decl(main.syn, 909, 34))
+>m : Symbol(m, Decl(main.syn, 1041, 13))
+>memoize : Symbol(memoize, Decl(main.syn, 1036, 5))
+>inner : Symbol(inner, Decl(main.syn, 1039, 34))
 
         const v = m()  // number
->v : Symbol(v, Decl(main.syn, 912, 13))
->m : Symbol(m, Decl(main.syn, 911, 13))
+>v : Symbol(v, Decl(main.syn, 1042, 13))
+>m : Symbol(m, Decl(main.syn, 1041, 13))
     }
 }
 
 // async return type elision
 {
     async function elided(): number { return 1 }
->elided : Symbol(elided, Decl(main.syn, 917, 1))
+>elided : Symbol(elided, Decl(main.syn, 1047, 1))
 
     async function testElided() {
->testElided : Symbol(testElided, Decl(main.syn, 918, 48))
+>testElided : Symbol(testElided, Decl(main.syn, 1048, 48))
 
         const v = elided()  // number
->v : Symbol(v, Decl(main.syn, 920, 13))
->elided : Symbol(elided, Decl(main.syn, 917, 1))
+>v : Symbol(v, Decl(main.syn, 1050, 13))
+>elided : Symbol(elided, Decl(main.syn, 1047, 1))
     }
 
     async function explicit(): Promise<number> { return 1 }
->explicit : Symbol(explicit, Decl(main.syn, 921, 5))
+>explicit : Symbol(explicit, Decl(main.syn, 1051, 5))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 
     async function testExplicit() {
->testExplicit : Symbol(testExplicit, Decl(main.syn, 923, 59))
+>testExplicit : Symbol(testExplicit, Decl(main.syn, 1053, 59))
 
         const v = explicit()  // number
->v : Symbol(v, Decl(main.syn, 925, 13))
->explicit : Symbol(explicit, Decl(main.syn, 921, 5))
+>v : Symbol(v, Decl(main.syn, 1055, 13))
+>explicit : Symbol(explicit, Decl(main.syn, 1051, 5))
     }
 
     async function inferred() { return 1 }
->inferred : Symbol(inferred, Decl(main.syn, 926, 5))
+>inferred : Symbol(inferred, Decl(main.syn, 1056, 5))
 
     async function testInferred() {
->testInferred : Symbol(testInferred, Decl(main.syn, 928, 42))
+>testInferred : Symbol(testInferred, Decl(main.syn, 1058, 42))
 
         const v = inferred()  // number
->v : Symbol(v, Decl(main.syn, 930, 13))
->inferred : Symbol(inferred, Decl(main.syn, 926, 5))
+>v : Symbol(v, Decl(main.syn, 1060, 13))
+>inferred : Symbol(inferred, Decl(main.syn, 1056, 5))
     }
 }
 
@@ -2140,11 +2424,11 @@ const d4 = <div><#if (cond)></></div>
     // b can be seen within the tree, but not outside
     ;<div @ a>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->a : Symbol(a, Decl(main.syn, 937, 5))
+>a : Symbol(a, Decl(main.syn, 1067, 5))
 
         <div @ b></div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->b : Symbol(b, Decl(main.syn, 938, 8))
+>b : Symbol(b, Decl(main.syn, 1068, 8))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         <#run>
@@ -2152,8 +2436,8 @@ const d4 = <div><#if (cond)></></div>
 >console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
 >console : Symbol(console, Decl(lib.dom.d.ts, --, --))
 >log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
->a : Symbol(a, Decl(main.syn, 937, 5))
->b : Symbol(b, Decl(main.syn, 938, 8))
+>a : Symbol(a, Decl(main.syn, 1067, 5))
+>b : Symbol(b, Decl(main.syn, 1068, 8))
 
         </>
     </div>
@@ -2163,135 +2447,134 @@ const d4 = <div><#if (cond)></></div>
 >console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
 >console : Symbol(console, Decl(lib.dom.d.ts, --, --))
 >log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
->a : Symbol(a, Decl(main.syn, 937, 5))
+>a : Symbol(a, Decl(main.syn, 1067, 5))
 
-    // trailing bindings should be parsed correctly:
-    ;<div id="aaa" @ c />
+    ;<div @ c id="aaa" />
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->c : Symbol(c, Decl(main.syn, 946, 5))
->id : Symbol(id, Decl(main.syn, 946, 9))
+>c : Symbol(c, Decl(main.syn, 1075, 5))
+>id : Symbol(id, Decl(main.syn, 1075, 13))
 }
 
 // spread JSX elements
 {
     declare function Comp(): Element[];
->Comp : Symbol(Comp, Decl(main.syn, 950, 1))
+>Comp : Symbol(Comp, Decl(main.syn, 1079, 1))
 >Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
 
     const spread1 = <div><...Comp /></div> // ok
->spread1 : Symbol(spread1, Decl(main.syn, 952, 9))
+>spread1 : Symbol(spread1, Decl(main.syn, 1081, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->Comp : Symbol(Comp, Decl(main.syn, 950, 1))
+>Comp : Symbol(Comp, Decl(main.syn, 1079, 1))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     const noSpread1 = <div><Comp /></div> // error
->noSpread1 : Symbol(noSpread1, Decl(main.syn, 953, 9))
+>noSpread1 : Symbol(noSpread1, Decl(main.syn, 1082, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->Comp : Symbol(Comp, Decl(main.syn, 950, 1))
+>Comp : Symbol(Comp, Decl(main.syn, 1079, 1))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     // errors on intrinsics
     const spread2 = <div><...div /></div>
->spread2 : Symbol(spread2, Decl(main.syn, 956, 9))
+>spread2 : Symbol(spread2, Decl(main.syn, 1085, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     const spread3 = <div><...div></div></div>
->spread3 : Symbol(spread3, Decl(main.syn, 957, 9))
+>spread3 : Symbol(spread3, Decl(main.syn, 1086, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     declare function Comp2(): (() => void)[];
->Comp2 : Symbol(Comp2, Decl(main.syn, 957, 45))
+>Comp2 : Symbol(Comp2, Decl(main.syn, 1086, 45))
 
-    const spread4 = <div><...Comp2 /></div>  // error, intrinsics want something Element-like
->spread4 : Symbol(spread4, Decl(main.syn, 960, 9))
+    const spread4 = <div><...Comp2 /></div>  // error, intrinsics want something NodeLike
+>spread4 : Symbol(spread4, Decl(main.syn, 1089, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->Comp2 : Symbol(Comp2, Decl(main.syn, 957, 45))
+>Comp2 : Symbol(Comp2, Decl(main.syn, 1086, 45))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     declare function Comp3(): Element;
->Comp3 : Symbol(Comp3, Decl(main.syn, 960, 43))
+>Comp3 : Symbol(Comp3, Decl(main.syn, 1089, 43))
 >Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
 
     const noSpread2 = <div><Comp3 /></div> // ok
->noSpread2 : Symbol(noSpread2, Decl(main.syn, 963, 9))
+>noSpread2 : Symbol(noSpread2, Decl(main.syn, 1092, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->Comp3 : Symbol(Comp3, Decl(main.syn, 960, 43))
+>Comp3 : Symbol(Comp3, Decl(main.syn, 1089, 43))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     const spread5 = <div><...Comp3 /></div> // error
->spread5 : Symbol(spread5, Decl(main.syn, 964, 9))
+>spread5 : Symbol(spread5, Decl(main.syn, 1093, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->Comp3 : Symbol(Comp3, Decl(main.syn, 960, 43))
+>Comp3 : Symbol(Comp3, Decl(main.syn, 1089, 43))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     declare function Comp4(props: { children: Element[] }): Element;
->Comp4 : Symbol(Comp4, Decl(main.syn, 964, 43))
->props : Symbol(props, Decl(main.syn, 966, 27))
->children : Symbol(children, Decl(main.syn, 966, 35))
+>Comp4 : Symbol(Comp4, Decl(main.syn, 1093, 43))
+>props : Symbol(props, Decl(main.syn, 1095, 27))
+>children : Symbol(children, Decl(main.syn, 1095, 35))
 >Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
 >Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
 
     // ok
     const spread6 = <Comp4>
->spread6 : Symbol(spread6, Decl(main.syn, 968, 9))
->Comp4 : Symbol(Comp4, Decl(main.syn, 964, 43))
+>spread6 : Symbol(spread6, Decl(main.syn, 1097, 9))
+>Comp4 : Symbol(Comp4, Decl(main.syn, 1093, 43))
 
       <Comp3 />
->Comp3 : Symbol(Comp3, Decl(main.syn, 960, 43))
+>Comp3 : Symbol(Comp3, Decl(main.syn, 1089, 43))
 
       <...Comp />
->Comp : Symbol(Comp, Decl(main.syn, 950, 1))
+>Comp : Symbol(Comp, Decl(main.syn, 1079, 1))
 
       <...Comp></Comp>
->Comp : Symbol(Comp, Decl(main.syn, 950, 1))
->Comp : Symbol(Comp, Decl(main.syn, 950, 1))
+>Comp : Symbol(Comp, Decl(main.syn, 1079, 1))
+>Comp : Symbol(Comp, Decl(main.syn, 1079, 1))
 
     </Comp4>
->Comp4 : Symbol(Comp4, Decl(main.syn, 964, 43))
+>Comp4 : Symbol(Comp4, Decl(main.syn, 1093, 43))
 
     // error
     const spread7 = <Comp4>
->spread7 : Symbol(spread7, Decl(main.syn, 975, 9))
->Comp4 : Symbol(Comp4, Decl(main.syn, 964, 43))
+>spread7 : Symbol(spread7, Decl(main.syn, 1104, 9))
+>Comp4 : Symbol(Comp4, Decl(main.syn, 1093, 43))
 
       <Comp3 />
->Comp3 : Symbol(Comp3, Decl(main.syn, 960, 43))
+>Comp3 : Symbol(Comp3, Decl(main.syn, 1089, 43))
 
       <Comp />
->Comp : Symbol(Comp, Decl(main.syn, 950, 1))
+>Comp : Symbol(Comp, Decl(main.syn, 1079, 1))
 
     </Comp4>
->Comp4 : Symbol(Comp4, Decl(main.syn, 964, 43))
+>Comp4 : Symbol(Comp4, Decl(main.syn, 1093, 43))
 
     declare function Comp5(): [Element] | [];
->Comp5 : Symbol(Comp5, Decl(main.syn, 978, 12))
+>Comp5 : Symbol(Comp5, Decl(main.syn, 1107, 12))
 >Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
 
     // ok
     const spread8 = <Comp4>
->spread8 : Symbol(spread8, Decl(main.syn, 982, 9))
->Comp4 : Symbol(Comp4, Decl(main.syn, 964, 43))
+>spread8 : Symbol(spread8, Decl(main.syn, 1111, 9))
+>Comp4 : Symbol(Comp4, Decl(main.syn, 1093, 43))
 
         <...Comp5 />
->Comp5 : Symbol(Comp5, Decl(main.syn, 978, 12))
+>Comp5 : Symbol(Comp5, Decl(main.syn, 1107, 12))
 
     </Comp4>
->Comp4 : Symbol(Comp4, Decl(main.syn, 964, 43))
+>Comp4 : Symbol(Comp4, Decl(main.syn, 1093, 43))
 }
 
 {
     const cond = true as boolean
->cond : Symbol(cond, Decl(main.syn, 988, 9))
+>cond : Symbol(cond, Decl(main.syn, 1117, 9))
 
     // [] | [HtmlDivElement]
     const if1 = <#if (cond)>
->if1 : Symbol(if1, Decl(main.syn, 990, 9))
->cond : Symbol(cond, Decl(main.syn, 988, 9))
+>if1 : Symbol(if1, Decl(main.syn, 1119, 9))
+>cond : Symbol(cond, Decl(main.syn, 1117, 9))
 
       <div></div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
@@ -2300,7 +2583,7 @@ const d4 = <div><#if (cond)></></div>
     </>
     // [HtmlDivElement]
     const if2 = <#if (true)>
->if2 : Symbol(if2, Decl(main.syn, 994, 9))
+>if2 : Symbol(if2, Decl(main.syn, 1123, 9))
 
       <div></div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
@@ -2309,7 +2592,7 @@ const d4 = <div><#if (cond)></></div>
     </>
     // []
     const if3 = <#if (false)>
->if3 : Symbol(if3, Decl(main.syn, 998, 9))
+>if3 : Symbol(if3, Decl(main.syn, 1127, 9))
 
       <div></div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
@@ -2321,7 +2604,7 @@ const d4 = <div><#if (cond)></></div>
 {
     // do not parse this as JSX, we should only see '> expected'
     const m = new Map<string, Promise<string
->m : Symbol(m, Decl(main.syn, 1005, 9))
+>m : Symbol(m, Decl(main.syn, 1134, 9))
 >Map : Symbol(Map, Decl(lib.es2015.collection.d.ts, --, --), Decl(lib.es2015.collection.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 >Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
 
@@ -2440,12 +2723,6 @@ const d4 = <div><#if (cond)></></div>
 // </Foo>
 //
 //
-// --- WIP: unlabeled callable fragments ---
-// - callable fragments can be used without labels, analogous to arrow function expressions
-// - they appear as `<(...params)> </>`
-// - cannot appear as a child of an intrinsic
-//
-//
 //
 // --- WIP: explicit (JSX) resource management ---
 // - `unwind { ... }` inside #run or #component body: registers cleanup to run when the component is cleaned up
@@ -2473,154 +2750,150 @@ const d4 = <div><#if (cond)></></div>
 
 {
     <#component Foo(x: string)>
->x : Symbol(x, Decl(main.syn, 1153, 20))
+>x : Symbol(x, Decl(main.syn, 1276, 20))
 
         <div>{x}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->x : Symbol(x, Decl(main.syn, 1153, 20))
+>x : Symbol(x, Decl(main.syn, 1276, 20))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
     const r1 = <Foo x="hi" />
->r1 : Symbol(r1, Decl(main.syn, 1156, 9))
->Foo : Symbol(Foo, Decl(main.syn, 1152, 1))
->x : Symbol(x, Decl(main.syn, 1156, 19))
+>r1 : Symbol(r1, Decl(main.syn, 1279, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 1275, 1))
+>x : Symbol(x, Decl(main.syn, 1279, 19))
 
     // Foo is typed as (props: { x: string }) => HTMLDivElement
 
     ;<#component Bar(x: string)>
->x : Symbol(x, Decl(main.syn, 1159, 21))
+>x : Symbol(x, Decl(main.syn, 1282, 21))
 
         <div>{x}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->x : Symbol(x, Decl(main.syn, 1159, 21))
+>x : Symbol(x, Decl(main.syn, 1282, 21))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         <div>{x}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->x : Symbol(x, Decl(main.syn, 1159, 21))
+>x : Symbol(x, Decl(main.syn, 1282, 21))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
     const r2 = <Bar x="hi" />
->r2 : Symbol(r2, Decl(main.syn, 1163, 9))
->Bar : Symbol(Bar, Decl(main.syn, 1159, 5))
->x : Symbol(x, Decl(main.syn, 1163, 19))
+>r2 : Symbol(r2, Decl(main.syn, 1286, 9))
+>Bar : Symbol(Bar, Decl(main.syn, 1282, 5))
+>x : Symbol(x, Decl(main.syn, 1286, 19))
 
     ;<#component Baz(x: string): HTMLDivElement>
->x : Symbol(x, Decl(main.syn, 1165, 21))
+>x : Symbol(x, Decl(main.syn, 1288, 21))
 >HTMLDivElement : Symbol(HTMLDivElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
 
         <div>{x}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->x : Symbol(x, Decl(main.syn, 1165, 21))
+>x : Symbol(x, Decl(main.syn, 1288, 21))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
     const r3 = <Baz x="hi" />
->r3 : Symbol(r3, Decl(main.syn, 1168, 9))
->Baz : Symbol(Baz, Decl(main.syn, 1165, 5))
->x : Symbol(x, Decl(main.syn, 1168, 19))
+>r3 : Symbol(r3, Decl(main.syn, 1291, 9))
+>Baz : Symbol(Baz, Decl(main.syn, 1288, 5))
+>x : Symbol(x, Decl(main.syn, 1291, 19))
 
     <#component WithOpt(x: string, y?: number)>
->x : Symbol(x, Decl(main.syn, 1170, 24))
->y : Symbol(y, Decl(main.syn, 1170, 34))
+>x : Symbol(x, Decl(main.syn, 1293, 24))
+>y : Symbol(y, Decl(main.syn, 1293, 34))
 
         <div>{x}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->x : Symbol(x, Decl(main.syn, 1170, 24))
+>x : Symbol(x, Decl(main.syn, 1293, 24))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
     const r4a = <WithOpt x="hi" />       // ok
->r4a : Symbol(r4a, Decl(main.syn, 1173, 9))
->WithOpt : Symbol(WithOpt, Decl(main.syn, 1168, 29))
->x : Symbol(x, Decl(main.syn, 1173, 24))
+>r4a : Symbol(r4a, Decl(main.syn, 1296, 9))
+>WithOpt : Symbol(WithOpt, Decl(main.syn, 1291, 29))
+>x : Symbol(x, Decl(main.syn, 1296, 24))
 
     const r4b = <WithOpt x="hi" y={1} /> // ok
->r4b : Symbol(r4b, Decl(main.syn, 1174, 9))
->WithOpt : Symbol(WithOpt, Decl(main.syn, 1168, 29))
->x : Symbol(x, Decl(main.syn, 1174, 24))
->y : Symbol(y, Decl(main.syn, 1174, 31))
+>r4b : Symbol(r4b, Decl(main.syn, 1297, 9))
+>WithOpt : Symbol(WithOpt, Decl(main.syn, 1291, 29))
+>x : Symbol(x, Decl(main.syn, 1297, 24))
+>y : Symbol(y, Decl(main.syn, 1297, 31))
 
-    // Foo used as a type — aliases ComponentNode<HTMLDivElement, { x: string }>
     const r1_typed: Foo = r1
->r1_typed : Symbol(r1_typed, Decl(main.syn, 1177, 9))
->Foo : Symbol(Foo, Decl(main.syn, 1152, 1))
->r1 : Symbol(r1, Decl(main.syn, 1156, 9))
+>r1_typed : Symbol(r1_typed, Decl(main.syn, 1299, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 1275, 1))
+>r1 : Symbol(r1, Decl(main.syn, 1279, 9))
 
-    // Baz also usable as a type
     const r3_typed: Baz = r3
->r3_typed : Symbol(r3_typed, Decl(main.syn, 1179, 9))
->Baz : Symbol(Baz, Decl(main.syn, 1165, 5))
->r3 : Symbol(r3, Decl(main.syn, 1168, 9))
+>r3_typed : Symbol(r3_typed, Decl(main.syn, 1300, 9))
+>Baz : Symbol(Baz, Decl(main.syn, 1288, 5))
+>r3 : Symbol(r3, Decl(main.syn, 1291, 9))
 
-    // same props shape — structurally compatible
     const r_cross: Foo = r3
->r_cross : Symbol(r_cross, Decl(main.syn, 1181, 9))
->Foo : Symbol(Foo, Decl(main.syn, 1152, 1))
->r3 : Symbol(r3, Decl(main.syn, 1168, 9))
+>r_cross : Symbol(r_cross, Decl(main.syn, 1301, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 1275, 1))
+>r3 : Symbol(r3, Decl(main.syn, 1291, 9))
 
-    // { x, y? } assignable to { x } — ok
     const r_cross2: Foo = r4a
->r_cross2 : Symbol(r_cross2, Decl(main.syn, 1183, 9))
->Foo : Symbol(Foo, Decl(main.syn, 1152, 1))
->r4a : Symbol(r4a, Decl(main.syn, 1173, 9))
+>r_cross2 : Symbol(r_cross2, Decl(main.syn, 1302, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 1275, 1))
+>r4a : Symbol(r4a, Decl(main.syn, 1296, 9))
 }
 
 {
     // expression form
     const Expr = <#component(x: string): HTMLDivElement>
->Expr : Symbol(Expr, Decl(main.syn, 1188, 9))
->x : Symbol(x, Decl(main.syn, 1188, 29))
+>Expr : Symbol(Expr, Decl(main.syn, 1307, 9))
+>x : Symbol(x, Decl(main.syn, 1307, 29))
 >HTMLDivElement : Symbol(HTMLDivElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
 
         <div>{x}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->x : Symbol(x, Decl(main.syn, 1188, 29))
+>x : Symbol(x, Decl(main.syn, 1307, 29))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
     // Expr is (props: { x: string }) => HTMLDivElement
     const r5 = <Expr x="hello" />
->r5 : Symbol(r5, Decl(main.syn, 1192, 9))
->Expr : Symbol(Expr, Decl(main.syn, 1188, 9))
->x : Symbol(x, Decl(main.syn, 1192, 20))
+>r5 : Symbol(r5, Decl(main.syn, 1311, 9))
+>Expr : Symbol(Expr, Decl(main.syn, 1307, 9))
+>x : Symbol(x, Decl(main.syn, 1311, 20))
 }
 
 {
     // component with init body
     <#component WithBody(x: string) {
->x : Symbol(x, Decl(main.syn, 1197, 25))
+>x : Symbol(x, Decl(main.syn, 1316, 25))
 
         const y = `hello: ${x}`
->y : Symbol(y, Decl(main.syn, 1198, 13))
->x : Symbol(x, Decl(main.syn, 1197, 25))
+>y : Symbol(y, Decl(main.syn, 1317, 13))
+>x : Symbol(x, Decl(main.syn, 1316, 25))
 
     }>
         <div>{y}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->y : Symbol(y, Decl(main.syn, 1198, 13))
+>y : Symbol(y, Decl(main.syn, 1317, 13))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
     const r6 = <WithBody x="world" />
->r6 : Symbol(r6, Decl(main.syn, 1202, 9))
->WithBody : Symbol(WithBody, Decl(main.syn, 1195, 1))
->x : Symbol(x, Decl(main.syn, 1202, 24))
+>r6 : Symbol(r6, Decl(main.syn, 1321, 9))
+>WithBody : Symbol(WithBody, Decl(main.syn, 1314, 1))
+>x : Symbol(x, Decl(main.syn, 1321, 24))
 }
 
 {
     <#component BadReturn(x: string) {
->x : Symbol(x, Decl(main.syn, 1206, 26))
+>x : Symbol(x, Decl(main.syn, 1325, 26))
 
         return x
->x : Symbol(x, Decl(main.syn, 1206, 26))
+>x : Symbol(x, Decl(main.syn, 1325, 26))
 
     }>
         <div>{x}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->x : Symbol(x, Decl(main.syn, 1206, 26))
+>x : Symbol(x, Decl(main.syn, 1325, 26))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
@@ -2629,134 +2902,134 @@ const d4 = <div><#if (cond)></></div>
 {
     // plain labeled fragment
     <#component Foo(children: { content: [string, string] })>
->children : Symbol(children, Decl(main.syn, 1215, 20))
->content : Symbol(content, Decl(main.syn, 1215, 31))
+>children : Symbol(children, Decl(main.syn, 1334, 20))
+>content : Symbol(content, Decl(main.syn, 1334, 31))
 
         <div>{...children.content}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->children.content : Symbol(content, Decl(main.syn, 1215, 31))
->children : Symbol(children, Decl(main.syn, 1215, 20))
->content : Symbol(content, Decl(main.syn, 1215, 31))
+>children.content : Symbol(content, Decl(main.syn, 1334, 31))
+>children : Symbol(children, Decl(main.syn, 1334, 20))
+>content : Symbol(content, Decl(main.syn, 1334, 31))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
     const r_lf1 = <Foo>
->r_lf1 : Symbol(r_lf1, Decl(main.syn, 1218, 9))
->Foo : Symbol(Foo, Decl(main.syn, 1213, 1))
+>r_lf1 : Symbol(r_lf1, Decl(main.syn, 1337, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 1332, 1))
 
         <:content>hi{'there'}</>
 >content : Symbol(content)
 
     </Foo>
->Foo : Symbol(Foo, Decl(main.syn, 1213, 1))
+>Foo : Symbol(Foo, Decl(main.syn, 1332, 1))
 
     // callable labeled fragment
     ;<#component Bar(children: { item: (val: string) => [HTMLSpanElement] })>
->children : Symbol(children, Decl(main.syn, 1223, 21))
->item : Symbol(item, Decl(main.syn, 1223, 32))
->val : Symbol(val, Decl(main.syn, 1223, 40))
+>children : Symbol(children, Decl(main.syn, 1342, 21))
+>item : Symbol(item, Decl(main.syn, 1342, 32))
+>val : Symbol(val, Decl(main.syn, 1342, 40))
 >HTMLSpanElement : Symbol(HTMLSpanElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
 
         <div>{...children.item("test")}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->children.item : Symbol(item, Decl(main.syn, 1223, 32))
->children : Symbol(children, Decl(main.syn, 1223, 21))
->item : Symbol(item, Decl(main.syn, 1223, 32))
+>children.item : Symbol(item, Decl(main.syn, 1342, 32))
+>children : Symbol(children, Decl(main.syn, 1342, 21))
+>item : Symbol(item, Decl(main.syn, 1342, 32))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
     const r_lf2 = <Bar>
->r_lf2 : Symbol(r_lf2, Decl(main.syn, 1226, 9))
->Bar : Symbol(Bar, Decl(main.syn, 1223, 5))
+>r_lf2 : Symbol(r_lf2, Decl(main.syn, 1345, 9))
+>Bar : Symbol(Bar, Decl(main.syn, 1342, 5))
 
         <:item(val: string)><span>{val}</span></>
 >item : Symbol(item)
->val : Symbol(val, Decl(main.syn, 1227, 15))
+>val : Symbol(val, Decl(main.syn, 1346, 15))
 >span : Symbol(JSX.IntrinsicElements.span, Decl(lib.jsx.d.ts, --, --))
->val : Symbol(val, Decl(main.syn, 1227, 15))
+>val : Symbol(val, Decl(main.syn, 1346, 15))
 >span : Symbol(JSX.IntrinsicElements.span, Decl(lib.jsx.d.ts, --, --))
 
     </Bar>
->Bar : Symbol(Bar, Decl(main.syn, 1223, 5))
+>Bar : Symbol(Bar, Decl(main.syn, 1342, 5))
 
     // contextual typingg
     ;<#component Ctx(children: { slot: (n: number, s: string) => [HTMLDivElement] })>
->children : Symbol(children, Decl(main.syn, 1231, 21))
->slot : Symbol(slot, Decl(main.syn, 1231, 32))
->n : Symbol(n, Decl(main.syn, 1231, 40))
->s : Symbol(s, Decl(main.syn, 1231, 50))
+>children : Symbol(children, Decl(main.syn, 1350, 21))
+>slot : Symbol(slot, Decl(main.syn, 1350, 32))
+>n : Symbol(n, Decl(main.syn, 1350, 40))
+>s : Symbol(s, Decl(main.syn, 1350, 50))
 >HTMLDivElement : Symbol(HTMLDivElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
 
         <div>{...children.slot(1, 'hi')}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->children.slot : Symbol(slot, Decl(main.syn, 1231, 32))
->children : Symbol(children, Decl(main.syn, 1231, 21))
->slot : Symbol(slot, Decl(main.syn, 1231, 32))
+>children.slot : Symbol(slot, Decl(main.syn, 1350, 32))
+>children : Symbol(children, Decl(main.syn, 1350, 21))
+>slot : Symbol(slot, Decl(main.syn, 1350, 32))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
     const r_ctx = <Ctx>
->r_ctx : Symbol(r_ctx, Decl(main.syn, 1234, 9))
->Ctx : Symbol(Ctx, Decl(main.syn, 1231, 5))
+>r_ctx : Symbol(r_ctx, Decl(main.syn, 1353, 9))
+>Ctx : Symbol(Ctx, Decl(main.syn, 1350, 5))
 
         <:slot(n, s)><div>{n.toFixed()}{s.toUpperCase()}</div></>
 >slot : Symbol(slot)
->n : Symbol(n, Decl(main.syn, 1235, 15))
->s : Symbol(s, Decl(main.syn, 1235, 17))
+>n : Symbol(n, Decl(main.syn, 1354, 15))
+>s : Symbol(s, Decl(main.syn, 1354, 17))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >n.toFixed : Symbol(Number.toFixed, Decl(lib.es5.d.ts, --, --))
->n : Symbol(n, Decl(main.syn, 1235, 15))
+>n : Symbol(n, Decl(main.syn, 1354, 15))
 >toFixed : Symbol(Number.toFixed, Decl(lib.es5.d.ts, --, --))
 >s.toUpperCase : Symbol(String.toUpperCase, Decl(lib.es5.d.ts, --, --))
->s : Symbol(s, Decl(main.syn, 1235, 17))
+>s : Symbol(s, Decl(main.syn, 1354, 17))
 >toUpperCase : Symbol(String.toUpperCase, Decl(lib.es5.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </Ctx>
->Ctx : Symbol(Ctx, Decl(main.syn, 1231, 5))
+>Ctx : Symbol(Ctx, Decl(main.syn, 1350, 5))
 
     ;<#component Ctx2(children: { slot: (s: string) => [string] })>
->children : Symbol(children, Decl(main.syn, 1238, 22))
->slot : Symbol(slot, Decl(main.syn, 1238, 33))
->s : Symbol(s, Decl(main.syn, 1238, 41))
+>children : Symbol(children, Decl(main.syn, 1357, 22))
+>slot : Symbol(slot, Decl(main.syn, 1357, 33))
+>s : Symbol(s, Decl(main.syn, 1357, 41))
 
         <div>{...children.slot('hi')}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->children.slot : Symbol(slot, Decl(main.syn, 1238, 33))
->children : Symbol(children, Decl(main.syn, 1238, 22))
->slot : Symbol(slot, Decl(main.syn, 1238, 33))
+>children.slot : Symbol(slot, Decl(main.syn, 1357, 33))
+>children : Symbol(children, Decl(main.syn, 1357, 22))
+>slot : Symbol(slot, Decl(main.syn, 1357, 33))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
     const r_ctx2 = <Ctx2>
->r_ctx2 : Symbol(r_ctx2, Decl(main.syn, 1241, 9))
->Ctx2 : Symbol(Ctx2, Decl(main.syn, 1238, 5))
+>r_ctx2 : Symbol(r_ctx2, Decl(main.syn, 1360, 9))
+>Ctx2 : Symbol(Ctx2, Decl(main.syn, 1357, 5))
 
         <:slot(s)>{s}</>
 >slot : Symbol(slot)
->s : Symbol(s, Decl(main.syn, 1242, 15))
->s : Symbol(s, Decl(main.syn, 1242, 15))
+>s : Symbol(s, Decl(main.syn, 1361, 15))
+>s : Symbol(s, Decl(main.syn, 1361, 15))
 
     </Ctx2>
->Ctx2 : Symbol(Ctx2, Decl(main.syn, 1238, 5))
+>Ctx2 : Symbol(Ctx2, Decl(main.syn, 1357, 5))
 
     const r_ctx3 = <Ctx2>
->r_ctx3 : Symbol(r_ctx3, Decl(main.syn, 1245, 9))
->Ctx2 : Symbol(Ctx2, Decl(main.syn, 1238, 5))
+>r_ctx3 : Symbol(r_ctx3, Decl(main.syn, 1364, 9))
+>Ctx2 : Symbol(Ctx2, Decl(main.syn, 1357, 5))
 
         {...{
             slot: s => <>{s}</>
->slot : Symbol(slot, Decl(main.syn, 1246, 13))
->s : Symbol(s, Decl(main.syn, 1247, 17))
->s : Symbol(s, Decl(main.syn, 1247, 17))
+>slot : Symbol(slot, Decl(main.syn, 1365, 13))
+>s : Symbol(s, Decl(main.syn, 1366, 17))
+>s : Symbol(s, Decl(main.syn, 1366, 17))
 
         }}
     </Ctx2>
->Ctx2 : Symbol(Ctx2, Decl(main.syn, 1238, 5))
+>Ctx2 : Symbol(Ctx2, Decl(main.syn, 1357, 5))
 
     const r_dup = <Foo>
->r_dup : Symbol(r_dup, Decl(main.syn, 1251, 9))
->Foo : Symbol(Foo, Decl(main.syn, 1213, 1))
+>r_dup : Symbol(r_dup, Decl(main.syn, 1370, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 1332, 1))
 
         <:content>hi{'there'}</>
 >content : Symbol(content)
@@ -2765,11 +3038,11 @@ const d4 = <div><#if (cond)></></div>
 >content : Symbol(content)
 
     </Foo>
->Foo : Symbol(Foo, Decl(main.syn, 1213, 1))
+>Foo : Symbol(Foo, Decl(main.syn, 1332, 1))
 
     const r_mix = <Foo>
->r_mix : Symbol(r_mix, Decl(main.syn, 1256, 9))
->Foo : Symbol(Foo, Decl(main.syn, 1213, 1))
+>r_mix : Symbol(r_mix, Decl(main.syn, 1375, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 1332, 1))
 
         <div>hi</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
@@ -2777,97 +3050,97 @@ const d4 = <div><#if (cond)></></div>
 
         <:content>there{'!'}</>
     </Foo>
->Foo : Symbol(Foo, Decl(main.syn, 1213, 1))
+>Foo : Symbol(Foo, Decl(main.syn, 1332, 1))
 
     <#component OptChildren(children: { slot?: (s: string) => [string] })>
->children : Symbol(children, Decl(main.syn, 1261, 28))
->slot : Symbol(slot, Decl(main.syn, 1261, 39))
->s : Symbol(s, Decl(main.syn, 1261, 48))
+>children : Symbol(children, Decl(main.syn, 1380, 28))
+>slot : Symbol(slot, Decl(main.syn, 1380, 39))
+>s : Symbol(s, Decl(main.syn, 1380, 48))
 
         <div>{...(children.slot?.('hi') ?? [])}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->children.slot : Symbol(slot, Decl(main.syn, 1261, 39))
->children : Symbol(children, Decl(main.syn, 1261, 28))
->slot : Symbol(slot, Decl(main.syn, 1261, 39))
+>children.slot : Symbol(slot, Decl(main.syn, 1380, 39))
+>children : Symbol(children, Decl(main.syn, 1380, 28))
+>slot : Symbol(slot, Decl(main.syn, 1380, 39))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
 
     const opt_cond = true as boolean
->opt_cond : Symbol(opt_cond, Decl(main.syn, 1265, 9))
+>opt_cond : Symbol(opt_cond, Decl(main.syn, 1384, 9))
 
     const opt_1 = <OptChildren>
->opt_1 : Symbol(opt_1, Decl(main.syn, 1266, 9))
->OptChildren : Symbol(OptChildren, Decl(main.syn, 1259, 10))
+>opt_1 : Symbol(opt_1, Decl(main.syn, 1385, 9))
+>OptChildren : Symbol(OptChildren, Decl(main.syn, 1378, 10))
 
         <#if (opt_cond)>
->opt_cond : Symbol(opt_cond, Decl(main.syn, 1265, 9))
+>opt_cond : Symbol(opt_cond, Decl(main.syn, 1384, 9))
 
             <:slot(v2)>
 >slot : Symbol(slot)
->v2 : Symbol(v2, Decl(main.syn, 1268, 19))
+>v2 : Symbol(v2, Decl(main.syn, 1387, 19))
 
                 {v2}
->v2 : Symbol(v2, Decl(main.syn, 1268, 19))
+>v2 : Symbol(v2, Decl(main.syn, 1387, 19))
 
             </>
         </>
     </OptChildren>
->OptChildren : Symbol(OptChildren, Decl(main.syn, 1259, 10))
+>OptChildren : Symbol(OptChildren, Decl(main.syn, 1378, 10))
 
     const opt_2 = <OptChildren>
->opt_2 : Symbol(opt_2, Decl(main.syn, 1273, 9))
->OptChildren : Symbol(OptChildren, Decl(main.syn, 1259, 10))
+>opt_2 : Symbol(opt_2, Decl(main.syn, 1392, 9))
+>OptChildren : Symbol(OptChildren, Decl(main.syn, 1378, 10))
 
         <#if (opt_cond)>
->opt_cond : Symbol(opt_cond, Decl(main.syn, 1265, 9))
+>opt_cond : Symbol(opt_cond, Decl(main.syn, 1384, 9))
 
             <:slot(v2)>
 >slot : Symbol(slot)
->v2 : Symbol(v2, Decl(main.syn, 1275, 19))
+>v2 : Symbol(v2, Decl(main.syn, 1394, 19))
 
                 {v2}
->v2 : Symbol(v2, Decl(main.syn, 1275, 19))
+>v2 : Symbol(v2, Decl(main.syn, 1394, 19))
 
             </>
         </><#else>
             <:slot(v2)>
 >slot : Symbol(slot)
->v2 : Symbol(v2, Decl(main.syn, 1279, 19))
+>v2 : Symbol(v2, Decl(main.syn, 1398, 19))
 
                 {v2}{v2}
->v2 : Symbol(v2, Decl(main.syn, 1279, 19))
->v2 : Symbol(v2, Decl(main.syn, 1279, 19))
+>v2 : Symbol(v2, Decl(main.syn, 1398, 19))
+>v2 : Symbol(v2, Decl(main.syn, 1398, 19))
 
             </>
         </>
     </OptChildren>
->OptChildren : Symbol(OptChildren, Decl(main.syn, 1259, 10))
+>OptChildren : Symbol(OptChildren, Decl(main.syn, 1378, 10))
 
 }
 
 {
     <#component EventComp(w: HTMLElement) {
->w : Symbol(w, Decl(main.syn, 1288, 26))
+>w : Symbol(w, Decl(main.syn, 1407, 26))
 >HTMLElement : Symbol(HTMLElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
 
         function onKeyPress(ev: KeyboardEvent) {}
->onKeyPress : Symbol(onKeyPress, Decl(main.syn, 1288, 43))
->ev : Symbol(ev, Decl(main.syn, 1289, 28))
+>onKeyPress : Symbol(onKeyPress, Decl(main.syn, 1407, 43))
+>ev : Symbol(ev, Decl(main.syn, 1408, 28))
 >KeyboardEvent : Symbol(KeyboardEvent, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
 
         w.addEventListener('keypress', onKeyPress)
 >w.addEventListener : Symbol(HTMLElement.addEventListener, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
->w : Symbol(w, Decl(main.syn, 1288, 26))
+>w : Symbol(w, Decl(main.syn, 1407, 26))
 >addEventListener : Symbol(HTMLElement.addEventListener, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
->onKeyPress : Symbol(onKeyPress, Decl(main.syn, 1288, 43))
+>onKeyPress : Symbol(onKeyPress, Decl(main.syn, 1407, 43))
 
         unwind {
             w.removeEventListener('keypress', onKeyPress)
 >w.removeEventListener : Symbol(HTMLElement.removeEventListener, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
->w : Symbol(w, Decl(main.syn, 1288, 26))
+>w : Symbol(w, Decl(main.syn, 1407, 26))
 >removeEventListener : Symbol(HTMLElement.removeEventListener, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
->onKeyPress : Symbol(onKeyPress, Decl(main.syn, 1288, 43))
+>onKeyPress : Symbol(onKeyPress, Decl(main.syn, 1407, 43))
         }
     }>
         <div></div>
@@ -2876,7 +3149,7 @@ const d4 = <div><#if (cond)></></div>
 
         <#run>
             const el = document.createElement('div')
->el : Symbol(el, Decl(main.syn, 1297, 17))
+>el : Symbol(el, Decl(main.syn, 1416, 17))
 >document.createElement : Symbol(Document.createElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
 >document : Symbol(document, Decl(lib.dom.d.ts, --, --))
 >createElement : Symbol(Document.createElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
@@ -2884,58 +3157,296 @@ const d4 = <div><#if (cond)></></div>
             unwind {
                 el.remove()
 >el.remove : Symbol(ChildNode.remove, Decl(lib.dom.d.ts, --, --))
->el : Symbol(el, Decl(main.syn, 1297, 17))
+>el : Symbol(el, Decl(main.syn, 1416, 17))
 >remove : Symbol(ChildNode.remove, Decl(lib.dom.d.ts, --, --))
             }
         </>
     </>
 }
 
-// numeric literals as JSX attribute values (no braces needed)
 {
     const a = <input min=0 max=100 step=5 />
->a : Symbol(a, Decl(main.syn, 1307, 9))
+>a : Symbol(a, Decl(main.syn, 1425, 9))
 >input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
->min : Symbol(min, Decl(main.syn, 1307, 20))
->max : Symbol(max, Decl(main.syn, 1307, 26))
->step : Symbol(step, Decl(main.syn, 1307, 34))
+>min : Symbol(min, Decl(main.syn, 1425, 20))
+>max : Symbol(max, Decl(main.syn, 1425, 26))
+>step : Symbol(step, Decl(main.syn, 1425, 34))
 
     const b = <input value=3.14 />
->b : Symbol(b, Decl(main.syn, 1308, 9))
+>b : Symbol(b, Decl(main.syn, 1426, 9))
 >input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
->value : Symbol(value, Decl(main.syn, 1308, 20))
+>value : Symbol(value, Decl(main.syn, 1426, 20))
 
     const c = <input min=-10 />
->c : Symbol(c, Decl(main.syn, 1309, 9))
+>c : Symbol(c, Decl(main.syn, 1427, 9))
 >input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
->min : Symbol(min, Decl(main.syn, 1309, 20))
+>min : Symbol(min, Decl(main.syn, 1427, 20))
 }
 
-// JSX shorthand attribute — proper AST node (not desugared)
 {
     const value = 'hello'
->value : Symbol(value, Decl(main.syn, 1314, 9))
+>value : Symbol(value, Decl(main.syn, 1431, 9))
 
     const d = <input {value} />
->d : Symbol(d, Decl(main.syn, 1315, 9))
+>d : Symbol(d, Decl(main.syn, 1432, 9))
 >input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
+>value : Symbol(value, Decl(main.syn, 1431, 9))
 
-    // object type => should suggest spread
     <#component Foo(x: string, y: string)></>
->x : Symbol(x, Decl(main.syn, 1318, 20))
->y : Symbol(y, Decl(main.syn, 1318, 30))
+>x : Symbol(x, Decl(main.syn, 1434, 20))
+>y : Symbol(y, Decl(main.syn, 1434, 30))
 
     const o = { x: '1', y: '1' }
->o : Symbol(o, Decl(main.syn, 1319, 9))
->x : Symbol(x, Decl(main.syn, 1319, 15))
->y : Symbol(y, Decl(main.syn, 1319, 23))
+>o : Symbol(o, Decl(main.syn, 1435, 9))
+>x : Symbol(x, Decl(main.syn, 1435, 15))
+>y : Symbol(y, Decl(main.syn, 1435, 23))
 
     const e = <Foo {o} />
->e : Symbol(e, Decl(main.syn, 1320, 9))
->Foo : Symbol(Foo, Decl(main.syn, 1315, 31))
+>e : Symbol(e, Decl(main.syn, 1436, 9))
+>Foo : Symbol(Foo, Decl(main.syn, 1432, 31))
+>o : Symbol(o, Decl(main.syn, 1435, 9))
 }
+
+{
+    ;<div .foo/>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    ;<div .foo></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    // class attributes should not conflict with normal attributes
+    ;<input .min min=500></input>
+>input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
+>min : Symbol(min, Decl(main.syn, 1443, 16))
+>input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
+
+    ;<input (.min.min2)></input>
+>input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
+>input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
+
+    ;<input (.min.min2={cond})></input>
+>input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
+>cond : Symbol(cond, Decl(main.syn, 497, 5))
+>input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
+
+    ;<input (.min.min2={cond}, .bar)></input>
+>input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
+>cond : Symbol(cond, Decl(main.syn, 497, 5))
+>input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
+
+    ;<input .min.min2={cond}></input>
+>input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
+>cond : Symbol(cond, Decl(main.syn, 497, 5))
+>input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
+
+    ;<input .min.min2={cond} @ i></input>
+>input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
+>i : Symbol(i, Decl(main.syn, 1448, 5))
+>cond : Symbol(cond, Decl(main.syn, 497, 5))
+>input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
+
+    ;<input (.m) @ i2></input>
+>input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
+>i2 : Symbol(i2, Decl(main.syn, 1449, 5))
+>input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
+
+    // errors emitted during parse
+    ;<div id="foo" .a.a></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>id : Symbol(id, Decl(main.syn, 1452, 9))
+> : Symbol((Missing), Decl(main.syn, 1452, 18))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    ;<div id="foo" (.a)></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>id : Symbol(id, Decl(main.syn, 1453, 9))
+> : Symbol((Missing), Decl(main.syn, 1453, 18))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    ;<div @ foo_1 (.a)></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>foo_1 : Symbol(foo_1, Decl(main.syn, 1454, 5))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    ;<div @ foo_2 .a></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>foo_2 : Symbol(foo_2, Decl(main.syn, 1455, 5))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    ;<div .a .b .c></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    ;<div .a .b .c={cond}></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>cond : Symbol(cond, Decl(main.syn, 497, 5))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    ;<div .a .c={cond} .b></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>cond : Symbol(cond, Decl(main.syn, 497, 5))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    ;<div (.a, .c={cond} .b)></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>cond : Symbol(cond, Decl(main.syn, 497, 5))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    // errors
+    ;<div .a.a></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    ;<div (.a, .a)></div> 
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    ;<div (.a={cond}, .a)></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>cond : Symbol(cond, Decl(main.syn, 497, 5))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    ;<div (.a.b={cond}, .a)></div> 
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>cond : Symbol(cond, Decl(main.syn, 497, 5))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    ;<div (.a, .a={cond})></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>cond : Symbol(cond, Decl(main.syn, 497, 5))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    ;<div (.a, .a.b={cond})></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>cond : Symbol(cond, Decl(main.syn, 497, 5))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    ;<div (.a={cond}, .a.b={cond})></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>cond : Symbol(cond, Decl(main.syn, 497, 5))
+>cond : Symbol(cond, Decl(main.syn, 497, 5))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    // class attribute cannot be used with class list
+    ;<div .a class="b" />
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>class : Symbol(class, Decl(main.syn, 1471, 12))
+
+    ;<div .a {...{ class: 'b' }} />
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>class : Symbol(class, Decl(main.syn, 1472, 18))
+
+    // ok
+    ;<div class="b" />
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>class : Symbol(class, Decl(main.syn, 1475, 9))
+
+    // ok
+    const cond2 = false as boolean
+>cond2 : Symbol(cond2, Decl(main.syn, 1478, 9))
+
+    const cond3 = false as boolean
+>cond3 : Symbol(cond3, Decl(main.syn, 1479, 9))
+
+    ;<div (.a={cond}, .a.b={cond2}, .a={cond3})></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>cond : Symbol(cond, Decl(main.syn, 497, 5))
+>cond2 : Symbol(cond2, Decl(main.syn, 1478, 9))
+>cond3 : Symbol(cond3, Decl(main.syn, 1479, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    // errors
+    ;<div ({...['a', 'b', 'a']})></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    ;<div (.a, {...['a', 'b']})></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    ;<div ({...['a']}, .a)></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    ;<div ({...123})></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    ;<div ({..."123"})></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    // ok
+    ;<div ({...['a', 'b']})></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    ;<div ({...['a', 'b']}, .c)></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    ;<div ({...(['a', 'b'] as string[])})></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    const arr = ['a', 'b']
+>arr : Symbol(arr, Decl(main.syn, 1493, 9))
+
+    ;<div ({...arr})></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>arr : Symbol(arr, Decl(main.syn, 1493, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    // suggest use class list
+    ;<div {...(['a', 'b'] as string[])} />
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    ;<div {...['a', 'b'] as const} />
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>const : Symbol(const)
+
+}
+
+{
+    // this is bugged, something to do with `getContextualJsxElementAttributesType`
+    let c = 0
+>c : Symbol(c, Decl(main.syn, 1504, 7))
+
+    ;<div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <div id="d" @ root>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>id : Symbol(id, Decl(main.syn, 1506, 12))
+>@ : Symbol(@, Decl(main.syn, 1506, 19))
+>root : Symbol(root, Decl(main.syn, 1506, 21))
+
+            {c}
+>c : Symbol(c, Decl(main.syn, 1504, 7))
+
+        </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+            <#run>
+                if (false) {
+                    // nullish update target
+                    update roo {
+                        c += 1
+>c : Symbol(c, Decl(main.syn, 1504, 7))
+                    }
+                }
+            </>
+        </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+}
+
 
 // /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a
 
-// ^(\s*)on(.*)\?:
-// $1on\L$2?:

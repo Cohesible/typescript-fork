@@ -54,6 +54,12 @@ import {
     JsxComponentDirective,
     JsxStyleDirective,
     JsxClassAttribute,
+    JsxClassList,
+    isJsxClassAttribute,
+    isJsxClassList,
+    isJsxSpreadAttribute,
+    JsxSpreadAttribute,
+    isJsxExpression,
     JsxLabeledFragment,
     UnwindStatement,
     UpdateBlockStatement,
@@ -1696,6 +1702,7 @@ const visitEachChildTable: VisitEachChildTable = {
             nodesVisitor(node.typeArguments, visitor, isTypeNode),
             nodeVisitor(node.name, visitor, isIdentifier),
             Debug.checkDefined(nodeVisitor(node.attributes, visitor, isJsxAttributes)),
+            nodeVisitor(node.classList, visitor, isJsxClassList),
         );
     },
 
@@ -1707,6 +1714,7 @@ const visitEachChildTable: VisitEachChildTable = {
             nodesVisitor(node.typeArguments, visitor, isTypeNode),
             nodeVisitor(node.name, visitor, isIdentifier),
             Debug.checkDefined(nodeVisitor(node.attributes, visitor, isJsxAttributes)),
+            nodeVisitor(node.classList, visitor, isJsxClassList),
         );
     },
 
@@ -1821,11 +1829,18 @@ const visitEachChildTable: VisitEachChildTable = {
         );
     },
 
-    [SyntaxKind.JsxClassAttribute]: function visitEachChildOfJsxClassAttribute(node, visitor, context, _nodesVisitor, nodeVisitor, _tokenVisitor) {
+    [SyntaxKind.JsxClassAttribute]: function visitEachChildOfJsxClassAttribute(node, visitor, context, nodesVisitor, nodeVisitor, _tokenVisitor) {
         return context.factory.updateJsxClassAttribute(
             node as JsxClassAttribute,
-            Debug.checkDefined(nodeVisitor((node as JsxClassAttribute).name, visitor, isIdentifier)),
-            nodeVisitor((node as JsxClassAttribute).initializer, visitor, isStringLiteralOrJsxExpression),
+            nodesVisitor((node as JsxClassAttribute).names, visitor, isIdentifier),
+            nodeVisitor((node as JsxClassAttribute).initializer, visitor, isJsxExpression),
+        );
+    },
+
+    [SyntaxKind.JsxClassList]: function visitEachChildOfJsxClassList(node, visitor, context, nodesVisitor, _nodeVisitor, _tokenVisitor) {
+        return context.factory.updateJsxClassList(
+            node as JsxClassList,
+            nodesVisitor((node as JsxClassList).attributes, visitor, (n): n is JsxClassAttribute | JsxSpreadAttribute => isJsxClassAttribute(n) || isJsxSpreadAttribute(n)),
         );
     },
 

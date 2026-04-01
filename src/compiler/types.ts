@@ -381,6 +381,7 @@ export const enum SyntaxKind {
     JsxSpreadAttribute,
     JsxShorthandAttribute,
     JsxClassAttribute,
+    JsxClassList,
     JsxExpression,
     JsxNamespacedName,
     JsxIfDirective,
@@ -1219,6 +1220,7 @@ export type HasChildren =
     | JsxSpreadAttribute
     | JsxShorthandAttribute
     | JsxClassAttribute
+    | JsxClassList
     | JsxExpression
     | JsxNamespacedName
     | JsxIfDirective
@@ -2137,7 +2139,6 @@ export interface FunctionDeclaration extends FunctionLikeDeclarationBase, Declar
     readonly modifiers?: NodeArray<ModifierLike>;
     readonly name?: Identifier;
     readonly body?: FunctionBody;
-    readonly satisfiesType?: TypeNode;
 }
 
 export interface MethodSignature extends SignatureDeclarationBase, TypeElement, LocalsContainer {
@@ -3271,6 +3272,8 @@ export interface JsxElement extends PrimaryExpression {
     readonly openingElement: JsxOpeningElement;
     readonly children: NodeArray<JsxChild>;
     readonly closingElement: JsxClosingElement;
+    /** @internal */ startFlowNode?: FlowNode;
+    /** @internal */ endFlowNode?: FlowNode;
 }
 
 /// Either the opening tag in a <Tag>...</Tag> pair or the lone <Tag /> in a self-closing form
@@ -3285,8 +3288,7 @@ export type JsxCallLike =
 export type JsxAttributeLike =
     | JsxAttribute
     | JsxSpreadAttribute
-    | JsxShorthandAttribute
-    | JsxClassAttribute;
+    | JsxShorthandAttribute;
 
 export type JsxAttributeName =
     | Identifier
@@ -3322,6 +3324,7 @@ export interface JsxOpeningElement extends Expression {
     readonly tagName: JsxTagNameExpression;
     readonly typeArguments?: NodeArray<TypeNode>;
     readonly name?: Identifier;
+    readonly classList?: JsxClassList;
     readonly attributes: JsxAttributes;
 }
 
@@ -3332,6 +3335,7 @@ export interface JsxSelfClosingElement extends PrimaryExpression {
     readonly tagName: JsxTagNameExpression;
     readonly typeArguments?: NodeArray<TypeNode>;
     readonly name?: Identifier;
+    readonly classList?: JsxClassList;
     readonly attributes: JsxAttributes;
 }
 
@@ -3341,6 +3345,8 @@ export interface JsxFragment extends PrimaryExpression {
     readonly openingFragment: JsxOpeningFragment;
     readonly children: NodeArray<JsxChild>;
     readonly closingFragment: JsxClosingFragment;
+    /** @internal */ startFlowNode?: FlowNode;
+    /** @internal */ endFlowNode?: FlowNode;
 }
 
 export interface JsxIfDirective extends PrimaryExpression {
@@ -3426,7 +3432,7 @@ export type JsxAttributeValue =
 
 export interface JsxSpreadAttribute extends ObjectLiteralElement {
     readonly kind: SyntaxKind.JsxSpreadAttribute;
-    readonly parent: JsxAttributes;
+    readonly parent: JsxAttributes | JsxClassList;
     readonly expression: Expression;
 }
 
@@ -3436,11 +3442,17 @@ export interface JsxShorthandAttribute extends ObjectLiteralElement {
     readonly parent: JsxAttributes;
 }
 
-export interface JsxClassAttribute extends Declaration {
+export interface JsxClassAttribute extends Node {
     readonly kind: SyntaxKind.JsxClassAttribute;
-    readonly parent: JsxAttributes;
-    readonly name: Identifier;
-    readonly initializer?: JsxAttributeValue;
+    readonly parent: JsxClassList;
+    readonly names: NodeArray<Identifier>;
+    readonly initializer?: JsxExpression;
+}
+
+export interface JsxClassList extends Node {
+    readonly kind: SyntaxKind.JsxClassList;
+    readonly parent: JsxOpeningElement | JsxSelfClosingElement;
+    readonly attributes: NodeArray<JsxClassAttribute | JsxSpreadAttribute>;
 }
 
 export interface JsxClosingElement extends Node {
@@ -6162,6 +6174,7 @@ export const enum SymbolFlags {
     Transient               = 1 << 25,  // Transient symbol (created during type check)
     Assignment              = 1 << 26,  // Assignment treated as declaration (eg `this.prop = 1`)
     ModuleExports           = 1 << 27,  // Symbol for CommonJS `module` of `module.exports`
+    JsxElement              = 1 << 28,  // Bound from @
     All = -1,
 
     Enum = RegularEnum | ConstEnum,
@@ -9420,10 +9433,10 @@ export interface NodeFactory {
 
     createJsxElement(openingElement: JsxOpeningElement, children: readonly JsxChild[], closingElement: JsxClosingElement): JsxElement;
     updateJsxElement(node: JsxElement, openingElement: JsxOpeningElement, children: readonly JsxChild[], closingElement: JsxClosingElement): JsxElement;
-    createJsxSelfClosingElement(dotDotDotToken: Token<SyntaxKind.DotDotDotToken> | undefined, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes): JsxSelfClosingElement;
-    updateJsxSelfClosingElement(node: JsxSelfClosingElement, dotDotDotToken: Token<SyntaxKind.DotDotDotToken> | undefined, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes): JsxSelfClosingElement;
-    createJsxOpeningElement(dotDotDotToken: Token<SyntaxKind.DotDotDotToken> | undefined, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes): JsxOpeningElement;
-    updateJsxOpeningElement(node: JsxOpeningElement, dotDotDotToken: Token<SyntaxKind.DotDotDotToken> | undefined, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes): JsxOpeningElement;
+    createJsxSelfClosingElement(dotDotDotToken: Token<SyntaxKind.DotDotDotToken> | undefined, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes, classList: JsxClassList | undefined): JsxSelfClosingElement;
+    updateJsxSelfClosingElement(node: JsxSelfClosingElement, dotDotDotToken: Token<SyntaxKind.DotDotDotToken> | undefined, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes, classList: JsxClassList | undefined): JsxSelfClosingElement;
+    createJsxOpeningElement(dotDotDotToken: Token<SyntaxKind.DotDotDotToken> | undefined, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes, classList: JsxClassList | undefined): JsxOpeningElement;
+    updateJsxOpeningElement(node: JsxOpeningElement, dotDotDotToken: Token<SyntaxKind.DotDotDotToken> | undefined, tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, identifier: Identifier | undefined, attributes: JsxAttributes, classList: JsxClassList | undefined): JsxOpeningElement;
     createJsxClosingElement(tagName: JsxTagNameExpression): JsxClosingElement;
     updateJsxClosingElement(node: JsxClosingElement, tagName: JsxTagNameExpression): JsxClosingElement;
     createJsxFragment(openingFragment: JsxOpeningFragment, children: readonly JsxChild[], closingFragment: JsxClosingFragment): JsxFragment;
@@ -9440,8 +9453,10 @@ export interface NodeFactory {
     updateJsxSpreadAttribute(node: JsxSpreadAttribute, expression: Expression): JsxSpreadAttribute;
     createJsxShorthandAttribute(name: Identifier): JsxShorthandAttribute;
     updateJsxShorthandAttribute(node: JsxShorthandAttribute, name: Identifier): JsxShorthandAttribute;
-    createJsxClassAttribute(name: Identifier, initializer: JsxAttributeValue | undefined): JsxClassAttribute;
-    updateJsxClassAttribute(node: JsxClassAttribute, name: Identifier, initializer: JsxAttributeValue | undefined): JsxClassAttribute;
+    createJsxClassAttribute(names: readonly Identifier[], initializer: JsxExpression | undefined): JsxClassAttribute;
+    updateJsxClassAttribute(node: JsxClassAttribute, names: readonly Identifier[], initializer: JsxExpression | undefined): JsxClassAttribute;
+    createJsxClassList(attributes: readonly (JsxClassAttribute | JsxSpreadAttribute)[]): JsxClassList;
+    updateJsxClassList(node: JsxClassList, attributes: readonly (JsxClassAttribute | JsxSpreadAttribute)[]): JsxClassList;
     createJsxExpression(dotDotDotToken: DotDotDotToken | undefined, expression: Expression | undefined): JsxExpression;
     updateJsxExpression(node: JsxExpression, expression: Expression | undefined): JsxExpression;
     createJsxNamespacedName(namespace: Identifier, name: Identifier): JsxNamespacedName;

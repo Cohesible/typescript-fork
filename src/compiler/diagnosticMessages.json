@@ -3061,7 +3061,7 @@
         "category": "Error",
         "code": 95209
     },
-    "'update' block has no plausible effect on '{0}': the block does not reference any variable that '{0}' depends on.": {
+    "update has no plausible effect on '{0}', the block does not reference any variable that '{0}' depends on.": {
         "category": "Error",
         "code": 95210
     },
@@ -3076,6 +3076,58 @@
     "Class attribute expression must be of type 'boolean'.": {
         "category": "Error",
         "code": 95213
+    },
+    "Duplicate class name '{0}'.": {
+        "category": "Error",
+        "code": 95214
+    },
+    "Class name '{0}' is always added unconditionally; this conditional application is redundant.": {
+        "category": "Error",
+        "code": 95215
+    },
+    "'class' attribute will always overwrite the class list.": {
+        "category": "Error",
+        "code": 95216
+    },
+    "Type '{0}' is being spread as attributes. Did you mean to use a class list '( {...} )'?": {
+        "category": "Error",
+        "code": 95217
+    },
+    "An element's class list must appear before its attributes.": {
+        "category": "Error",
+        "code": 95218
+    },
+    "An element's class list must appear before its binding name.": {
+        "category": "Error",
+        "code": 95219
+    },
+    "Multiple classes must be enclosed in '()' and separated by commas.": {
+        "category": "Error",
+        "code": 95220
+    },
+    "Multiple classes must be enclosed in '()' and separated by commas. Did you mean '{0}'?": {
+        "category": "Error",
+        "code": 95221
+    },
+    "Class attributes must be placed inside a single class list.": {
+        "category": "Error",
+        "code": 95222
+    },
+    "This update runs unconditionally and is possibly infinite.": {
+        "category": "Error",
+        "code": 95223
+    },
+    "'{0}' is already covered by '{1}' in this update.": {
+        "category": "Error",
+        "code": 95224
+    },
+    "'{0}' depends on these changes but is not included in this update.": {
+        "category": "Error",
+        "code": 95225
+    },
+    "'{0}' depends on these changes and covers '{1}'; use 'update {0}' instead.": {
+        "category": "Error",
+        "code": 95226
     },
     "'{0}' is defined as an accessor in class '{1}', but is overridden here in '{2}' as an instance property.": {
         "category": "Error",

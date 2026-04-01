@@ -2,6 +2,7 @@
 
 === Performance Stats ===
 Type Count: 2,500
+Instantiation count: 1,000
 
 === main.syn ===
 function f<T>(t: reify T): T {
@@ -983,73 +984,6 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 }
 
 {
-    // satisfies postfix on function declarations
-    type Bar = (a: number) => number
->Bar : (a: number) => number
->    : ^ ^^      ^^^^^      
->a : number
->  : ^^^^^^
-
-    function bar(a) {
->bar : (a: number) => number
->    : ^ ^^^^^^^^^^^^^^^^^^^
->a : number
->  : ^^^^^^
-
-        return a // should be a number
->a : number
->  : ^^^^^^
-
-    } satisfies Bar
-
-    type Bar2 = (a: number, ...rest: number[]) => number
->Bar2 : (a: number, ...rest: number[]) => number
->     : ^ ^^      ^^^^^    ^^        ^^^^^      
->a : number
->  : ^^^^^^
->rest : number[]
->     : ^^^^^^^^
-
-    function bar2(a, ...arr) {
->bar2 : (a: number, ...arr: number[]) => number
->     : ^ ^^^^^^^^^^^^^   ^^^^^^^^^^^^^^^^^^^^^
->a : number
->  : ^^^^^^
->arr : number[]
->    : ^^^^^^^^
-
-        return arr[1] + a // should be a number
->arr[1] + a : number
->           : ^^^^^^
->arr[1] : number
->       : ^^^^^^
->arr : number[]
->    : ^^^^^^^^
->1 : 1
->  : ^
->a : number
->  : ^^^^^^
-
-    } satisfies Bar2
-
-    function bar3({ a }) {
->bar3 : ({ a }: { a: number; }) => number
->     : ^     ^^^^^^^      ^^^^^^^^^^^^^^
->a : number
->  : ^^^^^^
-
-        return a // should be a number
->a : number
->  : ^^^^^^
-
-    } satisfies (arg: { a: number }) => number
->arg : { a: number; }
->    : ^^^^^      ^^^
->a : number
->  : ^^^^^^
-}
-
-{
     // JSX should parse
     // TODO: auto include `jsx` lib if project includes JSX 
     const y = <div></div>
@@ -1991,8 +1925,8 @@ const d2 = <input {value}/>
 >                 : ^^^^^^^^^^^^^^^^
 >input : any
 >      : ^^^
->value : any
->      : ^^^
+>value : ""
+>      : ^^
 
 const d3 = <div>
 >d3 : HTMLDivElement
@@ -2548,7 +2482,6 @@ const d4 = <div><#if (cond)></></div>
 }
 
 {
-    // transitive analysis inside #component: calling a local function counts
     <#component Reactive(v: number) {
 >Reactive : any
 >         : ^^^
@@ -2565,7 +2498,7 @@ const d4 = <div><#if (cond)></></div>
 >increment : () => void
 >          : ^^^^^^^^^^
 
-            count++  // mutates `count`, which x depends on
+            count++  // x depends on
 >count++ : number
 >        : ^^^^^^
 >count : number
@@ -2601,7 +2534,6 @@ const d4 = <div><#if (cond)></></div>
 >div : any
 >    : ^^^
 
-        // ok — increment() mutates count (x's dep) even though block doesn't reference count directly
         update x {
 >x : HTMLDivElement
 >  : ^^^^^^^^^^^^^^
@@ -2613,7 +2545,6 @@ const d4 = <div><#if (cond)></></div>
 >          : ^^^^^^^^^^
         }
 
-        // error — unrelated() doesn't touch count
         update x {
 >x : HTMLDivElement
 >  : ^^^^^^^^^^^^^^
@@ -2637,7 +2568,401 @@ const d4 = <div><#if (cond)></></div>
 }
 
 {
-    // update depending on #run directive: rate is referenced inside <#run>, so counter depends on it
+    // catch reentrant (recursive) updates
+    // these only make sense if they're under branching control flow
+    let c = 0
+>c : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+    ;<div @ root>
+><div @ root>        {c}        <#run>            update root {                c += 1            }            if (c < 10) {                // ok                update root {                    c += 1                }            }        </>        <div @ d>            <#run>                update root {                    c += 1                }            </>        </div>    </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                                                                                                                                  : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+        {c}
+>c : number
+>  : ^^^^^^
+
+        <#run>
+            update root {
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+                c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+            }
+            if (c < 10) {
+>c < 10 : boolean
+>       : ^^^^^^^
+>c : number
+>  : ^^^^^^
+>10 : 10
+>   : ^^
+
+                // ok
+                update root {
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+                    c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+                }
+            }
+        </>
+        <div @ d>
+><div @ d>            <#run>                update root {                    c += 1                }            </>        </div> : HTMLDivElement
+>                                                                                                                                 : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+            <#run>
+                update root {
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+                    c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+                }
+            </>
+        </div>
+>div : any
+>    : ^^^
+
+    </div>
+>div : any
+>    : ^^^
+
+    ;<div>
+><div>        <#run>            // error (use-before-init)            update d { c += 1 }        </>        <div @ d>            {c}        </div>    </div> : HTMLDivElement
+>                                                                                                                                                            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <#run>
+            // error (use-before-init)
+            update d { c += 1 }
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+
+        </>
+        <div @ d>
+><div @ d>            {c}        </div> : HTMLDivElement
+>                                       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+            {c}
+>c : number
+>  : ^^^^^^
+
+        </div>
+>div : any
+>    : ^^^
+
+    </div>
+>div : any
+>    : ^^^
+}
+
+{
+    let c = 0
+>c : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+    ;<div @ root>
+><div @ root>        <div @ d1>            {c}        </div>        <div @ d2>            {c}        </div>        <button on:click={() => {            // ok            update root {                c += 1            }            // ok            update d1, d2 {                c += 1            }            // error            update d1 {                c += 1            }        }}>          Increment        </button>    </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                                                                                                                                                                               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+        <div @ d1>
+><div @ d1>            {c}        </div> : HTMLDivElement
+>                                        : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d1 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+
+            {c}
+>c : number
+>  : ^^^^^^
+
+        </div>
+>div : any
+>    : ^^^
+
+        <div @ d2>
+><div @ d2>            {c}        </div> : HTMLDivElement
+>                                        : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d2 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+
+            {c}
+>c : number
+>  : ^^^^^^
+
+        </div>
+>div : any
+>    : ^^^
+
+        <button on:click={() => {
+><button on:click={() => {            // ok            update root {                c += 1            }            // ok            update d1, d2 {                c += 1            }            // error            update d1 {                c += 1            }        }}>          Increment        </button> : HTMLButtonElement
+>                                                                                                                                                                                                                                                                                                                   : ^^^^^^^^^^^^^^^^^
+>button : any
+>       : ^^^
+>on:click : () => void
+>         : ^^^^^^^^^^
+>on : any
+>   : ^^^
+>click : any
+>      : ^^^
+>() => {            // ok            update root {                c += 1            }            // ok            update d1, d2 {                c += 1            }            // error            update d1 {                c += 1            }        } : () => void
+>                                                                                                                                                                                                                                                           : ^^^^^^^^^^
+
+            // ok
+            update root {
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+                c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+            }
+            // ok
+            update d1, d2 {
+>d1 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+>d2 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+
+                c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+            }
+            // error
+            update d1 {
+>d1 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+
+                c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+            }
+        }}>
+          Increment
+        </button>
+>button : any
+>       : ^^^
+
+    </div>
+>div : any
+>    : ^^^
+}
+
+{
+    let c = 0
+>c : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+    ;<div @ root>
+><div @ root>        <div @ d1>            {c}        </div>        {c}        <button on:click={() => {            update d1, root {                c += 1            }            update d1 {                c += 1            }        }}>          Increment        </button>    </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                           : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+        <div @ d1>
+><div @ d1>            {c}        </div> : HTMLDivElement
+>                                        : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d1 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+
+            {c}
+>c : number
+>  : ^^^^^^
+
+        </div>
+>div : any
+>    : ^^^
+
+        {c}
+>c : number
+>  : ^^^^^^
+
+        <button on:click={() => {
+><button on:click={() => {            update d1, root {                c += 1            }            update d1 {                c += 1            }        }}>          Increment        </button> : HTMLButtonElement
+>                                                                                                                                                                                                   : ^^^^^^^^^^^^^^^^^
+>button : any
+>       : ^^^
+>on:click : () => void
+>         : ^^^^^^^^^^
+>on : any
+>   : ^^^
+>click : any
+>      : ^^^
+>() => {            update d1, root {                c += 1            }            update d1 {                c += 1            }        } : () => void
+>                                                                                                                                           : ^^^^^^^^^^
+
+            update d1, root {
+>d1 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+                c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+            }
+            update d1 {
+>d1 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+
+                c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+            }
+        }}>
+          Increment
+        </button>
+>button : any
+>       : ^^^
+
+    </div>
+>div : any
+>    : ^^^
+}
+
+{
+    let c = 0
+>c : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+    ;<div @ root>
+><div @ root>        <div @ d>            {c}        </div>        <button on:click={() => {            // (TODO, maybe) suggestion - a more specific update target exists            update root {                c += 1            }        }}>          Increment        </button>    </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+        <div @ d>
+><div @ d>            {c}        </div> : HTMLDivElement
+>                                       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+            {c}
+>c : number
+>  : ^^^^^^
+
+        </div>
+>div : any
+>    : ^^^
+
+        <button on:click={() => {
+><button on:click={() => {            // (TODO, maybe) suggestion - a more specific update target exists            update root {                c += 1            }        }}>          Increment        </button> : HTMLButtonElement
+>                                                                                                                                                                                                                   : ^^^^^^^^^^^^^^^^^
+>button : any
+>       : ^^^
+>on:click : () => void
+>         : ^^^^^^^^^^
+>on : any
+>   : ^^^
+>click : any
+>      : ^^^
+>() => {            // (TODO, maybe) suggestion - a more specific update target exists            update root {                c += 1            }        } : () => void
+>                                                                                                                                                           : ^^^^^^^^^^
+
+            // (TODO, maybe) suggestion - a more specific update target exists
+            update root {
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+                c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+            }
+        }}>
+          Increment
+        </button>
+>button : any
+>       : ^^^
+
+    </div>
+>div : any
+>    : ^^^
+}
+
+{
     <#component Timer(n: number) {
 >Timer : any
 >      : ^^^
@@ -2744,7 +3069,6 @@ const d4 = <div><#if (cond)></></div>
 >div : any
 >    : ^^^
 
-        // ok — rate is in the #run body which is a dep of counter
         update counter {
 >counter : HTMLDivElement
 >        : ^^^^^^^^^^^^^^
@@ -2767,6 +3091,208 @@ const d4 = <div><#if (cond)></></div>
 >    : ^^^
 
     </>
+}
+
+{
+    let c = 0
+>c : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+    function noop() {}
+>noop : () => void
+>     : ^^^^^^^^^^
+
+    <#component Inner() {}>
+>Inner : any
+>      : ^^^
+
+        <div>{c}</div>
+><div>{c}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>c : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+    ;<div @ root>
+><div @ root>        <Inner />    </div> : HTMLDivElement
+>                                        : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+        <Inner />
+><Inner /> : HTMLDivElement
+>          : ^^^^^^^^^^^^^^
+>Inner : (props: {}) => HTMLDivElement
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    </div>
+>div : any
+>    : ^^^
+
+    update root {
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+        c += 1  // ok
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+    }
+    // TODO: the no-effect case should suggest to use the expression form (?)
+    update root {
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+        noop()  // error, no effect
+>noop() : void
+>       : ^^^^
+>noop : () => void
+>     : ^^^^^^^^^^
+    }
+}
+
+{
+    let c = 0
+>c : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+    <#component InnerB() {}>
+>InnerB : any
+>       : ^^^
+
+        <div>{c}</div>
+><div>{c}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>c : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+    ;<div @ root>
+><div @ root>        <InnerB @ d1 />        <div @ d2>{c}</div>        <#run>            setTimeout(() => {                update d1 {                    c += 1                }                update d2 {                    c += 1                }            })        </>    </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                          : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+        <InnerB @ d1 />
+><InnerB @ d1 /> : HTMLDivElement
+>                : ^^^^^^^^^^^^^^
+>InnerB : (props: {}) => HTMLDivElement
+>       : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>d1 : Element
+>   : ^^^^^^^
+
+        <div @ d2>{c}</div>
+><div @ d2>{c}</div> : HTMLDivElement
+>                    : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d2 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+>c : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+        <#run>
+            setTimeout(() => {
+>setTimeout(() => {                update d1 {                    c += 1                }                update d2 {                    c += 1                }            }) : number
+>                                                                                                                                                                             : ^^^^^^
+>setTimeout : (handler: TimerHandler, timeout?: number, ...arguments: any[]) => number
+>           : ^       ^^            ^^       ^^^      ^^^^^         ^^     ^^^^^      
+>() => {                update d1 {                    c += 1                }                update d2 {                    c += 1                }            } : () => void
+>                                                                                                                                                                 : ^^^^^^^^^^
+
+                update d1 {
+>d1 : Element
+>   : ^^^^^^^
+
+                    c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+                }
+                update d2 {
+>d2 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+
+                    c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+                }
+            })
+        </>
+    </div>
+>div : any
+>    : ^^^
+}
+
+{
+    let c = 0
+>c : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+    declare const External: any
+>External : any
+>         : ^^^
+
+    ;<div @ root>
+><div @ root>        <External />    </div> : HTMLDivElement
+>                                           : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+        <External />
+><External /> : Element
+>             : ^^^^^^^
+>External : any
+>         : ^^^
+
+    </div>
+>div : any
+>    : ^^^
+
+    update root {
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+        c += 1 
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+    }
 }
 
 // !T (FallibleType) and try expr
@@ -3838,9 +4364,8 @@ const d4 = <div><#if (cond)></></div>
 >b : any
 >  : ^^^
 
-    // trailing bindings should be parsed correctly:
-    ;<div id="aaa" @ c />
-><div id="aaa" @ c /> : HTMLDivElement
+    ;<div @ c id="aaa" />
+><div @ c id="aaa" /> : HTMLDivElement
 >                     : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
@@ -3919,7 +4444,7 @@ const d4 = <div><#if (cond)></></div>
 >Comp2 : () => (() => void)[]
 >      : ^^^^^^              
 
-    const spread4 = <div><...Comp2 /></div>  // error, intrinsics want something Element-like
+    const spread4 = <div><...Comp2 /></div>  // error, intrinsics want something NodeLike
 >spread4 : HTMLDivElement
 >        : ^^^^^^^^^^^^^^
 ><div><...Comp2 /></div> : HTMLDivElement
@@ -4239,12 +4764,6 @@ const d4 = <div><#if (cond)></></div>
 // </Foo>
 //
 //
-// --- WIP: unlabeled callable fragments ---
-// - callable fragments can be used without labels, analogous to arrow function expressions
-// - they appear as `<(...params)> </>`
-// - cannot appear as a child of an intrinsic
-//
-//
 //
 // --- WIP: explicit (JSX) resource management ---
 // - `unwind { ... }` inside #run or #component body: registers cleanup to run when the component is cleaned up
@@ -4407,28 +4926,24 @@ const d4 = <div><#if (cond)></></div>
 >1 : 1
 >  : ^
 
-    // Foo used as a type — aliases ComponentNode<HTMLDivElement, { x: string }>
     const r1_typed: Foo = r1
 >r1_typed : ComponentNode<HTMLDivElement, { x: string; }>
 >         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >r1 : ComponentNode<HTMLDivElement, { x: string; }>
 >   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    // Baz also usable as a type
     const r3_typed: Baz = r3
 >r3_typed : ComponentNode<HTMLDivElement, { x: string; }>
 >         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >r3 : ComponentNode<HTMLDivElement, { x: string; }>
 >   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    // same props shape — structurally compatible
     const r_cross: Foo = r3
 >r_cross : ComponentNode<HTMLDivElement, { x: string; }>
 >        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >r3 : ComponentNode<HTMLDivElement, { x: string; }>
 >   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    // { x, y? } assignable to { x } — ok
     const r_cross2: Foo = r4a
 >r_cross2 : ComponentNode<HTMLDivElement, { x: string; }>
 >         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -5031,7 +5546,6 @@ const d4 = <div><#if (cond)></></div>
     </>
 }
 
-// numeric literals as JSX attribute values (no braces needed)
 {
     const a = <input min=0 max=100 step=5 />
 >a : HTMLInputElement
@@ -5072,7 +5586,6 @@ const d4 = <div><#if (cond)></></div>
 >   : ^^
 }
 
-// JSX shorthand attribute — proper AST node (not desugared)
 {
     const value = 'hello'
 >value : "hello"
@@ -5087,10 +5600,9 @@ const d4 = <div><#if (cond)></></div>
 >                  : ^^^^^^^^^^^^^^^^
 >input : any
 >      : ^^^
->value : any
->      : ^^^
+>value : "hello"
+>      : ^^^^^^^
 
-    // object type => should suggest spread
     <#component Foo(x: string, y: string)></>
 >Foo : any
 >    : ^^^
@@ -5120,11 +5632,645 @@ const d4 = <div><#if (cond)></></div>
 >            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >Foo : (props: { x: string; y: string; }) => []
 >    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->o : any
->  : ^^^
+>o : { x: string; y: string; }
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^
 }
+
+{
+    ;<div .foo/>
+><div .foo/> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>foo : any
+>    : ^^^
+
+    ;<div .foo></div>
+><div .foo></div> : HTMLDivElement
+>                 : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>foo : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+    // class attributes should not conflict with normal attributes
+    ;<input .min min=500></input>
+><input .min min=500></input> : HTMLInputElement
+>                             : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>min : any
+>    : ^^^
+>min : number
+>    : ^^^^^^
+>input : any
+>      : ^^^
+
+    ;<input (.min.min2)></input>
+><input (.min.min2)></input> : HTMLInputElement
+>                            : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>min : any
+>    : ^^^
+>min2 : any
+>     : ^^^
+>input : any
+>      : ^^^
+
+    ;<input (.min.min2={cond})></input>
+><input (.min.min2={cond})></input> : HTMLInputElement
+>                                   : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>min : any
+>    : ^^^
+>min2 : any
+>     : ^^^
+>cond : true
+>     : ^^^^
+>input : any
+>      : ^^^
+
+    ;<input (.min.min2={cond}, .bar)></input>
+><input (.min.min2={cond}, .bar)></input> : HTMLInputElement
+>                                         : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>min : any
+>    : ^^^
+>min2 : any
+>     : ^^^
+>cond : true
+>     : ^^^^
+>bar : any
+>    : ^^^
+>input : any
+>      : ^^^
+
+    ;<input .min.min2={cond}></input>
+><input .min.min2={cond}></input> : HTMLInputElement
+>                                 : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>min : any
+>    : ^^^
+>min2 : any
+>     : ^^^
+>cond : true
+>     : ^^^^
+>input : any
+>      : ^^^
+
+    ;<input .min.min2={cond} @ i></input>
+><input .min.min2={cond} @ i></input> : HTMLInputElement
+>                                     : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>i : HTMLInputElement
+>  : ^^^^^^^^^^^^^^^^
+>min : any
+>    : ^^^
+>min2 : any
+>     : ^^^
+>cond : true
+>     : ^^^^
+>input : any
+>      : ^^^
+
+    ;<input (.m) @ i2></input>
+><input (.m) @ i2></input> : HTMLInputElement
+>                          : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>i2 : HTMLInputElement
+>   : ^^^^^^^^^^^^^^^^
+>m : any
+>  : ^^^
+>input : any
+>      : ^^^
+
+    // errors emitted during parse
+    ;<div id="foo" .a.a></div>
+><div id="foo" .a.a></div> : HTMLDivElement
+>                          : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>id : string
+>   : ^^^^^^
+> : true
+> : ^^^^
+>div : any
+>    : ^^^
+
+    ;<div id="foo" (.a)></div>
+><div id="foo" (.a)></div> : HTMLDivElement
+>                          : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>id : string
+>   : ^^^^^^
+> : true
+> : ^^^^
+>div : any
+>    : ^^^
+
+    ;<div @ foo_1 (.a)></div>
+><div @ foo_1 (.a)></div> : HTMLDivElement
+>                         : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>foo_1 : HTMLDivElement
+>      : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+    ;<div @ foo_2 .a></div>
+><div @ foo_2 .a></div> : HTMLDivElement
+>                       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>foo_2 : HTMLDivElement
+>      : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+    ;<div .a .b .c></div>
+><div .a .b .c></div> : HTMLDivElement
+>                     : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>b : any
+>  : ^^^
+>c : any
+>  : ^^^
+>div : any
+>    : ^^^
+
+    ;<div .a .b .c={cond}></div>
+><div .a .b .c={cond}></div> : HTMLDivElement
+>                            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>b : any
+>  : ^^^
+>c : any
+>  : ^^^
+>cond : true
+>     : ^^^^
+>div : any
+>    : ^^^
+
+    ;<div .a .c={cond} .b></div>
+><div .a .c={cond} .b></div> : HTMLDivElement
+>                            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>c : any
+>  : ^^^
+>cond : true
+>     : ^^^^
+>div : any
+>    : ^^^
+
+    ;<div (.a, .c={cond} .b)></div>
+><div (.a, .c={cond} .b)></div> : HTMLDivElement
+>                               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>c : any
+>  : ^^^
+>cond : true
+>     : ^^^^
+>b : any
+>  : ^^^
+>div : any
+>    : ^^^
+
+    // errors
+    ;<div .a.a></div>
+><div .a.a></div> : HTMLDivElement
+>                 : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>a : any
+>  : ^^^
+>div : any
+>    : ^^^
+
+    ;<div (.a, .a)></div> 
+><div (.a, .a)></div> : HTMLDivElement
+>                     : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>a : any
+>  : ^^^
+>div : any
+>    : ^^^
+
+    ;<div (.a={cond}, .a)></div>
+><div (.a={cond}, .a)></div> : HTMLDivElement
+>                            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>cond : true
+>     : ^^^^
+>a : any
+>  : ^^^
+>div : any
+>    : ^^^
+
+    ;<div (.a.b={cond}, .a)></div> 
+><div (.a.b={cond}, .a)></div> : HTMLDivElement
+>                              : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>b : any
+>  : ^^^
+>cond : true
+>     : ^^^^
+>a : any
+>  : ^^^
+>div : any
+>    : ^^^
+
+    ;<div (.a, .a={cond})></div>
+><div (.a, .a={cond})></div> : HTMLDivElement
+>                            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>a : any
+>  : ^^^
+>cond : true
+>     : ^^^^
+>div : any
+>    : ^^^
+
+    ;<div (.a, .a.b={cond})></div>
+><div (.a, .a.b={cond})></div> : HTMLDivElement
+>                              : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>a : any
+>  : ^^^
+>b : any
+>  : ^^^
+>cond : true
+>     : ^^^^
+>div : any
+>    : ^^^
+
+    ;<div (.a={cond}, .a.b={cond})></div>
+><div (.a={cond}, .a.b={cond})></div> : HTMLDivElement
+>                                     : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>cond : true
+>     : ^^^^
+>a : any
+>  : ^^^
+>b : any
+>  : ^^^
+>cond : true
+>     : ^^^^
+>div : any
+>    : ^^^
+
+    // class attribute cannot be used with class list
+    ;<div .a class="b" />
+><div .a class="b" /> : HTMLDivElement
+>                     : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>class : string
+>      : ^^^^^^
+
+    ;<div .a {...{ class: 'b' }} />
+><div .a {...{ class: 'b' }} /> : HTMLDivElement
+>                               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>{ class: 'b' } : { class: string; }
+>               : ^^^^^^^^^^^^^^^^^^
+>class : string
+>      : ^^^^^^
+>'b' : "b"
+>    : ^^^
+
+    // ok
+    ;<div class="b" />
+><div class="b" /> : HTMLDivElement
+>                  : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>class : string
+>      : ^^^^^^
+
+    // ok
+    const cond2 = false as boolean
+>cond2 : boolean
+>      : ^^^^^^^
+>false as boolean : boolean
+>                 : ^^^^^^^
+>false : false
+>      : ^^^^^
+
+    const cond3 = false as boolean
+>cond3 : boolean
+>      : ^^^^^^^
+>false as boolean : boolean
+>                 : ^^^^^^^
+>false : false
+>      : ^^^^^
+
+    ;<div (.a={cond}, .a.b={cond2}, .a={cond3})></div>
+><div (.a={cond}, .a.b={cond2}, .a={cond3})></div> : HTMLDivElement
+>                                                  : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>cond : true
+>     : ^^^^
+>a : any
+>  : ^^^
+>b : any
+>  : ^^^
+>cond2 : boolean
+>      : ^^^^^^^
+>a : any
+>  : ^^^
+>cond3 : boolean
+>      : ^^^^^^^
+>div : any
+>    : ^^^
+
+    // errors
+    ;<div ({...['a', 'b', 'a']})></div>
+><div ({...['a', 'b', 'a']})></div> : HTMLDivElement
+>                                   : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>['a', 'b', 'a'] : string[]
+>                : ^^^^^^^^
+>'a' : "a"
+>    : ^^^
+>'b' : "b"
+>    : ^^^
+>'a' : "a"
+>    : ^^^
+>div : any
+>    : ^^^
+
+    ;<div (.a, {...['a', 'b']})></div>
+><div (.a, {...['a', 'b']})></div> : HTMLDivElement
+>                                  : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>['a', 'b'] : string[]
+>           : ^^^^^^^^
+>'a' : "a"
+>    : ^^^
+>'b' : "b"
+>    : ^^^
+>div : any
+>    : ^^^
+
+    ;<div ({...['a']}, .a)></div>
+><div ({...['a']}, .a)></div> : HTMLDivElement
+>                             : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>['a'] : string[]
+>      : ^^^^^^^^
+>'a' : "a"
+>    : ^^^
+>a : any
+>  : ^^^
+>div : any
+>    : ^^^
+
+    ;<div ({...123})></div>
+><div ({...123})></div> : HTMLDivElement
+>                       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>123 : 123
+>    : ^^^
+>div : any
+>    : ^^^
+
+    ;<div ({..."123"})></div>
+><div ({..."123"})></div> : HTMLDivElement
+>                         : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>"123" : "123"
+>      : ^^^^^
+>div : any
+>    : ^^^
+
+    // ok
+    ;<div ({...['a', 'b']})></div>
+><div ({...['a', 'b']})></div> : HTMLDivElement
+>                              : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>['a', 'b'] : string[]
+>           : ^^^^^^^^
+>'a' : "a"
+>    : ^^^
+>'b' : "b"
+>    : ^^^
+>div : any
+>    : ^^^
+
+    ;<div ({...['a', 'b']}, .c)></div>
+><div ({...['a', 'b']}, .c)></div> : HTMLDivElement
+>                                  : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>['a', 'b'] : string[]
+>           : ^^^^^^^^
+>'a' : "a"
+>    : ^^^
+>'b' : "b"
+>    : ^^^
+>c : any
+>  : ^^^
+>div : any
+>    : ^^^
+
+    ;<div ({...(['a', 'b'] as string[])})></div>
+><div ({...(['a', 'b'] as string[])})></div> : HTMLDivElement
+>                                            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>(['a', 'b'] as string[]) : string[]
+>                         : ^^^^^^^^
+>['a', 'b'] as string[] : string[]
+>                       : ^^^^^^^^
+>['a', 'b'] : string[]
+>           : ^^^^^^^^
+>'a' : "a"
+>    : ^^^
+>'b' : "b"
+>    : ^^^
+>div : any
+>    : ^^^
+
+    const arr = ['a', 'b']
+>arr : string[]
+>    : ^^^^^^^^
+>['a', 'b'] : string[]
+>           : ^^^^^^^^
+>'a' : "a"
+>    : ^^^
+>'b' : "b"
+>    : ^^^
+
+    ;<div ({...arr})></div>
+><div ({...arr})></div> : HTMLDivElement
+>                       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>arr : string[]
+>    : ^^^^^^^^
+>div : any
+>    : ^^^
+
+    // suggest use class list
+    ;<div {...(['a', 'b'] as string[])} />
+><div {...(['a', 'b'] as string[])} /> : HTMLDivElement
+>                                      : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>(['a', 'b'] as string[]) : string[]
+>                         : ^^^^^^^^
+>['a', 'b'] as string[] : string[]
+>                       : ^^^^^^^^
+>['a', 'b'] : string[]
+>           : ^^^^^^^^
+>'a' : "a"
+>    : ^^^
+>'b' : "b"
+>    : ^^^
+
+    ;<div {...['a', 'b'] as const} />
+><div {...['a', 'b'] as const} /> : HTMLDivElement
+>                                 : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>['a', 'b'] as const : readonly ["a", "b"]
+>                    : ^^^^^^^^^^^^^^^^^^^
+>['a', 'b'] : readonly ["a", "b"]
+>           : ^^^^^^^^^^^^^^^^^^^
+>'a' : "a"
+>    : ^^^
+>'b' : "b"
+>    : ^^^
+
+}
+
+{
+    // this is bugged, something to do with `getContextualJsxElementAttributesType`
+    let c = 0
+>c : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+    ;<div>
+><div>        <div id="d" @ root>            {c}        </div>        <div>            <#run>                if (false) {                    // nullish update target                    update roo {                        c += 1                    }                }            </>        </div>    </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                                                : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <div id="d" @ root>
+><div id="d" @ root>            {c}        </div> : HTMLDivElement
+>                                                 : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>id : string
+>   : ^^^^^^
+>@ : true
+>  : ^^^^
+>root : true
+>     : ^^^^
+
+            {c}
+>c : number
+>  : ^^^^^^
+
+        </div>
+>div : any
+>    : ^^^
+
+        <div>
+><div>            <#run>                if (false) {                    // nullish update target                    update roo {                        c += 1                    }                }            </>        </div> : HTMLDivElement
+>                                                                                                                                                                                                                                 : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+            <#run>
+                if (false) {
+>false : false
+>      : ^^^^^
+
+                    // nullish update target
+                    update roo {
+>roo : any
+>    : ^^^
+
+                        c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+                    }
+                }
+            </>
+        </div>
+>div : any
+>    : ^^^
+
+    </div>
+>div : any
+>    : ^^^
+}
+
 
 // /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a
 
-// ^(\s*)on(.*)\?:
-// $1on\L$2?:

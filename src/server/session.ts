@@ -2003,7 +2003,7 @@ export class Session<TMessage = string> implements EventSender {
     private provideInlayHints(args: protocol.InlayHintsRequestArgs): readonly protocol.InlayHintItem[] {
         const { file, project } = this.getFileAndProject(args);
         const scriptInfo = this.projectService.getScriptInfoForNormalizedPath(file)!;
-        const hints = project.getLanguageService().provideInlayHints(file, args, this.getPreferences(file));
+        const hints = project.getLanguageService().provideInlayHints(file, args, this.getPreferences(file), args.asyncTokenPos);
 
         return hints.map(hint => {
             const { position, displayParts } = hint;
@@ -2369,6 +2369,12 @@ export class Session<TMessage = string> implements EventSender {
     private getJsxStyleRegions(args: protocol.FileRequestArgs) {
         const { file, languageService } = this.getFileAndLanguageServiceForSyntacticOperation(args);
         return languageService.getJsxStyleRegions(file);
+    }
+
+    private jsxFindScopedStyles(args: protocol.FileLocationRequestArgs) {
+        const { file, languageService } = this.getFileAndLanguageServiceForSyntacticOperation(args);
+        const position = this.getPositionInFile(args, file);
+        return languageService.jsxFindScopedStyles(file, position);
     }
 
     private getIndentation(args: protocol.IndentationRequestArgs) {
@@ -3570,6 +3576,9 @@ export class Session<TMessage = string> implements EventSender {
         },
         [protocol.CommandTypes.JsxStyleRegions]: (request: protocol.JsxStyleRegionsRequest) => {
             return this.requiredResponse(this.getJsxStyleRegions(request.arguments));
+        },
+        [protocol.CommandTypes.JsxFindScopedStyles]: (request: protocol.FileLocationRequest) => {
+            return this.requiredResponse(this.jsxFindScopedStyles(request.arguments));
         },
         [protocol.CommandTypes.FileReferences]: (request: protocol.FileReferencesRequest) => {
             return this.requiredResponse(this.getFileReferences(request.arguments, /*simplifiedResult*/ true));

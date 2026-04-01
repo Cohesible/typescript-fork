@@ -56,6 +56,7 @@ export const enum CommandTypes {
     BraceCompletion = "braceCompletion",
     GetSpanOfEnclosingComment = "getSpanOfEnclosingComment",
     JsxStyleRegions = "jsxStyleRegions",
+    JsxFindScopedStyles = "jsxFindScopedStyles",
     Change = "change",
     Close = "close",
     /** @deprecated Prefer CompletionInfo -- see comment on CompletionsResponse */
@@ -2377,6 +2378,8 @@ export interface InlayHintsRequestArgs extends FileRequestArgs {
      * Length of the span.
      */
     length: number;
+    // for per-decl hints
+    asyncTokenPos?: number;
 }
 
 export interface InlayHintsRequest extends Request {

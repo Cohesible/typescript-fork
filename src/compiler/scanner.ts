@@ -3829,10 +3829,11 @@ export function createScanner(
     }
 
     function scanJsxAttributeIdentifier(): SyntaxKind {
-        if (tokenIsIdentifierOrKeyword(token) || token === SyntaxKind.AtToken || token === SyntaxKind.MinusToken) {
+        if (tokenIsIdentifierOrKeyword(token) || token === SyntaxKind.AtToken || token === SyntaxKind.MinusToken || token === SyntaxKind.MinusMinusToken) {
             // Punctuation tokens don't reset tokenValue in scan
             if (token === SyntaxKind.AtToken) tokenValue = "@";
             else if (token === SyntaxKind.MinusToken) tokenValue = "-";
+            else if (token === SyntaxKind.MinusMinusToken) tokenValue += "--";
             while (pos < end) {
                 const ch = charCodeUnchecked(pos);
                 if (ch === CharacterCodes.minus) {

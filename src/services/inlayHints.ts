@@ -26,6 +26,7 @@ import {
     getLanguageVariant,
     getLeadingCommentRanges,
     getNameOfDeclaration,
+    getTokenAtPosition,
     getQuotePreference,
     hasContextSensitiveParameters,
     Identifier,
@@ -146,6 +147,21 @@ function shouldUseInteractiveInlayHints(preferences: UserPreferences) {
     return preferences.interactiveInlayHints === true;
 }
 
+function isNonTypeFunctionLike(node: Node) {
+    return node.kind === SyntaxKind.FunctionDeclaration ||
+        node.kind === SyntaxKind.FunctionExpression ||
+        node.kind === SyntaxKind.MethodDeclaration ||
+        node.kind === SyntaxKind.ArrowFunction;
+}
+
+function findNonTypeFunctionLikeAncestor(node: Node) {
+    let n = node
+    while (n) {
+        if (isNonTypeFunctionLike(n)) return n
+        n = n.parent
+    }
+}
+
 /** @internal */
 export function provideInlayHints(context: InlayHintsContext): InlayHint[] {
     const { file, program, span, cancellationToken, preferences } = context;
@@ -155,6 +171,25 @@ export function provideInlayHints(context: InlayHintsContext): InlayHint[] {
 
     const checker = program.getTypeChecker();
     const result: InlayHint[] = [];
+
+    let targetAsyncFunc: Node | undefined;
+    if (context.asyncTokenPos !== undefined) {
+        const asyncToken = getTokenAtPosition(file, context.asyncTokenPos);
+        if (asyncToken.kind === SyntaxKind.AsyncKeyword) {
+            const parent = asyncToken.parent;
+            if (isNonTypeFunctionLike(parent)) {
+                targetAsyncFunc = parent;
+                // XXX: fake hint to pass back some extra data
+                result.push({
+                    kind: InlayHintKind.Enum,
+                    position: 0,
+                    text: '',
+                    asyncFnStart: parent.pos,
+                    asyncFnEnd: parent.end,
+                } as unknown as InlayHint);
+            }
+        }
+    }
 
     visitor(file);
     return result;
@@ -195,11 +230,13 @@ export function provideInlayHints(context: InlayHintsContext): InlayHint[] {
         }
         else if (isCallExpression(node) || isNewExpression(node)) {
             const includeInlayAwaitPoints = (
-                !!preferences.includeInlayAwaitPoints &&
-                file.scriptKind === ScriptKind.Syn && 
+                file.scriptKind === ScriptKind.Syn &&
                 node.kind === SyntaxKind.CallExpression &&
                 node.parent?.kind !== SyntaxKind.AwaitExpression &&
-                !!(node.flags & NodeFlags.AwaitContext)
+                !!(node.flags & NodeFlags.AwaitContext) &&
+                (targetAsyncFunc !== undefined
+                    ? findNonTypeFunctionLikeAncestor(node) === targetAsyncFunc
+                    : !!preferences.includeInlayAwaitPoints)
             );
             if (shouldShowParameterNameHints(preferences) || includeInlayAwaitPoints) {
                 visitCallOrNewExpression(node, includeInlayAwaitPoints);

@@ -4988,6 +4988,12 @@ function getCompletionData(
                     }
 
                     break;
+
+                case SyntaxKind.CloseParenToken:
+                    if (parent && parent.kind === SyntaxKind.JsxClassList) {
+                        return parent.parent as JsxOpeningLikeElement;
+                    }
+                    break;
             }
         }
         return undefined;

@@ -332,6 +332,7 @@ import {
     WithStatement,
     CaseIsClause,
     JsxElement,
+    JsxFragment,
     JsxSelfClosingElement,
     getJsxElementNameContainer,
     findJsxElseDirective,
@@ -1166,12 +1167,19 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             case SyntaxKind.JsxLabeledFragment:
                 bindEachChild(node);
                 break;
-            case SyntaxKind.JsxElement:
+            case SyntaxKind.JsxFragment:
+            case SyntaxKind.JsxElement: {
+                const elem = node as JsxElement | JsxFragment;
+                elem.startFlowNode = currentFlow;
                 bindEachChild(node);
-                if ((node as JsxElement).openingElement.name) {
-                    bindJsxElementIdentifier(node as JsxElement);
+                elem.endFlowNode = currentFlow;
+                if (elem.kind === SyntaxKind.JsxElement) {
+                    if (elem.openingElement.name) {
+                        bindJsxElementIdentifier(elem);
+                    }
                 }
                 break;
+            }
             case SyntaxKind.JsxSelfClosingElement:
                 bindEachChild(node);
                 if ((node as JsxSelfClosingElement).name) {
@@ -1684,7 +1692,8 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             rootContainer.locals = createSymbolTable();
             addToContainerChain(rootContainer);
         }
-        declareSymbol(rootContainer.locals, /*parent*/ undefined, p as any,  SymbolFlags.BlockScopedVariable, SymbolFlags.BlockScopedVariableExcludes);
+        const flags = SymbolFlags.BlockScopedVariable | SymbolFlags.JsxElement;
+        declareSymbol(rootContainer.locals, /*parent*/ undefined, p as any, flags, SymbolFlags.BlockScopedVariableExcludes);
     }
 
     function bindJsxIfDirective(node: JsxIfDirective): void {

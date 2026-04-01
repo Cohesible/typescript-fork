@@ -353,6 +353,7 @@ import {
     JsxRunDirective,
     JsxComponentDirective,
     JsxStyleDirective,
+    JsxClassAttribute,
     JsxLabeledFragment,
     isJsxDirectiveLike,
 } from "./_namespaces/ts.js";
@@ -3173,6 +3174,7 @@ export function createLanguageService(
             return result;
         }
 
+        const classAttributes: { span: TextSpan }[] = []
         const regions: TextSpan[] = [];
         let text = ''
         let pos = 0;
@@ -3184,9 +3186,11 @@ export function createLanguageService(
                 case SyntaxKind.JsxElseDirective:
                 case SyntaxKind.JsxFragment:
                 case SyntaxKind.JsxElement:
-                case SyntaxKind.JsxLabeledFragment:
+                case SyntaxKind.JsxLabeledFragment: {
+                    let didInsertScope = false;
                     for (const child of (node as JsxElement).children) {
                         if (child.kind === SyntaxKind.JsxStyleDirective) {
+                            const scopeHeader = '@scope(*){';
                             const source = sourceFile.text;
                             const span = getSpanFromStyleDirective(sourceFile, child as JsxStyleDirective);
                             let acc = 0;
@@ -3199,6 +3203,17 @@ export function createLanguageService(
                                     acc += 1;
                                 }
                             }
+                            if (!didInsertScope) {
+                                const ind = text.lastIndexOf('\n');
+                                if (ind !== -1) {
+                                    text = text.slice(0, ind) + scopeHeader + '\n';
+                                } else {
+                                    text += scopeHeader;
+                                    acc -= scopeHeader.length;
+                                    if (acc < 0) return; // at the start of the doc, we'd break
+                                }
+                                didInsertScope = true;
+                            }
                             text = appendSpaces(text, acc);
                             pos = span.start + span.length;
                             text += source.slice(span.start, pos);
@@ -3207,6 +3222,13 @@ export function createLanguageService(
                         }
                         forEachChild(child, visit);
                     }
+                    if (didInsertScope) text += '}';
+                    return;
+                }
+                case SyntaxKind.JsxClassAttribute:
+                    for (const name of (node as JsxClassAttribute).names) {
+                        classAttributes.push({ span: createTextSpanFromBounds(name.getStart(), name.end) });
+                    }
                     return;
             }
             forEachChild(node, visit);
@@ -3214,11 +3236,56 @@ export function createLanguageService(
 
         visit(sourceFile);
 
-        return { regions, text };
+        return { regions, text, classAttributes };
     }
 
     function getSpanFromStyleDirective(_sourceFile: SourceFile, directive: JsxStyleDirective) {
         return createTextSpanFromBounds(directive.text.getStart(), directive.text.end);
+    }
+
+    function jsxFindScopedStyles(fileName: string, position: number): TextSpan[] {
+        const sourceFile = syntaxTreeCache.getCurrentSourceFile(fileName);
+        if (!sourceFile.containsJsx) return [];
+
+        const node = getTouchingPropertyName(sourceFile, position);
+        const result: TextSpan[] = [];
+
+        let current: Node = node;
+        while (current.parent) {
+            const parent = current.parent;
+            switch (parent.kind) {
+                case SyntaxKind.JsxElement:
+                case SyntaxKind.JsxFragment:
+                case SyntaxKind.JsxIfDirective:
+                case SyntaxKind.JsxElseDirective:
+                case SyntaxKind.JsxLabeledFragment:
+                    for (const child of (parent as JsxElement).children) {
+                        if (child.kind === SyntaxKind.JsxStyleDirective) {
+                            result.push(getSpanFromStyleDirective(sourceFile, child as JsxStyleDirective));
+                        }
+                    }
+                    break;
+                case SyntaxKind.JsxComponentDirective: {
+                    const comp = parent as JsxComponentDirective;
+                    for (const child of comp.children) {
+                        if (child.kind === SyntaxKind.JsxStyleDirective) {
+                            result.push(getSpanFromStyleDirective(sourceFile, child as JsxStyleDirective));
+                        }
+                    }
+                    if (comp.body) {
+                        for (const stmt of comp.body.statements) {
+                            if (stmt.kind === SyntaxKind.JsxStyleDirective) {
+                                result.push(getSpanFromStyleDirective(sourceFile, stmt as unknown as JsxStyleDirective));
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+            current = parent;
+        }
+
+        return result;
     }
 
     function getTodoComments(fileName: string, descriptors: TodoCommentDescriptor[]): TodoComment[] {
@@ -3389,7 +3456,7 @@ export function createLanguageService(
         };
     }
 
-    function getInlayHintsContext(file: SourceFile, span: TextSpan, preferences: UserPreferences): InlayHintsContext {
+    function getInlayHintsContext(file: SourceFile, span: TextSpan, preferences: UserPreferences, asyncTokenPos?: number): InlayHintsContext {
         return {
             file,
             program: getProgram()!,
@@ -3397,6 +3464,7 @@ export function createLanguageService(
             span,
             preferences,
             cancellationToken,
+            asyncTokenPos,
         };
     }
 
@@ -3476,10 +3544,10 @@ export function createLanguageService(
         return declaration ? CallHierarchy.getOutgoingCalls(program, declaration) : [];
     }
 
-    function provideInlayHints(fileName: string, span: TextSpan, preferences: UserPreferences = emptyOptions): InlayHint[] {
+    function provideInlayHints(fileName: string, span: TextSpan, preferences: UserPreferences = emptyOptions, asyncTokenPos?: number): InlayHint[] {
         synchronizeHostData();
         const sourceFile = getValidSourceFile(fileName);
-        return InlayHints.provideInlayHints(getInlayHintsContext(sourceFile, span, preferences));
+        return InlayHints.provideInlayHints(getInlayHintsContext(sourceFile, span, preferences, asyncTokenPos));
     }
 
     function mapCode(sourceFile: string, contents: string[], focusLocations: TextSpan[][] | undefined, formatOptions: FormatCodeSettings, preferences: UserPreferences): FileTextChanges[] {
@@ -3539,6 +3607,7 @@ export function createLanguageService(
         getLinkedEditingRangeAtPosition,
         getSpanOfEnclosingComment,
         getJsxStyleRegions,
+        jsxFindScopedStyles,
         getCodeFixesAtPosition,
         getCombinedCodeFix,
         applyCodeActionCommand,

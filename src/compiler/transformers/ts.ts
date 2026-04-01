@@ -1768,6 +1768,7 @@ export function transformTypeScript(context: TransformationContext): Transformer
             /*typeArguments*/ undefined,
             node.name,
             Debug.checkDefined(visitNode(node.attributes, visitor, isJsxAttributes)),
+            node.classList,
         );
     }
 
@@ -1779,6 +1780,7 @@ export function transformTypeScript(context: TransformationContext): Transformer
             /*typeArguments*/ undefined,
             node.name,
             Debug.checkDefined(visitNode(node.attributes, visitor, isJsxAttributes)),
+            node.classList,
         );
     }
 

@@ -625,7 +625,7 @@ export interface LanguageService {
     provideCallHierarchyIncomingCalls(fileName: string, position: number): CallHierarchyIncomingCall[];
     provideCallHierarchyOutgoingCalls(fileName: string, position: number): CallHierarchyOutgoingCall[];
 
-    provideInlayHints(fileName: string, span: TextSpan, preferences: UserPreferences | undefined): InlayHint[];
+    provideInlayHints(fileName: string, span: TextSpan, preferences: UserPreferences | undefined, asyncTokenPos?: number): InlayHint[];
 
     getOutliningSpans(fileName: string): OutliningSpan[];
     getTodoComments(fileName: string, descriptors: TodoCommentDescriptor[]): TodoComment[];
@@ -647,7 +647,8 @@ export interface LanguageService {
     getLinkedEditingRangeAtPosition(fileName: string, position: number): LinkedEditingInfo | undefined;
 
     getSpanOfEnclosingComment(fileName: string, position: number, onlyMultiLine: boolean): TextSpan | undefined;
-    getJsxStyleRegions(fileName: string): { regions: TextSpan[]; text: string; } | undefined;
+    getJsxStyleRegions(fileName: string): { regions: TextSpan[]; text: string; classAttributes: { span: TextSpan }[] } | undefined;
+    jsxFindScopedStyles(fileName: string, position: number): TextSpan[];
 
     toLineColumnOffset?(fileName: string, position: number): LineAndCharacter;
     /** @internal */
@@ -1806,6 +1807,8 @@ export const enum ScriptElementKind {
      */
     jsxAttribute = "JSX attribute",
 
+    jsxElement = "element",
+
     /** String literal */
     string = "string",
 
@@ -1962,4 +1965,5 @@ export interface InlayHintsContext {
     host: LanguageServiceHost;
     span: TextSpan;
     preferences: UserPreferences;
+    asyncTokenPos?: number;
 }

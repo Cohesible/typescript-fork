@@ -98,10 +98,10 @@ declare class Wire<T> {
 }
 
 interface ComponentNode<
-	T extends ChildNode = ChildNode,
+	T = unknown, 
 	U extends Record<string, unknown> = Record<string, unknown>
-> extends ChildNode, Updatable {
-	readonly rootNode: T
+> extends Updatable {
+	readonly root: T
 	readonly props: U
 }
 
@@ -114,25 +114,6 @@ declare namespace JSX {
 	type Children = Child[];
 
 	type Element = globalThis.Element;
-
-	// ============================================
-	// CSS Properties
-	// ============================================
-
-	type DOMCSSProperties = {
-		[key in keyof Omit<
-			CSSStyleDeclaration,
-			| 'item'
-			| 'setProperty'
-			| 'removeProperty'
-			| 'getPropertyValue'
-			| 'getPropertyPriority'
-		>]?: string | number | null;
-	};
-
-	interface CSSProperties extends DOMCSSProperties {
-		[key: string]: string | number | null | undefined;
-	}
 
 	// TODO: attributes with _no_ property equivalent should be mapped to empty string
 	// we likely won't emit any dynamic helpers for these, potentially meaning we should
@@ -208,6 +189,7 @@ declare namespace JSX {
 	interface DOMAttributes<Target extends EventTarget> {
 		children?: Children;
 		[key: `prop:${string}`]: unknown;
+		[key: `style:${string}`]: string | number; // emits as `.style.setProperty`
 
 		// Image Events
 		"on:load"?: GenericEventHandler<Target>;
@@ -584,7 +566,7 @@ declare namespace JSX {
 		popover?: 'auto' | 'hint' | 'manual' | boolean;
 		slot?: string;
 		spellcheck?: boolean;
-		style?: string | CSSProperties;
+		style?: string;
 		tabindex?: number;
 		title?: string;
 		translate?: boolean;

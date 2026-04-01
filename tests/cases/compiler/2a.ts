@@ -244,23 +244,6 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 }
 
 {
-    // satisfies postfix on function declarations
-    type Bar = (a: number) => number
-    function bar(a) {
-        return a // should be a number
-    } satisfies Bar
-
-    type Bar2 = (a: number, ...rest: number[]) => number
-    function bar2(a, ...arr) {
-        return arr[1] + a // should be a number
-    } satisfies Bar2
-
-    function bar3({ a }) {
-        return a // should be a number
-    } satisfies (arg: { a: number }) => number
-}
-
-{
     // JSX should parse
     // TODO: auto include `jsx` lib if project includes JSX 
     const y = <div></div>
@@ -506,7 +489,7 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 
 // update expression
 declare const el: Element;
-const d = <div onClick={() => {
+const d = <div on:click={() => {
     update el
 }}></div>
 
@@ -643,7 +626,7 @@ const d4 = <div><#if (cond)></></div>
         let count = v
 
         function increment() {
-            count++  // mutates `count`, which x depends on
+            count++  // x depends on
         }
 
         function unrelated() {
@@ -662,6 +645,107 @@ const d4 = <div><#if (cond)></></div>
     }>
         <div></div>
     </>
+}
+
+{
+    // catch recursive updates
+    // guarded recursive updates are ok
+    let c = 0
+    ;<div @ root>
+        {c}
+        <#run>
+            update root {
+                c += 1
+            }
+            if (c < 10) {
+                // ok
+                update root {
+                    c += 1
+                }
+            }
+        </>
+        <div @ d>
+            <#run>
+                update root {
+                    c += 1
+                }
+            </>
+        </div>
+    </div>
+
+    ;<div>
+        <#run>
+            // error (use-before-init)
+            update d { c += 1 }
+        </>
+        <div @ d>
+            {c}
+        </div>
+    </div>
+}
+
+{
+    let c = 0
+    ;<div @ root>
+        <div @ d1>
+            {c}
+        </div>
+        <div @ d2>
+            {c}
+        </div>
+        <button on:click={() => {
+            // ok
+            update root {
+                c += 1
+            }
+            // ok
+            update d1, d2 {
+                c += 1
+            }
+            // error
+            update d1 {
+                c += 1
+            }
+        }}>
+          Increment
+        </button>
+    </div>
+}
+
+{
+    let c = 0
+    ;<div @ root>
+        <div @ d1>
+            {c}
+        </div>
+        {c}
+        <button on:click={() => {
+            update d1, root {
+                c += 1
+            }
+            update d1 {
+                c += 1
+            }
+        }}>
+          Increment
+        </button>
+    </div>
+}
+
+{
+    let c = 0
+    ;<div @ root>
+        <div @ d>
+            {c}
+        </div>
+        <button on:click={() => {
+            update root {
+                c += 1
+            }
+        }}>
+          Increment
+        </button>
+    </div>
 }
 
 {
@@ -692,6 +776,84 @@ const d4 = <div><#if (cond)></></div>
     }>
         <div></div>
     </>
+}
+
+{
+    let c = 0
+    function noop() {}
+    <#component Inner() {}>
+        <div>{c}</div>
+    </>
+    ;<div @ root>
+        <Inner />
+    </div>
+    update root {
+        c += 1  // ok
+    }
+    // TODO: the no-effect case should suggest to use the expression form (?)
+    update root {
+        noop()  // error, no effect
+    }
+}
+
+{
+    let c = 0
+    <#component InnerB() {}>
+        <div>{c}</div>
+    </>
+    ;<div @ root>
+        <InnerB @ d1 />
+        <div @ d2>{c}</div>
+        <#run>
+            setTimeout(() => {
+                update d1 {
+                    c += 1
+                }
+                update d2 {
+                    c += 1
+                }
+            })
+        </>
+    </div>
+}
+
+{
+    let c = 0
+    declare const External: any
+    ;<div @ root>
+        <External />
+    </div>
+    update root {
+        c += 1 
+    }
+}
+
+{
+    ;<div @ p>
+        <#run>
+            let c = ''
+        </>
+        <div>
+            <input @ d2 
+                value={c}
+                on:click={() => {
+                    // ok
+                    update d1, d2 {
+                        c = 'a'
+                    }
+                    // ok (assumed self-coherence)
+                    update d1 {
+                        c = 'b'
+                    }
+                    // error
+                    update d2 {
+                        c = 'c'
+                    }
+                }}
+            />
+        </div>
+        <input @ d1 value={c} />
+    </div>
 }
 
 // !T (FallibleType) and try expr
@@ -945,8 +1107,7 @@ const d4 = <div><#if (cond)></></div>
     </div>
     console.log(a, b)
 
-    // trailing bindings should be parsed correctly:
-    ;<div id="aaa" @ c />
+    ;<div @ c id="aaa" />
 }
 
 // spread JSX elements
@@ -1119,12 +1280,6 @@ const d4 = <div><#if (cond)></></div>
 // <Foo v="hi">
 //  {...{ x: v => <>{v}</> }}
 // </Foo>
-//
-//
-// --- WIP: unlabeled callable fragments ---
-// - callable fragments can be used without labels, analogous to arrow function expressions
-// - they appear as `<(...params)> </>`
-// - cannot appear as a child of an intrinsic
 //
 //
 //
@@ -1321,6 +1476,63 @@ const d4 = <div><#if (cond)></></div>
     ;<div .foo></div>
     // class attributes should not conflict with normal attributes
     ;<input .min min=500></input>
+    ;<input (.min.min2)></input>
+    ;<input (.min.min2={cond})></input>
+    ;<input (.min.min2={cond}, .bar)></input>
+    ;<input .min.min2={cond}></input>
+    ;<input .min.min2={cond} @ i></input>
+    ;<input (.m) @ i2></input>
+
+    // errors emitted during parse
+    ;<div id="foo" .a.a></div>
+    ;<div id="foo" (.a)></div>
+    ;<div @ foo_1 (.a)></div>
+    ;<div @ foo_2 .a></div>
+    ;<div .a .b .c></div>
+    ;<div .a .b .c={cond}></div>
+    ;<div .a .c={cond} .b></div>
+    ;<div (.a, .c={cond} .b)></div>
+
+    // errors
+    ;<div .a.a></div>
+    ;<div (.a, .a)></div> 
+    ;<div (.a={cond}, .a)></div>
+    ;<div (.a.b={cond}, .a)></div> 
+    ;<div (.a, .a={cond})></div>
+    ;<div (.a, .a.b={cond})></div>
+    ;<div (.a={cond}, .a.b={cond})></div>
+
+    // class attribute cannot be used with class list
+    ;<div .a class="b" />
+    ;<div .a {...{ class: 'b' }} />
+
+    // ok
+    ;<div class="b" />
+
+    // ok
+    const cond2 = false as boolean
+    const cond3 = false as boolean
+    ;<div (.a={cond}, .a.b={cond2}, .a={cond3})></div>
+
+    // errors
+    ;<div ({...['a', 'b', 'a']})></div>
+    ;<div (.a, {...['a', 'b']})></div>
+    ;<div ({...['a']}, .a)></div>
+    ;<div ({...123})></div>
+    ;<div ({..."123"})></div>
+
+    // ok
+    ;<div ({...['a', 'b']})></div>
+    ;<div ({...['a', 'b']}, .c)></div>
+    ;<div ({...(['a', 'b'] as string[])})></div>
+    const arr = ['a', 'b']
+    ;<div ({...arr})></div>
+
+    // suggest use class list
+    ;<div {...(['a', 'b'] as string[])} />
+    ;<div {...['a', 'b'] as const} />
+
 }
+
 
 // /opt/homebrew/bin/node ./node_modules/.bin/hereby runtests --tests=2a

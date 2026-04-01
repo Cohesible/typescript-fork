@@ -175,6 +175,9 @@ function getSymbolKindOfConstructorPropertyMethodAccessorFunctionOrVar(typeCheck
         else if (forEach(symbol.declarations, isLet)) {
             return ScriptElementKind.letElement;
         }
+        else if (symbol.flags & SymbolFlags.JsxElement) {
+            return ScriptElementKind.jsxElement;
+        }
         return isLocalVariableOrFunction(symbol) ? ScriptElementKind.localVariableElement : ScriptElementKind.variableElement;
     }
     if (flags & SymbolFlags.Function) return isLocalVariableOrFunction(symbol) ? ScriptElementKind.localFunctionElement : ScriptElementKind.functionElement;
@@ -970,6 +973,11 @@ function getSymbolDisplayPartsDocumentationAndSymbolKindWorker(
             case ScriptElementKind.variableUsingElement:
             case ScriptElementKind.variableAwaitUsingElement:
                 displayParts.push(textOrKeywordPart(symbolKind));
+                return;
+            case ScriptElementKind.jsxElement:
+                displayParts.push(punctuationPart(SyntaxKind.OpenParenToken));
+                displayParts.push(displayPart(symbolKind, SymbolDisplayPartKind.keyword));
+                displayParts.push(punctuationPart(SyntaxKind.CloseParenToken));
                 return;
             default:
                 displayParts.push(punctuationPart(SyntaxKind.OpenParenToken));

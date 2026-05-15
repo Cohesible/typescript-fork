@@ -3704,7 +3704,7 @@ export function createScanner(
 
     function reScanJsxToken(allowMultilineJsxText = true): JsxTokenSyntaxKind {
         pos = tokenStart = fullStartPos;
-        return token = scanJsxToken(/*skipJsxExpressions*/ false, allowMultilineJsxText);
+        return token = scanJsxToken(/*scanVerbatim*/ false, allowMultilineJsxText);
     }
 
     function reScanLessThanToken(): SyntaxKind {
@@ -3729,7 +3729,7 @@ export function createScanner(
         return token = SyntaxKind.QuestionToken;
     }
 
-    function scanJsxToken(skipJsxExpressions = false, allowMultilineJsxText = true): JsxTokenSyntaxKind {
+    function scanJsxToken(scanVerbatim = false, allowMultilineJsxText = true): JsxTokenSyntaxKind {
         fullStartPos = tokenStart = pos;
 
         if (pos >= end) {
@@ -3746,7 +3746,7 @@ export function createScanner(
             return token = SyntaxKind.LessThanToken;
         }
 
-        if (!skipJsxExpressions && char === CharacterCodes.openBrace) {
+        if (!scanVerbatim && char === CharacterCodes.openBrace) {
             pos++;
             return token = SyntaxKind.OpenBraceToken;
         }
@@ -3759,7 +3759,7 @@ export function createScanner(
 
         while (pos < end) {
             char = charCodeUnchecked(pos);
-            if (!skipJsxExpressions && char === CharacterCodes.openBrace) {
+            if (!scanVerbatim && char === CharacterCodes.openBrace) {
                 break;
             }
             if (char === CharacterCodes.lessThan) {
@@ -3767,12 +3767,16 @@ export function createScanner(
                     pos = scanConflictMarkerTrivia(text, pos, error);
                     return token = SyntaxKind.ConflictMarkerTrivia;
                 }
+                if (scanVerbatim && pos+1 < end && charCodeUnchecked(pos+1) !== CharacterCodes.slash) {
+                    pos += 2;
+                    continue;
+                }
                 break;
             }
-            if (char === CharacterCodes.greaterThan) {
+            if (!scanVerbatim && char === CharacterCodes.greaterThan) {
                 error(Diagnostics.Unexpected_token_Did_you_mean_or_gt, pos, 1);
             }
-            if (!skipJsxExpressions && char === CharacterCodes.closeBrace) {
+            if (!scanVerbatim && char === CharacterCodes.closeBrace) {
                 error(Diagnostics.Unexpected_token_Did_you_mean_or_rbrace, pos, 1);
             }
 

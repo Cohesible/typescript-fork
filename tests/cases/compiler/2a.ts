@@ -450,7 +450,7 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
     const x0 = <Foo></Foo> // no error
     const x1 = <Foo><div/></Foo> // no error
     const x2 = <Foo><div/><div/></Foo> // no error
-    const x3 = <Foo>a</Foo> // error
+    const x3 = <Foo>a</Foo> // error (string is not Element)
     const x4 = <Foo/> // error (this is explictly no elements)
 
     function Foo2(props: { children: [string, number] }) {
@@ -854,6 +854,195 @@ const d4 = <div><#if (cond)></></div>
         </div>
         <input @ d1 value={c} />
     </div>
+}
+
+{
+    const items = ['a']
+    <#component Many(items: string[])>
+        <div>{...items}</div>
+    </>
+    const d = <Many {items}/>
+    update d {
+        items.push('aa')
+    }
+}
+
+{
+    <#component Wrapper() {
+        const a = document.createComment('')
+    }>
+        {a}
+    </>
+
+    // this should _not_ be a single root
+    const w = <Wrapper /> 
+}
+
+{
+    <#component Wrapper(children: (ChildNode | string)[]) {
+        const a = document.createComment('')
+    }>
+        <div>
+            <#run>
+                const q = a as ChildNode
+                while (true) {}
+            </>
+        </div>
+    </>
+
+    const q = <div>
+        <Wrapper>a</Wrapper>
+    </div>
+    update q {}
+}
+
+{
+    const d = <div>
+        <...Unresolved />
+    </div>
+}
+
+{
+    <#component Foo()>
+        <div></div>
+        <#style>
+            div { color: red }
+        </>
+    </>
+    const d = <div> <Foo/> </div>
+}
+
+{
+    <#component List<T>(items: T[], children: [(x: T) => ChildNode], key?: (x: T) => string | number)>
+        <div>
+            {children[0](items[0])}
+        </div>
+    </>
+    const items = [
+        { id: 1, first: '1', last: '2' },
+        { id: 2, first: '3', last: '4' }
+    ]
+    const l = <List {items} key={x => x.id}>
+        {x => <div>{x.first} {x.last}</div>}
+    </List>
+
+    function List2<T>(props: { items: T[], children: [(x: T) => ChildNode]}) {
+        return <div></div>
+    }
+    const l2 = <List2 {items}>
+        {x => <div>{x.first} {x.last}</div>}
+    </List2>
+}
+
+{
+    <#component One(children)>
+        <div>{...children}</div>
+    </>
+
+    <#component Two(children)>
+        <div>{children[0]}</div>
+    </>
+
+    <#component Three(children)>
+        <One>{...children}</One>
+    </>
+
+    <#component Four(children)>
+        <#component Inner(children: string[])>
+            <div>{...children}</div>
+        </>
+        <Inner>{...children}</Inner>
+    </>
+
+    <#component Five(id)>
+        <div id={id} />
+    </>
+
+    <#component Six(id)>
+        <div id={id}>
+            {id}
+        </div>
+    </>
+
+    <#component Seven(id)>
+        <div id={id}>
+            <#run>
+                const f = `${id}`
+            </>
+            {f}
+        </div>
+    </>
+}
+
+{
+    // public functions
+    <#component Foo() {
+        const val = 1
+        public function bar() { return val }
+        {
+            // public functions must be top-level
+            public function bar2() { return val }
+        }
+    }>
+        <#run>
+            // public functions cannot be inside the component template
+            public function bar2() { return val }
+        </>
+        <div/>
+    </>
+
+    const inst = <Foo />
+    const v = inst.bar()
+
+    <#component Foo2<const T>(attr: T) {
+        public function bar() { return attr }
+    }>
+        <div/>
+    </>
+
+    const inst2 = <Foo2 attr="test" />
+    const v2 = inst2.bar()
+
+
+    function createCompDecl<T>(v: T) {
+        <#component Foo3<U>(a: U, b = v) {
+            public function baz() { return { a, b } }
+        }>
+            <div/>
+        </>
+        return Foo3
+    }
+
+    const FooWithDefault = createCompDecl(1)
+    const inst3 = <FooWithDefault a="test" />
+    const v3 = inst3.baz()
+    const inst4 = <FooWithDefault a="test" b=2 />
+    const v4 = inst4.baz()
+
+    const d = <div>
+        <FooWithDefault @ f a="test" />
+        <#run>
+          const v = f.baz()
+        </>
+        {v.a}
+    </div>
+}
+
+{
+    <#component Foo()>
+        <div/>
+    </>
+    type AAA = typeof Foo
+}
+
+{
+    function Foo(this: { bar?: () => "aaa" }, props: {}) {
+        this.bar = () => 'aaa'
+        return <div/>
+    }
+
+    const x = <Foo />
+    const y = x.bar()
 }
 
 // !T (FallibleType) and try expr

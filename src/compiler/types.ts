@@ -3368,6 +3368,7 @@ export interface JsxRunDirective extends PrimaryExpression {
 
 export interface JsxComponentDirective extends PrimaryExpression, LocalsContainer {
     readonly kind: SyntaxKind.JsxComponentDirective;
+    readonly asteriskToken?: AsteriskToken,
     readonly name?: Identifier;
     readonly typeParameters?: NodeArray<TypeParameterDeclaration>;
     readonly parameters: NodeArray<ParameterDeclaration>;
@@ -9467,8 +9468,8 @@ export interface NodeFactory {
     updateJsxElseDirective(node: JsxElseDirective, children: readonly JsxChild[]): JsxElseDirective;
     createJsxRunDirective(statements: readonly Statement[]): JsxRunDirective;
     updateJsxRunDirective(node: JsxRunDirective, statements: readonly Statement[]): JsxRunDirective;
-    createJsxComponentDirective(name: Identifier | undefined, typeParameters: readonly TypeParameterDeclaration[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode | undefined, body: Block | undefined, children: readonly JsxChild[]): JsxComponentDirective;
-    updateJsxComponentDirective(node: JsxComponentDirective, name: Identifier | undefined, typeParameters: readonly TypeParameterDeclaration[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode | undefined, body: Block | undefined, children: readonly JsxChild[]): JsxComponentDirective;
+    createJsxComponentDirective(asteriskToken: AsteriskToken | undefined, name: Identifier | undefined, typeParameters: readonly TypeParameterDeclaration[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode | undefined, body: Block | undefined, children: readonly JsxChild[]): JsxComponentDirective;
+    updateJsxComponentDirective(node: JsxComponentDirective, asteriskToken: AsteriskToken | undefined, name: Identifier | undefined, typeParameters: readonly TypeParameterDeclaration[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode | undefined, body: Block | undefined, children: readonly JsxChild[]): JsxComponentDirective;
     createJsxStyleDirective(text: JsxText): JsxStyleDirective;
     updateJsxStyleDirective(node: JsxStyleDirective, text: JsxText): JsxStyleDirective;
     createJsxLabeledFragment(label: Identifier, parameters: readonly ParameterDeclaration[] | undefined, children: readonly JsxChild[]): JsxLabeledFragment;

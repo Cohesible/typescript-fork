@@ -2843,7 +2843,7 @@ export function createLanguageService(
         if (!token || token.parent.kind === SyntaxKind.SourceFile) return undefined;
 
         // matches more than valid tag names to allow linked editing when typing is in progress or tag name is incomplete
-        const jsxTagWordPattern = "[a-zA-Z0-9:\\-\\._$]*";
+        const jsxTagWordPattern = "(?:[^\\.][a-zA-Z0-9:\\-_\\.$]+)|[a-zA-Z0-9:\\-_$]*";
 
         if (isJsxFragment(token.parent.parent)) {
             const openFragment = token.parent.parent.openingFragment;
@@ -3181,14 +3181,22 @@ export function createLanguageService(
 
         function visit(node: Node) {
             switch (node.kind) {
-                case SyntaxKind.JsxComponentDirective:
+                case SyntaxKind.JsxComponentDirective: {
+                    const body = (node as JsxComponentDirective).body
+                    if (body) {
+                        visit(body)
+                    }
+                    // fallsthrough
+                }
+                case SyntaxKind.Block:
                 case SyntaxKind.JsxIfDirective:
                 case SyntaxKind.JsxElseDirective:
                 case SyntaxKind.JsxFragment:
                 case SyntaxKind.JsxElement:
                 case SyntaxKind.JsxLabeledFragment: {
                     let didInsertScope = false;
-                    for (const child of (node as JsxElement).children) {
+                    const children = node.kind === SyntaxKind.Block ? (node as BlockLike).statements :  (node as JsxElement).children
+                    for (const child of children) {
                         if (child.kind === SyntaxKind.JsxStyleDirective) {
                             const scopeHeader = '@scope(*){';
                             const source = sourceFile.text;

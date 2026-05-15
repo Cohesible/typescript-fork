@@ -6121,6 +6121,7 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
 
     // @api
     function createJsxComponentDirective(
+        asteriskToken: AsteriskToken | undefined,
         name: Identifier | undefined,
         typeParameters: readonly TypeParameterDeclaration[] | undefined,
         parameters: readonly ParameterDeclaration[],
@@ -6129,6 +6130,7 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         children: readonly JsxChild[],
     ) {
         const node = createBaseNode<JsxComponentDirective>(SyntaxKind.JsxComponentDirective);
+        node.asteriskToken = asteriskToken;
         node.name = name;
         node.typeParameters = typeParameters && createNodeArray(typeParameters);
         node.parameters = createNodeArray(parameters);
@@ -6148,6 +6150,7 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     // @api
     function updateJsxComponentDirective(
         node: JsxComponentDirective,
+        asteriskToken: AsteriskToken | undefined,
         name: Identifier | undefined,
         typeParameters: readonly TypeParameterDeclaration[] | undefined,
         parameters: readonly ParameterDeclaration[],
@@ -6155,9 +6158,9 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         body: Block | undefined,
         children: readonly JsxChild[],
     ) {
-        return node.name !== name || node.typeParameters !== typeParameters || node.parameters !== parameters
-            || node.type !== type || node.body !== body || node.children !== children
-            ? update(createJsxComponentDirective(name, typeParameters, parameters, type, body, children), node)
+        return node.asteriskToken !== asteriskToken || node.name !== name || node.typeParameters !== typeParameters
+            || node.parameters !== parameters || node.type !== type || node.body !== body || node.children !== children
+            ? update(createJsxComponentDirective(asteriskToken, name, typeParameters, parameters, type, body, children), node)
             : node;
     }
 

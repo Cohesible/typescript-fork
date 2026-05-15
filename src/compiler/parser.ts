@@ -1100,7 +1100,8 @@ const forEachChildTable: ForEachChildTable = {
         return visitNodes(cbNode, cbNodes, node.statements);
     },
     [SyntaxKind.JsxComponentDirective]: function forEachChildInJsxComponentDirective<T>(node: JsxComponentDirective, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
-        return visitNode(cbNode, node.name) ||
+        return visitNode(cbNode, node.asteriskToken) || 
+            visitNode(cbNode, node.name) ||
             visitNodes(cbNode, cbNodes, node.typeParameters) ||
             visitNodes(cbNode, cbNodes, node.parameters) ||
             visitNode(cbNode, node.type) ||
@@ -1591,6 +1592,8 @@ namespace Parser {
     var scriptKind: ScriptKind;
     var languageVariant: LanguageVariant;
     var synFileContainsJsx: boolean;
+    var inComponentDirectiveBody: boolean;
+
     var parseDiagnostics: DiagnosticWithDetachedLocation[];
     var jsDocDiagnostics: DiagnosticWithDetachedLocation[];
     var syntaxCursor: IncrementalParser.SyntaxCursor | undefined;
@@ -2931,10 +2934,10 @@ namespace Parser {
         }
 
         switch (parsingContext) {
-            case ParsingContext.JsxRunDirectiveStatements:
             case ParsingContext.SourceElements:
             case ParsingContext.BlockStatements:
             case ParsingContext.SwitchClauseStatements:
+            case ParsingContext.JsxRunDirectiveStatements:
                 // If we're in error recovery, then we don't want to treat ';' as an empty statement.
                 // The problem is that ';' can show up in far too many contexts, and if we see one
                 // and assume it's a statement, then we may bail out inappropriately from whatever
@@ -6072,8 +6075,11 @@ namespace Parser {
             return finishNode(factory.createPrefixUnaryExpression(token() as PrefixUnaryOperator, nextTokenAnd(parseLeftHandSideExpressionOrHigher)), pos);
         }
         else if (languageVariant === LanguageVariant.JSX && token() === SyntaxKind.LessThanToken && lookAhead(nextTokenIsIdentifierOrKeywordOrGreaterThan)) {
-            // JSXElement is part of primaryExpression
-            return parseJsxNode(/*inExpressionContext*/ true);
+            // continue parsing member/call access so `<Foo />.x` works
+            const pos = getNodePos();
+            const jsx = parseJsxNode(/*inExpressionContext*/ true) as Node as MemberExpression;
+            const memberExpr = parseMemberExpressionRest(pos, jsx, /*allowOptionalChain*/ true);
+            return parseCallExpressionRest(pos, memberExpr) as Node as UpdateExpression;
         }
 
         const expression = parseLeftHandSideExpressionOrHigher();
@@ -6441,7 +6447,7 @@ namespace Parser {
         }
         const dotDotDotToken = parseOptionalToken(SyntaxKind.DotDotDotToken);
         const tagName = parseJsxElementName();
-        const typeArguments = (contextFlags & NodeFlags.JavaScriptFile) === 0 ? tryParseTypeArguments() : undefined;
+        const typeArguments = (contextFlags & NodeFlags.JavaScriptFile) === 0 && !scanner.hasPrecedingLineBreak() ? tryParseTypeArguments() : undefined;
         let identifier = token() === SyntaxKind.AtToken ? parseJsxElementIdentifier() : undefined;
         let classList: JsxClassList | undefined;
         if (scriptKind === ScriptKind.Syn && (token() === SyntaxKind.DotToken || token() === SyntaxKind.OpenParenToken)) {
@@ -6824,6 +6830,20 @@ namespace Parser {
                 return n;
             }
             case '#component': {
+                function maybeParseInitBlock() {
+                    if (token() !== SyntaxKind.OpenBraceToken) return undefined;
+                    const pos = getNodePos();
+                    const openBracePosition = scanner.getTokenStart();
+                    nextToken();
+                    const multiLine = scanner.hasPrecedingLineBreak();
+                    const saveInComponent = inComponentDirectiveBody;
+                    inComponentDirectiveBody = true;
+                    const statements = parseList(ParsingContext.BlockStatements, parseStatement);
+                    inComponentDirectiveBody = saveInComponent;
+                    parseExpectedMatchingBrackets(SyntaxKind.OpenBraceToken, SyntaxKind.CloseBraceToken, /*openParsed*/ true, openBracePosition);
+                    return finishNode(factoryCreateBlock(statements, multiLine), pos);
+                }
+                const asteriskToken = parseOptionalToken(SyntaxKind.AsteriskToken);
                 const compName = token() === SyntaxKind.Identifier ? parseIdentifier() : undefined;
                 const typeParameters = parseTypeParameters();
                 const openParenPos = getNodePos();
@@ -6833,7 +6853,7 @@ namespace Parser {
                 const type = parseReturnType(SyntaxKind.ColonToken, /*isType*/ false);
                 const body = token() === SyntaxKind.OpenBraceToken ? parseBlock(/*ignoreMissingOpenBrace*/ false) : undefined;
                 const { children, hasError } = parseJsxDirectiveBody(pos, tagName, openingTag);
-                const n = finishNode(factory.createJsxComponentDirective(compName, typeParameters, parameters, type, body, children), pos);
+                const n = finishNode(factory.createJsxComponentDirective(asteriskToken, compName, typeParameters, parameters, type, body, children), pos);
                 if (hasError) (n as Mutable<typeof n>).flags |= NodeFlags.ThisNodeHasError;
                 return n;
             }
@@ -7949,8 +7969,12 @@ namespace Parser {
                 // When these don't start a declaration, they're an identifier in an expression statement
                 return true;
 
-            case SyntaxKind.AccessorKeyword:
             case SyntaxKind.PublicKeyword:
+                if (lookAhead(() => nextToken() === SyntaxKind.FunctionKeyword) && inComponentDirectiveBody) {
+                    return true;
+                }
+                // falls through
+            case SyntaxKind.AccessorKeyword:
             case SyntaxKind.PrivateKeyword:
             case SyntaxKind.ProtectedKeyword:
             case SyntaxKind.StaticKeyword:

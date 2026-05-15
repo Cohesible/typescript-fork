@@ -69,64 +69,13 @@ interface HTMLInputElement {
   oninput?: (ev: InputEvent & CurrentTarget<this>) => any
 }
 
-// Can be used directly in JSX expressions for intrinsic elements. 
-// Wires directly write into the patch point, eliminating the need for a coarse update.
-declare class Wire<T> {
-  	constructor(initial: T);
-	constructor(...args: T extends undefined ? [] : [T]);
-	/**
-	 * Immediately calls everything connected to the Wire with `value`.
-	 * 
-	 * Listeners are executed in insertion order.
-	 * 
-	 * Reentrant `set` calls stop execution of the prior call.
-	 */
-	set(value: T): void
-	/**
-	 * Weakly subscribes to the Wire. 
-	 * 
-	 * `cb` is immediately executed with the current Wire state if the Wire is not in a transient state. 
-	 * Otherwise, `cb` is called after all other listeners.
-	 * 
-	 * The returned function unsubscribes `cb` from the Wire. Holding the disposer keeps the attachment alive.
-	 */
-	listen(cb: (value: T) => void): () => void
-	/**
-	 * Creates a new Wire connected to this one via a transform function.
-	 */
-	convert<U>(fn: (value: T) => U): Wire<U>
-}
-
-interface ComponentNode<
-	T = unknown, 
-	U extends Record<string, unknown> = Record<string, unknown>
-> extends Updatable {
-	readonly root: T
-	readonly props: U
-}
-
-type NodeLike = string | number | ChildNode | Wire<string | number | ChildNode>
-
 declare namespace JSX {
 	type Booleanish = boolean | 'true' | 'false';
 
-	type Child = NodeLike;
-	type Children = Child[];
+	type Child = string | number | ChildNode;
+	type Children = (string | number | ChildNode)[];
 
 	type Element = globalThis.Element;
-
-	// TODO: attributes with _no_ property equivalent should be mapped to empty string
-	// we likely won't emit any dynamic helpers for these, potentially meaning we should
-	// validate for spreading these as attributes
-	interface UnreflectedAttributes {
-		'attr:is'?: string
-		'attr:exportparts'?: string
-		'attr:itemid'?: string
-		'attr:itemprop'?: string
-		'attr:itemref'?: string
-		'attr:itemscope'?: string
-		'attr:itemtype'?: string
-	}
 
 	// ============================================
 	// Event Types

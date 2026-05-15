@@ -3129,6 +3129,10 @@
         "category": "Error",
         "code": 95226
     },
+    "The type of '{0}' cannot be inferred from its usage in this component. An explicit type annotation is needed.": {
+        "category": "Error",
+        "code": 95227
+    },
     "'{0}' is defined as an accessor in class '{1}', but is overridden here in '{2}' as an instance property.": {
         "category": "Error",
         "code": 2610
@@ -3623,11 +3627,11 @@
         "category": "Error",
         "code": 2744
     },
-    "This JSX tag's '{0}' prop expects type '{1}' which requires multiple children, but only a single child was provided.": {
+    "This component has a children type '{0}' which requires multiple children, but only a single child was provided.": {
         "category": "Error",
         "code": 2745
     },
-    "This JSX tag's '{0}' prop expects a single child of type '{1}', but multiple children were provided.": {
+    "This component expects a single child of type '{0}', but multiple children were provided.": {
         "category": "Error",
         "code": 2746
     },

@@ -1742,52 +1742,53 @@ const visitEachChildTable: VisitEachChildTable = {
     },
     [SyntaxKind.JsxElseDirective]: function visitEachChildOfJsxElseDirective(node, visitor, context, nodesVisitor, _nodeVisitor, _tokenVisitor) {
         return context.factory.updateJsxElseDirective(
-            node as JsxElseDirective,
-            nodesVisitor((node as JsxElseDirective).children, visitor, isJsxChild),
+            node,
+            nodesVisitor(node.children, visitor, isJsxChild),
         );
     },
     [SyntaxKind.JsxRunDirective]: function visitEachChildOfJsxRunDirective(node, visitor, context, nodesVisitor, _nodeVisitor, _tokenVisitor) {
         return context.factory.updateJsxRunDirective(
-            node as JsxRunDirective,
-            nodesVisitor((node as JsxRunDirective).statements, visitor, isStatement),
+            node,
+            nodesVisitor(node.statements, visitor, isStatement),
         );
     },
-    [SyntaxKind.JsxComponentDirective]: function visitEachChildOfJsxComponentDirective(node, visitor, context, nodesVisitor, nodeVisitor, _tokenVisitor) {
+    [SyntaxKind.JsxComponentDirective]: function visitEachChildOfJsxComponentDirective(node, visitor, context, nodesVisitor, nodeVisitor, tokenVisitor) {
         return context.factory.updateJsxComponentDirective(
-            node as JsxComponentDirective,
-            nodeVisitor((node as JsxComponentDirective).name, visitor, isIdentifier),
-            nodesVisitor((node as JsxComponentDirective).typeParameters, visitor, isTypeParameterDeclaration),
-            nodesVisitor((node as JsxComponentDirective).parameters, visitor, isParameter),
-            nodeVisitor((node as JsxComponentDirective).type, visitor, isTypeNode),
-            nodeVisitor((node as JsxComponentDirective).body, visitor, isBlock),
-            nodesVisitor((node as JsxComponentDirective).children, visitor, isJsxChild),
+            node,
+            tokenVisitor ? nodeVisitor(node.asteriskToken, tokenVisitor, isAsteriskToken) : node.asteriskToken,
+            nodeVisitor(node.name, visitor, isIdentifier),
+            nodesVisitor(node.typeParameters, visitor, isTypeParameterDeclaration),
+            nodesVisitor(node.parameters, visitor, isParameter),
+            nodeVisitor(node.type, visitor, isTypeNode),
+            nodeVisitor(node.body, visitor, isBlock),
+            nodesVisitor(node.children, visitor, isJsxChild),
         );
     },
     [SyntaxKind.JsxLabeledFragment]: function visitEachChildOfJsxLabeledFragment(node, visitor, context, nodesVisitor, nodeVisitor, _tokenVisitor) {
         return context.factory.updateJsxLabeledFragment(
-            node as JsxLabeledFragment,
-            Debug.checkDefined(nodeVisitor((node as JsxLabeledFragment).label, visitor, isIdentifier)),
-            nodesVisitor((node as JsxLabeledFragment).parameters, visitor, isParameter),
-            nodesVisitor((node as JsxLabeledFragment).children, visitor, isJsxChild),
+            node,
+            Debug.checkDefined(nodeVisitor(node.label, visitor, isIdentifier)),
+            nodesVisitor(node.parameters, visitor, isParameter),
+            nodesVisitor(node.children, visitor, isJsxChild),
         );
     },
     [SyntaxKind.JsxStyleDirective]: function visitEachChildOfJsxStyleDirective(node, visitor, context, _nodesVisitor, nodeVisitor, _tokenVisitor) {
         return context.factory.updateJsxStyleDirective(
-            node as JsxStyleDirective,
-            Debug.checkDefined(nodeVisitor((node as JsxStyleDirective).text, visitor, isJsxText)),
+            node,
+            Debug.checkDefined(nodeVisitor(node.text, visitor, isJsxText)),
         );
     },
     [SyntaxKind.UnwindStatement]: function visitEachChildOfUnwindStatement(node, visitor, _context, _nodesVisitor, nodeVisitor, _tokenVisitor) {
         return _context.factory.updateUnwindStatement(
-            node as UnwindStatement,
-            Debug.checkDefined(nodeVisitor((node as UnwindStatement).statement, visitor, isBlock)),
+            node,
+            Debug.checkDefined(nodeVisitor(node.statement, visitor, isBlock)),
         );
     },
     [SyntaxKind.UpdateBlockStatement]: function visitEachChildOfUpdateBlockStatement(node, visitor, context, nodesVisitor, nodeVisitor, _tokenVisitor) {
         return context.factory.updateUpdateBlockStatement(
-            node as UpdateBlockStatement,
-            nodesVisitor((node as UpdateBlockStatement).operands, visitor, isExpression),
-            Debug.checkDefined(nodeVisitor((node as UpdateBlockStatement).block, visitor, isBlock)),
+            node,
+            nodesVisitor(node.operands, visitor, isExpression),
+            Debug.checkDefined(nodeVisitor(node.block, visitor, isBlock)),
         );
     },
 
@@ -1831,16 +1832,16 @@ const visitEachChildTable: VisitEachChildTable = {
 
     [SyntaxKind.JsxClassAttribute]: function visitEachChildOfJsxClassAttribute(node, visitor, context, nodesVisitor, nodeVisitor, _tokenVisitor) {
         return context.factory.updateJsxClassAttribute(
-            node as JsxClassAttribute,
-            nodesVisitor((node as JsxClassAttribute).names, visitor, isIdentifier),
-            nodeVisitor((node as JsxClassAttribute).initializer, visitor, isJsxExpression),
+            node,
+            nodesVisitor(node.names, visitor, isIdentifier),
+            nodeVisitor(node.initializer, visitor, isJsxExpression),
         );
     },
 
     [SyntaxKind.JsxClassList]: function visitEachChildOfJsxClassList(node, visitor, context, nodesVisitor, _nodeVisitor, _tokenVisitor) {
         return context.factory.updateJsxClassList(
-            node as JsxClassList,
-            nodesVisitor((node as JsxClassList).attributes, visitor, (n): n is JsxClassAttribute | JsxSpreadAttribute => isJsxClassAttribute(n) || isJsxSpreadAttribute(n)),
+            node,
+            nodesVisitor(node.attributes, visitor, n => isJsxClassAttribute(n) || isJsxSpreadAttribute(n)),
         );
     },
 

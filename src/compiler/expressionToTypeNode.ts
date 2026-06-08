@@ -692,6 +692,8 @@ export function createSyntacticTypeNodeBuilder(
             case SyntaxKind.PropertyAssignment:
             case SyntaxKind.ShorthandPropertyAssignment:
                 return typeFromPropertyAssignment(node, symbol, context);
+            case SyntaxKind.JsxMethodAttribute:
+                return inferTypeOfDeclaration(node, symbol, context, /*reportFallback*/ false);
             default:
                 Debug.assertNever(node, `Node needs to be an inferrable node, found ${Debug.formatSyntaxKind((node as Node).kind)}`);
         }
@@ -719,6 +721,7 @@ export function createSyntacticTypeNodeBuilder(
         switch (node.kind) {
             case SyntaxKind.GetAccessor:
                 return serializeTypeOfAccessor(node, symbol, context);
+            case SyntaxKind.JsxMethodAttribute:
             case SyntaxKind.MethodDeclaration:
             case SyntaxKind.FunctionDeclaration:
             case SyntaxKind.ConstructSignature:

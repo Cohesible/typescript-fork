@@ -2,7 +2,7 @@
 
 === Performance Stats ===
 Type Count: 2,500
-Instantiation count: 1,000
+Instantiation count: 2,500
 
 === main.syn ===
 function f<T>(t: reify T): T {
@@ -1571,10 +1571,10 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >    : ^^^
     }
     const f = <Foo>{...elements}</Foo>
->f : Element
->  : ^^^^^^^
-><Foo>{...elements}</Foo> : Element
->                         : ^^^^^^^
+>f : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><Foo>{...elements}</Foo> : HTMLDivElement
+>                         : ^^^^^^^^^^^^^^
 >Foo : (props: { children: Element[]; }) => HTMLDivElement
 >    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
 >elements : Element[]
@@ -1583,10 +1583,10 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
 
     const y = <Foo>{elements}</Foo> // error
->y : Element
->  : ^^^^^^^
-><Foo>{elements}</Foo> : Element
->                      : ^^^^^^^
+>y : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><Foo>{elements}</Foo> : HTMLDivElement
+>                      : ^^^^^^^^^^^^^^
 >Foo : (props: { children: Element[]; }) => HTMLDivElement
 >    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
 >elements : Element[]
@@ -1595,20 +1595,20 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
 
     const x0 = <Foo></Foo> // no error
->x0 : Element
->   : ^^^^^^^
-><Foo></Foo> : Element
->            : ^^^^^^^
+>x0 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><Foo></Foo> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
 >Foo : (props: { children: Element[]; }) => HTMLDivElement
 >    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
 >Foo : (props: { children: Element[]; }) => HTMLDivElement
 >    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
 
     const x1 = <Foo><div/></Foo> // no error
->x1 : Element
->   : ^^^^^^^
-><Foo><div/></Foo> : Element
->                  : ^^^^^^^
+>x1 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><Foo><div/></Foo> : HTMLDivElement
+>                  : ^^^^^^^^^^^^^^
 >Foo : (props: { children: Element[]; }) => HTMLDivElement
 >    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
 ><div/> : HTMLDivElement
@@ -1619,10 +1619,10 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
 
     const x2 = <Foo><div/><div/></Foo> // no error
->x2 : Element
->   : ^^^^^^^
-><Foo><div/><div/></Foo> : Element
->                        : ^^^^^^^
+>x2 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><Foo><div/><div/></Foo> : HTMLDivElement
+>                        : ^^^^^^^^^^^^^^
 >Foo : (props: { children: Element[]; }) => HTMLDivElement
 >    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
 ><div/> : HTMLDivElement
@@ -1637,20 +1637,20 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
 
     const x3 = <Foo>a</Foo> // error (string is not Element)
->x3 : Element
->   : ^^^^^^^
-><Foo>a</Foo> : Element
->             : ^^^^^^^
+>x3 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><Foo>a</Foo> : HTMLDivElement
+>             : ^^^^^^^^^^^^^^
 >Foo : (props: { children: Element[]; }) => HTMLDivElement
 >    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
 >Foo : (props: { children: Element[]; }) => HTMLDivElement
 >    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
 
     const x4 = <Foo/> // error (this is explictly no elements)
->x4 : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><Foo/> : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->       : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x4 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><Foo/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
 >Foo : (props: { children: Element[]; }) => HTMLDivElement
 >    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
 
@@ -1671,10 +1671,10 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >    : ^^^
     }
     const f2 = <Foo2>{'hi'}{...([1,2] as number[])}</Foo2> // error
->f2 : Element
->   : ^^^^^^^
-><Foo2>{'hi'}{...([1,2] as number[])}</Foo2> : Element
->                                            : ^^^^^^^
+>f2 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><Foo2>{'hi'}{...([1,2] as number[])}</Foo2> : HTMLDivElement
+>                                            : ^^^^^^^^^^^^^^
 >Foo2 : (props: { children: [string, number]; }) => HTMLDivElement
 >     : ^     ^^                               ^^^^^^^^^^^^^^^^^^^
 >'hi' : "hi"
@@ -1693,10 +1693,10 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >     : ^     ^^                               ^^^^^^^^^^^^^^^^^^^
 
     const f3 = <Foo2>{'hi'}{...([1] as [number])}</Foo2> // no error
->f3 : Element
->   : ^^^^^^^
-><Foo2>{'hi'}{...([1] as [number])}</Foo2> : Element
->                                          : ^^^^^^^
+>f3 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><Foo2>{'hi'}{...([1] as [number])}</Foo2> : HTMLDivElement
+>                                          : ^^^^^^^^^^^^^^
 >Foo2 : (props: { children: [string, number]; }) => HTMLDivElement
 >     : ^     ^^                               ^^^^^^^^^^^^^^^^^^^
 >'hi' : "hi"
@@ -1742,10 +1742,10 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
     }
     {
         const f = <FooOpt>{...elements}</FooOpt> // no error
->f : Element
->  : ^^^^^^^
-><FooOpt>{...elements}</FooOpt> : Element
->                               : ^^^^^^^
+>f : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><FooOpt>{...elements}</FooOpt> : HTMLDivElement
+>                               : ^^^^^^^^^^^^^^
 >FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
 >       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
 >elements : Element[]
@@ -1754,10 +1754,10 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
 
         const y = <FooOpt>{elements}</FooOpt> // error
->y : Element
->  : ^^^^^^^
-><FooOpt>{elements}</FooOpt> : Element
->                            : ^^^^^^^
+>y : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><FooOpt>{elements}</FooOpt> : HTMLDivElement
+>                            : ^^^^^^^^^^^^^^
 >FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
 >       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
 >elements : Element[]
@@ -1766,20 +1766,20 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
 
         const x0 = <FooOpt></FooOpt> // no error
->x0 : Element
->   : ^^^^^^^
-><FooOpt></FooOpt> : Element
->                  : ^^^^^^^
+>x0 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><FooOpt></FooOpt> : HTMLDivElement
+>                  : ^^^^^^^^^^^^^^
 >FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
 >       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
 >FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
 >       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
 
         const x1 = <FooOpt><div/></FooOpt> // no error
->x1 : Element
->   : ^^^^^^^
-><FooOpt><div/></FooOpt> : Element
->                        : ^^^^^^^
+>x1 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><FooOpt><div/></FooOpt> : HTMLDivElement
+>                        : ^^^^^^^^^^^^^^
 >FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
 >       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
 ><div/> : HTMLDivElement
@@ -1790,10 +1790,10 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
 
         const x2 = <FooOpt><div/><div/></FooOpt> // no error
->x2 : Element
->   : ^^^^^^^
-><FooOpt><div/><div/></FooOpt> : Element
->                              : ^^^^^^^
+>x2 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><FooOpt><div/><div/></FooOpt> : HTMLDivElement
+>                              : ^^^^^^^^^^^^^^
 >FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
 >       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
 ><div/> : HTMLDivElement
@@ -1808,20 +1808,20 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
 
         const x3 = <FooOpt>a</FooOpt> // error
->x3 : Element
->   : ^^^^^^^
-><FooOpt>a</FooOpt> : Element
->                   : ^^^^^^^
+>x3 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><FooOpt>a</FooOpt> : HTMLDivElement
+>                   : ^^^^^^^^^^^^^^
 >FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
 >       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
 >FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
 >       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
 
         const x4 = <FooOpt/> // no error
->x4 : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><FooOpt/> : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x4 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><FooOpt/> : HTMLDivElement
+>          : ^^^^^^^^^^^^^^
 >FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
 >       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
     }
@@ -1850,8 +1850,8 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >     : ^^^
         }
         function Main() {
->Main : () => Element
->     : ^^^^^^^^^^^^^
+>Main : () => HTMLSpanElement
+>     : ^^^^^^^^^^^^^^^^^^^^^
 
             const v = 'aaa'
 >v : "aaa"
@@ -1860,8 +1860,8 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >      : ^^^^^
 
             return <F1 v={v}></F1> // no error
-><F1 v={v}></F1> : Element
->                : ^^^^^^^
+><F1 v={v}></F1> : HTMLSpanElement
+>                : ^^^^^^^^^^^^^^^
 >F1 : (props: { v: string; }) => HTMLSpanElement
 >   : ^     ^^              ^^^^^^^^^^^^^^^^^^^^
 >v : string
@@ -1885,15 +1885,16 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 }
 
 // update expression
-declare const el: Element;
+{
+    declare const el: Element;
 >el : Element
 >   : ^^^^^^^
 
-const d = <div on:click={() => {
+    const d = <div on:click={() => {
 >d : HTMLDivElement
 >  : ^^^^^^^^^^^^^^
-><div on:click={() => {    update el}}></div> : HTMLDivElement
->                                             : ^^^^^^^^^^^^^^
+><div on:click={() => {        update el    }}></div> : HTMLDivElement
+>                                                     : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 >on:click : () => void
@@ -1902,27 +1903,29 @@ const d = <div on:click={() => {
 >   : ^^^
 >click : any
 >      : ^^^
->() => {    update el} : () => void
->                      : ^^^^^^^^^^
+>() => {        update el    } : () => void
+>                              : ^^^^^^^^^^
 
-    update el
+        update el
 >update el : Element
 >          : ^^^^^^^
 >el : Element
 >   : ^^^^^^^
 
-}}></div>
+    }}></div>
 >div : any
 >    : ^^^
+}
 
 // shorthand_jsx_attribute
-const value = ''
+{
+    const value = ''
 >value : ""
 >      : ^^
 >'' : ""
 >   : ^^
 
-const d2 = <input {value}/>
+    const d2 = <input {value}/>
 >d2 : HTMLInputElement
 >   : ^^^^^^^^^^^^^^^^
 ><input {value}/> : HTMLInputElement
@@ -1932,19 +1935,19 @@ const d2 = <input {value}/>
 >value : ""
 >      : ^^
 
-const d3 = <div>
+    const d3 = <div>
 >d3 : HTMLDivElement
 >   : ^^^^^^^^^^^^^^
-><div>  <#if (true)>     <div></div>  </></div> : HTMLDivElement
->                                               : ^^^^^^^^^^^^^^
+><div>        <#if (true)>            <div></div>        </>    </div> : HTMLDivElement
+>                                                                      : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 
-  <#if (true)>
+        <#if (true)>
 >true : true
 >     : ^^^^
 
-     <div></div>
+            <div></div>
 ><div></div> : HTMLDivElement
 >            : ^^^^^^^^^^^^^^
 >div : any
@@ -1952,18 +1955,18 @@ const d3 = <div>
 >div : any
 >    : ^^^
 
-  </>
-</div>
+        </>
+    </div>
 >div : any
 >    : ^^^
 
-const cond = true
+    const cond = true
 >cond : true
 >     : ^^^^
 >true : true
 >     : ^^^^
 
-const d4 = <div><#if (cond)></></div>
+    const d4 = <div><#if (cond)></></div>
 >d4 : HTMLDivElement
 >   : ^^^^^^^^^^^^^^
 ><div><#if (cond)></></div> : HTMLDivElement
@@ -1974,6 +1977,7 @@ const d4 = <div><#if (cond)></></div>
 >     : ^^^^
 >div : any
 >    : ^^^
+}
 
 {
     // cfa should work inside <#if>
@@ -2210,18 +2214,18 @@ const d4 = <div><#if (cond)></></div>
 >    : ^^^
 
         const el = <Comp/>
->el : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><Comp/> : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>el : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><Comp/> : HTMLDivElement
+>        : ^^^^^^^^^^^^^^
 >Comp : () => HTMLDivElement
 >     : ^^^^^^^^^^^^^^^^^^^^
 
         update el // ok
->update el : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->el : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>update el : HTMLDivElement
+>          : ^^^^^^^^^^^^^^
+>el : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
     }
 
     {
@@ -3122,19 +3126,27 @@ const d4 = <div><#if (cond)></></div>
 >    : ^^^
 
     </>
-    ;<div @ root>
-><div @ root>        <Inner />    </div> : HTMLDivElement
->                                        : ^^^^^^^^^^^^^^
->div : any
->    : ^^^
+    const inner = <Inner />
+>inner : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Inner /> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Inner : () => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+
+    const root = <div>
 >root : HTMLDivElement
 >     : ^^^^^^^^^^^^^^
+><div>        <Inner />    </div> : HTMLDivElement
+>                                 : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
 
         <Inner />
-><Inner /> : HTMLDivElement
->          : ^^^^^^^^^^^^^^
->Inner : (props: {}) => HTMLDivElement
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+><Inner /> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Inner : () => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
     </div>
 >div : any
@@ -3196,12 +3208,12 @@ const d4 = <div><#if (cond)></></div>
 >     : ^^^^^^^^^^^^^^
 
         <InnerB @ d1 />
-><InnerB @ d1 /> : HTMLDivElement
->                : ^^^^^^^^^^^^^^
->InnerB : (props: {}) => HTMLDivElement
->       : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->d1 : HTMLDivElement
->   : ^^^^^^^^^^^^^^
+><InnerB @ d1 /> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>                : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>InnerB : () => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>       : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>d1 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
         <div @ d2>{c}</div>
 ><div @ d2>{c}</div> : HTMLDivElement
@@ -3225,8 +3237,8 @@ const d4 = <div><#if (cond)></></div>
 >                                                                                                                                                                 : ^^^^^^^^^^
 
                 update d1 {
->d1 : HTMLDivElement
->   : ^^^^^^^^^^^^^^
+>d1 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
                     c += 1
 >c += 1 : number
@@ -3266,17 +3278,17 @@ const d4 = <div><#if (cond)></></div>
 >External : any
 >         : ^^^
 
-    ;<div @ root>
-><div @ root>        <External />    </div> : HTMLDivElement
->                                           : ^^^^^^^^^^^^^^
->div : any
->    : ^^^
+    const root = <div>
 >root : HTMLDivElement
 >     : ^^^^^^^^^^^^^^
+><div>        <External />    </div> : HTMLDivElement
+>                                    : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
 
         <External />
-><External /> : { readonly root: any; "__@update@670"(): void; }
->             : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+><External /> : any
+>             : ^^^
 >External : any
 >         : ^^^
 
@@ -3436,18 +3448,18 @@ const d4 = <div><#if (cond)></></div>
 
     </>
     const d = <Many {items}/>
->d : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><Many {items}/> : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->                : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Many : (props: { items: string[]; }) => HTMLDivElement
->     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>d : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Many {items}/> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>                : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Many : (attributes: { items: string[]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 >items : string[]
 >      : ^^^^^^^^
 
     update d {
->d : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>d : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
         items.push('aa')
 >items.push('aa') : number
@@ -3491,12 +3503,12 @@ const d4 = <div><#if (cond)></></div>
 
     // this should _not_ be a single root
     const w = <Wrapper /> 
->w : { readonly root: [Comment]; "__@update@670"(): void; }
->  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><Wrapper /> : { readonly root: [Comment]; "__@update@670"(): void; }
->            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Wrapper : (props: {}) => [Comment]
->        : ^^^^^^^^^^^^^^^^^^^^^^^^
+>w : { readonly root: [Comment]; [Symbol.update](): void; }
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Wrapper /> : { readonly root: [Comment]; [Symbol.update](): void; }
+>            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Wrapper : () => { readonly root: [Comment]; [Symbol.update](): void; }
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 }
 
 {
@@ -3556,12 +3568,12 @@ const d4 = <div><#if (cond)></></div>
 >    : ^^^
 
         <Wrapper>a</Wrapper>
-><Wrapper>a</Wrapper> : HTMLDivElement
->                     : ^^^^^^^^^^^^^^
->Wrapper : (props: { children: (string | ChildNode)[]; }) => HTMLDivElement
->        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Wrapper : (props: { children: (string | ChildNode)[]; }) => HTMLDivElement
->        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+><Wrapper>a</Wrapper> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>                     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Wrapper : (attributes: {}, children: (string | ChildNode)[]) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Wrapper : (attributes: {}, children: (string | ChildNode)[]) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
     </div>
 >div : any
@@ -3616,10 +3628,10 @@ const d4 = <div><#if (cond)></></div>
 >                    : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
-><Foo/> : HTMLDivElement
->       : ^^^^^^^^^^^^^^
->Foo : (props: {}) => HTMLDivElement
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+><Foo/> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>       : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Foo : () => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 >div : any
 >    : ^^^
 }
@@ -3634,8 +3646,8 @@ const d4 = <div><#if (cond)></></div>
 >         : ^^ ^^ ^^^^^         ^
 >x : T
 >  : ^
->key : ((x: T) => string | number) | undefined
->    : ^^ ^^ ^^^^^               ^^^^^^^^^^^^^
+>key : (x: T) => string | number
+>    : ^ ^^ ^^^^^               
 >x : T
 >  : ^
 
@@ -3710,8 +3722,8 @@ const d4 = <div><#if (cond)></></div>
 >  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ><List {items} key={x => x.id}>        {x => <div>{x.first} {x.last}</div>}    </List> : List<{ id: number; first: string; last: string; }>
 >                                                                                      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->List : <T>(props: { items: T[]; children: [(x: T) => ChildNode]; key?: ((x: T) => string | number) | undefined; }) => HTMLDivElement
->     : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ^^ ^^^^^         ^^^^^^^^^^^ ^^ ^^^^^               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>List : <T>(attributes: { items: T[]; key?: ((x: T) => string | number) | undefined; }, children: [(x: T) => ChildNode]) => List<T>
+>     : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ^^ ^^^^^               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ^^ ^^^^^         ^^^^^^^^^^^^^
 >items : { id: number; first: string; last: string; }[]
 >      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >key : (x: { id: number; first: string; last: string; }) => number
@@ -3752,8 +3764,8 @@ const d4 = <div><#if (cond)></></div>
 >    : ^^^
 
     </List>
->List : <T>(props: { items: T[]; children: [(x: T) => ChildNode]; key?: ((x: T) => string | number) | undefined; }) => HTMLDivElement
->     : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ^^ ^^^^^         ^^^^^^^^^^^ ^^ ^^^^^               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>List : <T>(attributes: { items: T[]; key?: ((x: T) => string | number) | undefined; }, children: [(x: T) => ChildNode]) => List<T>
+>     : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ^^ ^^^^^               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ^^ ^^^^^         ^^^^^^^^^^^^^
 
     function List2<T>(props: { items: T[], children: [(x: T) => ChildNode]}) {
 >List2 : <T>(props: { items: T[]; children: [(x: T) => ChildNode]; }) => HTMLDivElement
@@ -3776,10 +3788,10 @@ const d4 = <div><#if (cond)></></div>
 >    : ^^^
     }
     const l2 = <List2 {items}>
->l2 : Element
->   : ^^^^^^^
-><List2 {items}>        {x => <div>{x.first} {x.last}</div>}    </List2> : Element
->                                                                        : ^^^^^^^
+>l2 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><List2 {items}>        {x => <div>{x.first} {x.last}</div>}    </List2> : HTMLDivElement
+>                                                                        : ^^^^^^^^^^^^^^
 >List2 : <T>(props: { items: T[]; children: [(x: T) => ChildNode]; }) => HTMLDivElement
 >      : ^ ^^     ^^                                                ^^^^^^^^^^^^^^^^^^^
 >items : { id: number; first: string; last: string; }[]
@@ -3815,6 +3827,102 @@ const d4 = <div><#if (cond)></></div>
 }
 
 {
+    <div>
+><div>        <#run>            let c = 0        </>        <div @ v>{c}</div>        <div on:click() {            update v { c += 1 }            console.log(this)        }>            click        </div>    </div> : HTMLDivElement
+>                                                                                                                                                                                                                      : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <#run>
+            let c = 0
+>c : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+        </>
+        <div @ v>{c}</div>
+><div @ v>{c}</div> : HTMLDivElement
+>                   : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>v : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+>c : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+        <div on:click() {
+><div on:click() {            update v { c += 1 }            console.log(this)        }>            click        </div> : HTMLDivElement
+>                                                                                                                       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>on:click : () => void
+>         : ^^^^^^^^^^
+>on : any
+>   : ^^^
+>click : any
+>      : ^^^
+
+            update v { c += 1 }
+>v : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+
+            console.log(this)
+>console.log(this) : void
+>                  : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>this : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+        }>
+            click
+        </div>
+>div : any
+>    : ^^^
+
+    </div>
+>div : any
+>    : ^^^
+    
+    ;<div on:keypress(ev) {
+><div on:keypress(ev) {        ev.keyCode    } /> : HTMLDivElement
+>                                                 : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>on:keypress : (ev: JSX.TargetedEvent<HTMLDivElement, KeyboardEvent>) => void
+>            : ^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>on : any
+>   : ^^^
+>keypress : any
+>         : ^^^
+>ev : JSX.TargetedEvent<HTMLDivElement, KeyboardEvent>
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        ev.keyCode
+>ev.keyCode : number
+>           : ^^^^^^
+>ev : JSX.TargetedEvent<HTMLDivElement, KeyboardEvent>
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>keyCode : number
+>        : ^^^^^^
+
+    } />
+}
+
+{
     <#component One(children)>
 >One : any
 >    : ^^^
@@ -3836,18 +3944,18 @@ const d4 = <div><#if (cond)></></div>
     <#component Two(children)>
 >Two : any
 >    : ^^^
->children : [NodeLike]
->         : ^^^^^^^^^^
+>children : [string | number | ChildNode]
+>         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
         <div>{children[0]}</div>
 ><div>{children[0]}</div> : HTMLDivElement
 >                         : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->children[0] : NodeLike
->            : ^^^^^^^^
->children : [NodeLike]
->         : ^^^^^^^^^^
+>children[0] : string | number | ChildNode
+>            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>children : [string | number | ChildNode]
+>         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >0 : 0
 >  : ^
 >div : any
@@ -3862,14 +3970,14 @@ const d4 = <div><#if (cond)></></div>
 >         : ^^^^^^^^^^^^
 
         <One>{...children}</One>
-><One>{...children}</One> : HTMLDivElement
->                         : ^^^^^^^^^^^^^^
->One : (props: { children: JSX.Children; }) => HTMLDivElement
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+><One>{...children}</One> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>                         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>One : (attributes: {}, children: JSX.Children) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 >children : JSX.Children
 >         : ^^^^^^^^^^^^
->One : (props: { children: JSX.Children; }) => HTMLDivElement
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>One : (attributes: {}, children: JSX.Children) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
     </>
 
@@ -3897,14 +4005,14 @@ const d4 = <div><#if (cond)></></div>
 
         </>
         <Inner>{...children}</Inner>
-><Inner>{...children}</Inner> : HTMLDivElement
->                             : ^^^^^^^^^^^^^^
->Inner : (props: { children: string[]; }) => HTMLDivElement
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+><Inner>{...children}</Inner> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>                             : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Inner : (attributes: {}, children: string[]) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 >children : string[]
 >         : ^^^^^^^^
->Inner : (props: { children: string[]; }) => HTMLDivElement
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>Inner : (attributes: {}, children: string[]) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
     </>
 
@@ -4033,12 +4141,12 @@ const d4 = <div><#if (cond)></></div>
     </>
 
     const inst = <Foo />
->inst : { readonly root: HTMLDivElement; bar(): number; "__@update@670"(): void; }
->     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><Foo /> : { readonly root: HTMLDivElement; bar(): number; "__@update@670"(): void; }
->        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Foo : (this: { bar?: () => number; }, props: {}) => HTMLDivElement
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>inst : { readonly root: HTMLDivElement; bar(): number; [Symbol.update](): void; }
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Foo /> : { readonly root: HTMLDivElement; bar(): number; [Symbol.update](): void; }
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Foo : () => { readonly root: HTMLDivElement; bar(): number; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
     const v = inst.bar()
 >v : number
@@ -4047,8 +4155,8 @@ const d4 = <div><#if (cond)></></div>
 >           : ^^^^^^
 >inst.bar : () => number
 >         : ^^^^^^^^^^^^
->inst : { readonly root: HTMLDivElement; bar(): number; "__@update@670"(): void; }
->     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>inst : { readonly root: HTMLDivElement; bar(): number; [Symbol.update](): void; }
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 >bar : () => number
 >    : ^^^^^^^^^^^^
 
@@ -4078,8 +4186,8 @@ const d4 = <div><#if (cond)></></div>
 >      : ^^^^^^^^^^^^
 ><Foo2 attr="test" /> : Foo2<"test">
 >                     : ^^^^^^^^^^^^
->Foo2 : <const T>(this: { bar?: () => T; }, props: { attr: T; }) => HTMLDivElement
->     : ^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>Foo2 : <const T>(attributes: { attr: T; }) => Foo2<T>
+>     : ^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >attr : "test"
 >     : ^^^^^^
 
@@ -4097,8 +4205,8 @@ const d4 = <div><#if (cond)></></div>
 
 
     function createCompDecl<T>(v: T) {
->createCompDecl : <T>(v: T) => <U>(this: { baz?: () => { a: U; b: T; }; }, props: { a: U; b?: T | undefined; }) => HTMLDivElement
->               : ^ ^^ ^^ ^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>createCompDecl : <T>(v: T) => <U>(attributes: { a: U; b?: T | undefined; }) => Foo3<U>
+>               : ^ ^^ ^^ ^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >v : T
 >  : ^
 
@@ -4131,27 +4239,27 @@ const d4 = <div><#if (cond)></></div>
 
         </>
         return Foo3
->Foo3 : <U>(this: { baz?: () => { a: U; b: T; }; }, props: { a: U; b?: T | undefined; }) => HTMLDivElement
->     : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>Foo3 : <U>(attributes: { a: U; b?: T | undefined; }) => Foo3<U>
+>     : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     }
 
     const FooWithDefault = createCompDecl(1)
->FooWithDefault : <U>(this: { baz?: () => { a: U; b: number; }; }, props: { a: U; b?: number | undefined; }) => HTMLDivElement
->               : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->createCompDecl(1) : <U>(this: { baz?: () => { a: U; b: number; }; }, props: { a: U; b?: number | undefined; }) => HTMLDivElement
->                  : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->createCompDecl : <T>(v: T) => <U>(this: { baz?: () => { a: U; b: T; }; }, props: { a: U; b?: T | undefined; }) => HTMLDivElement
->               : ^ ^^ ^^ ^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>FooWithDefault : <U>(attributes: { a: U; b?: number | undefined; }) => createCompDecl<number>.Foo3<U>
+>               : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>createCompDecl(1) : <U>(attributes: { a: U; b?: number | undefined; }) => createCompDecl<number>.Foo3<U>
+>                  : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>createCompDecl : <T>(v: T) => <U>(attributes: { a: U; b?: T | undefined; }) => Foo3<U>
+>               : ^ ^^ ^^ ^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >1 : 1
 >  : ^
 
     const inst3 = <FooWithDefault a="test" />
->inst3 : { readonly root: HTMLDivElement; baz: () => { a: string; b: number; }; "__@update@670"(): void; }
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><FooWithDefault a="test" /> : { readonly root: HTMLDivElement; baz: () => { a: string; b: number; }; "__@update@670"(): void; }
->                            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->FooWithDefault : <U>(this: { baz?: () => { a: U; b: number; }; }, props: { a: U; b?: number | undefined; }) => HTMLDivElement
->               : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>inst3 : createCompDecl<number>.Foo3<string>
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+><FooWithDefault a="test" /> : createCompDecl<number>.Foo3<string>
+>                            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>FooWithDefault : <U>(attributes: { a: U; b?: number | undefined; }) => createCompDecl<number>.Foo3<U>
+>               : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >a : string
 >  : ^^^^^^
 
@@ -4162,18 +4270,18 @@ const d4 = <div><#if (cond)></></div>
 >            : ^^^^^^^^^^^^^^^^^^^^^^^^^
 >inst3.baz : () => { a: string; b: number; }
 >          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->inst3 : { readonly root: HTMLDivElement; baz: () => { a: string; b: number; }; "__@update@670"(): void; }
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>inst3 : createCompDecl<number>.Foo3<string>
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >baz : () => { a: string; b: number; }
 >    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     const inst4 = <FooWithDefault a="test" b=2 />
->inst4 : { readonly root: HTMLDivElement; baz: () => { a: string; b: number; }; "__@update@670"(): void; }
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><FooWithDefault a="test" b=2 /> : { readonly root: HTMLDivElement; baz: () => { a: string; b: number; }; "__@update@670"(): void; }
->                                : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->FooWithDefault : <U>(this: { baz?: () => { a: U; b: number; }; }, props: { a: U; b?: number | undefined; }) => HTMLDivElement
->               : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>inst4 : createCompDecl<number>.Foo3<string>
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+><FooWithDefault a="test" b=2 /> : createCompDecl<number>.Foo3<string>
+>                                : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>FooWithDefault : <U>(attributes: { a: U; b?: number | undefined; }) => createCompDecl<number>.Foo3<U>
+>               : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >a : string
 >  : ^^^^^^
 >b : number
@@ -4186,8 +4294,8 @@ const d4 = <div><#if (cond)></></div>
 >            : ^^^^^^^^^^^^^^^^^^^^^^^^^
 >inst4.baz : () => { a: string; b: number; }
 >          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->inst4 : { readonly root: HTMLDivElement; baz: () => { a: string; b: number; }; "__@update@670"(): void; }
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>inst4 : createCompDecl<number>.Foo3<string>
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >baz : () => { a: string; b: number; }
 >    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -4200,12 +4308,12 @@ const d4 = <div><#if (cond)></></div>
 >    : ^^^
 
         <FooWithDefault @ f a="test" />
-><FooWithDefault @ f a="test" /> : { readonly root: HTMLDivElement; baz: () => { a: string; b: number; }; "__@update@670"(): void; }
->                                : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->FooWithDefault : <U>(this: { baz?: () => { a: U; b: number; }; }, props: { a: U; b?: number | undefined; }) => HTMLDivElement
->               : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->f : { readonly root: HTMLDivElement; baz: () => { a: string; b: number; }; "__@update@670"(): void; }
->  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+><FooWithDefault @ f a="test" /> : createCompDecl<number>.Foo3<string>
+>                                : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>FooWithDefault : <U>(attributes: { a: U; b?: number | undefined; }) => createCompDecl<number>.Foo3<U>
+>               : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>f : createCompDecl<number>.Foo3<string>
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >a : string
 >  : ^^^^^^
 
@@ -4217,8 +4325,8 @@ const d4 = <div><#if (cond)></></div>
 >        : ^^^^^^^^^^^^^^^^^^^^^^^^^
 >f.baz : () => { a: string; b: number; }
 >      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->f : { readonly root: HTMLDivElement; baz: () => { a: string; b: number; }; "__@update@670"(): void; }
->  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>f : createCompDecl<number>.Foo3<string>
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >baz : () => { a: string; b: number; }
 >    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -4234,20 +4342,6 @@ const d4 = <div><#if (cond)></></div>
     </div>
 >div : any
 >    : ^^^
-
-    const q = { [Symbol.update]() { } }
->q : { [Symbol.update](): void; }
->  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->{ [Symbol.update]() { } } : { [Symbol.update](): void; }
->                          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->[Symbol.update] : () => void
->                : ^^^^^^^^^^
->Symbol.update : unique symbol
->              : ^^^^^^^^^^^^^
->Symbol : SymbolConstructor
->       : ^^^^^^^^^^^^^^^^^
->update : unique symbol
->       : ^^^^^^^^^^^^^
 }
 
 {
@@ -4263,51 +4357,52 @@ const d4 = <div><#if (cond)></></div>
 
     </>
     type AAA = typeof Foo
->AAA : (props: {}) => HTMLDivElement
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Foo : (props: {}) => HTMLDivElement
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>AAA : () => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Foo : () => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 }
 
 {
-    function Foo(this: { bar?: () => "aaa" }, props: {}) {
->Foo : (this: { bar?: () => "aaa"; }, props: {}) => HTMLDivElement
->    : ^    ^^                      ^^     ^^  ^^^^^^^^^^^^^^^^^^^
->this : { bar?: () => "aaa"; }
->     : ^^^^^^^^           ^^^
->bar : (() => "aaa") | undefined
->    : ^^^^^^^     ^^^^^^^^^^^^^
->props : {}
+    function Foo(attrs: {}): { root: HTMLDivElement; bar: () => 'aaa' } {
+>Foo : (attrs: {}) => { root: HTMLDivElement; bar: () => "aaa"; }
+>    : ^     ^^  ^^^^^                                           
+>attrs : {}
 >      : ^^
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+>bar : () => "aaa"
+>    : ^^^^^^     
 
-        this.bar = () => 'aaa'
->this.bar = () => 'aaa' : () => string
->                       : ^^^^^^^^^^^^
->this.bar : (() => "aaa") | undefined
->         : ^^^^^^^     ^^^^^^^^^^^^^
->this : { bar?: () => "aaa"; }
->     : ^^^^^^^^           ^^^
->bar : (() => "aaa") | undefined
->    : ^^^^^^^     ^^^^^^^^^^^^^
->() => 'aaa' : () => string
->            : ^^^^^^^^^^^^
->'aaa' : "aaa"
->      : ^^^^^
+        return {
+>{            root: <div/>,            bar: () => 'aaa',        } : { root: HTMLDivElement; bar: () => string; }
+>                                                                 : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-        return <div/>
+            root: <div/>,
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
 ><div/> : HTMLDivElement
 >       : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
+
+            bar: () => 'aaa',
+>bar : () => string
+>    : ^^^^^^^^^^^^
+>() => 'aaa' : () => string
+>            : ^^^^^^^^^^^^
+>'aaa' : "aaa"
+>      : ^^^^^
+        }
     }
 
     const x = <Foo />
->x : { readonly root: HTMLDivElement; bar: () => "aaa"; "__@update@670"(): void; }
->  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><Foo /> : { readonly root: HTMLDivElement; bar: () => "aaa"; "__@update@670"(): void; }
->        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Foo : (this: { bar?: () => "aaa"; }, props: {}) => HTMLDivElement
->    : ^    ^^                      ^^     ^^  ^^^^^^^^^^^^^^^^^^^
+>x : { root: HTMLDivElement; bar: () => "aaa"; }
+>  : ^^^^^^^^              ^^^^^^^           ^^^
+><Foo /> : { root: HTMLDivElement; bar: () => "aaa"; }
+>        : ^^^^^^^^              ^^^^^^^           ^^^
+>Foo : (attrs: {}) => { root: HTMLDivElement; bar: () => "aaa"; }
+>    : ^     ^^  ^^^^^                                           
 
     const y = x.bar()
 >y : "aaa"
@@ -4316,10 +4411,753 @@ const d4 = <div><#if (cond)></></div>
 >        : ^^^^^
 >x.bar : () => "aaa"
 >      : ^^^^^^     
->x : { readonly root: HTMLDivElement; bar: () => "aaa"; "__@update@670"(): void; }
->  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x : { root: HTMLDivElement; bar: () => "aaa"; }
+>  : ^^^^^^^^              ^^^^^^^           ^^^
 >bar : () => "aaa"
 >    : ^^^^^^     
+}
+
+{
+    <#component Foo() {
+>Foo : any
+>    : ^^^
+
+        const x = 1
+>x : 1
+>  : ^
+>1 : 1
+>  : ^
+
+        public { x as y }
+>x : 1
+>  : ^
+>y : 1
+>  : ^
+
+    }>
+      <div>{x}</div>
+><div>{x}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>x : 1
+>  : ^
+>div : any
+>    : ^^^
+
+    </>
+    const f = <Foo />
+>f : { readonly root: HTMLDivElement; y: 1; [Symbol.update](): void; }
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Foo /> : { readonly root: HTMLDivElement; y: 1; [Symbol.update](): void; }
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Foo : () => { readonly root: HTMLDivElement; y: 1; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+
+    f.y // number
+>f.y : 1
+>    : ^
+>f : { readonly root: HTMLDivElement; y: 1; [Symbol.update](): void; }
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>y : 1
+>  : ^
+
+    <#component Bar()>
+>Bar : any
+>    : ^^^
+
+      <Foo />
+><Foo /> : { readonly root: HTMLDivElement; y: 1; [Symbol.update](): void; }
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Foo : () => { readonly root: HTMLDivElement; y: 1; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+
+    </>
+
+    const b = <Bar />
+>b : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Bar /> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Bar : () => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+}
+
+export <#component ExportedComp()>
+>ExportedComp : any
+>             : ^^^
+
+    <div/>
+><div/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+</>
+
+
+{
+    const d = <div>
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div>        <#run>            static let c = 0            function foo() {                static let c2 = 0 // error            }        </>        {c++}    </div> : HTMLDivElement
+>                                                                                                                                                                     : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <#run>
+            static let c = 0
+>c : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+            function foo() {
+>foo : () => void
+>    : ^^^^^^^^^^
+
+                static let c2 = 0 // error
+>c2 : number
+>   : ^^^^^^
+>0 : 0
+>  : ^
+            }
+        </>
+        {c++}
+>c++ : number
+>    : ^^^^^^
+>c : number
+>  : ^^^^^^
+
+    </div>
+>div : any
+>    : ^^^
+
+    let co = 0
+>co : number
+>   : ^^^^^^
+>0 : 0
+>  : ^
+
+    const d2 = <div>
+>d2 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div>        <#run>            const c = 0            static function foo() {                return c // error            }            static class Foo { y = c } // error            static const d = () => c // error            static const c2 = c // OK            static let c3 = c // OK            static const d3 = <div>{c}</div> // error            static const d4 = <div>{co}</div> // OK, outside of a tree            static const d5 = <div>{c2}</div> // OK        </>        {c}    </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <#run>
+            const c = 0
+>c : 0
+>  : ^
+>0 : 0
+>  : ^
+
+            static function foo() {
+>foo : () => number
+>    : ^^^^^^^^^^^^
+
+                return c // error
+>c : 0
+>  : ^
+            }
+            static class Foo { y = c } // error
+>Foo : Foo
+>    : ^^^
+>y : number
+>  : ^^^^^^
+>c : 0
+>  : ^
+
+            static const d = () => c // error
+>d : () => number
+>  : ^^^^^^^^^^^^
+>() => c : () => number
+>        : ^^^^^^^^^^^^
+>c : 0
+>  : ^
+
+            static const c2 = c // OK
+>c2 : 0
+>   : ^
+>c : 0
+>  : ^
+
+            static let c3 = c // OK
+>c3 : number
+>   : ^^^^^^
+>c : 0
+>  : ^
+
+            static const d3 = <div>{c}</div> // error
+>d3 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div>{c}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>c : 0
+>  : ^
+>div : any
+>    : ^^^
+
+            static const d4 = <div>{co}</div> // OK, outside of a tree
+>d4 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div>{co}</div> : HTMLDivElement
+>                : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>co : number
+>   : ^^^^^^
+>div : any
+>    : ^^^
+
+            static const d5 = <div>{c2}</div> // OK
+>d5 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div>{c2}</div> : HTMLDivElement
+>                : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>c2 : 0
+>   : ^
+>div : any
+>    : ^^^
+
+        </>
+        {c}
+>c : 0
+>  : ^
+
+    </div>
+>div : any
+>    : ^^^
+
+    const d3 = <div>
+>d3 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div>        <#run>            const c = 0            const d2 = <div>              <#run>                static const f = () => c // OK, because the binding is stable              </>            </div>        </>    </div> : HTMLDivElement
+>                                                                                                                                                                                                                                : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <#run>
+            const c = 0
+>c : 0
+>  : ^
+>0 : 0
+>  : ^
+
+            const d2 = <div>
+>d2 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div>              <#run>                static const f = () => c // OK, because the binding is stable              </>            </div> : HTMLDivElement
+>                                                                                                                                          : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+              <#run>
+                static const f = () => c // OK, because the binding is stable
+>f : () => number
+>  : ^^^^^^^^^^^^
+>() => c : () => number
+>        : ^^^^^^^^^^^^
+>c : 0
+>  : ^
+
+              </>
+            </div>
+>div : any
+>    : ^^^
+
+        </>
+    </div>
+>div : any
+>    : ^^^
+
+    const d4 = <div>
+>d4 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div>        <#run>          const c = 0        </>        <div>            <#run>                static const f = () => c // error                static const f2 = () => {                    return <div>{c}</div> // error                }            </>        </div>    </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <#run>
+          const c = 0
+>c : 0
+>  : ^
+>0 : 0
+>  : ^
+
+        </>
+        <div>
+><div>            <#run>                static const f = () => c // error                static const f2 = () => {                    return <div>{c}</div> // error                }            </>        </div> : HTMLDivElement
+>                                                                                                                                                                                                                  : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+            <#run>
+                static const f = () => c // error
+>f : () => number
+>  : ^^^^^^^^^^^^
+>() => c : () => number
+>        : ^^^^^^^^^^^^
+>c : 0
+>  : ^
+
+                static const f2 = () => {
+>f2 : () => HTMLDivElement
+>   : ^^^^^^^^^^^^^^^^^^^^
+>() => {                    return <div>{c}</div> // error                } : () => HTMLDivElement
+>                                                                           : ^^^^^^^^^^^^^^^^^^^^
+
+                    return <div>{c}</div> // error
+><div>{c}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>c : 0
+>  : ^
+>div : any
+>    : ^^^
+                }
+            </>
+        </div>
+>div : any
+>    : ^^^
+
+    </div>
+>div : any
+>    : ^^^
+
+    const d5 = <div>
+>d5 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div>        <#run>            const c = 0            // error, components aren't allowed as top-level #run declarations            <#component Foo()>                <div></div>            </>            let cx = 0            static let cx = 0        </>        <#component Foo2()>            <div>                <#run>                    // OK, contiguous comp declarations observe the true tree binding                    // there is no concept of "which c?" here, so `c` is always the most recent value                    static const c2 = () => c                    const c3 = 0                    static const c4 = () => c3 // error                    const q = cx // error, nested components cannot capture mutable non-static tree locals                    const q = cx2 // OK                </>            </div>        </>    </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <#run>
+            const c = 0
+>c : 0
+>  : ^
+>0 : 0
+>  : ^
+
+            // error, components aren't allowed as top-level #run declarations
+            <#component Foo()>
+>Foo : any
+>    : ^^^
+
+                <div></div>
+><div></div> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+            </>
+
+            let cx = 0
+>cx : number
+>   : ^^^^^^
+>0 : 0
+>  : ^
+
+            static let cx = 0
+>cx : number
+>   : ^^^^^^
+>0 : 0
+>  : ^
+
+        </>
+        <#component Foo2()>
+>Foo2 : any
+>     : ^^^
+
+            <div>
+><div>                <#run>                    // OK, contiguous comp declarations observe the true tree binding                    // there is no concept of "which c?" here, so `c` is always the most recent value                    static const c2 = () => c                    const c3 = 0                    static const c4 = () => c3 // error                    const q = cx // error, nested components cannot capture mutable non-static tree locals                    const q = cx2 // OK                </>            </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+                <#run>
+                    // OK, contiguous comp declarations observe the true tree binding
+                    // there is no concept of "which c?" here, so `c` is always the most recent value
+                    static const c2 = () => c
+>c2 : () => number
+>   : ^^^^^^^^^^^^
+>() => c : () => number
+>        : ^^^^^^^^^^^^
+>c : 0
+>  : ^
+
+                    const c3 = 0
+>c3 : 0
+>   : ^
+>0 : 0
+>  : ^
+
+                    static const c4 = () => c3 // error
+>c4 : () => number
+>   : ^^^^^^^^^^^^
+>() => c3 : () => number
+>         : ^^^^^^^^^^^^
+>c3 : 0
+>   : ^
+
+                    const q = cx // error, nested components cannot capture mutable non-static tree locals
+>q : number
+>  : ^^^^^^
+>cx : number
+>   : ^^^^^^
+
+                    const q = cx2 // OK
+>q : any
+>  : ^^^
+>cx2 : any
+>    : ^^^
+
+                </>
+            </div>
+>div : any
+>    : ^^^
+
+        </>
+    </div>
+>div : any
+>    : ^^^
+}
+
+{
+    // jsx attr methods
+    const attrMethod = <div on:click() {
+>attrMethod : HTMLDivElement
+>           : ^^^^^^^^^^^^^^
+><div on:click() {        this // HTMLDivElement    }>click</div> : HTMLDivElement
+>                                                                 : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>on:click : () => void
+>         : ^^^^^^^^^^
+>on : any
+>   : ^^^
+>click : any
+>      : ^^^
+
+        this // HTMLDivElement
+>this : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+    }>click</div>
+>div : any
+>    : ^^^
+
+    <#component Foo(cb: () => void) {
+>Foo : any
+>    : ^^^
+>cb : () => void
+>   : ^^^^^^    
+
+        cb()
+>cb() : void
+>     : ^^^^
+>cb : () => void
+>   : ^^^^^^    
+
+    }>
+      <div/>
+><div/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+
+    const fooAttrMethod = <Foo cb() {
+>fooAttrMethod : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>              : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Foo cb() {        this // Foo     } /> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>                                        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Foo : (attributes: { cb: () => void; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>cb : () => void
+>   : ^^^^^^^^^^
+
+        this // Foo 
+>this : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+
+    } />
+
+    ;<div
+><div        async        async on:click() {}    /> : HTMLDivElement
+>                                                   : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        async
+>async : true
+>      : ^^^^
+
+        async on:click() {}
+>on:click : () => void
+>         : ^^^^^^^^^^
+>on : any
+>   : ^^^
+>click : any
+>      : ^^^
+
+    />
+
+    <#component Foo2<T>(cb: () => T) {
+>Foo2 : any
+>     : ^^^
+>cb : () => T
+>   : ^^^^^^ 
+
+        const v = cb()
+>v : T
+>  : ^
+>cb() : T
+>     : ^
+>cb : () => T
+>   : ^^^^^^ 
+
+        public function f() { return v }
+>f : () => T
+>  : ^^^^^^^
+>v : T
+>  : ^
+
+    }>
+      <div/>
+><div/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+
+    const f = <Foo2 cb() { return 1 } />
+>f : Foo2<number>
+>  : ^^^^^^^^^^^^
+><Foo2 cb() { return 1 } /> : Foo2<number>
+>                           : ^^^^^^^^^^^^
+>Foo2 : <T>(attributes: { cb: () => T; }) => Foo2<T>
+>     : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^^^^
+>cb : () => number
+>   : ^^^^^^^^^^^^
+>1 : 1
+>  : ^
+
+    const v = f.f() // number
+>v : number
+>  : ^^^^^^
+>f.f() : number
+>      : ^^^^^^
+>f.f : () => number
+>    : ^^^^^^^^^^^^
+>f : Foo2<number>
+>  : ^^^^^^^^^^^^
+>f : () => number
+>  : ^^^^^^^^^^^^
+}
+
+{
+    ;<div @ d />
+><div @ d /> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d : any
+>  : ^^^
+
+    console.log(d) // should error
+>console.log(d) : void
+>               : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>d : any
+>  : ^^^
+}
+
+{
+    let x: 0 | 1 | 2 = 0
+>x : 0 | 2 | 1
+>  : ^^^^^^^^^
+>0 : 0
+>  : ^
+
+    defer {
+        x // 2
+>x : 2
+>  : ^
+    }
+    defer {
+        x = 2
+>x = 2 : 2
+>      : ^
+>x : 0 | 2 | 1
+>  : ^^^^^^^^^
+>2 : 2
+>  : ^
+    }
+    function deferTest(cond: boolean) {
+>deferTest : (cond: boolean) => void
+>          : ^    ^^       ^^^^^^^^^
+>cond : boolean
+>     : ^^^^^^^
+
+        let y: 0 | 1 | 2 = 0
+>y : 0 | 2 | 1
+>  : ^^^^^^^^^
+>0 : 0
+>  : ^
+
+        defer {
+            y // 1 | 2
+>y : 2 | 1
+>  : ^^^^^
+        }
+        if (cond) {
+>cond : boolean
+>     : ^^^^^^^
+
+            y = 1
+>y = 1 : 1
+>      : ^
+>y : 0 | 2 | 1
+>  : ^^^^^^^^^
+>1 : 1
+>  : ^
+
+            return
+        }
+        y = 2
+>y = 2 : 2
+>      : ^
+>y : 0 | 2 | 1
+>  : ^^^^^^^^^
+>2 : 2
+>  : ^
+
+        //  throw new Error('!!!')
+    }
+}
+
+// {
+//     let blah: boolean = false
+//     let x
+//     {
+//         let foo: 1 | 2 | 3
+//         let bar: 1 | 2 | 3
+//         defer x = { foo, bar }
+//         if (blah) { foo = 1 } else { foo = 2 }
+//         if (blah) { bar = 2 } else { bar = 3 }
+//     }
+//     x // { foo: 1 | 2, bar: 2 | 3  }
+// }
+
+{
+    function deferFinally() {
+>deferFinally : () => void
+>             : ^^^^^^^^^^
+
+        let z: 0 | 1 | 2 = 0
+>z : 0 | 2 | 1
+>  : ^^^^^^^^^
+>0 : 0
+>  : ^
+
+        defer {
+            z
+>z : 2
+>  : ^
+        }
+        z = 2
+>z = 2 : 2
+>      : ^
+>z : 0 | 2 | 1
+>  : ^^^^^^^^^
+>2 : 2
+>  : ^
+    }
+}
+
+{
+    let x: number | undefined
+>x : number | undefined
+>  : ^^^^^^^^^^^^^^^^^^
+    {
+        defer if (!x) throw new Error('x not truthy!')
+>!x : boolean
+>   : ^^^^^^^
+>x : number | undefined
+>  : ^^^^^^^^^^^^^^^^^^
+>new Error('x not truthy!') : Error
+>                           : ^^^^^
+>Error : ErrorConstructor
+>      : ^^^^^^^^^^^^^^^^
+>'x not truthy!' : "x not truthy!"
+>                : ^^^^^^^^^^^^^^^
+    }
+    declare function check(x: number): void
+>check : (x: number) => void
+>      : ^ ^^      ^^^^^    
+>x : number
+>  : ^^^^^^
+
+    check(x) // OK
+>check(x) : void
+>         : ^^^^
+>check : (x: number) => void
+>      : ^ ^^      ^^^^^    
+>x : number
+>  : ^^^^^^
+}
+
+{
+    ;<#style d>
+>d : any
+>  : ^^^
+
+    </>
+    ;<#style (d)>
+>d : any
+>  : ^^^
+
+    </>
+    ;<#style d2(d)>
+>d2 : any
+>   : ^^^
+>d : any
+>  : ^^^
+
+    </>
+    ;<#style d3(d, d2)>
+>d3 : any
+>   : ^^^
+>d : any
+>  : ^^^
+>d2 : any
+>   : ^^^
+
+    </>
+    const o = d
+>o : any
+>  : ^^^
+>d : any
+>  : ^^^
 }
 
 // !T (FallibleType) and try expr
@@ -5339,13 +6177,13 @@ const d4 = <div><#if (cond)></></div>
 // element names
 {
     // b can be seen within the tree, but not outside
-    ;<div @ a>
-><div @ a>        <div @ b></div>        <#run>            console.log(a, b)        </>    </div> : HTMLDivElement
->                                                                                                 : ^^^^^^^^^^^^^^
->div : any
->    : ^^^
+    const a = <div>
 >a : HTMLDivElement
 >  : ^^^^^^^^^^^^^^
+><div>        <div @ b></div>        <#run>            console.log(a, b)        </>    </div> : HTMLDivElement
+>                                                                                             : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
 
         <div @ b></div>
 ><div @ b></div> : HTMLDivElement
@@ -5396,17 +6234,19 @@ const d4 = <div><#if (cond)></></div>
 >                     : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->c : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+>c : any
+>  : ^^^
 >id : string
 >   : ^^^^^^
 }
 
 // spread JSX elements
 {
-    declare function Comp(): Element[];
->Comp : () => Element[]
->     : ^^^^^^         
+    declare function Comp(): { root: Element[] } & Updatable;
+>Comp : () => { root: Element[]; } & Updatable
+>     : ^^^^^^                                
+>root : Element[]
+>     : ^^^^^^^^^
 
     const spread1 = <div><...Comp /></div> // ok
 >spread1 : HTMLDivElement
@@ -5415,10 +6255,10 @@ const d4 = <div><#if (cond)></></div>
 >                       : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
-><...Comp /> : { readonly root: Element[]; "__@update@670"(): void; }
->            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Comp : () => Element[]
->     : ^^^^^^         
+><...Comp /> : { root: Element[]; } & Updatable
+>            : ^^^^^^^^         ^^^^^^^^^^^^^^^
+>Comp : () => { root: Element[]; } & Updatable
+>     : ^^^^^^                                
 >div : any
 >    : ^^^
 
@@ -5429,10 +6269,10 @@ const d4 = <div><#if (cond)></></div>
 >                    : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
-><Comp /> : { readonly root: Element[]; "__@update@670"(): void; }
->         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Comp : () => Element[]
->     : ^^^^^^         
+><Comp /> : { root: Element[]; } & Updatable
+>         : ^^^^^^^^         ^^^^^^^^^^^^^^^
+>Comp : () => { root: Element[]; } & Updatable
+>     : ^^^^^^                                
 >div : any
 >    : ^^^
 
@@ -5467,9 +6307,11 @@ const d4 = <div><#if (cond)></></div>
 >div : any
 >    : ^^^
 
-    declare function Comp2(): (() => void)[];
->Comp2 : () => (() => void)[]
->      : ^^^^^^              
+    declare function Comp2(): { root: (() => void)[] } & Updatable
+>Comp2 : () => { root: (() => void)[]; } & Updatable
+>      : ^^^^^^                                     
+>root : (() => void)[]
+>     : ^^^^^^^    ^^^
 
     const spread4 = <div><...Comp2 /></div>  // error, intrinsics want something NodeLike
 >spread4 : HTMLDivElement
@@ -5478,16 +6320,18 @@ const d4 = <div><#if (cond)></></div>
 >                        : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
-><...Comp2 /> : { readonly root: (() => void)[]; "__@update@670"(): void; }
->             : ^^^^^^^^^^^^^^^^^^^^^^^^    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Comp2 : () => (() => void)[]
->      : ^^^^^^              
+><...Comp2 /> : { root: (() => void)[]; } & Updatable
+>             : ^^^^^^^^              ^^^^^^^^^^^^^^^
+>Comp2 : () => { root: (() => void)[]; } & Updatable
+>      : ^^^^^^                                     
 >div : any
 >    : ^^^
 
-    declare function Comp3(): Element;
->Comp3 : () => Element
->      : ^^^^^^       
+    declare function Comp3(): { root: Element } & Updatable;
+>Comp3 : () => { root: Element; } & Updatable
+>      : ^^^^^^                              
+>root : Element
+>     : ^^^^^^^
 
     const noSpread2 = <div><Comp3 /></div> // ok
 >noSpread2 : HTMLDivElement
@@ -5496,10 +6340,10 @@ const d4 = <div><#if (cond)></></div>
 >                     : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
-><Comp3 /> : { readonly root: Element; "__@update@670"(): void; }
->          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Comp3 : () => Element
->      : ^^^^^^       
+><Comp3 /> : { root: Element; } & Updatable
+>          : ^^^^^^^^       ^^^^^^^^^^^^^^^
+>Comp3 : () => { root: Element; } & Updatable
+>      : ^^^^^^                              
 >div : any
 >    : ^^^
 
@@ -5510,101 +6354,105 @@ const d4 = <div><#if (cond)></></div>
 >                        : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
-><...Comp3 /> : { readonly root: Element; "__@update@670"(): void; }
->             : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Comp3 : () => Element
->      : ^^^^^^       
+><...Comp3 /> : { root: Element; } & Updatable
+>             : ^^^^^^^^       ^^^^^^^^^^^^^^^
+>Comp3 : () => { root: Element; } & Updatable
+>      : ^^^^^^                              
 >div : any
 >    : ^^^
 
-    declare function Comp4(props: { children: Element[] }): Element;
->Comp4 : (props: { children: Element[]; }) => Element
->      : ^     ^^                        ^^^^^       
->props : { children: Element[]; }
->      : ^^^^^^^^^^^^         ^^^
+    declare function Comp4(attrs: {}, children: Element[]): { root: Element } & Updatable;
+>Comp4 : (attrs: {}, children: Element[]) => { root: Element; } & Updatable
+>      : ^     ^^  ^^        ^^         ^^^^^                              
+>attrs : {}
+>      : ^^
 >children : Element[]
 >         : ^^^^^^^^^
+>root : Element
+>     : ^^^^^^^
 
     // ok
     const spread6 = <Comp4>
->spread6 : Element
->        : ^^^^^^^
-><Comp4>      <Comp3 />      <...Comp />      <...Comp></Comp>    </Comp4> : Element
->                                                                          : ^^^^^^^
->Comp4 : (props: { children: Element[]; }) => Element
->      : ^     ^^                        ^^^^^       
+>spread6 : { root: Element; } & Updatable
+>        : ^^^^^^^^       ^^^^^^^^^^^^^^^
+><Comp4>      <Comp3 />      <...Comp />      <...Comp></Comp>    </Comp4> : { root: Element; } & Updatable
+>                                                                          : ^^^^^^^^       ^^^^^^^^^^^^^^^
+>Comp4 : (attrs: {}, children: Element[]) => { root: Element; } & Updatable
+>      : ^     ^^  ^^        ^^         ^^^^^                              
 
       <Comp3 />
-><Comp3 /> : { readonly root: Element; "__@update@670"(): void; }
->          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Comp3 : () => Element
->      : ^^^^^^       
+><Comp3 /> : { root: Element; } & Updatable
+>          : ^^^^^^^^       ^^^^^^^^^^^^^^^
+>Comp3 : () => { root: Element; } & Updatable
+>      : ^^^^^^                              
 
       <...Comp />
-><...Comp /> : { readonly root: Element[]; "__@update@670"(): void; }
->            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Comp : () => Element[]
->     : ^^^^^^         
+><...Comp /> : { root: Element[]; } & Updatable
+>            : ^^^^^^^^         ^^^^^^^^^^^^^^^
+>Comp : () => { root: Element[]; } & Updatable
+>     : ^^^^^^                                
 
       <...Comp></Comp>
-><...Comp></Comp> : Element
->                 : ^^^^^^^
->Comp : () => Element[]
->     : ^^^^^^         
->Comp : () => Element[]
->     : ^^^^^^         
+><...Comp></Comp> : { root: Element[]; } & Updatable
+>                 : ^^^^^^^^         ^^^^^^^^^^^^^^^
+>Comp : () => { root: Element[]; } & Updatable
+>     : ^^^^^^                                
+>Comp : () => { root: Element[]; } & Updatable
+>     : ^^^^^^                                
 
     </Comp4>
->Comp4 : (props: { children: Element[]; }) => Element
->      : ^     ^^                        ^^^^^       
+>Comp4 : (attrs: {}, children: Element[]) => { root: Element; } & Updatable
+>      : ^     ^^  ^^        ^^         ^^^^^                              
 
     // error
     const spread7 = <Comp4>
->spread7 : Element
->        : ^^^^^^^
-><Comp4>      <Comp3 />      <Comp />    </Comp4> : Element
->                                                 : ^^^^^^^
->Comp4 : (props: { children: Element[]; }) => Element
->      : ^     ^^                        ^^^^^       
+>spread7 : { root: Element; } & Updatable
+>        : ^^^^^^^^       ^^^^^^^^^^^^^^^
+><Comp4>      <Comp3 />      <Comp />    </Comp4> : { root: Element; } & Updatable
+>                                                 : ^^^^^^^^       ^^^^^^^^^^^^^^^
+>Comp4 : (attrs: {}, children: Element[]) => { root: Element; } & Updatable
+>      : ^     ^^  ^^        ^^         ^^^^^                              
 
       <Comp3 />
-><Comp3 /> : { readonly root: Element; "__@update@670"(): void; }
->          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Comp3 : () => Element
->      : ^^^^^^       
+><Comp3 /> : { root: Element; } & Updatable
+>          : ^^^^^^^^       ^^^^^^^^^^^^^^^
+>Comp3 : () => { root: Element; } & Updatable
+>      : ^^^^^^                              
 
       <Comp />
-><Comp /> : { readonly root: Element[]; "__@update@670"(): void; }
->         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Comp : () => Element[]
->     : ^^^^^^         
+><Comp /> : { root: Element[]; } & Updatable
+>         : ^^^^^^^^         ^^^^^^^^^^^^^^^
+>Comp : () => { root: Element[]; } & Updatable
+>     : ^^^^^^                                
 
     </Comp4>
->Comp4 : (props: { children: Element[]; }) => Element
->      : ^     ^^                        ^^^^^       
+>Comp4 : (attrs: {}, children: Element[]) => { root: Element; } & Updatable
+>      : ^     ^^  ^^        ^^         ^^^^^                              
 
-    declare function Comp5(): [Element] | [];
->Comp5 : () => [Element] | []
->      : ^^^^^^              
+    declare function Comp5(): { root: [Element] | [] } & Updatable;
+>Comp5 : () => { root: [Element] | []; } & Updatable
+>      : ^^^^^^                                     
+>root : [] | [Element]
+>     : ^^^^^^^^^^^^^^
 
     // ok
     const spread8 = <Comp4>
->spread8 : Element
->        : ^^^^^^^
-><Comp4>        <...Comp5 />    </Comp4> : Element
->                                        : ^^^^^^^
->Comp4 : (props: { children: Element[]; }) => Element
->      : ^     ^^                        ^^^^^       
+>spread8 : { root: Element; } & Updatable
+>        : ^^^^^^^^       ^^^^^^^^^^^^^^^
+><Comp4>        <...Comp5 />    </Comp4> : { root: Element; } & Updatable
+>                                        : ^^^^^^^^       ^^^^^^^^^^^^^^^
+>Comp4 : (attrs: {}, children: Element[]) => { root: Element; } & Updatable
+>      : ^     ^^  ^^        ^^         ^^^^^                              
 
         <...Comp5 />
-><...Comp5 /> : { readonly root: [] | [Element]; "__@update@670"(): void; }
->             : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Comp5 : () => [Element] | []
->      : ^^^^^^              
+><...Comp5 /> : { root: [Element] | []; } & Updatable
+>             : ^^^^^^^^              ^^^^^^^^^^^^^^^
+>Comp5 : () => { root: [Element] | []; } & Updatable
+>      : ^^^^^^                                     
 
     </Comp4>
->Comp4 : (props: { children: Element[]; }) => Element
->      : ^     ^^                        ^^^^^       
+>Comp4 : (attrs: {}, children: Element[]) => { root: Element; } & Updatable
+>      : ^     ^^  ^^        ^^         ^^^^^                              
 }
 
 {
@@ -5835,12 +6683,12 @@ const d4 = <div><#if (cond)></></div>
 
     </>
     const r1 = <Foo x="hi" />
->r1 : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><Foo x="hi" /> : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->               : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Foo : (props: { x: string; }) => HTMLDivElement
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>r1 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Foo x="hi" /> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>               : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Foo : (attributes: { x: string; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 >x : string
 >  : ^^^^^^
 
@@ -5874,12 +6722,12 @@ const d4 = <div><#if (cond)></></div>
 
     </>
     const r2 = <Bar x="hi" />
->r2 : { readonly root: [HTMLDivElement, HTMLDivElement]; "__@update@670"(): void; }
->   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><Bar x="hi" /> : { readonly root: [HTMLDivElement, HTMLDivElement]; "__@update@670"(): void; }
->               : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Bar : (props: { x: string; }) => [HTMLDivElement, HTMLDivElement]
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>r2 : { readonly root: [HTMLDivElement, HTMLDivElement]; [Symbol.update](): void; }
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Bar x="hi" /> : { readonly root: [HTMLDivElement, HTMLDivElement]; [Symbol.update](): void; }
+>               : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Bar : (attributes: { x: string; }) => { readonly root: [HTMLDivElement, HTMLDivElement]; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 >x : string
 >  : ^^^^^^
 
@@ -5901,12 +6749,12 @@ const d4 = <div><#if (cond)></></div>
 
     </>
     const r3 = <Baz x="hi" />
->r3 : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><Baz x="hi" /> : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->               : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Baz : (props: { x: string; }) => HTMLDivElement
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>r3 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Baz x="hi" /> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>               : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Baz : (attributes: { x: string; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 >x : string
 >  : ^^^^^^
 
@@ -5915,8 +6763,8 @@ const d4 = <div><#if (cond)></></div>
 >        : ^^^
 >x : string
 >  : ^^^^^^
->y : number | undefined
->  : ^^^^^^^^^^^^^^^^^^
+>y : number
+>  : ^^^^^^
 
         <div>{x}</div>
 ><div>{x}</div> : HTMLDivElement
@@ -5930,22 +6778,22 @@ const d4 = <div><#if (cond)></></div>
 
     </>
     const r4a = <WithOpt x="hi" />       // ok
->r4a : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><WithOpt x="hi" /> : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->                   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->WithOpt : (props: { x: string; y?: number | undefined; }) => HTMLDivElement
->        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>r4a : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><WithOpt x="hi" /> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>                   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>WithOpt : (attributes: { x: string; y?: number | undefined; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 >x : string
 >  : ^^^^^^
 
     const r4b = <WithOpt x="hi" y={1} /> // ok
->r4b : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><WithOpt x="hi" y={1} /> : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->                         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->WithOpt : (props: { x: string; y?: number | undefined; }) => HTMLDivElement
->        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>r4b : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><WithOpt x="hi" y={1} /> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>                         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>WithOpt : (attributes: { x: string; y?: number | undefined; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 >x : string
 >  : ^^^^^^
 >y : number
@@ -5954,35 +6802,35 @@ const d4 = <div><#if (cond)></></div>
 >  : ^
 
     const r1_typed: Foo = r1
->r1_typed : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->r1 : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>r1_typed : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>r1 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
     const r3_typed: Baz = r3
->r3_typed : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->r3 : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>r3_typed : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>r3 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
     const r_cross: Foo = r3
->r_cross : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->r3 : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>r_cross : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>r3 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
     const r_cross2: Foo = r4a
->r_cross2 : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->r4a : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>r_cross2 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>r4a : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 }
 
 {
     // expression form
     const Expr = <#component(x: string): HTMLDivElement>
->Expr : (props: { x: string; }) => HTMLDivElement
->     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>Expr : (attributes: { x: string; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 >x : string
 >  : ^^^^^^
 
@@ -5999,12 +6847,12 @@ const d4 = <div><#if (cond)></></div>
     </>
     // Expr is (props: { x: string }) => HTMLDivElement
     const r5 = <Expr x="hello" />
->r5 : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><Expr x="hello" /> : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->                   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Expr : (props: { x: string; }) => HTMLDivElement
->     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>r5 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Expr x="hello" /> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>                   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Expr : (attributes: { x: string; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 >x : string
 >  : ^^^^^^
 }
@@ -6038,12 +6886,12 @@ const d4 = <div><#if (cond)></></div>
 
     </>
     const r6 = <WithBody x="world" />
->r6 : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><WithBody x="world" /> : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->                       : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->WithBody : (props: { x: string; }) => HTMLDivElement
->         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>r6 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><WithBody x="world" /> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>                       : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>WithBody : (attributes: { x: string; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 >x : string
 >  : ^^^^^^
 }
@@ -6099,12 +6947,12 @@ const d4 = <div><#if (cond)></></div>
 
     </>
     const r_lf1 = <Foo>
->r_lf1 : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><Foo>        <:content>hi{'there'}</>    </Foo> : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->                                                : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Foo : (props: { children: { content: [string, string]; }; }) => HTMLDivElement
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^^^^^^^^^
+>r_lf1 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Foo>        <:content>hi{'there'}</>    </Foo> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>                                                : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Foo : (attributes: {}, children: { content: [string, string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
         <:content>hi{'there'}</>
 >content : [string, string]
@@ -6113,8 +6961,8 @@ const d4 = <div><#if (cond)></></div>
 >        : ^^^^^^^
 
     </Foo>
->Foo : (props: { children: { content: [string, string]; }; }) => HTMLDivElement
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^^^^^^^^^
+>Foo : (attributes: {}, children: { content: [string, string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
     // callable labeled fragment
     ;<#component Bar(children: { item: (val: string) => [HTMLSpanElement] })>
@@ -6147,12 +6995,12 @@ const d4 = <div><#if (cond)></></div>
 
     </>
     const r_lf2 = <Bar>
->r_lf2 : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><Bar>        <:item(val: string)><span>{val}</span></>    </Bar> : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->                                                                 : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Bar : (props: { children: { item: (val: string) => [HTMLSpanElement]; }; }) => HTMLDivElement
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+>r_lf2 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Bar>        <:item(val: string)><span>{val}</span></>    </Bar> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>                                                                 : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Bar : (attributes: {}, children: { item: (val: string) => [HTMLSpanElement]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
         <:item(val: string)><span>{val}</span></>
 >item : (val: string) => [HTMLSpanElement]
@@ -6169,8 +7017,8 @@ const d4 = <div><#if (cond)></></div>
 >     : ^^^
 
     </Bar>
->Bar : (props: { children: { item: (val: string) => [HTMLSpanElement]; }; }) => HTMLDivElement
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+>Bar : (attributes: {}, children: { item: (val: string) => [HTMLSpanElement]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
     // contextual typingg
     ;<#component Ctx(children: { slot: (n: number, s: string) => [HTMLDivElement] })>
@@ -6207,12 +7055,12 @@ const d4 = <div><#if (cond)></></div>
 
     </>
     const r_ctx = <Ctx>
->r_ctx : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><Ctx>        <:slot(n, s)><div>{n.toFixed()}{s.toUpperCase()}</div></>    </Ctx> : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->                                                                                 : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Ctx : (props: { children: { slot: (n: number, s: string) => [HTMLDivElement]; }; }) => HTMLDivElement
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+>r_ctx : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Ctx>        <:slot(n, s)><div>{n.toFixed()}{s.toUpperCase()}</div></>    </Ctx> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>                                                                                 : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Ctx : (attributes: {}, children: { slot: (n: number, s: string) => [HTMLDivElement]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
         <:slot(n, s)><div>{n.toFixed()}{s.toUpperCase()}</div></>
 >slot : (n: number, s: string) => [HTMLDivElement]
@@ -6245,8 +7093,8 @@ const d4 = <div><#if (cond)></></div>
 >    : ^^^
 
     </Ctx>
->Ctx : (props: { children: { slot: (n: number, s: string) => [HTMLDivElement]; }; }) => HTMLDivElement
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+>Ctx : (attributes: {}, children: { slot: (n: number, s: string) => [HTMLDivElement]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
     ;<#component Ctx2(children: { slot: (s: string) => [string] })>
 >Ctx2 : any
@@ -6278,12 +7126,12 @@ const d4 = <div><#if (cond)></></div>
 
     </>
     const r_ctx2 = <Ctx2>
->r_ctx2 : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->       : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><Ctx2>        <:slot(s)>{s}</>    </Ctx2> : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->                                          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Ctx2 : (props: { children: { slot: (s: string) => [string]; }; }) => HTMLDivElement
->     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+>r_ctx2 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>       : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Ctx2>        <:slot(s)>{s}</>    </Ctx2> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>                                          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Ctx2 : (attributes: {}, children: { slot: (s: string) => [string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
         <:slot(s)>{s}</>
 >slot : (s: string) => [string]
@@ -6294,16 +7142,16 @@ const d4 = <div><#if (cond)></></div>
 >  : ^^^^^^
 
     </Ctx2>
->Ctx2 : (props: { children: { slot: (s: string) => [string]; }; }) => HTMLDivElement
->     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+>Ctx2 : (attributes: {}, children: { slot: (s: string) => [string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
     const r_ctx3 = <Ctx2>
->r_ctx3 : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->       : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><Ctx2>        {...{            slot: s => <>{s}</>        }}    </Ctx2> : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->                                                                        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Ctx2 : (props: { children: { slot: (s: string) => [string]; }; }) => HTMLDivElement
->     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+>r_ctx3 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>       : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Ctx2>        {...{            slot: s => <>{s}</>        }}    </Ctx2> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>                                                                        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Ctx2 : (attributes: {}, children: { slot: (s: string) => [string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
         {...{
 >{            slot: s => <>{s}</>        } : { slot: (s: string) => [string]; }
@@ -6323,16 +7171,16 @@ const d4 = <div><#if (cond)></></div>
 
         }}
     </Ctx2>
->Ctx2 : (props: { children: { slot: (s: string) => [string]; }; }) => HTMLDivElement
->     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+>Ctx2 : (attributes: {}, children: { slot: (s: string) => [string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
     const r_dup = <Foo>
->r_dup : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><Foo>        <:content>hi{'there'}</>        <:content>oh{'no'}</>    </Foo> : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->                                                                             : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Foo : (props: { children: { content: [string, string]; }; }) => HTMLDivElement
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^^^^^^^^^
+>r_dup : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Foo>        <:content>hi{'there'}</>        <:content>oh{'no'}</>    </Foo> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>                                                                             : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Foo : (attributes: {}, children: { content: [string, string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
         <:content>hi{'there'}</>
 >content : [string, string]
@@ -6347,16 +7195,16 @@ const d4 = <div><#if (cond)></></div>
 >     : ^^^^
 
     </Foo>
->Foo : (props: { children: { content: [string, string]; }; }) => HTMLDivElement
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^^^^^^^^^
+>Foo : (attributes: {}, children: { content: [string, string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
     const r_mix = <Foo>
->r_mix : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><Foo>        <div>hi</div>        <:content>there{'!'}</>    </Foo> : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->                                                                    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Foo : (props: { children: { content: [string, string]; }; }) => HTMLDivElement
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^^^^^^^^^
+>r_mix : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Foo>        <div>hi</div>        <:content>there{'!'}</>    </Foo> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>                                                                    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Foo : (attributes: {}, children: { content: [string, string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
         <div>hi</div>
 ><div>hi</div> : HTMLDivElement
@@ -6373,8 +7221,8 @@ const d4 = <div><#if (cond)></></div>
 >    : ^^^
 
     </Foo>
->Foo : (props: { children: { content: [string, string]; }; }) => HTMLDivElement
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^^^^^^^^^
+>Foo : (attributes: {}, children: { content: [string, string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
     <#component OptChildren(children: { slot?: (s: string) => [string] })>
 >OptChildren : any
@@ -6421,12 +7269,12 @@ const d4 = <div><#if (cond)></></div>
 >     : ^^^^
 
     const opt_1 = <OptChildren>
->opt_1 : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><OptChildren>        <#if (opt_cond)>            <:slot(v2)>                {v2}            </>        </>    </OptChildren> : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->                                                                                                                             : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->OptChildren : (props: { children: { slot?: (s: string) => [string]; }; }) => HTMLDivElement
->            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+>opt_1 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><OptChildren>        <#if (opt_cond)>            <:slot(v2)>                {v2}            </>        </>    </OptChildren> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>                                                                                                                             : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>OptChildren : (attributes: {}, children: { slot?: (s: string) => [string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
         <#if (opt_cond)>
 >opt_cond : boolean
@@ -6445,16 +7293,16 @@ const d4 = <div><#if (cond)></></div>
             </>
         </>
     </OptChildren>
->OptChildren : (props: { children: { slot?: (s: string) => [string]; }; }) => HTMLDivElement
->            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+>OptChildren : (attributes: {}, children: { slot?: (s: string) => [string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
     const opt_2 = <OptChildren>
->opt_2 : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><OptChildren>        <#if (opt_cond)>            <:slot(v2)>                {v2}            </>        </><#else>            <:slot(v2)>                {v2}{v2}            </>        </>    </OptChildren> : { readonly root: HTMLDivElement; "__@update@670"(): void; }
->                                                                                                                                                                                                             : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->OptChildren : (props: { children: { slot?: (s: string) => [string]; }; }) => HTMLDivElement
->            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+>opt_2 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><OptChildren>        <#if (opt_cond)>            <:slot(v2)>                {v2}            </>        </><#else>            <:slot(v2)>                {v2}{v2}            </>        </>    </OptChildren> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>                                                                                                                                                                                                             : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>OptChildren : (attributes: {}, children: { slot?: (s: string) => [string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
         <#if (opt_cond)>
 >opt_cond : boolean
@@ -6487,8 +7335,8 @@ const d4 = <div><#if (cond)></></div>
             </>
         </>
     </OptChildren>
->OptChildren : (props: { children: { slot?: (s: string) => [string]; }; }) => HTMLDivElement
->            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+>OptChildren : (attributes: {}, children: { slot?: (s: string) => [string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 
 }
 
@@ -6653,17 +7501,23 @@ const d4 = <div><#if (cond)></></div>
 >    : ^^^
 
     const e = <Foo {o} />
->e : { readonly root: []; "__@update@670"(): void; }
->  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-><Foo {o} /> : { readonly root: []; "__@update@670"(): void; }
->            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->Foo : (props: { x: string; y: string; }) => []
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>e : { readonly root: []; [Symbol.update](): void; }
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Foo {o} /> : { readonly root: []; [Symbol.update](): void; }
+>            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Foo : (attributes: { x: string; y: string; }) => { readonly root: []; [Symbol.update](): void; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 >o : { x: string; y: string; }
 >  : ^^^^^^^^^^^^^^^^^^^^^^^^^
 }
 
 {
+    const cond = true;
+>cond : true
+>     : ^^^^
+>true : true
+>     : ^^^^
+
     ;<div .foo/>
 ><div .foo/> : HTMLDivElement
 >            : ^^^^^^^^^^^^^^

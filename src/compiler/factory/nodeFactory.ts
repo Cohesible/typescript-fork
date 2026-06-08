@@ -283,6 +283,7 @@ import {
     JsxClassAttribute,
     JsxClassList,
     JsxLabeledFragment,
+    JsxPublicDeclaration,
     UnwindStatement,
     UpdateBlockStatement,
     JsxElseDirective,
@@ -293,6 +294,7 @@ import {
     JsxSelfClosingElement,
     JsxSpreadAttribute,
     JsxShorthandAttribute,
+    JsxMethodAttribute,
     JsxTagNameExpression,
     JsxText,
     KeywordSyntaxKind,
@@ -1017,6 +1019,8 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         updateJsxSpreadAttribute,
         createJsxShorthandAttribute,
         updateJsxShorthandAttribute,
+        createJsxMethodAttribute,
+        updateJsxMethodAttribute,
         createJsxClassAttribute,
         updateJsxClassAttribute,
         createJsxClassList,
@@ -1037,6 +1041,8 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         updateJsxStyleDirective,
         createJsxLabeledFragment,
         updateJsxLabeledFragment,
+        createJsxPublicDeclaration,
+        updateJsxPublicDeclaration,
         createUnwindStatement,
         updateUnwindStatement,
         createUpdateBlockStatement,
@@ -4395,18 +4401,19 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     }
 
     // @api
-    function createDeferStatement(statement: Statement) {
+    function createDeferStatement(statement: Statement, isFinally?: boolean) {
         const node = createBaseNode<DeferStatement>(SyntaxKind.DeferStatement);
         node.statement = statement;
         node.jsDoc = undefined; // initialized by parser (JsDocContainer)
         node.flowNode = undefined; // initialized by binder (FlowContainer)
+        node.isFinally = isFinally ?? false;
         return node;
     }
 
     // @api
-    function updateDeferStatement(node: DeferStatement, statement: Statement) {
-        return node.statement !== statement
-            ? update(createDeferStatement(statement), node)
+    function updateDeferStatement(node: DeferStatement, statement: Statement, isFinally?: boolean) {
+        return node.statement !== statement || node.isFinally !== (isFinally ?? false)
+            ? update(createDeferStatement(statement, isFinally), node)
             : node;
     }
 
@@ -5972,6 +5979,30 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     }
 
     // @api
+    function createJsxMethodAttribute(modifiers: readonly Modifier[] | undefined, name: JsxAttributeName, typeParameters: readonly TypeParameterDeclaration[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode | undefined, body: Block) {
+        const node = createBaseDeclaration<JsxMethodAttribute>(SyntaxKind.JsxMethodAttribute);
+        node.modifiers = asNodeArray(modifiers);
+        node.name = name;
+        node.typeParameters = asNodeArray(typeParameters);
+        node.parameters = createNodeArray(parameters);
+        node.type = type;
+        node.body = body;
+        node.transformFlags |= propagateChildrenFlags(node.modifiers) |
+            propagateChildFlags(node.name) |
+            propagateChildrenFlags(node.typeParameters) |
+            propagateChildrenFlags(node.parameters) |
+            propagateChildFlags(node.type) |
+            propagateChildFlags(node.body) |
+            TransformFlags.ContainsJsx;
+        return node;
+    }
+
+    function updateJsxMethodAttribute(node: JsxMethodAttribute, modifiers: NodeArray<Modifier> | undefined, name: JsxAttributeName, typeParameters: NodeArray<TypeParameterDeclaration> | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode | undefined, body: Block) {
+        return node.modifiers !== modifiers || node.name !== name || node.typeParameters !== typeParameters || node.parameters !== parameters || node.type !== type || node.body !== body
+            ? update(createJsxMethodAttribute(modifiers, name, typeParameters, parameters, type, body), node)
+            : node;
+    }
+
     function createJsxShorthandAttribute(name: Identifier) {
         const node = createBaseNode<JsxShorthandAttribute>(SyntaxKind.JsxShorthandAttribute);
         node.name = name;
@@ -6106,21 +6137,24 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
             : node;
     }
 
-    function createJsxStyleDirective(text: JsxText) {
+    function createJsxStyleDirective(text: JsxText, name?: Identifier, args?: NodeArray<Expression>) {
         const node = createBaseNode<JsxStyleDirective>(SyntaxKind.JsxStyleDirective);
+        node.name = name;
+        node.arguments = args;
         node.text = text;
-        node.transformFlags |= propagateChildFlags(node.text) | TransformFlags.ContainsJsx;
+        node.transformFlags |= propagateChildFlags(node.name) | propagateChildrenFlags(node.arguments) | propagateChildFlags(node.text) | TransformFlags.ContainsJsx;
         return node;
     }
 
-    function updateJsxStyleDirective(node: JsxStyleDirective, text: JsxText) {
-        return node.text !== text
-            ? update(createJsxStyleDirective(text), node)
+    function updateJsxStyleDirective(node: JsxStyleDirective, text: JsxText, name?: Identifier, args?: NodeArray<Expression>) {
+        return node.text !== text || node.name !== name || node.arguments !== args
+            ? update(createJsxStyleDirective(text, name, args), node)
             : node;
     }
 
     // @api
     function createJsxComponentDirective(
+        modifiers: readonly Modifier[] | undefined,
         asteriskToken: AsteriskToken | undefined,
         name: Identifier | undefined,
         typeParameters: readonly TypeParameterDeclaration[] | undefined,
@@ -6130,6 +6164,7 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         children: readonly JsxChild[],
     ) {
         const node = createBaseNode<JsxComponentDirective>(SyntaxKind.JsxComponentDirective);
+        node.modifiers = asNodeArray(modifiers);
         node.asteriskToken = asteriskToken;
         node.name = name;
         node.typeParameters = typeParameters && createNodeArray(typeParameters);
@@ -6137,7 +6172,8 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         node.type = type;
         node.body = body;
         node.children = createNodeArray(children);
-        node.transformFlags |= propagateChildFlags(node.name)
+        node.transformFlags |= propagateChildrenFlags(node.modifiers)
+            | propagateChildFlags(node.name)
             | propagateChildrenFlags(node.typeParameters)
             | propagateChildrenFlags(node.parameters)
             | propagateChildFlags(node.type)
@@ -6150,6 +6186,7 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     // @api
     function updateJsxComponentDirective(
         node: JsxComponentDirective,
+        modifiers: NodeArray<Modifier> | undefined,
         asteriskToken: AsteriskToken | undefined,
         name: Identifier | undefined,
         typeParameters: readonly TypeParameterDeclaration[] | undefined,
@@ -6158,9 +6195,9 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         body: Block | undefined,
         children: readonly JsxChild[],
     ) {
-        return node.asteriskToken !== asteriskToken || node.name !== name || node.typeParameters !== typeParameters
+        return node.modifiers !== modifiers || node.asteriskToken !== asteriskToken || node.name !== name || node.typeParameters !== typeParameters
             || node.parameters !== parameters || node.type !== type || node.body !== body || node.children !== children
-            ? update(createJsxComponentDirective(asteriskToken, name, typeParameters, parameters, type, body, children), node)
+            ? update(createJsxComponentDirective(modifiers, asteriskToken, name, typeParameters, parameters, type, body, children), node)
             : node;
     }
 
@@ -6181,6 +6218,20 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     function updateJsxLabeledFragment(node: JsxLabeledFragment, label: Identifier, parameters: readonly ParameterDeclaration[] | undefined, children: readonly JsxChild[]) {
         return node.label !== label || node.parameters !== parameters || node.children !== children
             ? update(createJsxLabeledFragment(label, parameters, children), node)
+            : node;
+    }
+
+    // @api
+    function createJsxPublicDeclaration(elements: readonly ExportSpecifier[]) {
+        const node = createBaseNode<JsxPublicDeclaration>(SyntaxKind.JsxPublicDeclaration);
+        node.elements = createNodeArray(elements);
+        node.transformFlags |= propagateChildrenFlags(node.elements);
+        return node;
+    }
+
+    function updateJsxPublicDeclaration(node: JsxPublicDeclaration, elements: readonly ExportSpecifier[]) {
+        return node.elements !== elements as NodeArray<ExportSpecifier>
+            ? update(createJsxPublicDeclaration(elements), node)
             : node;
     }
 
@@ -7508,6 +7559,8 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
             isImportDeclaration(node) ? updateImportDeclaration(node, modifierArray, node.importClause, node.moduleSpecifier, node.attributes) :
             isExportAssignment(node) ? updateExportAssignment(node, modifierArray, node.expression) :
             isExportDeclaration(node) ? updateExportDeclaration(node, modifierArray, node.isTypeOnly, node.exportClause, node.moduleSpecifier, node.attributes) :
+            node.kind === SyntaxKind.JsxMethodAttribute ? updateJsxMethodAttribute(node as JsxMethodAttribute, asNodeArray(modifierArray), node.name, node.typeParameters, node.parameters, node.type, node.body) :
+            node.kind === SyntaxKind.JsxComponentDirective ? updateJsxComponentDirective(node as JsxComponentDirective, asNodeArray(modifierArray), node.asteriskToken, node.name, node.typeParameters, node.parameters, node.type, node.body, node.children) :
             Debug.assertNever(node);
     }
 

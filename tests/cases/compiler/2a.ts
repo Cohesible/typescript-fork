@@ -488,22 +488,26 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 }
 
 // update expression
-declare const el: Element;
-const d = <div on:click={() => {
-    update el
-}}></div>
+{
+    declare const el: Element;
+    const d = <div on:click={() => {
+        update el
+    }}></div>
+}
 
 // shorthand_jsx_attribute
-const value = ''
-const d2 = <input {value}/>
-const d3 = <div>
-  <#if (true)>
-     <div></div>
-  </>
-</div>
+{
+    const value = ''
+    const d2 = <input {value}/>
+    const d3 = <div>
+        <#if (true)>
+            <div></div>
+        </>
+    </div>
 
-const cond = true
-const d4 = <div><#if (cond)></></div>
+    const cond = true
+    const d4 = <div><#if (cond)></></div>
+}
 
 {
     // cfa should work inside <#if>
@@ -784,7 +788,8 @@ const d4 = <div><#if (cond)></></div>
     <#component Inner() {}>
         <div>{c}</div>
     </>
-    ;<div @ root>
+    const inner = <Inner />
+    const root = <div>
         <Inner />
     </div>
     update root {
@@ -820,7 +825,7 @@ const d4 = <div><#if (cond)></></div>
 {
     let c = 0
     declare const External: any
-    ;<div @ root>
+    const root = <div>
         <External />
     </div>
     update root {
@@ -935,6 +940,25 @@ const d4 = <div><#if (cond)></></div>
 }
 
 {
+    <div>
+        <#run>
+            let c = 0
+        </>
+        <div @ v>{c}</div>
+        <div on:click() {
+            update v { c += 1 }
+            console.log(this)
+        }>
+            click
+        </div>
+    </div>
+    
+    ;<div on:keypress(ev) {
+        ev.keyCode
+    } />
+}
+
+{
     <#component One(children)>
         <div>{...children}</div>
     </>
@@ -1036,13 +1060,223 @@ const d4 = <div><#if (cond)></></div>
 }
 
 {
-    function Foo(this: { bar?: () => "aaa" }, props: {}) {
-        this.bar = () => 'aaa'
-        return <div/>
+    function Foo(attrs: {}): { root: HTMLDivElement; bar: () => 'aaa' } {
+        return {
+            root: <div/>,
+            bar: () => 'aaa',
+        }
     }
 
     const x = <Foo />
     const y = x.bar()
+}
+
+{
+    <#component Foo() {
+        const x = 1
+        public { x as y }
+    }>
+      <div>{x}</div>
+    </>
+    const f = <Foo />
+    f.y // number
+
+    <#component Bar()>
+      <Foo />
+    </>
+
+    const b = <Bar />
+}
+
+export <#component ExportedComp()>
+    <div/>
+</>
+
+
+{
+    const d = <div>
+        <#run>
+            static let c = 0
+            function foo() {
+                static let c2 = 0 // error
+            }
+        </>
+        {c++}
+    </div>
+
+    let co = 0
+    const d2 = <div>
+        <#run>
+            const c = 0
+            static function foo() {
+                return c // error
+            }
+            static class Foo { y = c } // error
+            static const d = () => c // error
+            static const c2 = c // OK
+            static let c3 = c // OK
+            static const d3 = <div>{c}</div> // error
+            static const d4 = <div>{co}</div> // OK, outside of a tree
+            static const d5 = <div>{c2}</div> // OK
+
+        </>
+        {c}
+    </div>
+
+    const d3 = <div>
+        <#run>
+            const c = 0
+            const d2 = <div>
+              <#run>
+                static const f = () => c // OK, because the binding is stable
+              </>
+            </div>
+        </>
+    </div>
+
+    const d4 = <div>
+        <#run>
+          const c = 0
+        </>
+        <div>
+            <#run>
+                static const f = () => c // error
+                static const f2 = () => {
+                    return <div>{c}</div> // error
+                }
+            </>
+        </div>
+    </div>
+
+    const d5 = <div>
+        <#run>
+            const c = 0
+            // error, components aren't allowed as top-level #run declarations
+            <#component Foo()>
+                <div></div>
+            </>
+
+            let cx = 0
+            static let cx = 0
+        </>
+        <#component Foo2()>
+            <div>
+                <#run>
+                    // OK, contiguous comp declarations observe the true tree binding
+                    // there is no concept of "which c?" here, so `c` is always the most recent value
+                    static const c2 = () => c
+                    const c3 = 0
+                    static const c4 = () => c3 // error
+
+                    const q = cx // error, nested components cannot capture mutable non-static tree locals
+                    const q = cx2 // OK
+                </>
+            </div>
+        </>
+    </div>
+}
+
+{
+    // jsx attr methods
+    const attrMethod = <div on:click() {
+        this // HTMLDivElement
+    }>click</div>
+
+    <#component Foo(cb: () => void) {
+        cb()
+    }>
+      <div/>
+    </>
+
+    const fooAttrMethod = <Foo cb() {
+        this // Foo 
+    } />
+
+    ;<div
+        async
+        async on:click() {}
+    />
+
+    <#component Foo2<T>(cb: () => T) {
+        const v = cb()
+        public function f() { return v }
+    }>
+      <div/>
+    </>
+
+    const f = <Foo2 cb() { return 1 } />
+    const v = f.f() // number
+}
+
+{
+    ;<div @ d />
+    console.log(d) // should error
+}
+
+{
+    let x: 0 | 1 | 2 = 0
+    defer {
+        x // 2
+    }
+    defer {
+        x = 2
+    }
+    function deferTest(cond: boolean) {
+        let y: 0 | 1 | 2 = 0
+        defer {
+            y // 1 | 2
+        }
+        if (cond) {
+            y = 1
+            return
+        }
+        y = 2
+        //  throw new Error('!!!')
+    }
+}
+
+// {
+//     let blah: boolean = false
+//     let x
+//     {
+//         let foo: 1 | 2 | 3
+//         let bar: 1 | 2 | 3
+//         defer x = { foo, bar }
+//         if (blah) { foo = 1 } else { foo = 2 }
+//         if (blah) { bar = 2 } else { bar = 3 }
+//     }
+//     x // { foo: 1 | 2, bar: 2 | 3  }
+// }
+
+{
+    function deferFinally() {
+        let z: 0 | 1 | 2 = 0
+        defer {
+            z
+        }
+        z = 2
+    }
+}
+
+{
+    let x: number | undefined
+    {
+        defer if (!x) throw new Error('x not truthy!')
+    }
+    declare function check(x: number): void
+    check(x) // OK
+}
+
+{
+    ;<#style d>
+    </>
+    ;<#style (d)>
+    </>
+    ;<#style d2(d)>
+    </>
+    ;<#style d3(d, d2)>
+    </>
+    const o = d
 }
 
 // !T (FallibleType) and try expr
@@ -1288,7 +1522,7 @@ const d4 = <div><#if (cond)></></div>
 // element names
 {
     // b can be seen within the tree, but not outside
-    ;<div @ a>
+    const a = <div>
         <div @ b></div>
         <#run>
             console.log(a, b)
@@ -1301,7 +1535,7 @@ const d4 = <div><#if (cond)></></div>
 
 // spread JSX elements
 {
-    declare function Comp(): Element[];
+    declare function Comp(): { root: Element[] } & Updatable;
     const spread1 = <div><...Comp /></div> // ok
     const noSpread1 = <div><Comp /></div> // error
 
@@ -1309,14 +1543,14 @@ const d4 = <div><#if (cond)></></div>
     const spread2 = <div><...div /></div>
     const spread3 = <div><...div></div></div>
 
-    declare function Comp2(): (() => void)[];
+    declare function Comp2(): { root: (() => void)[] } & Updatable
     const spread4 = <div><...Comp2 /></div>  // error, intrinsics want something NodeLike
 
-    declare function Comp3(): Element;
+    declare function Comp3(): { root: Element } & Updatable;
     const noSpread2 = <div><Comp3 /></div> // ok
     const spread5 = <div><...Comp3 /></div> // error
 
-    declare function Comp4(props: { children: Element[] }): Element;
+    declare function Comp4(attrs: {}, children: Element[]): { root: Element } & Updatable;
     // ok
     const spread6 = <Comp4>
       <Comp3 />
@@ -1330,7 +1564,7 @@ const d4 = <div><#if (cond)></></div>
       <Comp />
     </Comp4>
 
-    declare function Comp5(): [Element] | [];
+    declare function Comp5(): { root: [Element] | [] } & Updatable;
     // ok
     const spread8 = <Comp4>
         <...Comp5 />
@@ -1661,6 +1895,7 @@ const d4 = <div><#if (cond)></></div>
 }
 
 {
+    const cond = true;
     ;<div .foo/>
     ;<div .foo></div>
     // class attributes should not conflict with normal attributes

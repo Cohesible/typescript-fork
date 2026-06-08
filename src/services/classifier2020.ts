@@ -156,7 +156,7 @@ function collectTokens(program: Program, sourceFile: SourceFile, span: TextSpan,
             return;
         }
         
-        if (isJsxExpression(node) || isJsxRunDirective(node)) {
+        if (isJsxExpression(node) || isJsxRunDirective(node) || node.kind === SyntaxKind.JsxMethodAttribute) {
             const prevInJSX = inJSX;
             const prevInJSXElement = inJSXElement;
             inJSX = true;

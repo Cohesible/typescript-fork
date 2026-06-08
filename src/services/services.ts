@@ -174,6 +174,7 @@ import {
     isJsxNamespacedName,
     isJsxOpeningElement,
     isJsxOpeningFragment,
+    isJsxSelfClosingElement,
     isJsxText,
     isLabelName,
     isLiteralComputedPropertyDeclarationName,
@@ -209,6 +210,7 @@ import {
     JsxElement,
     JsxEmit,
     JsxFragment,
+    JsxImportantPunctuationEntry,
     LanguageService,
     LanguageServiceHost,
     LanguageServiceMode,
@@ -2335,6 +2337,69 @@ export function createLanguageService(
         };
     }
 
+    function jsxImportantPunctuation(fileName: string): JsxImportantPunctuationEntry[] {
+        synchronizeHostData();
+        const sourceFile = getValidSourceFile(fileName);
+        const result: JsxImportantPunctuationEntry[] = [];
+
+        function visit(node: Node, namedDepth: number): void {
+            switch (node.kind) {
+                case SyntaxKind.JsxElement:
+                case SyntaxKind.FunctionDeclaration:
+                case SyntaxKind.JsxComponentDirective:
+                case SyntaxKind.ClassDeclaration:
+                case SyntaxKind.InterfaceDeclaration:
+                    cancellationToken.throwIfCancellationRequested()
+            }
+            if (isJsxElement(node)) {
+                const opening = node.openingElement;
+                const closing = node.closingElement;
+                if (opening.name || node.parent?.kind === SyntaxKind.VariableDeclaration) {
+                    const p1 = sourceFile.getLineAndCharacterOfPosition(opening.getStart());
+                    const p2 = sourceFile.getLineAndCharacterOfPosition(closing.getEnd());
+                    if (p1.line === p2.line) {
+                        const locs: number[] = [
+                            opening.getStart(sourceFile),       // <
+                            closing.end - 1,                    // >
+                        ];
+                        result.push({ locations: locs, depth: namedDepth });
+                        return forEachChild(node, child => visit(child, namedDepth + 1));
+                    }
+                    const locs: number[] = [
+                        opening.getStart(sourceFile),       // <
+                        // opening.end - 1,                    // >
+                        closing.getStart(sourceFile),       // <
+                        closing.getStart(sourceFile) + 1,   // /
+                        // closing.end - 1,                    // >
+                    ];
+                    result.push({ locations: locs, depth: namedDepth });
+                    forEachChild(node, child => visit(child, namedDepth + 1));
+                }
+                else {
+                    forEachChild(node, child => visit(child, namedDepth));
+                }
+            }
+            else if (isJsxSelfClosingElement(node)) {
+                if (node.name) {
+                    const start = node.getStart(sourceFile);
+                    const locs: number[] = [
+                        start,          // <
+                        node.end - 2,   // /
+                        node.end - 1,   // >
+                    ];
+                    result.push({ locations: locs, depth: namedDepth });
+                }
+                forEachChild(node, child => visit(child, namedDepth));
+            }
+            else {
+                forEachChild(node, child => visit(child, namedDepth));
+            }
+        }
+
+        visit(sourceFile, 0);
+        return result;
+    }
+
     function preparePasteEditsForFile(fileName: string, copiedTextRange: TextRange[]): boolean {
         synchronizeHostData();
         return PreparePasteEdits.preparePasteEdits(
@@ -2789,6 +2854,43 @@ export function createLanguageService(
         return true;
     }
 
+    function jsxShouldUseSelfClosing(fileName: string, pos: number, isComponent: boolean) {
+        const program = getProgram();
+        const semanticFile = program?.getSourceFile(fileName);
+        if (!semanticFile) return false;
+        const tagNameNode = getTouchingPropertyName(semanticFile, pos);
+        const checker = program!.getTypeChecker();
+        if (!isIdentifier(tagNameNode)) return false; // TODO: dotted names for components
+        if (!isComponent) {
+            const intrinsics = checker.getJsxIntrinsicTagNamesAt(tagNameNode);
+            const match = intrinsics.find(x => x.escapedName === tagNameNode.escapedText);
+            if (!match) return false;
+            const t = checker.getTypeOfSymbol(match);
+            if (t.flags & TypeFlags.AnyOrUnknown) return false;
+            const childrenType = checker.getTypeOfPropertyOfType(t, "children");
+            if (!childrenType) return false;
+            if (childrenType.flags & TypeFlags.VoidLike) return true;
+            if (childrenType.flags & TypeFlags.Never) return true;
+            return false;
+        }
+        const symbol = checker.getSymbolAtLocation(tagNameNode);
+        if (!symbol) return false;
+
+        const callSigs = checker.getSignaturesOfType(checker.getTypeOfSymbol(symbol), SignatureKind.Call);
+        if (!callSigs.length) return false;
+
+        for (const sig of callSigs) {
+            const params = sig.getParameters();
+            if (params.length <= 1) continue;
+            const childrenType = checker.getTypeOfSymbol(params[1]);
+            if (childrenType.flags & TypeFlags.VoidLike) continue;
+            if (childrenType.flags & TypeFlags.Never) continue;
+            return false;
+        }
+
+        return true;
+    }
+
     function getJsxClosingTagAtPosition(fileName: string, position: number): JsxClosingTagInfo | undefined {
         const sourceFile = syntaxTreeCache.getCurrentSourceFile(fileName);
         const token = findPrecedingToken(position, sourceFile);
@@ -2796,29 +2898,17 @@ export function createLanguageService(
         const element = token.kind === SyntaxKind.GreaterThanToken && isJsxOpeningElement(token.parent) ? token.parent.parent
             : isJsxText(token) && isJsxElement(token.parent) ? token.parent : undefined;
         if (element && isUnclosedTag(element)) {
-            const ref = element.openingElement.tagName.getText(sourceFile);
-            const isComponent = ref[0] >= 'A' && ref[0] <= 'Z';
+            const tagName = element.openingElement.tagName;
+            const ref = tagName.getText(sourceFile);
+            const isComponent = (ref[0] >= 'A' && ref[0] <= 'Z') || tagName.kind !== SyntaxKind.Identifier;
             if (ref.length === 1 && isComponent) {
                 if (element.parent?.kind !== SyntaxKind.JsxElement && element.parent?.kind !== SyntaxKind.JsxExpression && element.parent?.kind !== SyntaxKind.JsxFragment) {
                     return undefined;
                 }
             }
-            if (sourceFile.scriptKind === ScriptKind.Syn && isComponent) {
-                const program = getProgram();
-                const semanticFile = program?.getSourceFile(fileName);
-                const tagNameNode = semanticFile && getTouchingPropertyName(semanticFile, element.openingElement.tagName.getStart(sourceFile));
-                const checker = program?.getTypeChecker();
-                const symbol = tagNameNode && checker?.getSymbolAtLocation(tagNameNode);
-                if (symbol && checker) {
-                    const callSigs = checker.getSignaturesOfType(checker.getTypeOfSymbol(symbol), SignatureKind.Call);
-                    if (callSigs.length > 0 && callSigs.every(sig => {
-                        const params = sig.getParameters();
-                        if (params.length === 0) return true;
-                        const propsType = checker.getTypeOfSymbol(params[0]);
-                        return !(propsType.flags & TypeFlags.Any) && !checker.getPropertyOfType(propsType, "children");
-                    })) {
-                        return { newText: '', selfClosing: true };
-                    }
+            if (sourceFile.scriptKind === ScriptKind.Syn) {
+                if (jsxShouldUseSelfClosing(fileName, tagName.getStart(sourceFile), isComponent)) {
+                    return { newText: '', selfClosing: true };
                 }
             }
             return { newText: `</${ref}>` };
@@ -3645,6 +3735,7 @@ export function createLanguageService(
         preparePasteEditsForFile,
         getPasteEdits,
         mapCode,
+        jsxImportantPunctuation,
     };
 
     switch (languageServiceMode) {

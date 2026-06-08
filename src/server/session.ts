@@ -2371,6 +2371,11 @@ export class Session<TMessage = string> implements EventSender {
         return languageService.getJsxStyleRegions(file);
     }
 
+    private getJsxImportantPunctuation(args: protocol.FileRequestArgs) {
+        const { file, languageService } = this.getFileAndLanguageServiceForSyntacticOperation(args);
+        return languageService.jsxImportantPunctuation(file);
+    }
+
     private jsxFindScopedStyles(args: protocol.FileLocationRequestArgs) {
         const { file, languageService } = this.getFileAndLanguageServiceForSyntacticOperation(args);
         const position = this.getPositionInFile(args, file);
@@ -3723,6 +3728,9 @@ export class Session<TMessage = string> implements EventSender {
         },
         [protocol.CommandTypes.JsxClosingTag]: (request: protocol.JsxClosingTagRequest) => {
             return this.requiredResponse(this.getJsxClosingTag(request.arguments));
+        },
+        [protocol.CommandTypes.JsxImportantPunctuation]: (request: protocol.JsxImportantPunctuationRequest) => {
+            return this.requiredResponse(this.getJsxImportantPunctuation(request.arguments));
         },
         [protocol.CommandTypes.LinkedEditingRange]: (request: protocol.LinkedEditingRangeRequest) => {
             return this.requiredResponse(this.getLinkedEditingRange(request.arguments));

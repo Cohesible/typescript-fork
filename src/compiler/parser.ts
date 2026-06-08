@@ -232,6 +232,7 @@ import {
     JsxComponentDirective,
     JsxStyleDirective,
     JsxLabeledFragment,
+    JsxPublicDeclaration,
     UnwindStatement,
     UpdateBlockStatement,
     JsxExpression,
@@ -245,6 +246,7 @@ import {
     JsxSelfClosingElement,
     JsxSpreadAttribute,
     JsxShorthandAttribute,
+    JsxMethodAttribute,
     JsxClassAttribute,
     JsxClassList,
     JsxTagNameExpression,
@@ -1072,6 +1074,14 @@ const forEachChildTable: ForEachChildTable = {
     [SyntaxKind.JsxShorthandAttribute]: function forEachChildInJsxShorthandAttribute<T>(node: JsxShorthandAttribute, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNode(cbNode, node.name);
     },
+    [SyntaxKind.JsxMethodAttribute]: function forEachChildInJsxMethodAttribute<T>(node: JsxMethodAttribute, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+        return visitNodes(cbNode, cbNodes, node.modifiers) ||
+            visitNode(cbNode, node.name) ||
+            visitNodes(cbNode, cbNodes, node.typeParameters) ||
+            visitNodes(cbNode, cbNodes, node.parameters) ||
+            visitNode(cbNode, node.type) ||
+            visitNode(cbNode, node.body);
+    },
     [SyntaxKind.JsxClassAttribute]: function forEachChildInJsxClassAttribute<T>(node: JsxClassAttribute, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNodes(cbNode, cbNodes, node.names) || visitNode(cbNode, node.initializer);
     },
@@ -1100,7 +1110,8 @@ const forEachChildTable: ForEachChildTable = {
         return visitNodes(cbNode, cbNodes, node.statements);
     },
     [SyntaxKind.JsxComponentDirective]: function forEachChildInJsxComponentDirective<T>(node: JsxComponentDirective, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
-        return visitNode(cbNode, node.asteriskToken) || 
+        return visitNodes(cbNode, cbNodes, node.modifiers) ||
+            visitNode(cbNode, node.asteriskToken) ||
             visitNode(cbNode, node.name) ||
             visitNodes(cbNode, cbNodes, node.typeParameters) ||
             visitNodes(cbNode, cbNodes, node.parameters) ||
@@ -1113,8 +1124,13 @@ const forEachChildTable: ForEachChildTable = {
             visitNodes(cbNode, cbNodes, node.parameters) ||
             visitNodes(cbNode, cbNodes, node.children);
     },
-    [SyntaxKind.JsxStyleDirective]: function forEachChildInJsxStyleDirective<T>(node: JsxStyleDirective, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
-        return visitNode(cbNode, node.text);
+    [SyntaxKind.JsxStyleDirective]: function forEachChildInJsxStyleDirective<T>(node: JsxStyleDirective, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+        return visitNode(cbNode, node.name) ||
+            visitNodes(cbNode, cbNodes, node.arguments) ||
+            visitNode(cbNode, node.text);
+    },
+    [SyntaxKind.JsxPublicDeclaration]: function forEachChildInJsxPublicDeclaration<T>(node: JsxPublicDeclaration, cbNode: (node: Node) => T | undefined, cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
+        return visitNodes(cbNode, cbNodes, node.elements);
     },
     [SyntaxKind.UnwindStatement]: function forEachChildInUnwindStatement<T>(node: UnwindStatement, cbNode: (node: Node) => T | undefined, _cbNodes?: (nodes: NodeArray<Node>) => T | undefined): T | undefined {
         return visitNode(cbNode, node.statement);
@@ -2888,6 +2904,7 @@ namespace Parser {
 
     function canFollowExportModifier(): boolean {
         return token() === SyntaxKind.AtToken
+            || (scriptKind === ScriptKind.Syn && token() === SyntaxKind.LessThanToken)
             || token() !== SyntaxKind.AsteriskToken
                 && token() !== SyntaxKind.AsKeyword
                 && token() !== SyntaxKind.OpenBraceToken
@@ -3066,9 +3083,9 @@ namespace Parser {
         return tokenIsIdentifierOrKeyword(token());
     }
 
-    function nextTokenIsIdentifierOrKeywordOrGreaterThan() {
+    function nextTokenIsIdentifierOrKeywordOrGreaterThanOrDotDotDot() {
         nextToken();
-        return tokenIsIdentifierOrKeywordOrGreaterThan(token());
+        return tokenIsIdentifierOrKeywordOrGreaterThan(token()) || token() === SyntaxKind.DotDotDotToken;
     }
 
     function isHeritageClauseExtendsOrImplementsKeyword(): boolean {
@@ -5779,11 +5796,23 @@ namespace Parser {
                 break;
             }
 
-            // ASI for JSX directives:
-            //   const y = foo()
-            //   <#component Bar()>...
-            if (token() === SyntaxKind.LessThanToken && scanner.hasPrecedingLineBreak() && scriptKind === ScriptKind.Syn && lookAhead(() => nextToken() === SyntaxKind.PrivateIdentifier)) {
-                break;
+            if (scriptKind === ScriptKind.Syn && token() === SyntaxKind.LessThanToken) {
+                // ASI for JSX directives:
+                //   const y = foo()
+                //   <#component Bar()>...
+                if (scanner.hasPrecedingLineBreak()) {
+                    if (lookAhead(() => {
+                        switch (nextToken()) {
+                            case SyntaxKind.SlashToken:
+                            case SyntaxKind.PrivateIdentifier:
+                                return true;
+                        }
+                        return false;
+                    })) break;
+                } else if (parsingContext & ParsingContext.JsxRunDirectiveStatements) {
+                    if (lookAhead(() => nextTokenIsSlash() && nextToken() === SyntaxKind.GreaterThanToken)) 
+                        break;
+                }
             }
 
             if (token() === SyntaxKind.AsKeyword || token() === SyntaxKind.SatisfiesKeyword || token() === SyntaxKind.IsKeyword) {
@@ -6074,7 +6103,7 @@ namespace Parser {
             const pos = getNodePos();
             return finishNode(factory.createPrefixUnaryExpression(token() as PrefixUnaryOperator, nextTokenAnd(parseLeftHandSideExpressionOrHigher)), pos);
         }
-        else if (languageVariant === LanguageVariant.JSX && token() === SyntaxKind.LessThanToken && lookAhead(nextTokenIsIdentifierOrKeywordOrGreaterThan)) {
+        else if (languageVariant === LanguageVariant.JSX && token() === SyntaxKind.LessThanToken && lookAhead(nextTokenIsIdentifierOrKeywordOrGreaterThanOrDotDotDot)) {
             // continue parsing member/call access so `<Foo />.x` works
             const pos = getNodePos();
             const jsx = parseJsxNode(/*inExpressionContext*/ true) as Node as MemberExpression;
@@ -6371,28 +6400,12 @@ namespace Parser {
             case SyntaxKind.JsxTextAllWhiteSpaces:
                 return parseJsxText();
             case SyntaxKind.OpenBraceToken:
-                if (scriptKind === ScriptKind.Syn && lookAhead(() => {
-                    nextToken();
-                    return scanner.hasPrecedingLineBreak();
-                })) {
-                    return parseJsxRunDirective();
-                }
                 return parseJsxExpression(/*inExpressionContext*/ false);
             case SyntaxKind.LessThanToken:
                 return parseJsxNode(/*inExpressionContext*/ false, /*topInvalidNodePosition*/ undefined, openingTag);
             default:
                 return Debug.assertNever(token);
         }
-    }
-
-    function parseJsxRunDirective(): JsxRunDirective {
-        const pos = getNodePos();
-        parseExpected(SyntaxKind.OpenBraceToken);
-        const statements = parseList(ParsingContext.BlockStatements, parseStatement);
-        if (parseExpected(SyntaxKind.CloseBraceToken, /*diagnosticMessage*/ undefined, /*shouldAdvance*/ false)) {
-            scanJsxText();
-        }
-        return finishNode(factory.createJsxRunDirective(statements), pos);
     }
 
     function parseJsxChildren(openingTag: JsxOpeningElement | JsxOpeningFragment): NodeArray<JsxChild> {
@@ -6463,7 +6476,8 @@ namespace Parser {
         if (classList && token() === SyntaxKind.AtToken) {
             identifier = parseJsxElementIdentifier();
         }
-
+        // FIXME: report a diagnostic if `@` and ident are parsed as attr
+        // we need to report that element name binding should follow the tag name
         let attributes = parseJsxAttributes(!!classList);
 
         let node: JsxOpeningLikeElement;
@@ -6530,9 +6544,11 @@ namespace Parser {
             return undefined;
         }
 
+        let staticToken: Token<SyntaxKind.StaticKeyword> | undefined;
         let dotDotDotToken: DotDotDotToken | undefined;
         let expression: Expression | undefined;
         if (token() !== SyntaxKind.CloseBraceToken) {
+            staticToken = parseOptionalToken(SyntaxKind.StaticKeyword);
             if (!inExpressionContext) {
                 dotDotDotToken = parseOptionalToken(SyntaxKind.DotDotDotToken);
             }
@@ -6549,11 +6565,12 @@ namespace Parser {
                 scanJsxText();
             }
         }
-
-        return finishNode(factory.createJsxExpression(dotDotDotToken, expression), pos);
+        const n = finishNode(factory.createJsxExpression(dotDotDotToken, expression), pos);
+        if (staticToken) n.modifierFlagsCache |= ModifierFlags.Static;
+        return n;
     }
 
-    function parseJsxAttribute(hasClassList: boolean): JsxAttribute | JsxSpreadAttribute | JsxShorthandAttribute {
+    function parseJsxAttribute(hasClassList: boolean): JsxAttribute | JsxSpreadAttribute | JsxShorthandAttribute | JsxMethodAttribute {
         if (token() === SyntaxKind.OpenBraceToken) {
             if (scriptKind !== ScriptKind.Syn) {
                 return parseJsxSpreadAttribute();
@@ -6577,8 +6594,34 @@ namespace Parser {
             return n;
         }
 
+        if (scriptKind === ScriptKind.Syn) {
+            if (token() === SyntaxKind.AsyncKeyword && lookAhead(() => isJsxMethodAttributeStart(/*maybeAsync*/true))) {
+                return parseJsxMethodAttribute();
+            }
+            if (lookAhead(isJsxMethodAttributeStart)) {
+                return parseJsxMethodAttribute();
+            }
+        }
+
         const pos = getNodePos();
         return finishNode(factory.createJsxAttribute(parseJsxAttributeName(), parseJsxAttributeValue()), pos);
+    }
+
+    function isJsxMethodAttributeStart(maybeAsync = false): boolean {
+        if (maybeAsync) {
+            nextToken();
+            if (scanner.hasPrecedingLineBreak()) return false;
+        }
+        // skip attr name
+        if (!isIdentifier() && !isKeyword(token())) return false;
+        nextToken();
+        if (token() === SyntaxKind.ColonToken) {
+            nextToken();
+            if (!isIdentifier() && !isKeyword(token())) return false;
+            nextToken();
+        }
+        if (scanner.getTokenFullStart() !== scanner.getTokenStart()) return false;
+        return token() === SyntaxKind.OpenParenToken || token() === SyntaxKind.LessThanToken;
     }
 
     function parseJsxClassAttribute(insideParens = false, errorRecoveryStart?: number): JsxClassAttribute {
@@ -6599,7 +6642,7 @@ namespace Parser {
         }
         while (
             token() === SyntaxKind.DotToken && 
-            lookAhead(() => { nextToken(); return token() !== SyntaxKind.DotToken; })
+            lookAhead(() => tokenIsIdentifierOrKeyword(nextToken()))
         );
         const namesList = createNodeArray(names, pos);
         let initializer: JsxExpression | undefined;
@@ -6632,9 +6675,17 @@ namespace Parser {
         let attributes: NodeArray<(JsxClassAttribute | JsxSpreadAttribute)>
         if (token() === SyntaxKind.OpenParenToken) {
             nextToken();
+            let closed = false;
             const start = getNodePos()
             const elements: (JsxClassAttribute | JsxSpreadAttribute)[] = [];
-            while (token() !== SyntaxKind.CloseParenToken && token() !== SyntaxKind.EndOfFileToken) {
+            while (token() !== SyntaxKind.EndOfFileToken) {
+                if (token() === SyntaxKind.CloseParenToken) {
+                    closed = true;
+                    break;
+                }
+                if (token() === SyntaxKind.SlashToken || token() === SyntaxKind.GreaterThanToken) {
+                    break;
+                }
                 if (token() === SyntaxKind.OpenBraceToken) {
                     elements.push(parseJsxSpreadAttribute());
                 }
@@ -6646,7 +6697,7 @@ namespace Parser {
                 }
             }
             attributes = createNodeArray(elements, start);
-            parseExpected(SyntaxKind.CloseParenToken);
+            if (closed) parseExpected(SyntaxKind.CloseParenToken);
         }
         else {
             attributes = createNodeArray([parseJsxClassAttribute()], pos);
@@ -6691,6 +6742,25 @@ namespace Parser {
             return finishNode(factory.createJsxNamespacedName(attrName, parseIdentifierNameErrorOnUnicodeEscapeSequence()), pos);
         }
         return attrName;
+    }
+
+    function parseJsxMethodAttribute(): JsxMethodAttribute {
+        const pos = getNodePos();
+        let modifiers: NodeArray<Modifier> | undefined;
+        if (token() === SyntaxKind.AsyncKeyword) {
+            const modPos = getNodePos();
+            const asyncMod = finishNode(factory.createToken(SyntaxKind.AsyncKeyword), modPos);
+            nextToken();
+            modifiers = createNodeArray([asyncMod], modPos);
+        }
+        const name = parseJsxAttributeName();
+        const typeParameters = token() === SyntaxKind.LessThanToken ? parseTypeParameters() : undefined;
+        parseExpected(SyntaxKind.OpenParenToken);
+        const parameters = parseParametersWorker(SignatureFlags.Await, /*allowAmbiguity*/ true);
+        parseExpected(SyntaxKind.CloseParenToken);
+        const type = token() === SyntaxKind.ColonToken ? parseTypeAnnotation() : undefined;
+        const body = parseBlock(/*ignoreMissingOpenBrace*/ false);
+        return finishNode(factory.createJsxMethodAttribute(modifiers, name, typeParameters, parameters, type, body), pos);
     }
 
     function parseJsxSpreadAttribute(): JsxSpreadAttribute {
@@ -6813,6 +6883,8 @@ namespace Parser {
                 return n;
             }
             case '#style': {
+                const styleName = token() === SyntaxKind.Identifier ? parseIdentifier() : undefined;
+                const styleArgs = token() === SyntaxKind.OpenParenToken ? parseArgumentList() : undefined;
                 parseExpected(SyntaxKind.GreaterThanToken, /*diagnosticMessage*/ undefined, /*shouldAdvance*/ false);
                 currentToken = scanner.scanJsxToken(/*skipJsxExpressions*/ true);
                 const textPos = getNodePos();
@@ -6825,7 +6897,7 @@ namespace Parser {
                 }
                 const textNode = finishNode(factory.createJsxText(cssText, isAllWhiteSpace), textPos);
                 const { hasError } = parseDirectiveEnd(tagName, !openingTag);
-                const n = finishNode(factory.createJsxStyleDirective(textNode), pos);
+                const n = finishNode(factory.createJsxStyleDirective(textNode, styleName, styleArgs), pos);
                 if (hasError) (n as Mutable<typeof n>).flags |= NodeFlags.ThisNodeHasError;
                 return n;
             }
@@ -6851,9 +6923,15 @@ namespace Parser {
                 const parameters = parseParametersWorker(SignatureFlags.None, /*allowAmbiguity*/ true);
                 parseExpectedMatchingBrackets(SyntaxKind.OpenParenToken, SyntaxKind.CloseParenToken, openParenParsed, openParenPos);
                 const type = parseReturnType(SyntaxKind.ColonToken, /*isType*/ false);
-                const body = token() === SyntaxKind.OpenBraceToken ? parseBlock(/*ignoreMissingOpenBrace*/ false) : undefined;
+                let body: Block | undefined;
+                if (token() === SyntaxKind.OpenBraceToken) {
+                    const saveInComponent = inComponentDirectiveBody;
+                    inComponentDirectiveBody = true;
+                    body = parseBlock(/*ignoreMissingOpenBrace*/ false);
+                    inComponentDirectiveBody = saveInComponent;
+                }
                 const { children, hasError } = parseJsxDirectiveBody(pos, tagName, openingTag);
-                const n = finishNode(factory.createJsxComponentDirective(asteriskToken, compName, typeParameters, parameters, type, body, children), pos);
+                const n = finishNode(factory.createJsxComponentDirective(undefined, asteriskToken, compName, typeParameters, parameters, type, body, children), pos);
                 if (hasError) (n as Mutable<typeof n>).flags |= NodeFlags.ThisNodeHasError;
                 return n;
             }
@@ -6863,6 +6941,23 @@ namespace Parser {
         const { children, endPos } = parseJsxDirectiveBody(pos, tagName, openingTag);
         const close = finishNode(factory.createJsxClosingElement(factory.createIdentifier("")), endPos);
         return factory.createJsxElement(open, children, close);
+    }
+
+    function parseJsxComponentDirectiveDeclaration(_pos: number, modifiersIn: NodeArray<ModifierLike> | undefined): JsxComponentDirective {
+        // current token is `<`; delegate to the directive parser which handles `<#component ...> ... </>`
+        const directive = parseJsxDirective(/*openingTag*/ undefined) as JsxComponentDirective;
+        const modifiers = modifiersIn as NodeArray<Modifier> | undefined;
+        if (modifiers) {
+            (directive as Mutable<JsxComponentDirective>).modifiers = modifiers;
+        }
+        return directive;
+    }
+
+    function parseJsxPublicDeclaration(): JsxPublicDeclaration {
+        const pos = getNodePos();
+        parseExpected(SyntaxKind.PublicKeyword);
+        const elements = parseBracketedList(ParsingContext.ImportOrExportSpecifiers, parseExportSpecifier, SyntaxKind.OpenBraceToken, SyntaxKind.CloseBraceToken);
+        return finishNode(factory.createJsxPublicDeclaration(elements), pos);
     }
 
     function parseJsxLabeledFragment(openingTag: JsxOpeningElement | JsxOpeningFragment | undefined) {
@@ -7745,10 +7840,37 @@ namespace Parser {
         return finishNode(factory.createUpdateBlockStatement(operands, block), pos);
     }
 
+    function nextTokenCanBeStaticTreeDeclaration() {
+        switch (nextToken()) {
+            case SyntaxKind.AsyncKeyword:
+            case SyntaxKind.LetKeyword:
+            case SyntaxKind.ConstKeyword:
+            case SyntaxKind.ClassKeyword:
+            case SyntaxKind.FunctionKeyword:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    function parseStaticBlock(): Statement {
+        const pos = getNodePos();
+        parseExpectedToken(SyntaxKind.StaticKeyword);
+        const block = parseBlock(/*ignoreMissingOpenBrace*/ false);
+        (block as Mutable<typeof block>).pos = pos;
+        block.modifierFlagsCache |= ModifierFlags.Static;
+        return block;
+    }
+
     function parseDeferStatement(): Statement {
         const pos = getNodePos();
-
+        let isFinally = false;
         switch (lookAhead(nextToken)) {
+            case SyntaxKind.FinallyKeyword:
+                nextToken();
+                isFinally = true;
+                // fallsthrough
+
             // statements
             case SyntaxKind.IfKeyword:
             case SyntaxKind.WhileKeyword:
@@ -7768,7 +7890,7 @@ namespace Parser {
             case SyntaxKind.PlusPlusToken: 
             case SyntaxKind.MinusMinusToken:
                 nextToken()
-                return finishNode(factory.createDeferStatement(parseStatement()), pos);
+                return finishNode(factory.createDeferStatement(parseStatement(), isFinally), pos);
         }
 
         return parseExpressionOrLabeledStatement();
@@ -7883,6 +8005,10 @@ namespace Parser {
                     }
                     continue;
 
+                case SyntaxKind.LessThanToken:
+                    // export <#component ...> — JSX component directive as declaration
+                    nextToken();
+                    return token() === SyntaxKind.PrivateIdentifier && scanner.getTokenValue() === "#component";
                 case SyntaxKind.GlobalKeyword:
                     nextToken();
                     return token() === SyntaxKind.OpenBraceToken || token() === SyntaxKind.Identifier || token() === SyntaxKind.ExportKeyword;
@@ -7969,15 +8095,23 @@ namespace Parser {
                 // When these don't start a declaration, they're an identifier in an expression statement
                 return true;
 
+            case SyntaxKind.StaticKeyword:
+                if (lookAhead(nextTokenCanBeStaticTreeDeclaration) && (parsingContext & ParsingContext.JsxRunDirectiveStatements)) {
+                    return true;
+                }
+                return isStartOfDeclaration() || !lookAhead(nextTokenIsIdentifierOrKeywordOnSameLine);
+
             case SyntaxKind.PublicKeyword:
                 if (lookAhead(() => nextToken() === SyntaxKind.FunctionKeyword) && inComponentDirectiveBody) {
+                    return true;
+                }
+                if (lookAhead(() => nextToken() === SyntaxKind.OpenBraceToken) && inComponentDirectiveBody) {
                     return true;
                 }
                 // falls through
             case SyntaxKind.AccessorKeyword:
             case SyntaxKind.PrivateKeyword:
             case SyntaxKind.ProtectedKeyword:
-            case SyntaxKind.StaticKeyword:
             case SyntaxKind.ReadonlyKeyword:
                 // When these don't start a declaration, they may be the start of a class member if an identifier
                 // immediately follows. Otherwise they're an identifier in an expression statement.
@@ -8106,11 +8240,26 @@ namespace Parser {
                 break;
             case SyntaxKind.AtToken:
                 return parseDeclaration();
+            case SyntaxKind.StaticKeyword:
+                if (parsingContext & (1 << ParsingContext.JsxRunDirectiveStatements)) {
+                    if (lookAhead(() => nextToken() === SyntaxKind.OpenBraceToken)) {
+                        return parseStaticBlock();
+                    }
+                }
+                if (isStartOfDeclaration()) {
+                    return parseDeclaration();
+                }
+                break;
             case SyntaxKind.FallthroughKeyword:
                 if (scriptKind === ScriptKind.Syn) {
                     if (parsingContext & (1 << ParsingContext.SwitchClauseStatements)) {
                         return parseFallthroughStatement();
                     }
+                }
+                // falls through
+            case SyntaxKind.PublicKeyword:
+                if (lookAhead(() => nextToken() === SyntaxKind.OpenBraceToken) && inComponentDirectiveBody) {
+                    return parseJsxPublicDeclaration();
                 }
                 // falls through
             case SyntaxKind.AsyncKeyword:
@@ -8125,10 +8274,8 @@ namespace Parser {
             case SyntaxKind.ImportKeyword:
             case SyntaxKind.PrivateKeyword:
             case SyntaxKind.ProtectedKeyword:
-            case SyntaxKind.PublicKeyword:
             case SyntaxKind.AbstractKeyword:
             case SyntaxKind.AccessorKeyword:
-            case SyntaxKind.StaticKeyword:
             case SyntaxKind.ReadonlyKeyword:
             case SyntaxKind.GlobalKeyword:
                 if (isStartOfDeclaration()) {
@@ -8202,6 +8349,8 @@ namespace Parser {
                 return parseModuleDeclaration(pos, hasJSDoc, modifiersIn);
             case SyntaxKind.ImportKeyword:
                 return parseImportDeclarationOrImportEqualsDeclaration(pos, hasJSDoc, modifiersIn);
+            case SyntaxKind.LessThanToken:
+                return parseJsxComponentDirectiveDeclaration(pos, modifiersIn) as unknown as Statement;
             case SyntaxKind.ExportKeyword:
                 nextToken();
                 switch (token()) {

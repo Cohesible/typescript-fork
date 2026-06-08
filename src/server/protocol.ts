@@ -49,6 +49,7 @@ type ChangePropertyTypes<T, Substitutions extends { [K in keyof T]?: any; }> = {
 
 export const enum CommandTypes {
     JsxClosingTag = "jsxClosingTag",
+    JsxImportantPunctuation = "jsxImportantPunctuation",
     LinkedEditingRange = "linkedEditingRange",
     Brace = "brace",
     /** @internal */
@@ -1151,6 +1152,19 @@ export interface JsxClosingTagRequestArgs extends FileLocationRequestArgs {}
 
 export interface JsxClosingTagResponse extends Response {
     readonly body: TextInsertion;
+}
+
+export interface JsxImportantPunctuationRequest extends FileRequest {
+    readonly command: CommandTypes.JsxImportantPunctuation;
+}
+
+export interface JsxImportantPunctuationEntry {
+    locations: number[];
+    depth: number;
+}
+
+export interface JsxImportantPunctuationResponse extends Response {
+    readonly body: JsxImportantPunctuationEntry[];
 }
 
 export interface LinkedEditingRangeRequest extends FileLocationRequest {

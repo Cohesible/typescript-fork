@@ -3041,7 +3041,7 @@
         "category": "Error",
         "code": 95204
     },
-    "Return statement is not allowed in component directive body": {
+    "Return statement is not allowed in component body": {
         "category": "Error",
         "code": 95205
     },
@@ -3132,6 +3132,18 @@
     "The type of '{0}' cannot be inferred from its usage in this component. An explicit type annotation is needed.": {
         "category": "Error",
         "code": 95227
+    },
+    "A static declaration can only be used at the top level of a #run directive.": {
+        "category": "Error",
+        "code": 95228
+    },
+    "Static declarations cannot capture the non-static tree local '{0}'.": {
+        "category": "Error",
+        "code": 95229
+    },
+    "A component declaration cannot appear inside a '#run' directive.": {
+        "category": "Error",
+        "code": 95230
     },
     "'{0}' is defined as an accessor in class '{1}', but is overridden here in '{2}' as an instance property.": {
         "category": "Error",

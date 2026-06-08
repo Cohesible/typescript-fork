@@ -17,100 +17,118 @@ main.syn(452,17): error TS2322: Type '{ children: [string, ...number[]]; }' is n
       Target requires 2 element(s) but source may have fewer.
 main.syn(460,20): error TS2882: This JSX tag's 'children' prop expects type 'Element[] | undefined', but the child has array type 'Element[]'. Did you mean to spread it with '{...}'?
 main.syn(464,28): error TS2747: 'FooOpt' components don't accept text as child elements. Text in JSX has the type 'string', but the expected type of 'children' is 'Element[] | undefined'.
-main.syn(513,12): error TS2345: Argument of type 'Element | null' is not assignable to parameter of type 'Updatable'.
+main.syn(517,12): error TS2345: Argument of type 'Element | null' is not assignable to parameter of type 'Updatable'.
   Type 'null' is not assignable to type 'Updatable'.
-main.syn(528,9): error TS95201: update has no effect: this element contains no dynamic expressions
-main.syn(578,9): error TS95202: Possibly redundant 'update': 'x1' was already updated above with no intervening changes.
+main.syn(532,9): error TS95201: update has no effect: this element contains no dynamic expressions
 main.syn(582,9): error TS95202: Possibly redundant 'update': 'x1' was already updated above with no intervening changes.
-main.syn(607,12): error TS95210: update has no plausible effect on 'xa', the block does not reference any variable that 'xa' depends on.
-main.syn(612,20): error TS1005: ';' expected.
-main.syn(635,16): error TS95210: update has no plausible effect on 'x', the block does not reference any variable that 'x' depends on.
-main.syn(650,20): error TS95223: This update runs unconditionally and is possibly infinite.
-main.syn(662,24): error TS95223: This update runs unconditionally and is possibly infinite.
-main.syn(672,20): error TS2448: Block-scoped variable 'd' used before its declaration.
-main.syn(699,13): error TS95225: 'd2' depends on these changes but is not included in this update.
-main.syn(716,20): error TS95224: 'd1' is already covered by 'root' in this update.
-main.syn(719,13): error TS95226: 'root' depends on these changes and covers 'd1'; use 'update root' instead.
-main.syn(787,12): error TS95210: update has no plausible effect on 'root', the block does not reference any variable that 'root' depends on.
-main.syn(802,17): error TS95225: 'd2' depends on these changes but is not included in this update.
-main.syn(805,17): error TS95225: 'd1' depends on these changes but is not included in this update.
-main.syn(842,21): error TS95225: 'd1' depends on these changes but is not included in this update.
-main.syn(858,12): error TS95210: update has no plausible effect on 'd', the block does not reference any variable that 'd' depends on.
-main.syn(889,12): error TS95210: update has no plausible effect on 'q', the block does not reference any variable that 'q' depends on.
-main.syn(894,13): error TS2304: Cannot find name 'Unresolved'.
-main.syn(960,23): error TS95227: The type of 'id' cannot be inferred from its usage in this component. An explicit type annotation is needed.
-main.syn(1066,10): error TS2345: Argument of type 'string | Err1 | Err2' is not assignable to parameter of type 'string'.
+main.syn(586,9): error TS95202: Possibly redundant 'update': 'x1' was already updated above with no intervening changes.
+main.syn(611,12): error TS95210: update has no plausible effect on 'xa', the block does not reference any variable that 'xa' depends on.
+main.syn(616,20): error TS1005: ';' expected.
+main.syn(639,16): error TS95210: update has no plausible effect on 'x', the block does not reference any variable that 'x' depends on.
+main.syn(654,20): error TS95223: This update runs unconditionally and is possibly infinite.
+main.syn(666,24): error TS95223: This update runs unconditionally and is possibly infinite.
+main.syn(676,20): error TS2448: Block-scoped variable 'd' used before its declaration.
+main.syn(703,13): error TS95225: 'd2' depends on these changes but is not included in this update.
+main.syn(720,20): error TS95224: 'd1' is already covered by 'root' in this update.
+main.syn(723,13): error TS95226: 'root' depends on these changes and covers 'd1'; use 'update root' instead.
+main.syn(792,12): error TS95210: update has no plausible effect on 'root', the block does not reference any variable that 'root' depends on.
+main.syn(807,17): error TS95225: 'd2' depends on these changes but is not included in this update.
+main.syn(810,17): error TS95225: 'd1' depends on these changes but is not included in this update.
+main.syn(847,21): error TS95225: 'd1' depends on these changes but is not included in this update.
+main.syn(894,12): error TS95210: update has no plausible effect on 'q', the block does not reference any variable that 'q' depends on.
+main.syn(899,13): error TS2304: Cannot find name 'Unresolved'.
+main.syn(984,23): error TS95227: The type of 'id' cannot be inferred from its usage in this component. An explicit type annotation is needed.
+main.syn(1094,17): error TS95228: A static declaration can only be used at the top level of a #run directive.
+main.syn(1105,24): error TS95229: Static declarations cannot capture the non-static tree local 'c'.
+main.syn(1107,36): error TS95229: Static declarations cannot capture the non-static tree local 'c'.
+main.syn(1108,36): error TS95229: Static declarations cannot capture the non-static tree local 'c'.
+main.syn(1111,37): error TS95229: Static declarations cannot capture the non-static tree local 'c'.
+main.syn(1136,40): error TS95229: Static declarations cannot capture the non-static tree local 'c'.
+main.syn(1138,34): error TS95229: Static declarations cannot capture the non-static tree local 'c'.
+main.syn(1148,13): error TS95230: A component directive declaration cannot appear inside a '#run' directive.
+main.syn(1152,17): error TS2451: Cannot redeclare block-scoped variable 'cx'.
+main.syn(1153,24): error TS2451: Cannot redeclare block-scoped variable 'cx'.
+main.syn(1162,45): error TS95229: Static declarations cannot capture the non-static tree local 'c3'.
+main.syn(1164,27): error TS2451: Cannot redeclare block-scoped variable 'q'.
+main.syn(1165,27): error TS2451: Cannot redeclare block-scoped variable 'q'.
+main.syn(1165,31): error TS2304: Cannot find name 'cx2'.
+main.syn(1189,9): error TS2322: Type '{ async: true; "on:click": () => void; }' is not assignable to type 'HTMLAttributes<HTMLDivElement>'.
+  Property 'async' does not exist on type 'HTMLAttributes<HTMLDivElement>'.
+main.syn(1206,17): error TS2304: Cannot find name 'd'.
+main.syn(1298,10): error TS2345: Argument of type 'string | Err1 | Err2' is not assignable to parameter of type 'string'.
   Type 'Err1' is not assignable to type 'string'.
-main.syn(1067,11): error TS2322: Type 'string | Err1 | Err2' is not assignable to type 'string'.
+main.syn(1299,11): error TS2322: Type 'string | Err1 | Err2' is not assignable to type 'string'.
   Type 'Err1' is not assignable to type 'string'.
-main.syn(1074,11): error TS2345: Argument of type 'string | Err1 | Err2' is not assignable to parameter of type 'string | number'.
+main.syn(1306,11): error TS2345: Argument of type 'string | Err1 | Err2' is not assignable to parameter of type 'string | number'.
   Type 'Err1' is not assignable to type 'string | number'.
-main.syn(1077,11): error TS2322: Type 'string | Err1 | Err2' is not assignable to type 'boolean'.
+main.syn(1309,11): error TS2322: Type 'string | Err1 | Err2' is not assignable to type 'boolean'.
   Type 'string' is not assignable to type 'boolean'.
-main.syn(1080,28): error TS2322: Type 'string | Err1 | Err2' is not assignable to type 'string'.
+main.syn(1312,28): error TS2322: Type 'string | Err1 | Err2' is not assignable to type 'string'.
   Type 'Err1' is not assignable to type 'string'.
-main.syn(1084,20): error TS2884: 'try' has no effect because the expression cannot be an 'Error'.
-main.syn(1088,20): error TS2885: 'try' will always throw because the expression always returns an 'Error'.
-main.syn(1095,5): error TS2886: This expression returns 'void | Error'. Use 'try' to throw on error, or 'void' to discard the result.
-main.syn(1112,5): error TS2886: This expression returns 'Err<"bad"> | undefined'. Use 'try' to throw on error, or 'void' to discard the result.
-main.syn(1192,20): error TS95204: Async call to 'foo' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
-main.syn(1194,9): error TS95204: Async call to 'foo' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
-main.syn(1212,8): error TS95203: 'bar' returns 'Promise<number>' which is also directly assignable to the expected type. Use 'await' or 'as async'.
-main.syn(1219,11): error TS95204: Async call to 'bar' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
-main.syn(1219,18): error TS95204: Async call to 'bar' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
-main.syn(1226,20): error TS95204: Async call to 'bar' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
-main.syn(1253,15): error TS2322: Type 'number' is not assignable to type 'Promise<number>'.
-main.syn(1292,20): error TS2304: Cannot find name 'b'.
-main.syn(1301,29): error TS95200: 'Comp' returns 'Element[]' and cannot be used as a single JSX element. Did you mean '...Comp'?
-main.syn(1304,30): error TS2304: Cannot find name 'div'.
-main.syn(1305,30): error TS2304: Cannot find name 'div'.
-main.syn(1308,22): error TS2322: Type '{ children: (() => void)[]; }' is not assignable to type 'HTMLAttributes<HTMLDivElement>'.
+main.syn(1316,20): error TS2884: 'try' has no effect because the expression cannot be an 'Error'.
+main.syn(1320,20): error TS2885: 'try' will always throw because the expression always returns an 'Error'.
+main.syn(1327,5): error TS2886: This expression returns 'void | Error'. Use 'try' to throw on error, or 'void' to discard the result.
+main.syn(1344,5): error TS2886: This expression returns 'Err<"bad"> | undefined'. Use 'try' to throw on error, or 'void' to discard the result.
+main.syn(1424,20): error TS95204: Async call to 'foo' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+main.syn(1426,9): error TS95204: Async call to 'foo' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+main.syn(1444,8): error TS95203: 'bar' returns 'Promise<number>' which is also directly assignable to the expected type. Use 'await' or 'as async'.
+main.syn(1451,11): error TS95204: Async call to 'bar' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+main.syn(1451,18): error TS95204: Async call to 'bar' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+main.syn(1458,20): error TS95204: Async call to 'bar' in sync function: result type will change if this function is made async. Use 'as async' or an explicit type annotation.
+main.syn(1485,15): error TS2322: Type 'number' is not assignable to type 'Promise<number>'.
+main.syn(1521,25): error TS2448: Block-scoped variable 'a' used before its declaration.
+main.syn(1521,25): error TS2454: Variable 'a' is used before being assigned.
+main.syn(1524,20): error TS2304: Cannot find name 'b'.
+main.syn(1533,29): error TS95200: 'Comp' returns 'Element[]' and cannot be used as a single JSX element. Did you mean '...Comp'?
+main.syn(1536,30): error TS2304: Cannot find name 'div'.
+main.syn(1537,30): error TS2304: Cannot find name 'div'.
+main.syn(1540,22): error TS2322: Type '{ children: (() => void)[]; }' is not assignable to type 'HTMLAttributes<HTMLDivElement>'.
   Types of property 'children' are incompatible.
-    Type '(() => void)[]' is not assignable to type 'NodeLike[]'.
-      Type '() => void' is not assignable to type 'NodeLike'.
-main.syn(1312,26): error TS95198: Spread JSX element type 'Element' is not an array type.
-main.syn(1325,8): error TS95200: 'Comp' returns 'Element[]' and cannot be used as a single JSX element. Did you mean '...Comp'?
-main.syn(1355,1): error TS1005: '>' expected.
-main.syn(1545,9): error TS95205: Return statement is not allowed in component directive body
-main.syn(1591,11): error TS95207: Duplicate labeled fragment ':content'.
-main.syn(1594,20): error TS2746: This component expects a single child of type '{ content: [string, string]; }', but multiple children were provided.
-main.syn(1596,9): error TS95206: Named children must be used consistently: either all children must be labeled fragments or none.
-main.syn(1617,15): error TS2322: Type '[string, string]' is not assignable to type '[string]'.
+    Type '(() => void)[]' is not assignable to type '(string | number | ChildNode)[]'.
+      Type '() => void' is not assignable to type 'string | number | ChildNode'.
+main.syn(1544,26): error TS95198: Spread JSX element type 'Element' is not an array type.
+main.syn(1557,8): error TS95200: 'Comp' returns 'Element[]' and cannot be used as a single JSX element. Did you mean '...Comp'?
+main.syn(1587,1): error TS1005: '>' expected.
+main.syn(1777,9): error TS95205: Return statement is not allowed in component directive body
+main.syn(1823,11): error TS95207: Duplicate labeled fragment ':content'.
+main.syn(1826,20): error TS2746: This component expects a single child of type '{ content: [string, string]; }', but multiple children were provided.
+main.syn(1828,9): error TS95206: Named children must be used consistently: either all children must be labeled fragments or none.
+main.syn(1849,15): error TS2322: Type '[string, string]' is not assignable to type '[string]'.
   Source has 2 element(s) but target allows only 1.
-main.syn(1655,16): error TS2739: Type '{ o: { x: string; y: string; }; }' is missing the following properties from type '{ x: string; y: string; }': x, y
-main.syn(1655,20): error TS95211: JSX shorthand attribute 'o' has an object type; did you mean to spread it with '{...o}'?
-main.syn(1671,19): error TS95218: An element's class list must appear before its attributes.
-main.syn(1672,19): error TS95218: An element's class list must appear before its attributes.
-main.syn(1673,18): error TS95219: An element's class list must appear before its binding name.
-main.syn(1674,18): error TS95219: An element's class list must appear before its binding name.
-main.syn(1675,10): error TS95221: Multiple classes must be enclosed in '()' and separated by commas. Did you mean '.a.b.c'?
-main.syn(1676,10): error TS95220: Multiple classes must be enclosed in '()' and separated by commas.
-main.syn(1677,10): error TS95220: Multiple classes must be enclosed in '()' and separated by commas.
-main.syn(1678,26): error TS1005: ',' expected.
-main.syn(1681,12): error TS95214: Duplicate class name 'a'.
-main.syn(1681,14): error TS95214: Duplicate class name 'a'.
-main.syn(1682,13): error TS95214: Duplicate class name 'a'.
-main.syn(1682,17): error TS95214: Duplicate class name 'a'.
-main.syn(1683,13): error TS95215: Class name 'a' is always added unconditionally; this conditional application is redundant.
-main.syn(1684,13): error TS95215: Class name 'a' is always added unconditionally; this conditional application is redundant.
-main.syn(1685,17): error TS95215: Class name 'a' is always added unconditionally; this conditional application is redundant.
-main.syn(1686,17): error TS95215: Class name 'a' is always added unconditionally; this conditional application is redundant.
-main.syn(1687,13): error TS95214: Duplicate class name 'a'.
-main.syn(1687,24): error TS95214: Duplicate class name 'a'.
-main.syn(1690,14): error TS95216: 'class' attribute will always overwrite the class list.
-main.syn(1691,14): error TS95216: 'class' attribute will always overwrite the class list.
-main.syn(1702,12): error TS95214: Duplicate class name 'a'.
-main.syn(1703,13): error TS95214: Duplicate class name 'a'.
-main.syn(1703,16): error TS95214: Duplicate class name 'a'.
-main.syn(1704,12): error TS95214: Duplicate class name 'a'.
-main.syn(1704,25): error TS95214: Duplicate class name 'a'.
-main.syn(1705,16): error TS2322: Type 'number' is not assignable to type 'readonly string[]'.
-main.syn(1706,16): error TS2322: Type 'string' is not assignable to type 'readonly string[]'.
-main.syn(1716,11): error TS95217: Type 'string[]' is being spread as attributes. Did you mean to use a class list '( {...} )'?
-main.syn(1717,11): error TS95217: Type 'readonly ["a", "b"]' is being spread as attributes. Did you mean to use a class list '( {...} )'?
+main.syn(1887,16): error TS2739: Type '{ o: { x: string; y: string; }; }' is missing the following properties from type '{ x: string; y: string; }': x, y
+main.syn(1887,20): error TS95211: JSX shorthand attribute 'o' has an object type; did you mean to spread it with '{...o}'?
+main.syn(1904,19): error TS95218: An element's class list must appear before its attributes.
+main.syn(1905,19): error TS95218: An element's class list must appear before its attributes.
+main.syn(1906,18): error TS95219: An element's class list must appear before its binding name.
+main.syn(1907,18): error TS95219: An element's class list must appear before its binding name.
+main.syn(1908,10): error TS95221: Multiple classes must be enclosed in '()' and separated by commas. Did you mean '.a.b.c'?
+main.syn(1909,10): error TS95220: Multiple classes must be enclosed in '()' and separated by commas.
+main.syn(1910,10): error TS95220: Multiple classes must be enclosed in '()' and separated by commas.
+main.syn(1911,26): error TS1005: ',' expected.
+main.syn(1914,12): error TS95214: Duplicate class name 'a'.
+main.syn(1914,14): error TS95214: Duplicate class name 'a'.
+main.syn(1915,13): error TS95214: Duplicate class name 'a'.
+main.syn(1915,17): error TS95214: Duplicate class name 'a'.
+main.syn(1916,13): error TS95215: Class name 'a' is always added unconditionally; this conditional application is redundant.
+main.syn(1917,13): error TS95215: Class name 'a' is always added unconditionally; this conditional application is redundant.
+main.syn(1918,17): error TS95215: Class name 'a' is always added unconditionally; this conditional application is redundant.
+main.syn(1919,17): error TS95215: Class name 'a' is always added unconditionally; this conditional application is redundant.
+main.syn(1920,13): error TS95214: Duplicate class name 'a'.
+main.syn(1920,24): error TS95214: Duplicate class name 'a'.
+main.syn(1923,14): error TS95216: 'class' attribute will always overwrite the class list.
+main.syn(1924,14): error TS95216: 'class' attribute will always overwrite the class list.
+main.syn(1935,12): error TS95214: Duplicate class name 'a'.
+main.syn(1936,13): error TS95214: Duplicate class name 'a'.
+main.syn(1936,16): error TS95214: Duplicate class name 'a'.
+main.syn(1937,12): error TS95214: Duplicate class name 'a'.
+main.syn(1937,25): error TS95214: Duplicate class name 'a'.
+main.syn(1938,16): error TS2322: Type 'number' is not assignable to type 'readonly string[]'.
+main.syn(1939,16): error TS2322: Type 'string' is not assignable to type 'readonly string[]'.
+main.syn(1949,11): error TS95217: Type 'string[]' is being spread as attributes. Did you mean to use a class list '( {...} )'?
+main.syn(1950,11): error TS95217: Type 'readonly ["a", "b"]' is being spread as attributes. Did you mean to use a class list '( {...} )'?
 
 
-==== main.syn (94 errors) ====
+==== main.syn (111 errors) ====
     function f<T>(t: reify T): T {
         switch (Type.kind(t)) {
             case "array":
@@ -627,22 +645,26 @@ main.syn(1717,11): error TS95217: Type 'readonly ["a", "b"]' is being spread as 
     }
     
     // update expression
-    declare const el: Element;
-    const d = <div on:click={() => {
-        update el
-    }}></div>
+    {
+        declare const el: Element;
+        const d = <div on:click={() => {
+            update el
+        }}></div>
+    }
     
     // shorthand_jsx_attribute
-    const value = ''
-    const d2 = <input {value}/>
-    const d3 = <div>
-      <#if (true)>
-         <div></div>
-      </>
-    </div>
+    {
+        const value = ''
+        const d2 = <input {value}/>
+        const d3 = <div>
+            <#if (true)>
+                <div></div>
+            </>
+        </div>
     
-    const cond = true
-    const d4 = <div><#if (cond)></></div>
+        const cond = true
+        const d4 = <div><#if (cond)></></div>
+    }
     
     {
         // cfa should work inside <#if>
@@ -837,7 +859,7 @@ main.syn(1717,11): error TS95217: Type 'readonly ["a", "b"]' is being spread as 
                 update d { c += 1 }
                        ~
 !!! error TS2448: Block-scoped variable 'd' used before its declaration.
-!!! related TS2728 main.syn:674:9: 'd' is declared here.
+!!! related TS2728 main.syn:678:9: 'd' is declared here.
             </>
             <div @ d>
                 {c}
@@ -955,7 +977,8 @@ main.syn(1717,11): error TS95217: Type 'readonly ["a", "b"]' is being spread as 
         <#component Inner() {}>
             <div>{c}</div>
         </>
-        ;<div @ root>
+        const inner = <Inner />
+        const root = <div>
             <Inner />
         </div>
         update root {
@@ -1001,7 +1024,7 @@ main.syn(1717,11): error TS95217: Type 'readonly ["a", "b"]' is being spread as 
     {
         let c = 0
         declare const External: any
-        ;<div @ root>
+        const root = <div>
             <External />
         </div>
         update root {
@@ -1048,8 +1071,6 @@ main.syn(1717,11): error TS95217: Type 'readonly ["a", "b"]' is being spread as 
         </>
         const d = <Many {items}/>
         update d {
-               ~
-!!! error TS95210: update has no plausible effect on 'd', the block does not reference any variable that 'd' depends on.
             items.push('aa')
         }
     }
@@ -1123,6 +1144,25 @@ main.syn(1717,11): error TS95217: Type 'readonly ["a", "b"]' is being spread as 
         const l2 = <List2 {items}>
             {x => <div>{x.first} {x.last}</div>}
         </List2>
+    }
+    
+    {
+        <div>
+            <#run>
+                let c = 0
+            </>
+            <div @ v>{c}</div>
+            <div on:click() {
+                update v { c += 1 }
+                console.log(this)
+            }>
+                click
+            </div>
+        </div>
+        
+        ;<div on:keypress(ev) {
+            ev.keyCode
+        } />
     }
     
     {
@@ -1219,8 +1259,6 @@ main.syn(1717,11): error TS95217: Type 'readonly ["a", "b"]' is being spread as 
             </>
             {v.a}
         </div>
-    
-        const q = { [Symbol.update]() { } }
     }
     
     {
@@ -1231,13 +1269,258 @@ main.syn(1717,11): error TS95217: Type 'readonly ["a", "b"]' is being spread as 
     }
     
     {
-        function Foo(this: { bar?: () => "aaa" }, props: {}) {
-            this.bar = () => 'aaa'
-            return <div/>
+        function Foo(attrs: {}): { root: HTMLDivElement; bar: () => 'aaa' } {
+            return {
+                root: <div/>,
+                bar: () => 'aaa',
+            }
         }
     
         const x = <Foo />
         const y = x.bar()
+    }
+    
+    {
+        <#component Foo() {
+            const x = 1
+            public { x as y }
+        }>
+          <div>{x}</div>
+        </>
+        const f = <Foo />
+        f.y // number
+    
+        <#component Bar()>
+          <Foo />
+        </>
+    
+        const b = <Bar />
+    }
+    
+    export <#component ExportedComp()>
+        <div/>
+    </>
+    
+    
+    {
+        const d = <div>
+            <#run>
+                static let c = 0
+                function foo() {
+                    static let c2 = 0 // error
+                    ~~~~~~~~~~~~~~~~~
+!!! error TS95228: A static declaration can only be used at the top level of a #run directive.
+                }
+            </>
+            {c++}
+        </div>
+    
+        let co = 0
+        const d2 = <div>
+            <#run>
+                const c = 0
+                static function foo() {
+                    return c // error
+                           ~
+!!! error TS95229: Static declarations cannot capture the non-static tree local 'c'.
+                }
+                static class Foo { y = c } // error
+                                       ~
+!!! error TS95229: Static declarations cannot capture the non-static tree local 'c'.
+                static const d = () => c // error
+                                       ~
+!!! error TS95229: Static declarations cannot capture the non-static tree local 'c'.
+                static const c2 = c // OK
+                static let c3 = c // OK
+                static const d3 = <div>{c}</div> // error
+                                        ~
+!!! error TS95229: Static declarations cannot capture the non-static tree local 'c'.
+                static const d4 = <div>{co}</div> // OK, outside of a tree
+                static const d5 = <div>{c2}</div> // OK
+    
+            </>
+            {c}
+        </div>
+    
+        const d3 = <div>
+            <#run>
+                const c = 0
+                const d2 = <div>
+                  <#run>
+                    static const f = () => c // OK, because the binding is stable
+                  </>
+                </div>
+            </>
+        </div>
+    
+        const d4 = <div>
+            <#run>
+              const c = 0
+            </>
+            <div>
+                <#run>
+                    static const f = () => c // error
+                                           ~
+!!! error TS95229: Static declarations cannot capture the non-static tree local 'c'.
+                    static const f2 = () => {
+                        return <div>{c}</div> // error
+                                     ~
+!!! error TS95229: Static declarations cannot capture the non-static tree local 'c'.
+                    }
+                </>
+            </div>
+        </div>
+    
+        const d5 = <div>
+            <#run>
+                const c = 0
+                // error, components aren't allowed as top-level #run declarations
+                <#component Foo()>
+                ~~~~~~~~~~~~~~~~~~
+                    <div></div>
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                </>
+    ~~~~~~~~~~~~~~~
+!!! error TS95230: A component directive declaration cannot appear inside a '#run' directive.
+    
+                let cx = 0
+                    ~~
+!!! error TS2451: Cannot redeclare block-scoped variable 'cx'.
+                static let cx = 0
+                           ~~
+!!! error TS2451: Cannot redeclare block-scoped variable 'cx'.
+            </>
+            <#component Foo2()>
+                <div>
+                    <#run>
+                        // OK, contiguous comp declarations observe the true tree binding
+                        // there is no concept of "which c?" here, so `c` is always the most recent value
+                        static const c2 = () => c
+                        const c3 = 0
+                        static const c4 = () => c3 // error
+                                                ~~
+!!! error TS95229: Static declarations cannot capture the non-static tree local 'c3'.
+    
+                        const q = cx // error, nested components cannot capture mutable non-static tree locals
+                              ~
+!!! error TS2451: Cannot redeclare block-scoped variable 'q'.
+                        const q = cx2 // OK
+                              ~
+!!! error TS2451: Cannot redeclare block-scoped variable 'q'.
+                                  ~~~
+!!! error TS2304: Cannot find name 'cx2'.
+                    </>
+                </div>
+            </>
+        </div>
+    }
+    
+    {
+        // jsx attr methods
+        const attrMethod = <div on:click() {
+            this // HTMLDivElement
+        }>click</div>
+    
+        <#component Foo(cb: () => void) {
+            cb()
+        }>
+          <div/>
+        </>
+    
+        const fooAttrMethod = <Foo cb() {
+            this // Foo 
+        } />
+    
+        ;<div
+            async
+            ~~~~~
+!!! error TS2322: Type '{ async: true; "on:click": () => void; }' is not assignable to type 'HTMLAttributes<HTMLDivElement>'.
+!!! error TS2322:   Property 'async' does not exist on type 'HTMLAttributes<HTMLDivElement>'.
+            async on:click() {}
+        />
+    
+        <#component Foo2<T>(cb: () => T) {
+            const v = cb()
+            public function f() { return v }
+        }>
+          <div/>
+        </>
+    
+        const f = <Foo2 cb() { return 1 } />
+        const v = f.f() // number
+    }
+    
+    {
+        ;<div @ d />
+        console.log(d) // should error
+                    ~
+!!! error TS2304: Cannot find name 'd'.
+    }
+    
+    {
+        let x: 0 | 1 | 2 = 0
+        defer {
+            x // 2
+        }
+        defer {
+            x = 2
+        }
+        function deferTest(cond: boolean) {
+            let y: 0 | 1 | 2 = 0
+            defer {
+                y // 1 | 2
+            }
+            if (cond) {
+                y = 1
+                return
+            }
+            y = 2
+            //  throw new Error('!!!')
+        }
+    }
+    
+    // {
+    //     let blah: boolean = false
+    //     let x
+    //     {
+    //         let foo: 1 | 2 | 3
+    //         let bar: 1 | 2 | 3
+    //         defer x = { foo, bar }
+    //         if (blah) { foo = 1 } else { foo = 2 }
+    //         if (blah) { bar = 2 } else { bar = 3 }
+    //     }
+    //     x // { foo: 1 | 2, bar: 2 | 3  }
+    // }
+    
+    {
+        function deferFinally() {
+            let z: 0 | 1 | 2 = 0
+            defer {
+                z
+            }
+            z = 2
+        }
+    }
+    
+    {
+        let x: number | undefined
+        {
+            defer if (!x) throw new Error('x not truthy!')
+        }
+        declare function check(x: number): void
+        check(x) // OK
+    }
+    
+    {
+        ;<#style d>
+        </>
+        ;<#style (d)>
+        </>
+        ;<#style d2(d)>
+        </>
+        ;<#style d3(d, d2)>
+        </>
+        const o = d
     }
     
     // !T (FallibleType) and try expr
@@ -1267,12 +1550,12 @@ main.syn(1717,11): error TS95217: Type 'readonly ["a", "b"]' is being spread as 
              ~~~~~~~~~
 !!! error TS2345: Argument of type 'string | Err1 | Err2' is not assignable to parameter of type 'string'.
 !!! error TS2345:   Type 'Err1' is not assignable to type 'string'.
-!!! related TS2883 main.syn:1066:10: Did you forget to use 'try'? The expression returns a fallible type.
+!!! related TS2883 main.syn:1298:10: Did you forget to use 'try'? The expression returns a fallible type.
         const z2: string = mayFail()
               ~~
 !!! error TS2322: Type 'string | Err1 | Err2' is not assignable to type 'string'.
 !!! error TS2322:   Type 'Err1' is not assignable to type 'string'.
-!!! related TS2883 main.syn:1067:24: Did you forget to use 'try'? The expression returns a fallible type.
+!!! related TS2883 main.syn:1299:24: Did you forget to use 'try'? The expression returns a fallible type.
     
         // no hint: target already accepts the full union
         const z3: string | Err1 | Err2 = mayFail()
@@ -1283,7 +1566,7 @@ main.syn(1717,11): error TS95217: Type 'readonly ["a", "b"]' is being spread as 
               ~~~~~~~~~
 !!! error TS2345: Argument of type 'string | Err1 | Err2' is not assignable to parameter of type 'string | number'.
 !!! error TS2345:   Type 'Err1' is not assignable to type 'string | number'.
-!!! related TS2883 main.syn:1074:11: Did you forget to use 'try'? The expression returns a fallible type.
+!!! related TS2883 main.syn:1306:11: Did you forget to use 'try'? The expression returns a fallible type.
     
         // no hint: string is not assignable to boolean — unrelated mismatch
         const z4: boolean = mayFail()
@@ -1296,7 +1579,7 @@ main.syn(1717,11): error TS95217: Type 'readonly ["a", "b"]' is being spread as 
                                ~~~~~~
 !!! error TS2322: Type 'string | Err1 | Err2' is not assignable to type 'string'.
 !!! error TS2322:   Type 'Err1' is not assignable to type 'string'.
-!!! related TS2883 main.syn:1080:35: Did you forget to use 'try'? The expression returns a fallible type.
+!!! related TS2883 main.syn:1312:35: Did you forget to use 'try'? The expression returns a fallible type.
     
         // never error
         const foo = () => ''
@@ -1524,10 +1807,15 @@ main.syn(1717,11): error TS95217: Type 'readonly ["a", "b"]' is being spread as 
     // element names
     {
         // b can be seen within the tree, but not outside
-        ;<div @ a>
+        const a = <div>
             <div @ b></div>
             <#run>
                 console.log(a, b)
+                            ~
+!!! error TS2448: Block-scoped variable 'a' used before its declaration.
+!!! related TS2728 main.syn:1518:11: 'a' is declared here.
+                            ~
+!!! error TS2454: Variable 'a' is used before being assigned.
             </>
         </div>
         console.log(a, b)
@@ -1539,7 +1827,7 @@ main.syn(1717,11): error TS95217: Type 'readonly ["a", "b"]' is being spread as 
     
     // spread JSX elements
     {
-        declare function Comp(): Element[];
+        declare function Comp(): { root: Element[] } & Updatable;
         const spread1 = <div><...Comp /></div> // ok
         const noSpread1 = <div><Comp /></div> // error
                                 ~~~~
@@ -1553,21 +1841,21 @@ main.syn(1717,11): error TS95217: Type 'readonly ["a", "b"]' is being spread as 
                                  ~~~
 !!! error TS2304: Cannot find name 'div'.
     
-        declare function Comp2(): (() => void)[];
+        declare function Comp2(): { root: (() => void)[] } & Updatable
         const spread4 = <div><...Comp2 /></div>  // error, intrinsics want something NodeLike
                          ~~~
 !!! error TS2322: Type '{ children: (() => void)[]; }' is not assignable to type 'HTMLAttributes<HTMLDivElement>'.
 !!! error TS2322:   Types of property 'children' are incompatible.
-!!! error TS2322:     Type '(() => void)[]' is not assignable to type 'NodeLike[]'.
-!!! error TS2322:       Type '() => void' is not assignable to type 'NodeLike'.
+!!! error TS2322:     Type '(() => void)[]' is not assignable to type '(string | number | ChildNode)[]'.
+!!! error TS2322:       Type '() => void' is not assignable to type 'string | number | ChildNode'.
     
-        declare function Comp3(): Element;
+        declare function Comp3(): { root: Element } & Updatable;
         const noSpread2 = <div><Comp3 /></div> // ok
         const spread5 = <div><...Comp3 /></div> // error
                              ~~~~~~~~~~~~
 !!! error TS95198: Spread JSX element type 'Element' is not an array type.
     
-        declare function Comp4(props: { children: Element[] }): Element;
+        declare function Comp4(attrs: {}, children: Element[]): { root: Element } & Updatable;
         // ok
         const spread6 = <Comp4>
           <Comp3 />
@@ -1583,7 +1871,7 @@ main.syn(1717,11): error TS95217: Type 'readonly ["a", "b"]' is being spread as 
 !!! error TS95200: 'Comp' returns 'Element[]' and cannot be used as a single JSX element. Did you mean '...Comp'?
         </Comp4>
     
-        declare function Comp5(): [Element] | [];
+        declare function Comp5(): { root: [Element] | [] } & Updatable;
         // ok
         const spread8 = <Comp4>
             <...Comp5 />
@@ -1931,6 +2219,7 @@ main.syn(1717,11): error TS95217: Type 'readonly ["a", "b"]' is being spread as 
     }
     
     {
+        const cond = true;
         ;<div .foo/>
         ;<div .foo></div>
         // class attributes should not conflict with normal attributes

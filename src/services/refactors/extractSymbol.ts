@@ -1002,6 +1002,8 @@ function getDescriptionForFunctionLikeDeclaration(scope: FunctionLikeDeclaration
             return scope.name
                 ? `function '${scope.name.text}'`
                 : ANONYMOUS;
+        case SyntaxKind.JsxMethodAttribute:
+            return `method '${scope.name.getText()}'`
         case SyntaxKind.ArrowFunction:
             return "arrow function";
         case SyntaxKind.MethodDeclaration:

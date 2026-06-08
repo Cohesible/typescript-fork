@@ -1713,6 +1713,7 @@ function isFunctionLikeDeclarationKind(kind: SyntaxKind): boolean {
         case SyntaxKind.SetAccessor:
         case SyntaxKind.FunctionExpression:
         case SyntaxKind.ArrowFunction:
+        case SyntaxKind.JsxMethodAttribute:
             return true;
         default:
             return false;
@@ -2339,6 +2340,7 @@ export function canHaveLocals(node: Node): node is HasLocals {
         case SyntaxKind.JsxElseDirective:
         case SyntaxKind.JsxComponentDirective:
         case SyntaxKind.JsxLabeledFragment:
+        case SyntaxKind.JsxMethodAttribute:
             return true;
         default:
             return false;
@@ -2363,6 +2365,7 @@ function isDeclarationKind(kind: SyntaxKind) {
         || kind === SyntaxKind.ImportSpecifier
         || kind === SyntaxKind.InterfaceDeclaration
         || kind === SyntaxKind.JsxAttribute
+        || kind === SyntaxKind.JsxMethodAttribute
         || kind === SyntaxKind.MethodDeclaration
         || kind === SyntaxKind.MethodSignature
         || kind === SyntaxKind.ModuleDeclaration
@@ -2524,7 +2527,8 @@ export function isJsxAttributeLike(node: Node): node is JsxAttributeLike {
     return kind === SyntaxKind.JsxAttribute
         || kind === SyntaxKind.JsxSpreadAttribute
         || kind === SyntaxKind.JsxShorthandAttribute
-        || kind === SyntaxKind.JsxClassAttribute;
+        || kind === SyntaxKind.JsxClassAttribute
+        || kind === SyntaxKind.JsxMethodAttribute;
 }
 
 export function isStringLiteralOrJsxExpression(node: Node): node is StringLiteral | JsxExpression {

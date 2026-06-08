@@ -71,6 +71,7 @@ import {
     Symbol,
     TextChange,
     TextInsertion,
+    JsxImportantPunctuationEntry,
     textPart,
     TextRange,
     TextSpan,
@@ -750,6 +751,12 @@ export class SessionClient implements LanguageService {
 
     getJsxClosingTagAtPosition(_fileName: string, _position: number): never {
         return notImplemented();
+    }
+
+    jsxImportantPunctuation(fileName: string): JsxImportantPunctuationEntry[] {
+        const request = this.processRequest<protocol.JsxImportantPunctuationRequest>(protocol.CommandTypes.JsxImportantPunctuation, { file: fileName });
+        const response = this.processResponse<protocol.JsxImportantPunctuationResponse>(request);
+        return response.body;
     }
 
     getLinkedEditingRangeAtPosition(_fileName: string, _position: number): never {

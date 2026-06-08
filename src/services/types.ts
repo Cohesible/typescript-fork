@@ -709,6 +709,13 @@ export interface LanguageService {
         args: PasteEditsArgs,
         formatOptions: FormatCodeSettings,
     ): PasteEdits;
+
+    jsxImportantPunctuation(fileName: string): JsxImportantPunctuationEntry[];
+}
+
+export interface JsxImportantPunctuationEntry {
+    locations: number[];
+    depth: number;
 }
 
 export interface JsxClosingTagInfo {

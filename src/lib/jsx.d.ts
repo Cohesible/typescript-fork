@@ -62,12 +62,7 @@ interface Element {
 	[Symbol.update]?(): void
 }
 
-// TODO: generate these augmentations
-// this likely has a significant impact on check time
-type CurrentTarget<T> = { currentTarget: T }
-interface HTMLInputElement {
-  oninput?: (ev: InputEvent & CurrentTarget<this>) => any
-}
+// global { interface Element { [Symbol.update]: (() => void) | undefined } }
 
 declare namespace JSX {
 	type Booleanish = boolean | 'true' | 'false';
@@ -76,6 +71,8 @@ declare namespace JSX {
 	type Children = (string | number | ChildNode)[];
 
 	type Element = globalThis.Element;
+
+	type ScopedStylesheet = any; // TODO
 
 	// ============================================
 	// Event Types

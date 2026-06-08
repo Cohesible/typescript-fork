@@ -132,6 +132,7 @@ import {
     JsxRunDirective,
     JsxComponentDirective,
     JsxElseDirective,
+    JsxStyleDirective,
     UnwindStatement,
     UpdateBlockStatement,
     JsxIfDirective,
@@ -558,13 +559,14 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
     var currentTrueTarget: FlowLabel | undefined;
     var currentFalseTarget: FlowLabel | undefined;
     var currentExceptionTarget: FlowLabel | undefined;
+    var currentDeferTarget: FlowLabel | undefined;
     var preSwitchCaseFlow: FlowNode | undefined;
     var activeLabelList: ActiveLabel | undefined;
     var hasExplicitReturn: boolean;
     var inReturnPosition: boolean;
     var hasFlowEffects: boolean;
-    var inDefer = false;
     var fallthroughFlowNodes: FlowNode[] | undefined;
+    var deferredStatements: [FlowLabel, Statement][] | undefined;
 
     // state used for emit helpers
     var emitFlags: NodeFlags;
@@ -1031,6 +1033,8 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             const saveContinueTarget = currentContinueTarget;
             const saveReturnTarget = currentReturnTarget;
             const saveExceptionTarget = currentExceptionTarget;
+            const saveDeferTarget = currentDeferTarget;
+            const saveDeferredStatements = deferredStatements;
             const saveActiveLabelList = activeLabelList;
             const saveHasExplicitReturn = hasExplicitReturn;
             const isImmediatelyInvoked = (
@@ -1053,9 +1057,12 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             currentExceptionTarget = undefined;
             currentBreakTarget = undefined;
             currentContinueTarget = undefined;
+            currentDeferTarget = undefined;
+            deferredStatements = undefined;
             activeLabelList = undefined;
             hasExplicitReturn = false;
             bindChildren(node);
+            bindDeferredStatements();
             // Reset all reachability check related flags on node (for incremental scenarios)
             node.flags &= ~NodeFlags.ReachabilityAndEmitFlags;
             if (!(currentFlow.flags & FlowFlags.Unreachable) && containerFlags & ContainerFlags.IsFunctionLike && nodeIsPresent((node as FunctionLikeDeclaration | ClassStaticBlockDeclaration).body)) {
@@ -1082,6 +1089,8 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             currentContinueTarget = saveContinueTarget;
             currentReturnTarget = saveReturnTarget;
             currentExceptionTarget = saveExceptionTarget;
+            currentDeferTarget = saveDeferTarget;
+            deferredStatements = saveDeferredStatements;
             activeLabelList = saveActiveLabelList;
             hasExplicitReturn = saveHasExplicitReturn;
         }
@@ -1090,6 +1099,13 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             bindChildren(node);
             Debug.assertNotNode(node, isIdentifier); // ContainsThis cannot overlap with HasExtendedUnicodeEscape on Identifier
             node.flags = seenThisKeyword ? node.flags | NodeFlags.ContainsThis : node.flags & ~NodeFlags.ContainsThis;
+        }
+        else if (containerFlags & ContainerFlags.IsBlockScopedContainer) {
+            const saveDeferredStatements = deferredStatements;
+            deferredStatements = undefined;
+            bindChildren(node);
+            bindDeferredStatements();
+            deferredStatements = saveDeferredStatements;
         }
         else {
             bindChildren(node);
@@ -1164,9 +1180,6 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             case SyntaxKind.JsxComponentDirective:
                 bindJsxComponentDirective(node as JsxComponentDirective);
                 break;
-            case SyntaxKind.JsxLabeledFragment:
-                bindEachChild(node);
-                break;
             case SyntaxKind.JsxFragment:
             case SyntaxKind.JsxElement: {
                 const elem = node as JsxElement | JsxFragment;
@@ -1187,11 +1200,6 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                 }
                 break;
             case SyntaxKind.ThrowStatement:
-                if (inDefer) {
-                    bind((node as ThrowStatement).expression);
-                    break;
-                }
-                // falls through
             case SyntaxKind.ReturnStatement:
                 bindReturnOrThrow(node as ReturnStatement | ThrowStatement);
                 break;
@@ -1737,6 +1745,8 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             hasExplicitReturn = true;
             if (currentReturnTarget) {
                 addAntecedent(currentReturnTarget, currentFlow);
+            } else if (currentDeferTarget) {
+                addAntecedent(currentDeferTarget, currentFlow);
             }
         }
         currentFlow = unreachableFlow;
@@ -1860,9 +1870,31 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
     }
 
     function bindDeferStatement(node: DeferStatement) {
-        inDefer = true;
-        bind(node.statement);
-        inDefer = false;
+        const deferLabel = createBranchLabel();
+        if (currentReturnTarget) {
+            currentReturnTarget = deferLabel;
+        }
+        if (currentContinueTarget) {
+            currentContinueTarget = deferLabel;
+        }
+        if (currentBreakTarget) {
+            currentBreakTarget = deferLabel;
+        }
+        if (node.isFinally) {
+            addAntecedent(deferLabel, currentFlow);
+        }
+        currentDeferTarget = deferLabel;
+        if (!deferredStatements) deferredStatements = [];
+        deferredStatements!.push([deferLabel, node.statement]);
+    }
+
+    function bindDeferredStatements() {
+        while (deferredStatements?.length) {
+            const [label, statement] = deferredStatements!.pop()!
+            addAntecedent(label, currentFlow);
+            currentFlow = finishFlowLabel(label);
+            bind(statement);
+        }
     }
 
     function bindSwitchStatement(node: SwitchStatement): void {
@@ -2496,6 +2528,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             case SyntaxKind.MappedType:
             case SyntaxKind.JsxComponentDirective:
             case SyntaxKind.JsxLabeledFragment:
+            case SyntaxKind.JsxMethodAttribute:
                 // All the children of these container types are never visible through another
                 // symbol (i.e. through another symbol's 'exports' or 'members').  Instead,
                 // they're only accessed 'lexically' (i.e. from code that exists underneath
@@ -3184,7 +3217,12 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                 return bindFunctionDeclaration(node as FunctionDeclaration);
             case SyntaxKind.JsxComponentDirective:
                 if ((node as JsxComponentDirective).name) {
-                    bindBlockScopedDeclaration(node as unknown as Declaration, SymbolFlags.Function | SymbolFlags.TypeAlias, SymbolFlags.FunctionExcludes | SymbolFlags.TypeAliasExcludes);
+                    bindBlockScopedDeclaration(node as unknown as Declaration, SymbolFlags.Function | SymbolFlags.Interface, SymbolFlags.FunctionExcludes | SymbolFlags.TypeAliasExcludes);
+                }
+                return;
+            case SyntaxKind.JsxStyleDirective:
+                if ((node as JsxStyleDirective).name) {
+                    bindBlockScopedDeclaration(node as unknown as Declaration, SymbolFlags.BlockScopedVariable, SymbolFlags.BlockScopedVariableExcludes);
                 }
                 return;
             case SyntaxKind.Constructor:
@@ -3248,6 +3286,8 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                 return bindJsxAttributes(node as JsxAttributes);
             case SyntaxKind.JsxAttribute:
                 return bindJsxAttribute(node as JsxAttribute, SymbolFlags.Property, SymbolFlags.PropertyExcludes);
+            case SyntaxKind.JsxMethodAttribute:
+                return bindJsxAttribute(node as unknown as JsxAttribute, SymbolFlags.Property, SymbolFlags.PropertyExcludes);
 
             // Imports and exports
             case SyntaxKind.ImportEqualsDeclaration:
@@ -4149,6 +4189,9 @@ export function getContainerFlags(node: Node): ContainerFlags {
         case SyntaxKind.JSDocImportTag:
             // treat as a container to prevent using an enclosing effective host, ensuring import bindings are scoped correctly
             return ContainerFlags.IsContainer | ContainerFlags.IsControlFlowContainer | ContainerFlags.HasLocals;
+
+        case SyntaxKind.JsxMethodAttribute:
+            return ContainerFlags.IsContainer | ContainerFlags.IsControlFlowContainer | ContainerFlags.HasLocals | ContainerFlags.IsFunctionLike;
 
         case SyntaxKind.FunctionExpression:
         case SyntaxKind.ArrowFunction:

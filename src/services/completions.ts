@@ -341,6 +341,7 @@ import {
     scanner,
     ScriptElementKind,
     ScriptElementKindModifier,
+    ScriptKind,
     ScriptTarget,
     SemanticMeaning,
     setEmitFlags,
@@ -1884,8 +1885,16 @@ function createCompletionEntry(
                 isSnippet = true;
             }
             else {
-                // Use braces for everything else
-                useBraces = true;
+                const callSigs = typeChecker.getSignaturesOfType(typeChecker.getNonNullableType(type), SignatureKind.Call);
+                if (callSigs.length && sourceFile.scriptKind === ScriptKind.Syn) {
+                    const sig = callSigs[0];
+                    const params = sig.parameters.map((p, i) => `\${${i + 1}:${unescapeLeadingUnderscores(p.escapedName)}}`).join(", ");
+                    insertText = `${escapeSnippetText(name)}(${params}) {$${sig.parameters.length + 1}}`;
+                    isSnippet = true;
+                }
+                else {
+                    useBraces = true;
+                }
             }
         }
 
@@ -3568,6 +3577,12 @@ function getCompletionData(
                     }
                     break;
 
+                case SyntaxKind.Block:
+                    if (parent.parent.kind === SyntaxKind.JsxMethodAttribute && contextToken.kind === SyntaxKind.CloseBraceToken) {
+                        isJsxIdentifierExpected = true;
+                    }
+                    break;
+
                 case SyntaxKind.JsxExpression:
                 case SyntaxKind.JsxSpreadAttribute:
                 case SyntaxKind.JsxShorthandAttribute:
@@ -3585,6 +3600,20 @@ function getCompletionData(
                     if (contextToken.kind === SyntaxKind.ColonToken) {
                         isRightOfJsxLabel = true;
                         location = contextToken;
+                    }
+                    break;
+
+                case SyntaxKind.JsxClassAttribute:
+                    // <div .x [||] 
+                    if (previousToken.kind === SyntaxKind.Identifier) {
+                        isJsxIdentifierExpected = true;
+                    }
+                    break;
+
+                case SyntaxKind.JsxClassList:
+                    // <div (.x) [||] 
+                    if (previousToken.kind === SyntaxKind.CloseParenToken || (contextToken.kind === SyntaxKind.CloseParenToken && contextToken.pos < previousToken.pos)) {
+                        isJsxIdentifierExpected = true;
                     }
                     break;
 
@@ -4925,6 +4954,7 @@ function getCompletionData(
     function tryGetContainingJsxElement(contextToken: Node): JsxOpeningLikeElement | undefined {
         if (contextToken) {
             const parent = contextToken.parent;
+            if (!parent) return undefined;
             switch (contextToken.kind) {
                 case SyntaxKind.GreaterThanToken: // End of a type argument list
                 case SyntaxKind.LessThanSlashToken:
@@ -4935,7 +4965,7 @@ function getCompletionData(
                 case SyntaxKind.JsxAttribute:
                 case SyntaxKind.JsxShorthandAttribute:
                 case SyntaxKind.JsxSpreadAttribute:
-                    if (parent && (parent.kind === SyntaxKind.JsxSelfClosingElement || parent.kind === SyntaxKind.JsxOpeningElement)) {
+                    if (parent.kind === SyntaxKind.JsxSelfClosingElement || parent.kind === SyntaxKind.JsxOpeningElement) {
                         if (contextToken.kind === SyntaxKind.GreaterThanToken) {
                             const precedingToken = findPrecedingToken(contextToken.pos, sourceFile, /*startNode*/ undefined);
                             if (!(parent as JsxOpeningLikeElement).typeArguments || (precedingToken && precedingToken.kind === SyntaxKind.SlashToken)) break;
@@ -4948,14 +4978,25 @@ function getCompletionData(
                         //          attributes: JsxAttributes
                         //             properties: NodeArray<JsxAttributeLike>
                         return parent.parent.parent as JsxOpeningLikeElement;
+                    } else if (parent.kind === SyntaxKind.JsxClassAttribute) {
+                        return parent.parent.parent as JsxOpeningLikeElement;
+                    }
+                    break;
+
+                case SyntaxKind.TrueKeyword:
+                case SyntaxKind.FalseKeyword:
+                case SyntaxKind.NumericLiteral:
+                    if (parent.kind === SyntaxKind.JsxAttribute && (parent as JsxAttribute).initializer === contextToken) {
+                        return parent.parent.parent as JsxOpeningLikeElement;
                     }
                     break;
 
                 // The context token is the closing } or " of an attribute, which means
                 // its parent is a JsxExpression, whose parent is a JsxAttribute,
                 // whose parent is a JsxOpeningLikeElement
+                case SyntaxKind.NumericLiteral:
                 case SyntaxKind.StringLiteral:
-                    if (parent && ((parent.kind === SyntaxKind.JsxAttribute) || (parent.kind === SyntaxKind.JsxSpreadAttribute) || (parent.kind === SyntaxKind.JsxShorthandAttribute))) {
+                    if ((parent.kind === SyntaxKind.JsxAttribute) || (parent.kind === SyntaxKind.JsxSpreadAttribute) || (parent.kind === SyntaxKind.JsxShorthandAttribute)) {
                         // Currently we parse JsxOpeningLikeElement as:
                         //      JsxOpeningLikeElement
                         //          attributes: JsxAttributes
@@ -4967,9 +5008,8 @@ function getCompletionData(
 
                 case SyntaxKind.CloseBraceToken:
                     if (
-                        parent &&
                         parent.kind === SyntaxKind.JsxExpression &&
-                        parent.parent && parent.parent.kind === SyntaxKind.JsxAttribute
+                        parent.parent && (parent.parent.kind === SyntaxKind.JsxAttribute || parent.parent.kind === SyntaxKind.JsxClassAttribute)
                     ) {
                         // Currently we parse JsxOpeningLikeElement as:
                         //      JsxOpeningLikeElement
@@ -4979,7 +5019,7 @@ function getCompletionData(
                         return parent.parent.parent.parent as JsxOpeningLikeElement;
                     }
 
-                    if (parent && (parent.kind === SyntaxKind.JsxSpreadAttribute || parent.kind === SyntaxKind.JsxShorthandAttribute)) {
+                    if (parent.kind === SyntaxKind.JsxSpreadAttribute || parent.kind === SyntaxKind.JsxShorthandAttribute) {
                         // Currently we parse JsxOpeningLikeElement as:
                         //      JsxOpeningLikeElement
                         //          attributes: JsxAttributes
@@ -4987,10 +5027,14 @@ function getCompletionData(
                         return parent.parent.parent as JsxOpeningLikeElement;
                     }
 
+                    if (parent.kind === SyntaxKind.Block && parent.parent.kind === SyntaxKind.JsxMethodAttribute) {
+                        return parent.parent.parent.parent as JsxOpeningLikeElement;
+                    }
+
                     break;
 
                 case SyntaxKind.CloseParenToken:
-                    if (parent && parent.kind === SyntaxKind.JsxClassList) {
+                    if (parent.kind === SyntaxKind.JsxClassList) {
                         return parent.parent as JsxOpeningLikeElement;
                     }
                     break;

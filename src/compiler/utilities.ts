@@ -405,6 +405,7 @@ import {
     JsxFragment,
     JsxIfDirective,
     JsxNamespacedName,
+    JsxMethodAttribute,
     JsxOpeningElement,
     JsxOpeningLikeElement,
     JsxSelfClosingElement,
@@ -2223,6 +2224,8 @@ export function isDeclarationWithTypeParameterChildren(node: Node): node is Decl
         case SyntaxKind.SetAccessor:
         case SyntaxKind.FunctionExpression:
         case SyntaxKind.ArrowFunction:
+        case SyntaxKind.JsxMethodAttribute:
+        case SyntaxKind.JsxComponentDirective:
             return true;
         default:
             assertType<never>(node);
@@ -3130,6 +3133,7 @@ export type ThisContainer =
     | ConstructSignatureDeclaration
     | IndexSignatureDeclaration
     | EnumDeclaration
+    | JsxMethodAttribute
     | SourceFile;
 
 /** @internal */
@@ -3197,6 +3201,7 @@ export function getThisContainer(node: Node, includeArrowFunctions: boolean, inc
             case SyntaxKind.ConstructSignature:
             case SyntaxKind.IndexSignature:
             case SyntaxKind.EnumDeclaration:
+            case SyntaxKind.JsxMethodAttribute:
             case SyntaxKind.SourceFile:
                 return node as ThisContainer | ArrowFunction;
         }
@@ -5073,6 +5078,12 @@ export function getJsxElementNameContainer(node: Node): Node | undefined {
         switch (n.kind) {
             case SyntaxKind.JsxExpression:
                 return el;
+            case SyntaxKind.JsxComponentDirective:
+                if (n !== node) return n;
+                break;
+            case SyntaxKind.JsxIfDirective:
+            case SyntaxKind.JsxElseDirective:
+                return n;
             case SyntaxKind.JsxLabeledFragment:
                 if ((n as JsxLabeledFragment).parameters) {
                     return n;
@@ -5081,16 +5092,23 @@ export function getJsxElementNameContainer(node: Node): Node | undefined {
             case SyntaxKind.JsxElement:
             case SyntaxKind.JsxFragment:
             case SyntaxKind.JsxSelfClosingElement:
-            case SyntaxKind.JsxComponentDirective:
+                // named elements prevent further hoisting
+                if (n.kind === SyntaxKind.JsxElement) {
+                    if ((n as JsxElement).openingElement.name && n !== node) {
+                        return n;
+                    }
+                } else if (n.kind === SyntaxKind.JsxSelfClosingElement) {
+                    if ((n as JsxSelfClosingElement).name && n !== node) {
+                        return n;
+                    }
+                }
                 el = n
                 break;
             case SyntaxKind.Block:
                 if (isFunctionLike(node.parent) || isClassStaticBlockDeclaration(node.parent) || node.parent.kind === SyntaxKind.JsxComponentDirective) {
                     break
                 }
-                // fallsthrough
-            case SyntaxKind.JsxIfDirective:
-            case SyntaxKind.JsxElseDirective:
+                // falls through
             case SyntaxKind.SourceFile:
             case SyntaxKind.MethodDeclaration:
             case SyntaxKind.MethodSignature:
@@ -5102,7 +5120,7 @@ export function getJsxElementNameContainer(node: Node): Node | undefined {
             case SyntaxKind.InterfaceDeclaration:
             case SyntaxKind.EnumDeclaration:
             case SyntaxKind.ModuleDeclaration:
-                return el === node ? n : el;
+                return el;
         }
         n = n.parent;
     }
@@ -5347,6 +5365,7 @@ export function getFunctionFlags(node: SignatureDeclaration | undefined): Functi
             // falls through
 
         case SyntaxKind.ArrowFunction:
+        case SyntaxKind.JsxMethodAttribute:
             if (hasSyntacticModifier(node, ModifierFlags.Async)) {
                 flags |= FunctionFlags.Async;
             }
@@ -5367,6 +5386,7 @@ export function isAsyncFunction(node: Node): boolean {
         case SyntaxKind.FunctionExpression:
         case SyntaxKind.ArrowFunction:
         case SyntaxKind.MethodDeclaration:
+        case SyntaxKind.JsxMethodAttribute:
             return (node as FunctionLikeDeclaration).body !== undefined
                 && (node as FunctionLikeDeclaration).asteriskToken === undefined
                 && hasSyntacticModifier(node, ModifierFlags.Async);
@@ -11582,7 +11602,8 @@ export function createNameResolver({
             if (canHaveLocals(location) && location.locals && !isGlobalSourceFile(location)) {
                 if (result = lookup(location.locals, name, meaning)) {
                     let useResult = true;
-                    if (isFunctionLike(location) && lastLocation && lastLocation !== (location as FunctionLikeDeclaration).body) {
+                    // TODO(perf): the extra logic for comps may be slow
+                    if (isFunctionLike(location) && lastLocation && lastLocation !== (location as FunctionLikeDeclaration).body && ((location as any).kind !== SyntaxKind.JsxComponentDirective || !isJsxChild(lastLocation))) {
                         // symbol lookup restrictions for function-like declarations
                         // - Type parameters of a function are in scope in the entire function declaration, including the parameter
                         //   list and return type. However, local types are only in scope in the function body.
@@ -12122,6 +12143,7 @@ export function hasInferredType(node: Node): node is HasInferredType {
         case SyntaxKind.ShorthandPropertyAssignment:
         case SyntaxKind.JSDocParameterTag:
         case SyntaxKind.JSDocPropertyTag:
+        case SyntaxKind.JsxMethodAttribute:
             return true;
         default:
             assertType<never>(node);

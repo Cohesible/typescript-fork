@@ -380,6 +380,7 @@ export const enum SyntaxKind {
     JsxAttributes,
     JsxSpreadAttribute,
     JsxShorthandAttribute,
+    JsxMethodAttribute,
     JsxClassAttribute,
     JsxClassList,
     JsxExpression,
@@ -390,6 +391,7 @@ export const enum SyntaxKind {
     JsxComponentDirective,
     JsxStyleDirective,
     JsxLabeledFragment,
+    JsxPublicDeclaration,
     UnwindStatement,
     UpdateBlockStatement,
 
@@ -1219,6 +1221,7 @@ export type HasChildren =
     | JsxAttributes
     | JsxSpreadAttribute
     | JsxShorthandAttribute
+    | JsxMethodAttribute
     | JsxClassAttribute
     | JsxClassList
     | JsxExpression
@@ -1229,6 +1232,7 @@ export type HasChildren =
     | JsxComponentDirective
     | JsxStyleDirective
     | JsxLabeledFragment
+    | JsxPublicDeclaration
     | CaseClause
     | CaseIsClause
     | DefaultClause
@@ -1283,6 +1287,8 @@ export type HasJSDoc =
     | JSDocFunctionType
     | JSDocSignature
     | LabeledStatement
+    | JsxMethodAttribute
+    | JsxComponentDirective
     | MethodDeclaration
     | MethodSignature
     | ModuleDeclaration
@@ -1429,7 +1435,9 @@ export type HasModifiers =
     | ImportEqualsDeclaration
     | ImportDeclaration
     | ExportAssignment
-    | ExportDeclaration;
+    | ExportDeclaration
+    | JsxMethodAttribute
+    | JsxComponentDirective;
 
 // NOTE: Changing the following list requires changes to:
 // - `canHaveIllegalModifiers` in factory/utilities.ts
@@ -1486,7 +1494,8 @@ export type IsContainer =
     | FunctionExpression
     | ArrowFunction
     | JsxComponentDirective
-    | JsxLabeledFragment;
+    | JsxLabeledFragment
+    | JsxMethodAttribute;
 
 /**
  * Nodes that introduce a new block scope. Corresponds with `ContainerFlags.IsBlockScopedContainer` in binder.ts.
@@ -1595,6 +1604,7 @@ export type HasLocals =
     | MethodSignature
     | JsxComponentDirective
     | JsxLabeledFragment
+    | JsxMethodAttribute
     | ModuleDeclaration
     | SetAccessorDeclaration
     | SourceFile
@@ -1908,6 +1918,7 @@ export type SignatureDeclaration =
     | JSDocFunctionType
     | FunctionDeclaration
     | MethodDeclaration
+    | JsxMethodAttribute
     | ConstructorDeclaration
     | AccessorDeclaration
     | FunctionExpression
@@ -2130,7 +2141,8 @@ export type FunctionLikeDeclaration =
     | SetAccessorDeclaration
     | ConstructorDeclaration
     | FunctionExpression
-    | ArrowFunction;
+    | ArrowFunction
+    | JsxMethodAttribute;
 /** @deprecated Use SignatureDeclaration */
 export type FunctionLike = SignatureDeclaration;
 
@@ -3288,7 +3300,8 @@ export type JsxCallLike =
 export type JsxAttributeLike =
     | JsxAttribute
     | JsxSpreadAttribute
-    | JsxShorthandAttribute;
+    | JsxShorthandAttribute
+    | JsxMethodAttribute;
 
 export type JsxAttributeName =
     | Identifier
@@ -3366,8 +3379,9 @@ export interface JsxRunDirective extends PrimaryExpression {
     readonly statements: NodeArray<Statement>;
 }
 
-export interface JsxComponentDirective extends PrimaryExpression, LocalsContainer {
+export interface JsxComponentDirective extends PrimaryExpression, LocalsContainer, FlowContainer {
     readonly kind: SyntaxKind.JsxComponentDirective;
+    readonly modifiers?: NodeArray<Modifier>;
     readonly asteriskToken?: AsteriskToken,
     readonly name?: Identifier;
     readonly typeParameters?: NodeArray<TypeParameterDeclaration>;
@@ -3376,11 +3390,20 @@ export interface JsxComponentDirective extends PrimaryExpression, LocalsContaine
     readonly body?: Block;
     readonly children: NodeArray<JsxChild>;
     /** @internal */ symbol: Symbol; // set by binder when named
+    /** @internal */ jsDoc?: JSDocArray; // not used
 }
 
 export interface JsxStyleDirective extends PrimaryExpression {
     readonly kind: SyntaxKind.JsxStyleDirective;
+    readonly name?: Identifier;
+    readonly arguments?: NodeArray<Expression>;
     readonly text: JsxText;
+}
+
+export interface JsxPublicDeclaration extends Statement {
+    readonly kind: SyntaxKind.JsxPublicDeclaration;
+    readonly parent: Block;
+    readonly elements: NodeArray<ExportSpecifier>;
 }
 
 export interface JsxLabeledFragment extends PrimaryExpression, LocalsContainer {
@@ -3441,6 +3464,23 @@ export interface JsxShorthandAttribute extends ObjectLiteralElement {
     readonly kind: SyntaxKind.JsxShorthandAttribute;
     readonly name: Identifier;
     readonly parent: JsxAttributes;
+}
+
+export interface JsxMethodAttribute extends Declaration, LocalsContainer {
+    readonly kind: SyntaxKind.JsxMethodAttribute;
+    readonly parent: JsxAttributes;
+    readonly modifiers?: NodeArray<Modifier>;
+    readonly name: JsxAttributeName;
+    readonly typeParameters?: NodeArray<TypeParameterDeclaration>;
+    readonly parameters: NodeArray<ParameterDeclaration>;
+    readonly type?: TypeNode;
+    readonly body: Block;
+    readonly asteriskToken?: AsteriskToken // never parsed
+    readonly questionToken?: QuestionToken // never parsed
+    /** @internal */ typeArguments?: NodeArray<TypeNode>;
+    /** @internal */ jsDoc?: JSDocArray; // this is never parsed of course
+    /** @internal */ endFlowNode?: FlowNode;
+    /** @internal */ returnFlowNode?: FlowNode;
 }
 
 export interface JsxClassAttribute extends Node {
@@ -3535,6 +3575,7 @@ export interface DebuggerStatement extends Statement, FlowContainer {
 export interface DeferStatement extends Statement, FlowContainer {
     readonly kind: SyntaxKind.DeferStatement;
     readonly statement: Statement;
+    readonly isFinally: boolean;
 }
 
 export interface MissingDeclaration extends DeclarationStatement, PrimaryExpression {
@@ -3733,6 +3774,7 @@ export type DeclarationWithTypeParameterChildren =
     | ClassLikeDeclaration
     | InterfaceDeclaration
     | TypeAliasDeclaration
+    | JsxComponentDirective
     | JSDocTemplateTag;
 
 export interface ClassLikeDeclarationBase extends NamedDeclaration, JSDocContainer {
@@ -9269,8 +9311,8 @@ export interface NodeFactory {
     createDebuggerStatement(): DebuggerStatement;
     createFallthroughStatement(): FallthroughStatement;
     updateFallthroughStatement(node: FallthroughStatement, type: TypeNode): FallthroughStatement;
-    createDeferStatement(statement: Statement): DeferStatement;
-    updateDeferStatement(node: DeferStatement, statement: Statement): DeferStatement;
+    createDeferStatement(statement: Statement, isFinally?: boolean): DeferStatement;
+    updateDeferStatement(node: DeferStatement, statement: Statement, isFinally?: boolean): DeferStatement;
     createVariableDeclaration(name: string | BindingName, exclamationToken?: ExclamationToken, type?: TypeNode, initializer?: Expression): VariableDeclaration;
     updateVariableDeclaration(node: VariableDeclaration, name: BindingName, exclamationToken: ExclamationToken | undefined, type: TypeNode | undefined, initializer: Expression | undefined): VariableDeclaration;
     createVariableDeclarationList(declarations: readonly VariableDeclaration[], flags?: NodeFlags): VariableDeclarationList;
@@ -9454,6 +9496,8 @@ export interface NodeFactory {
     updateJsxSpreadAttribute(node: JsxSpreadAttribute, expression: Expression): JsxSpreadAttribute;
     createJsxShorthandAttribute(name: Identifier): JsxShorthandAttribute;
     updateJsxShorthandAttribute(node: JsxShorthandAttribute, name: Identifier): JsxShorthandAttribute;
+    createJsxMethodAttribute(modifiers: readonly Modifier[] | undefined, name: JsxAttributeName, typeParameters: readonly TypeParameterDeclaration[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode | undefined, body: Block): JsxMethodAttribute;
+    updateJsxMethodAttribute(node: JsxMethodAttribute, modifiers: NodeArray<Modifier> | undefined, name: JsxAttributeName, typeParameters: NodeArray<TypeParameterDeclaration> | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode | undefined, body: Block): JsxMethodAttribute;
     createJsxClassAttribute(names: readonly Identifier[], initializer: JsxExpression | undefined): JsxClassAttribute;
     updateJsxClassAttribute(node: JsxClassAttribute, names: readonly Identifier[], initializer: JsxExpression | undefined): JsxClassAttribute;
     createJsxClassList(attributes: readonly (JsxClassAttribute | JsxSpreadAttribute)[]): JsxClassList;
@@ -9468,12 +9512,14 @@ export interface NodeFactory {
     updateJsxElseDirective(node: JsxElseDirective, children: readonly JsxChild[]): JsxElseDirective;
     createJsxRunDirective(statements: readonly Statement[]): JsxRunDirective;
     updateJsxRunDirective(node: JsxRunDirective, statements: readonly Statement[]): JsxRunDirective;
-    createJsxComponentDirective(asteriskToken: AsteriskToken | undefined, name: Identifier | undefined, typeParameters: readonly TypeParameterDeclaration[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode | undefined, body: Block | undefined, children: readonly JsxChild[]): JsxComponentDirective;
-    updateJsxComponentDirective(node: JsxComponentDirective, asteriskToken: AsteriskToken | undefined, name: Identifier | undefined, typeParameters: readonly TypeParameterDeclaration[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode | undefined, body: Block | undefined, children: readonly JsxChild[]): JsxComponentDirective;
-    createJsxStyleDirective(text: JsxText): JsxStyleDirective;
-    updateJsxStyleDirective(node: JsxStyleDirective, text: JsxText): JsxStyleDirective;
+    createJsxComponentDirective(modifiers: readonly Modifier[] | undefined, asteriskToken: AsteriskToken | undefined, name: Identifier | undefined, typeParameters: readonly TypeParameterDeclaration[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode | undefined, body: Block | undefined, children: readonly JsxChild[]): JsxComponentDirective;
+    updateJsxComponentDirective(node: JsxComponentDirective, modifiers: NodeArray<Modifier> | undefined, asteriskToken: AsteriskToken | undefined, name: Identifier | undefined, typeParameters: readonly TypeParameterDeclaration[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode | undefined, body: Block | undefined, children: readonly JsxChild[]): JsxComponentDirective;
+    createJsxStyleDirective(text: JsxText, name?: Identifier, args?: NodeArray<Expression>): JsxStyleDirective;
+    updateJsxStyleDirective(node: JsxStyleDirective, text: JsxText, name?: Identifier, args?: NodeArray<Expression>): JsxStyleDirective;
     createJsxLabeledFragment(label: Identifier, parameters: readonly ParameterDeclaration[] | undefined, children: readonly JsxChild[]): JsxLabeledFragment;
     updateJsxLabeledFragment(node: JsxLabeledFragment, label: Identifier, parameters: readonly ParameterDeclaration[] | undefined, children: readonly JsxChild[]): JsxLabeledFragment;
+    createJsxPublicDeclaration(elements: readonly ExportSpecifier[]): JsxPublicDeclaration;
+    updateJsxPublicDeclaration(node: JsxPublicDeclaration, elements: readonly ExportSpecifier[]): JsxPublicDeclaration;
     createUnwindStatement(statement: Block): UnwindStatement;
     updateUnwindStatement(node: UnwindStatement, statement: Block): UnwindStatement;
     createUpdateBlockStatement(operands: readonly Expression[], block: Block): UpdateBlockStatement;
@@ -10841,7 +10887,8 @@ export type HasInferredType =
     | PropertyAccessExpression
     | ElementAccessExpression
     | BinaryExpression
-    | ExportAssignment;
+    | ExportAssignment
+    | JsxMethodAttribute;
 
 /** @internal */
 export interface SyntacticTypeNodeBuilderContext {

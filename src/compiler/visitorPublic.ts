@@ -1755,6 +1755,7 @@ const visitEachChildTable: VisitEachChildTable = {
     [SyntaxKind.JsxComponentDirective]: function visitEachChildOfJsxComponentDirective(node, visitor, context, nodesVisitor, nodeVisitor, tokenVisitor) {
         return context.factory.updateJsxComponentDirective(
             node,
+            nodesVisitor(node.modifiers, visitor, isModifier),
             tokenVisitor ? nodeVisitor(node.asteriskToken, tokenVisitor, isAsteriskToken) : node.asteriskToken,
             nodeVisitor(node.name, visitor, isIdentifier),
             nodesVisitor(node.typeParameters, visitor, isTypeParameterDeclaration),
@@ -1776,6 +1777,12 @@ const visitEachChildTable: VisitEachChildTable = {
         return context.factory.updateJsxStyleDirective(
             node,
             Debug.checkDefined(nodeVisitor(node.text, visitor, isJsxText)),
+        );
+    },
+    [SyntaxKind.JsxPublicDeclaration]: function visitEachChildOfJsxPublicDeclaration(node, visitor, context, nodesVisitor, _nodeVisitor, _tokenVisitor) {
+        return context.factory.updateJsxPublicDeclaration(
+            node,
+            nodesVisitor(node.elements, visitor, isExportSpecifier),
         );
     },
     [SyntaxKind.UnwindStatement]: function visitEachChildOfUnwindStatement(node, visitor, _context, _nodesVisitor, nodeVisitor, _tokenVisitor) {
@@ -1827,6 +1834,18 @@ const visitEachChildTable: VisitEachChildTable = {
         return context.factory.updateJsxShorthandAttribute(
             node,
             Debug.checkDefined(nodeVisitor(node.name, visitor, isIdentifier)),
+        );
+    },
+
+    [SyntaxKind.JsxMethodAttribute]: function visitEachChildOfJsxMethodAttribute(node, visitor, context, nodesVisitor, nodeVisitor, _tokenVisitor) {
+        return context.factory.updateJsxMethodAttribute(
+            node,
+            nodesVisitor(node.modifiers, visitor, isModifier),
+            Debug.checkDefined(nodeVisitor(node.name, visitor, isJsxAttributeName)),
+            nodesVisitor(node.typeParameters, visitor, isTypeParameterDeclaration),
+            nodesVisitor(node.parameters, visitor, isParameter),
+            nodeVisitor(node.type, visitor, isTypeNode),
+            Debug.checkDefined(nodeVisitor(node.body, visitor, isBlock)),
         );
     },
 

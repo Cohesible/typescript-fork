@@ -1,0 +1,261 @@
+//// [tests/cases/syn/componentDecl.syn] ////
+
+=== componentDecl.syn ===
+{
+    <#component Foo(x: string)>
+>Foo : error
+>x : string
+>  : ^^^^^^
+
+        <div>{x}</div>
+><div>{x}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>x : string
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+    const r1 = <Foo x="hi" />
+>r1 : Foo
+>   : ^^^
+><Foo x="hi" /> : Foo
+>               : ^^^
+>Foo : (attributes: { x: string; }) => Foo
+>    : ^^^^^^^^^^^^^^^^^^      ^^^^^^^^^^^
+>x : string
+>  : ^^^^^^
+
+    <#component Bar(x: string)>
+>Bar : error
+>x : string
+>  : ^^^^^^
+
+        <div>{x}</div>
+><div>{x}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>x : string
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+        <div>{x}</div>
+><div>{x}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>x : string
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+    const r2 = <Bar x="hi" />
+>r2 : Bar
+>   : ^^^
+><Bar x="hi" /> : Bar
+>               : ^^^
+>Bar : (attributes: { x: string; }) => Bar
+>    : ^^^^^^^^^^^^^^^^^^      ^^^^^^^^^^^
+>x : string
+>  : ^^^^^^
+
+    <#component Baz(x: string)>
+>Baz : error
+>x : string
+>  : ^^^^^^
+
+        <div>{x}</div>
+><div>{x}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>x : string
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+    const r3 = <Baz x="hi" />
+>r3 : Baz
+>   : ^^^
+><Baz x="hi" /> : Baz
+>               : ^^^
+>Baz : (attributes: { x: string; }) => Baz
+>    : ^^^^^^^^^^^^^^^^^^      ^^^^^^^^^^^
+>x : string
+>  : ^^^^^^
+
+    <#component WithOpt(x: string, y?: number)>
+>WithOpt : error
+>x : string
+>  : ^^^^^^
+>y : number
+>  : ^^^^^^
+
+        <div>{x}</div>
+><div>{x}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>x : string
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+    const r4a = <WithOpt x="hi" />       // ok
+>r4a : WithOpt
+>    : ^^^^^^^
+><WithOpt x="hi" /> : WithOpt
+>                   : ^^^^^^^
+>WithOpt : (attributes: { x: string; y?: number; }) => WithOpt
+>        : ^^^^^^^^^^^^^^^^^^      ^^^^^^      ^^^^^^^^^^^^^^^
+>x : string
+>  : ^^^^^^
+
+    const r4b = <WithOpt x="hi" y={1} /> // ok
+>r4b : WithOpt
+>    : ^^^^^^^
+><WithOpt x="hi" y={1} /> : WithOpt
+>                         : ^^^^^^^
+>WithOpt : (attributes: { x: string; y?: number; }) => WithOpt
+>        : ^^^^^^^^^^^^^^^^^^      ^^^^^^      ^^^^^^^^^^^^^^^
+>x : string
+>  : ^^^^^^
+>y : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+
+    const r1_typed: Foo = r1
+>r1_typed : Foo
+>         : ^^^
+>r1 : Foo
+>   : ^^^
+
+    const r3_typed: Baz = r3
+>r3_typed : Baz
+>         : ^^^
+>r3 : Baz
+>   : ^^^
+
+    const r_cross: Foo = r3
+>r_cross : Foo
+>        : ^^^
+>r3 : Baz
+>   : ^^^
+
+    const r_cross2: Foo = r4a
+>r_cross2 : Foo
+>         : ^^^
+>r4a : WithOpt
+>    : ^^^^^^^
+}
+
+{
+    // expression form
+    const Expr = <#component(x: string)>
+>Expr : (attributes: { x: string; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>     : ^^^^^^^^^^^^^^^^^^      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>x : string
+>  : ^^^^^^
+
+        <div>{x}</div>
+><div>{x}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>x : string
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+    const r5 = <Expr x="hello" />
+>r5 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Expr x="hello" /> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>                   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Expr : (attributes: { x: string; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
+>     : ^^^^^^^^^^^^^^^^^^      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>x : string
+>  : ^^^^^^
+}
+
+{
+    <#component Foo()>
+>Foo : error
+
+        <div/>
+><div/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+    type AAA = typeof Foo
+>AAA : () => Foo
+>    : ^^^^^^^^^
+>Foo : () => Foo
+>    : ^^^^^^^^^
+}
+
+{
+    function Foo(attrs: {}): { root: HTMLDivElement; bar: () => 'aaa' } {
+>Foo : (attrs: {}) => { root: HTMLDivElement; bar: () => "aaa"; }
+>    : ^     ^^  ^^^^^                                           
+>attrs : {}
+>      : ^^
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+>bar : () => "aaa"
+>    : ^^^^^^     
+
+        return {
+>{            root: <div/>,            bar: () => 'aaa',        } : { root: HTMLDivElement; bar: () => string; }
+>                                                                 : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+            root: <div/>,
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+><div/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+            bar: () => 'aaa',
+>bar : () => string
+>    : ^^^^^^^^^^^^
+>() => 'aaa' : () => string
+>            : ^^^^^^^^^^^^
+>'aaa' : "aaa"
+>      : ^^^^^
+        }
+    }
+
+    const x = <Foo />
+>x : { root: HTMLDivElement; bar: () => "aaa"; }
+>  : ^^^^^^^^              ^^^^^^^           ^^^
+><Foo /> : { root: HTMLDivElement; bar: () => "aaa"; }
+>        : ^^^^^^^^              ^^^^^^^           ^^^
+>Foo : (attrs: {}) => { root: HTMLDivElement; bar: () => "aaa"; }
+>    : ^     ^^  ^^^^^                                           
+
+    const y = x.bar()
+>y : "aaa"
+>  : ^^^^^
+>x.bar() : "aaa"
+>        : ^^^^^
+>x.bar : () => "aaa"
+>      : ^^^^^^     
+>x : { root: HTMLDivElement; bar: () => "aaa"; }
+>  : ^^^^^^^^              ^^^^^^^           ^^^
+>bar : () => "aaa"
+>    : ^^^^^^     
+}
+

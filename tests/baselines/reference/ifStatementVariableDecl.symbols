@@ -1,0 +1,20 @@
+//// [tests/cases/syn/ifStatementVariableDecl.syn] ////
+
+=== ifStatementVariableDecl.syn ===
+const m = new Map<string, number>()
+>m : Symbol(m, Decl(ifStatementVariableDecl.syn, 0, 5))
+>Map : Symbol(Map, Decl(lib.es2015.collection.d.ts, --, --), Decl(lib.es2015.collection.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
+
+if (const x = m.get('x')) { x }
+>x : Symbol(x, Decl(ifStatementVariableDecl.syn, 1, 9))
+>m.get : Symbol(Map.get, Decl(lib.es2015.collection.d.ts, --, --))
+>m : Symbol(m, Decl(ifStatementVariableDecl.syn, 0, 5))
+>get : Symbol(Map.get, Decl(lib.es2015.collection.d.ts, --, --))
+>x : Symbol(x, Decl(ifStatementVariableDecl.syn, 1, 9))
+
+if (const x = m.get('x')!) {}
+>x : Symbol(x, Decl(ifStatementVariableDecl.syn, 2, 9))
+>m.get : Symbol(Map.get, Decl(lib.es2015.collection.d.ts, --, --))
+>m : Symbol(m, Decl(ifStatementVariableDecl.syn, 0, 5))
+>get : Symbol(Map.get, Decl(lib.es2015.collection.d.ts, --, --))
+

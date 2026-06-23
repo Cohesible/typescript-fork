@@ -1,0 +1,786 @@
+//// [tests/cases/syn/componentChildren.syn] ////
+
+=== componentChildren.syn ===
+{
+    <#component One(children)>
+>One : any
+>    : ^^^
+>children : JSX.Children
+>         : ^^^^^^^^^^^^
+
+        <div>{...children}</div>
+><div>{...children}</div> : HTMLDivElement
+>                         : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>children : JSX.Children
+>         : ^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+
+    <#component Two(children)>
+>Two : any
+>    : ^^^
+>children : [string | number | ChildNode]
+>         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        <div>{children[0]}</div>
+><div>{children[0]}</div> : HTMLDivElement
+>                         : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>children[0] : string | number | ChildNode
+>            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>children : [string | number | ChildNode]
+>         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>0 : 0
+>  : ^
+>div : any
+>    : ^^^
+
+    </>
+
+    <#component Three(children)>
+>Three : any
+>      : ^^^
+>children : JSX.Children
+>         : ^^^^^^^^^^^^
+
+        <One>{...children}</One>
+><One>{...children}</One> : One
+>                         : ^^^
+>One : (attributes: {}, children: JSX.Children) => One
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>children : JSX.Children
+>         : ^^^^^^^^^^^^
+>One : (attributes: {}, children: JSX.Children) => One
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    </>
+
+    <#component Four(children)>
+>Four : any
+>     : ^^^
+>children : string[]
+>         : ^^^^^^^^
+
+        <#component Inner(children: string[])>
+>Inner : any
+>      : ^^^
+>children : string[]
+>         : ^^^^^^^^
+
+            <div>{...children}</div>
+><div>{...children}</div> : HTMLDivElement
+>                         : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>children : string[]
+>         : ^^^^^^^^
+>div : any
+>    : ^^^
+
+        </>
+        <Inner>{...children}</Inner>
+><Inner>{...children}</Inner> : Inner
+>                             : ^^^^^
+>Inner : (attributes: {}, children: string[]) => Inner
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>children : string[]
+>         : ^^^^^^^^
+>Inner : (attributes: {}, children: string[]) => Inner
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    </>
+
+    <#component Five(id)>
+>Five : any
+>     : ^^^
+>id : string
+>   : ^^^^^^
+
+        <div id={id} />
+><div id={id} /> : HTMLDivElement
+>                : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>id : string
+>   : ^^^^^^
+>id : string
+>   : ^^^^^^
+
+    </>
+
+    <#component Six(id)>
+>Six : any
+>    : ^^^
+>id : string
+>   : ^^^^^^
+
+        <div id={id}>
+><div id={id}>            {id}        </div> : HTMLDivElement
+>                                            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>id : string
+>   : ^^^^^^
+>id : string
+>   : ^^^^^^
+
+            {id}
+>id : string
+>   : ^^^^^^
+
+        </div>
+>div : any
+>    : ^^^
+
+    </>
+
+    <#component Seven(id)>
+>Seven : any
+>      : ^^^
+>id : any
+>   : ^^^
+
+        <div id={id}>
+><div id={id}>            <#run>                const f = `${id}`            </>            {f}        </div> : HTMLDivElement
+>                                                                                                             : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>id : any
+>   : ^^^
+>id : any
+>   : ^^^
+
+            <#run>
+                const f = `${id}`
+>f : string
+>  : ^^^^^^
+>`${id}` : string
+>        : ^^^^^^
+>id : any
+>   : ^^^
+
+            </>
+            {f}
+>f : string
+>  : ^^^^^^
+
+        </div>
+>div : any
+>    : ^^^
+
+    </>
+}
+
+{
+    // plain labeled fragment
+    <#component Foo(children: { content: [Text, string] })>
+>Foo : any
+>    : ^^^
+>children : { content: [Text, string]; }
+>         : ^^^^^^^^^^^              ^^^
+>content : [Text, string]
+>        : ^^^^^^^^^^^^^^
+
+        <div>{...children.content}</div>
+><div>{...children.content}</div> : HTMLDivElement
+>                                 : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>children.content : [Text, string]
+>                 : ^^^^^^^^^^^^^^
+>children : { content: [Text, string]; }
+>         : ^^^^^^^^^^^              ^^^
+>content : [Text, string]
+>        : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+    const r_lf1 = <Foo>
+>r_lf1 : Foo
+>      : ^^^
+><Foo>        <:content>hi{'there'}</>    </Foo> : Foo
+>                                                : ^^^
+>Foo : (attributes: {}, children: { content: [Text, string]; }) => Foo
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^              ^^^^^^^^^^^
+
+        <:content>hi{'there'}</>
+>content : [Text, string]
+>        : ^^^^^^^^^^^^^^
+>'there' : "there"
+>        : ^^^^^^^
+
+    </Foo>
+>Foo : (attributes: {}, children: { content: [Text, string]; }) => Foo
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^              ^^^^^^^^^^^
+
+    // callable labeled fragment
+    ;<#component Bar(children: { item: (val: string) => [HTMLSpanElement] })>
+>Bar : any
+>    : ^^^
+>children : { item: (val: string) => [HTMLSpanElement]; }
+>         : ^^^^^^^^                                  ^^^
+>item : (val: string) => [HTMLSpanElement]
+>     : ^   ^^      ^^^^^                 
+>val : string
+>    : ^^^^^^
+
+        <div>{...children.item("test")}</div>
+><div>{...children.item("test")}</div> : HTMLDivElement
+>                                      : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>children.item("test") : [HTMLSpanElement]
+>                      : ^^^^^^^^^^^^^^^^^
+>children.item : (val: string) => [HTMLSpanElement]
+>              : ^   ^^      ^^^^^                 
+>children : { item: (val: string) => [HTMLSpanElement]; }
+>         : ^^^^^^^^                                  ^^^
+>item : (val: string) => [HTMLSpanElement]
+>     : ^   ^^      ^^^^^                 
+>"test" : "test"
+>       : ^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+    const r_lf2 = <Bar>
+>r_lf2 : Bar
+>      : ^^^
+><Bar>        <:item(val: string)><span>{val}</span></>    </Bar> : Bar
+>                                                                 : ^^^
+>Bar : (attributes: {}, children: { item: (val: string) => [HTMLSpanElement]; }) => Bar
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                  ^^^^^^^^^^^
+
+        <:item(val: string)><span>{val}</span></>
+>item : (val: string) => [HTMLSpanElement]
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>val : string
+>    : ^^^^^^
+><span>{val}</span> : HTMLSpanElement
+>                   : ^^^^^^^^^^^^^^^
+>span : any
+>     : ^^^
+>val : string
+>    : ^^^^^^
+>span : any
+>     : ^^^
+
+    </Bar>
+>Bar : (attributes: {}, children: { item: (val: string) => [HTMLSpanElement]; }) => Bar
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                  ^^^^^^^^^^^
+
+    // contextual typing
+    ;<#component Ctx(children: { slot: (n: number, s: string) => [HTMLDivElement] })>
+>Ctx : any
+>    : ^^^
+>children : { slot: (n: number, s: string) => [HTMLDivElement]; }
+>         : ^^^^^^^^                                          ^^^
+>slot : (n: number, s: string) => [HTMLDivElement]
+>     : ^ ^^      ^^ ^^      ^^^^^                
+>n : number
+>  : ^^^^^^
+>s : string
+>  : ^^^^^^
+
+        <div>{...children.slot(1, 'hi')}</div>
+><div>{...children.slot(1, 'hi')}</div> : HTMLDivElement
+>                                       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>children.slot(1, 'hi') : [HTMLDivElement]
+>                       : ^^^^^^^^^^^^^^^^
+>children.slot : (n: number, s: string) => [HTMLDivElement]
+>              : ^ ^^      ^^ ^^      ^^^^^                
+>children : { slot: (n: number, s: string) => [HTMLDivElement]; }
+>         : ^^^^^^^^                                          ^^^
+>slot : (n: number, s: string) => [HTMLDivElement]
+>     : ^ ^^      ^^ ^^      ^^^^^                
+>1 : 1
+>  : ^
+>'hi' : "hi"
+>     : ^^^^
+>div : any
+>    : ^^^
+
+    </>
+    const r_ctx = <Ctx>
+>r_ctx : Ctx
+>      : ^^^
+><Ctx>        <:slot(n, s)><div>{n.toFixed()}{s.toUpperCase()}</div></>    </Ctx> : Ctx
+>                                                                                 : ^^^
+>Ctx : (attributes: {}, children: { slot: (n: number, s: string) => [HTMLDivElement]; }) => Ctx
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                          ^^^^^^^^^^^
+
+        <:slot(n, s)><div>{n.toFixed()}{s.toUpperCase()}</div></>
+>slot : (n: number, s: string) => [HTMLDivElement]
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>n : number
+>  : ^^^^^^
+>s : string
+>  : ^^^^^^
+><div>{n.toFixed()}{s.toUpperCase()}</div> : HTMLDivElement
+>                                          : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>n.toFixed() : string
+>            : ^^^^^^
+>n.toFixed : (fractionDigits?: number) => string
+>          : ^              ^^^      ^^^^^      
+>n : number
+>  : ^^^^^^
+>toFixed : (fractionDigits?: number) => string
+>        : ^              ^^^      ^^^^^      
+>s.toUpperCase() : string
+>                : ^^^^^^
+>s.toUpperCase : () => string
+>              : ^^^^^^      
+>s : string
+>  : ^^^^^^
+>toUpperCase : () => string
+>            : ^^^^^^      
+>div : any
+>    : ^^^
+
+    </Ctx>
+>Ctx : (attributes: {}, children: { slot: (n: number, s: string) => [HTMLDivElement]; }) => Ctx
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                          ^^^^^^^^^^^
+
+    ;<#component Ctx2(children: { slot: (s: string) => [string] })>
+>Ctx2 : any
+>     : ^^^
+>children : { slot: (s: string) => [string]; }
+>         : ^^^^^^^^                       ^^^
+>slot : (s: string) => [string]
+>     : ^ ^^      ^^^^^        
+>s : string
+>  : ^^^^^^
+
+        <div>{...children.slot('hi')}</div>
+><div>{...children.slot('hi')}</div> : HTMLDivElement
+>                                    : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>children.slot('hi') : [string]
+>                    : ^^^^^^^^
+>children.slot : (s: string) => [string]
+>              : ^ ^^      ^^^^^        
+>children : { slot: (s: string) => [string]; }
+>         : ^^^^^^^^                       ^^^
+>slot : (s: string) => [string]
+>     : ^ ^^      ^^^^^        
+>'hi' : "hi"
+>     : ^^^^
+>div : any
+>    : ^^^
+
+    </>
+    const r_ctx2 = <Ctx2>
+>r_ctx2 : Ctx2
+>       : ^^^^
+><Ctx2>        <:slot(s)>{s}</>    </Ctx2> : Ctx2
+>                                          : ^^^^
+>Ctx2 : (attributes: {}, children: { slot: (s: string) => [string]; }) => Ctx2
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^
+
+        <:slot(s)>{s}</>
+>slot : (s: string) => [string]
+>     : ^^^^^^^^^^^^^^^^^^^^^^^
+>s : string
+>  : ^^^^^^
+>s : string
+>  : ^^^^^^
+
+    </Ctx2>
+>Ctx2 : (attributes: {}, children: { slot: (s: string) => [string]; }) => Ctx2
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^
+
+    const r_ctx3 = <Ctx2>
+>r_ctx3 : Ctx2
+>       : ^^^^
+><Ctx2>        {...{            slot: s => <>{s}</>        }}    </Ctx2> : Ctx2
+>                                                                        : ^^^^
+>Ctx2 : (attributes: {}, children: { slot: (s: string) => [string]; }) => Ctx2
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^
+
+        {...{
+>{            slot: s => <>{s}</>        } : { slot: (s: string) => [string]; }
+>                                          : ^^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^
+
+            slot: s => <>{s}</>
+>slot : (s: string) => [string]
+>     : ^ ^^^^^^^^^^^^^^^^^^^^^
+>s => <>{s}</> : (s: string) => [string]
+>              : ^ ^^^^^^^^^^^^^^^^^^^^^
+>s : string
+>  : ^^^^^^
+><>{s}</> : [string]
+>         : ^^^^^^^^
+>s : string
+>  : ^^^^^^
+
+        }}
+    </Ctx2>
+>Ctx2 : (attributes: {}, children: { slot: (s: string) => [string]; }) => Ctx2
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^
+
+    const r_dup = <Foo>
+>r_dup : Foo
+>      : ^^^
+><Foo>        <:content>hi{'there'}</>        <:content>oh{'no'}</>    </Foo> : Foo
+>                                                                             : ^^^
+>Foo : (attributes: {}, children: { content: [Text, string]; }) => Foo
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^              ^^^^^^^^^^^
+
+        <:content>hi{'there'}</>
+>content : [Text, string]
+>        : ^^^^^^^^^^^^^^
+>'there' : "there"
+>        : ^^^^^^^
+
+        <:content>oh{'no'}</>
+>content : [Text, string]
+>        : ^^^^^^^^^^^^^^
+>'no' : "no"
+>     : ^^^^
+
+    </Foo>
+>Foo : (attributes: {}, children: { content: [Text, string]; }) => Foo
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^              ^^^^^^^^^^^
+
+    const r_mix = <Foo>
+>r_mix : Foo
+>      : ^^^
+><Foo>        <div>hi</div>        <:content>there{'!'}</>    </Foo> : Foo
+>                                                                    : ^^^
+>Foo : (attributes: {}, children: { content: [Text, string]; }) => Foo
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^              ^^^^^^^^^^^
+
+        <div>hi</div>
+><div>hi</div> : HTMLDivElement
+>              : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+        <:content>there{'!'}</>
+>content : any
+>        : ^^^
+>'!' : "!"
+>    : ^^^
+
+    </Foo>
+>Foo : (attributes: {}, children: { content: [Text, string]; }) => Foo
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^              ^^^^^^^^^^^
+
+    <#component OptChildren(children: { slot?: (s: string) => [string] })>
+>OptChildren : any
+>            : ^^^
+>children : { slot?: (s: string) => [string]; }
+>         : ^^^^^^^^^                       ^^^
+>slot : ((s: string) => [string]) | undefined
+>     : ^^ ^^      ^^^^^        ^^^^^^^^^^^^^
+>s : string
+>  : ^^^^^^
+
+        <div>{...(children.slot?.('hi') ?? [])}</div>
+><div>{...(children.slot?.('hi') ?? [])}</div> : HTMLDivElement
+>                                              : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>(children.slot?.('hi') ?? []) : [string] | never[]
+>                              : ^^^^^^^^^^^^^^^^^^
+>children.slot?.('hi') ?? [] : [string] | never[]
+>                            : ^^^^^^^^^^^^^^^^^^
+>children.slot?.('hi') : [string] | undefined
+>                      : ^^^^^^^^^^^^^^^^^^^^
+>children.slot : ((s: string) => [string]) | undefined
+>              : ^^ ^^      ^^^^^        ^^^^^^^^^^^^^
+>children : { slot?: (s: string) => [string]; }
+>         : ^^^^^^^^^                       ^^^
+>slot : ((s: string) => [string]) | undefined
+>     : ^^ ^^      ^^^^^        ^^^^^^^^^^^^^
+>'hi' : "hi"
+>     : ^^^^
+>[] : never[]
+>   : ^^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+
+    const opt_cond = true as boolean
+>opt_cond : boolean
+>         : ^^^^^^^
+>true as boolean : boolean
+>                : ^^^^^^^
+>true : true
+>     : ^^^^
+
+    const opt_1 = <OptChildren>
+>opt_1 : OptChildren
+>      : ^^^^^^^^^^^
+><OptChildren>        <#if (opt_cond)>            <:slot(v2)>                {v2}            </>        </>    </OptChildren> : OptChildren
+>                                                                                                                             : ^^^^^^^^^^^
+>OptChildren : (attributes: {}, children: { slot?: (s: string) => [string]; }) => OptChildren
+>            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^
+
+        <#if (opt_cond)>
+>opt_cond : boolean
+>         : ^^^^^^^
+
+            <:slot(v2)>
+>slot : (v2: string) => [string]
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^
+>v2 : string
+>   : ^^^^^^
+
+                {v2}
+>v2 : string
+>   : ^^^^^^
+
+            </>
+        </>
+    </OptChildren>
+>OptChildren : (attributes: {}, children: { slot?: (s: string) => [string]; }) => OptChildren
+>            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^
+
+    const opt_2 = <OptChildren>
+>opt_2 : OptChildren
+>      : ^^^^^^^^^^^
+><OptChildren>        <#if (opt_cond)>            <:slot(v2)>                {v2}            </>        </><#else>            <:slot(v2)>                {v2}{v2}            </>        </>    </OptChildren> : OptChildren
+>                                                                                                                                                                                                             : ^^^^^^^^^^^
+>OptChildren : (attributes: {}, children: { slot?: (s: string) => [string]; }) => OptChildren
+>            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^
+
+        <#if (opt_cond)>
+>opt_cond : boolean
+>         : ^^^^^^^
+
+            <:slot(v2)>
+>slot : (v2: string) => [string]
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^
+>v2 : string
+>   : ^^^^^^
+
+                {v2}
+>v2 : string
+>   : ^^^^^^
+
+            </>
+        </><#else>
+            <:slot(v2)>
+>slot : ((s: string) => [string]) | undefined
+>     : ^^ ^^      ^^^^^        ^^^^^^^^^^^^^
+>v2 : string
+>   : ^^^^^^
+
+                {v2}{v2}
+>v2 : string
+>   : ^^^^^^
+>v2 : string
+>   : ^^^^^^
+
+            </>
+        </>
+    </OptChildren>
+>OptChildren : (attributes: {}, children: { slot?: (s: string) => [string]; }) => OptChildren
+>            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^
+}
+
+{
+    <#component List<T>(items: T[], children: [(x: T) => ChildNode], key?: (x: T) => string | number)>
+>List : any
+>     : ^^^
+>items : T[]
+>      : ^^^
+>children : [(x: T) => ChildNode]
+>         : ^^ ^^ ^^^^^         ^
+>x : T
+>  : ^
+>key : (x: T) => string | number
+>    : ^ ^^ ^^^^^               
+>x : T
+>  : ^
+
+        <div>
+><div>            {children[0](items[0])}        </div> : HTMLDivElement
+>                                                       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+            {children[0](items[0])}
+>children[0](items[0]) : ChildNode
+>                      : ^^^^^^^^^
+>children[0] : (x: T) => ChildNode
+>            : ^ ^^ ^^^^^         
+>children : [(x: T) => ChildNode]
+>         : ^^ ^^ ^^^^^         ^
+>0 : 0
+>  : ^
+>items[0] : T
+>         : ^
+>items : T[]
+>      : ^^^
+>0 : 0
+>  : ^
+
+        </div>
+>div : any
+>    : ^^^
+
+    </>
+    const items = [
+>items : { id: number; first: string; last: string; }[]
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>[        { id: 1, first: '1', last: '2' },        { id: 2, first: '3', last: '4' }    ] : { id: number; first: string; last: string; }[]
+>                                                                                        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        { id: 1, first: '1', last: '2' },
+>{ id: 1, first: '1', last: '2' } : { id: number; first: string; last: string; }
+>                                 : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>id : number
+>   : ^^^^^^
+>1 : 1
+>  : ^
+>first : string
+>      : ^^^^^^
+>'1' : "1"
+>    : ^^^
+>last : string
+>     : ^^^^^^
+>'2' : "2"
+>    : ^^^
+
+        { id: 2, first: '3', last: '4' }
+>{ id: 2, first: '3', last: '4' } : { id: number; first: string; last: string; }
+>                                 : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>id : number
+>   : ^^^^^^
+>2 : 2
+>  : ^
+>first : string
+>      : ^^^^^^
+>'3' : "3"
+>    : ^^^
+>last : string
+>     : ^^^^^^
+>'4' : "4"
+>    : ^^^
+
+    ]
+    const l = <List {items} key={x => x.id}>
+>l : List<{ id: number; first: string; last: string; }>
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+><List {items} key={x => x.id}>        {x => <div>{x.first} {x.last}</div>}    </List> : List<{ id: number; first: string; last: string; }>
+>                                                                                      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>List : <T>(attributes: { items: T[]; key?: (x: T) => string | number; }, children: [(x: T) => ChildNode]) => List<T>
+>     : ^ ^^^^^^^^^^^^^^^^^^^^^^^   ^^^^^^^^                         ^^^^^^^^^^^^^^^^^ ^^ ^^^^^         ^^^^^^^^^^^^^
+>items : { id: number; first: string; last: string; }[]
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>key : (x: { id: number; first: string; last: string; }) => number
+>    : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x => x.id : (x: { id: number; first: string; last: string; }) => number
+>          : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x : { id: number; first: string; last: string; }
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x.id : number
+>     : ^^^^^^
+>x : { id: number; first: string; last: string; }
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>id : number
+>   : ^^^^^^
+
+        {x => <div>{x.first} {x.last}</div>}
+>x => <div>{x.first} {x.last}</div> : (x: { id: number; first: string; last: string; }) => HTMLDivElement
+>                                   : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x : { id: number; first: string; last: string; }
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+><div>{x.first} {x.last}</div> : HTMLDivElement
+>                              : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>x.first : string
+>        : ^^^^^^
+>x : { id: number; first: string; last: string; }
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>first : string
+>      : ^^^^^^
+>x.last : string
+>       : ^^^^^^
+>x : { id: number; first: string; last: string; }
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>last : string
+>     : ^^^^^^
+>div : any
+>    : ^^^
+
+    </List>
+>List : <T>(attributes: { items: T[]; key?: (x: T) => string | number; }, children: [(x: T) => ChildNode]) => List<T>
+>     : ^ ^^^^^^^^^^^^^^^^^^^^^^^   ^^^^^^^^                         ^^^^^^^^^^^^^^^^^ ^^ ^^^^^         ^^^^^^^^^^^^^
+
+    function List2<T>(attrs: { items: T[] }, children: [(x: T) => ChildNode]) {
+>List2 : <T>(attrs: { items: T[]; }, children: [(x: T) => ChildNode]) => HTMLDivElement
+>      : ^ ^^     ^^               ^^        ^^                     ^^^^^^^^^^^^^^^^^^^
+>attrs : { items: T[]; }
+>      : ^^^^^^^^^   ^^^
+>items : T[]
+>      : ^^^
+>children : [(x: T) => ChildNode]
+>         : ^^ ^^ ^^^^^         ^
+>x : T
+>  : ^
+
+        return <div></div>
+><div></div> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+    }
+    const l2 = <List2 {items}>
+>l2 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><List2 {items}>        {x => <div>{x.first} {x.last}</div>}    </List2> : HTMLDivElement
+>                                                                        : ^^^^^^^^^^^^^^
+>List2 : <T>(attrs: { items: T[]; }, children: [(x: T) => ChildNode]) => HTMLDivElement
+>      : ^ ^^     ^^               ^^        ^^                     ^^^^^^^^^^^^^^^^^^^
+>items : { id: number; first: string; last: string; }[]
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        {x => <div>{x.first} {x.last}</div>}
+>x => <div>{x.first} {x.last}</div> : (x: { id: number; first: string; last: string; }) => HTMLDivElement
+>                                   : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x : { id: number; first: string; last: string; }
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+><div>{x.first} {x.last}</div> : HTMLDivElement
+>                              : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>x.first : string
+>        : ^^^^^^
+>x : { id: number; first: string; last: string; }
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>first : string
+>      : ^^^^^^
+>x.last : string
+>       : ^^^^^^
+>x : { id: number; first: string; last: string; }
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>last : string
+>     : ^^^^^^
+>div : any
+>    : ^^^
+
+    </List2>
+>List2 : <T>(attrs: { items: T[]; }, children: [(x: T) => ChildNode]) => HTMLDivElement
+>      : ^ ^^     ^^               ^^        ^^                     ^^^^^^^^^^^^^^^^^^^
+}
+

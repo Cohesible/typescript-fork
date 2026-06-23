@@ -19,6 +19,7 @@ export function canHaveModifiers(node: Node): node is HasModifiers {
         || kind === SyntaxKind.PropertyDeclaration
         || kind === SyntaxKind.MethodSignature
         || kind === SyntaxKind.MethodDeclaration
+        || kind === SyntaxKind.JsxMethodAttribute
         || kind === SyntaxKind.Constructor
         || kind === SyntaxKind.GetAccessor
         || kind === SyntaxKind.SetAccessor

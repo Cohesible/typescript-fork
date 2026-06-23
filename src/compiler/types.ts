@@ -3366,12 +3366,14 @@ export interface JsxIfDirective extends PrimaryExpression {
     readonly kind: SyntaxKind.JsxIfDirective;
     readonly condition: Expression;
     readonly children: NodeArray<JsxChild>;
+    /** @internal */ endFlowNode?: FlowNode;
 }
 
 export interface JsxElseDirective extends PrimaryExpression {
     readonly kind: SyntaxKind.JsxElseDirective;
     readonly children: NodeArray<JsxChild>;
-    /** @internal */ elseFlowNode?: FlowNode // used by the binder
+    /** @internal */ elseFlowNode?: FlowNode; // used by the binder
+    /** @internal */ endFlowNode?: FlowNode;
 }
 
 export interface JsxRunDirective extends PrimaryExpression {
@@ -3391,6 +3393,7 @@ export interface JsxComponentDirective extends PrimaryExpression, LocalsContaine
     readonly children: NodeArray<JsxChild>;
     /** @internal */ symbol: Symbol; // set by binder when named
     /** @internal */ jsDoc?: JSDocArray; // not used
+    /** @internal */ endFlowNode?: FlowNode;
 }
 
 export interface JsxStyleDirective extends PrimaryExpression {
@@ -5319,6 +5322,7 @@ export interface WriterContextOut {
 
 export interface TypeChecker {
     getTypeOfSymbolAtLocation(symbol: Symbol, node: Node): Type;
+    /** @internal */ getInferredTypeForAutoVariable(decl: VariableDeclaration): Type | undefined;
     getTypeOfSymbol(symbol: Symbol): Type;
     getDeclaredTypeOfSymbol(symbol: Symbol): Type;
     getPropertiesOfType(type: Type): Symbol[];
@@ -10777,6 +10781,7 @@ export interface UserPreferences {
     readonly includeInlayVariableTypeHints?: boolean;
     readonly includeInlayVariableTypeHintsWhenTypeMatchesName?: boolean;
     readonly includeInlayPropertyDeclarationTypeHints?: boolean;
+    readonly includeInlayUninitializedTypeHints?: boolean;
     readonly includeInlayFunctionLikeReturnTypeHints?: boolean;
     readonly includeInlayEnumMemberValueHints?: boolean;
     readonly interactiveInlayHints?: boolean;

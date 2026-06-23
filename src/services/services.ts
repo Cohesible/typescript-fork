@@ -2295,6 +2295,9 @@ export function createLanguageService(
             // Avoid giving quickInfo for the sourceFile as a whole.
             return undefined;
         }
+        if (node.kind === SyntaxKind.Identifier && node.parent.kind === SyntaxKind.JsxClassAttribute) {
+            return undefined;
+        }
 
         const typeChecker = program.getTypeChecker();
         const nodeForQuickInfo = getNodeForQuickInfo(node);

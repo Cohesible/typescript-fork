@@ -41,6 +41,7 @@ import {
     isAssertionExpression,
     isBindingElement,
     isBindingPattern,
+    isBlock,
     isCallExpression,
     isCallSignatureDeclaration,
     isComputedPropertyName,
@@ -55,6 +56,8 @@ import {
     isFunctionTypeNode,
     isGetAccessorDeclaration,
     isIdentifier,
+    isJsxComponentDirective,
+    isJsxContainer,
     isIdentifierText,
     isImportTypeNode,
     isIndexedAccessTypeNode,
@@ -97,8 +100,10 @@ import {
     isTypeQueryNode,
     isTypeReferenceNode,
     isUnionTypeNode,
+    isSourceFile,
     isVarConst,
     isVariableDeclaration,
+    JsxComponentDirective,
     LiteralLikeNode,
     MethodDeclaration,
     NewExpression,
@@ -129,6 +134,7 @@ import {
     UserPreferences,
     usingSingleLineStringWriter,
     VariableDeclaration,
+    isArrayLiteralExpression,
 } from "./_namespaces/ts.js";
 
 const leadingParameterNameCommentRegexFactory = (name: string) => {
@@ -219,7 +225,7 @@ export function provideInlayHints(context: InlayHintsContext): InlayHint[] {
             return;
         }
 
-        if (preferences.includeInlayVariableTypeHints && isVariableDeclaration(node)) {
+        if ((preferences.includeInlayVariableTypeHints || preferences.includeInlayUninitializedTypeHints) && isVariableDeclaration(node)) {
             visitVariableLikeDeclaration(node);
         }
         else if (preferences.includeInlayPropertyDeclarationTypeHints && isPropertyDeclaration(node)) {
@@ -249,6 +255,9 @@ export function provideInlayHints(context: InlayHintsContext): InlayHint[] {
             if (preferences.includeInlayFunctionLikeReturnTypeHints && isSignatureSupportingReturnAnnotation(node)) {
                 visitFunctionDeclarationLikeForReturnType(node);
             }
+            if (preferences.includeInlayUninitializedTypeHints && isJsxComponentDirective(node)) {
+                visitJsxComponentDirectiveParamTypes(node);
+            }
         }
         return forEachChild(node, visitor);
     }
@@ -277,13 +286,13 @@ export function provideInlayHints(context: InlayHintsContext): InlayHint[] {
         });
     }
 
-    function addTypeHints(hintText: string | InlayHintDisplayPart[], position: number) {
+    function addTypeHints(hintText: string | InlayHintDisplayPart[], position: number, whitespaceBefore = true) {
         result.push({
             text: typeof hintText === "string" ? `: ${hintText}` : "",
             displayParts: typeof hintText === "string" ? undefined : [{ text: ": " }, ...hintText],
             position,
             kind: InlayHintKind.Type,
-            whitespaceBefore: true,
+            whitespaceBefore,
         });
     }
 
@@ -313,6 +322,28 @@ export function provideInlayHints(context: InlayHintsContext): InlayHint[] {
 
     function visitVariableLikeDeclaration(decl: VariableDeclaration | PropertyDeclaration) {
         if (
+            isVariableDeclaration(decl) &&
+            !getEffectiveTypeAnnotationNode(decl) &&
+            preferences.includeInlayUninitializedTypeHints
+        ) {
+            if (isBindingPattern(decl.name)) return;
+            if (decl.parent.kind === SyntaxKind.CatchClause) {
+                addTypeHints('coerced Error', decl.name.end, false)
+                return;
+            }
+            if (decl.parent.parent.kind !== SyntaxKind.VariableStatement) return;
+            if (decl.initializer && !(isArrayLiteralExpression(decl.initializer) && decl.initializer.elements.length === 0)) return;
+            const inferred = checker.getInferredTypeForAutoVariable(decl);
+            if (inferred) {
+                const hintParts = typeToInlayHintParts(inferred);
+                if (hintParts) addTypeHints(hintParts, decl.name.end, false);
+            }
+            return;
+        }
+
+        if (!preferences.includeInlayVariableTypeHints) return;
+
+        if (
             decl.initializer === undefined && !(isPropertyDeclaration(decl) && !(checker.getTypeAtLocation(decl).flags & TypeFlags.Any)) ||
             isBindingPattern(decl.name) || (isVariableDeclaration(decl) && !isHintableDeclaration(decl))
         ) {
@@ -337,6 +368,27 @@ export function provideInlayHints(context: InlayHintsContext): InlayHint[] {
                 return;
             }
             addTypeHints(hintParts, decl.name.end);
+        }
+    }
+
+    function isJsxTreeElementOrContainer(node: Node): boolean {
+        return isBlock(node) || isSourceFile(node) || isJsxContainer(node) || node.kind === SyntaxKind.ExpressionStatement;
+    }
+
+    function visitJsxComponentDirectiveParamTypes(node: JsxComponentDirective): void {
+        if (!node.parent || !isJsxTreeElementOrContainer(node.parent)) return;
+
+        for (const param of node.parameters) {
+            if (parameterIsThisKeyword(param)) continue;
+            if (getEffectiveTypeAnnotationNode(param)) continue;
+            if (param.initializer) continue;
+            if (!isIdentifier(param.name)) continue;
+
+            const type = checker.getTypeAtLocation(param);
+            if (type.flags & TypeFlags.Any) continue;
+
+            const hintParts = typeToInlayHintParts(type);
+            if (hintParts) addTypeHints(hintParts, param.name.end, false);
         }
     }
 
@@ -366,6 +418,7 @@ export function provideInlayHints(context: InlayHintsContext): InlayHint[] {
         }
 
         if (!args?.length) return;
+        if (!shouldShowParameterNameHints(preferences)) return;
 
         let signatureParamPos = 0;
         for (const originalArg of args) {
@@ -958,6 +1011,12 @@ export function provideInlayHints(context: InlayHintsContext): InlayHint[] {
                     parts.push({ text: "[" });
                     visitForDisplayParts(node.expression);
                     parts.push({ text: "]" });
+                    break;
+                case SyntaxKind.PropertyAccessExpression:
+                    Debug.assertNode(node, isPropertyAccessExpression);
+                    visitForDisplayParts(node.name);
+                    parts.push({ text: "." });
+                    visitForDisplayParts(node.expression);
                     break;
                 default:
                     Debug.failBadSyntaxKind(node);

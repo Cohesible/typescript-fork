@@ -1,0 +1,50 @@
+//// [tests/cases/syn/elementNames.syn] ////
+
+=== elementNames.syn ===
+// element names
+{
+    // b can be seen within the tree, but not outside
+    const a = <div>
+>a : Symbol(a, Decl(elementNames.syn, 3, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <div @ b></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>b : Symbol(b, Decl(elementNames.syn, 4, 8))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <#run>
+            console.log(a, b)
+>console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>console : Symbol(console, Decl(lib.dom.d.ts, --, --))
+>log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>a : Symbol(a, Decl(elementNames.syn, 3, 9))
+>b : Symbol(b, Decl(elementNames.syn, 4, 8))
+
+        </>
+    </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    console.log(a, b);
+>console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>console : Symbol(console, Decl(lib.dom.d.ts, --, --))
+>log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>a : Symbol(a, Decl(elementNames.syn, 3, 9))
+
+    <div @ c id="aaa" />;
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>c : Symbol(c, Decl(elementNames.syn, 9, 22))
+>id : Symbol(id, Decl(elementNames.syn, 11, 12))
+}
+
+{
+    <div @ d />;
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>d : Symbol(d, Decl(elementNames.syn, 14, 1))
+
+    console.log(d) // should error
+>console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>console : Symbol(console, Decl(lib.dom.d.ts, --, --))
+>log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+}
+

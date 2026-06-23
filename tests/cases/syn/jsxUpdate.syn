@@ -1,0 +1,304 @@
+// update expression
+{
+    declare const el: Element;
+    const d = <div on:click={() => {
+        update el
+    }}></div>
+}
+
+{
+    // error, possibly null
+    update document.querySelector('.a')
+
+    if (const x = document.querySelector('.a')) {
+        // ok
+        update x
+    }
+
+    {
+        let y = 0
+        const x = <div>{y}</div>
+        update x // ok
+    }
+
+    {
+        const x = <div>hi</div>
+        update x // error, `x` has no updatable expressions
+    }
+
+    {
+        let y = 0
+        const x = <div><div>{y}</div></div>
+        update x // ok
+    }
+
+    {
+        let y = '0'
+        const x = <div><div id={y}></div></div>
+        update x // ok
+    }
+
+    {
+        let y = '0'
+        const x = <div id={y}></div>
+        update x // ok
+    }
+
+    {
+        // components can always be updated
+        function Comp() { return <div></div> }
+        const el = <Comp/>
+        update el // ok
+    }
+
+    {
+        // expressions and blocks always make the element updatable
+        const el = <div>
+            {<span>hi</span>}
+        </div>
+        update el // ok
+
+        const el2 = <div>
+            <#run>
+                console.log('hi')
+            </>
+        </div>
+        update el2 // ok
+    }
+}
+
+// update block form
+{
+    let y = 0
+    const x = <div>{y}</div>
+
+    update x {
+        y = 1
+    }
+
+    update x
+
+    let a = 0
+    let b = ''
+    const xa = <div>{a}</div>
+    const xb = <span>{b}</span>
+
+    update xa, xb {
+        a = 1
+        b = 'hi'
+    }
+
+    update xa, xb {
+        b = 'only b'
+    }
+
+    declare const unknown: Element
+    update unknown {
+        y = 2
+    }
+}
+
+// catch recursive updates
+{
+    let c = 0
+    ;<div @ root>
+        {c}
+        <#run>
+            update root {
+                c += 1
+            }
+            if (c < 10) {
+                // ok
+                update root {
+                    c += 1
+                }
+            }
+        </>
+        <div @ d>
+            <#run>
+                update root {
+                    c += 1
+                }
+            </>
+        </div>
+    </div>
+
+    ;<div>
+        <#run>
+            // error (use-before-init)
+            update d { c += 1 }
+        </>
+        <div @ d>
+            {c}
+        </div>
+    </div>
+}
+
+{
+    let c = 0
+    ;<div @ root>
+        <div @ d1>
+            {c}
+        </div>
+        <div @ d2>
+            {c}
+        </div>
+        <button on:click={() => {
+            // ok
+            update root {
+                c += 1
+            }
+            // ok
+            update d1, d2 {
+                c += 1
+            }
+            // error
+            update d1 {
+                c += 1
+            }
+        }}>
+          Increment
+        </button>
+    </div>
+}
+
+{
+    let c = 0
+    ;<div @ root>
+        <div @ d1>
+            {c}
+        </div>
+        {c}
+        <button on:click={() => {
+            update d1, root {
+                c += 1
+            }
+            update d1 {
+                c += 1
+            }
+        }}>
+          Increment
+        </button>
+    </div>
+}
+
+{
+    let c = 0
+    ;<div @ root>
+        <div @ d>
+            {c}
+        </div>
+        <button on:click={() => {
+            update root {
+                c += 1
+            }
+        }}>
+          Increment
+        </button>
+    </div>
+}
+
+{
+    <#component Comp(v: number) {
+        let count = v
+
+        function increment() {
+            count++
+        }
+
+        function unrelated() {
+            console.log('hi')
+        }
+
+        const x = <div>{count}</div>
+
+        update x {
+            increment()
+        }
+
+        update x {
+            unrelated()
+        }
+    }>
+        <div></div>
+    </>
+}
+
+{
+    let c = 0
+    <#component Inner() {}>
+        <div>{c}</div>
+    </>
+    const inner = <Inner />
+    const root = <div>
+        <Inner />
+    </div>
+    update root {
+        c += 1  // ok
+    }
+    // TODO: the no-effect case should suggest to use the expression form (?)
+    update root {
+        noop()  // error, no effect
+    }
+}
+
+{
+    let c = 0
+    <#component InnerB() {}>
+        <div>{c}</div>
+    </>;
+    <div @ root>
+        <InnerB @ d1 />
+        <div @ d2>{c}</div>
+        <#run>
+            setTimeout(() => {
+                update d1 {
+                    c += 1
+                }
+                update d2 {
+                    c += 1
+                }
+            })
+        </>
+    </div>
+}
+
+{
+    let c = 0
+    declare const External: any
+    const root = <div>
+        <External />
+    </div>
+    update root {
+        c += 1
+    }
+}
+
+{
+    let c = 0;
+    <div @ p>
+        <#run>
+            let c = ''
+        </>
+        <div>
+            <input @ d2
+                value={c}
+                on:click={() => {
+                    // ok
+                    update d1, d2 {
+                        c = 'a'
+                    }
+                    // ok (assumed self-coherence)
+                    update d1 {
+                        c = 'b'
+                    }
+                    // error
+                    update d2 {
+                        c = 'c'
+                    }
+                }}
+            />
+        </div>
+        <input @ d1 value={c} />
+    </div>
+}

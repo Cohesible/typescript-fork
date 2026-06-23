@@ -61,6 +61,8 @@ export function createRunner(kind: TestRunnerKind): RunnerBase {
             return new CompilerBaselineRunner(CompilerTestType.Conformance);
         case "compiler":
             return new CompilerBaselineRunner(CompilerTestType.Regressions);
+        case "syn":
+            return new CompilerBaselineRunner(CompilerTestType.Syn);
         case "fourslash":
             return new FourSlashRunner(FourSlash.FourSlashTestType.Native);
         case "fourslash-server":
@@ -186,6 +188,9 @@ function handleTestConfig() {
                     case "conformance":
                         runners.push(new CompilerBaselineRunner(CompilerTestType.Conformance));
                         break;
+                    case "syn":
+                        runners.push(new CompilerBaselineRunner(CompilerTestType.Syn));
+                        break;
                     case "project":
                         runners.push(new project.ProjectRunner());
                         break;
@@ -210,6 +215,7 @@ function handleTestConfig() {
         // compiler
         runners.push(new CompilerBaselineRunner(CompilerTestType.Conformance));
         runners.push(new CompilerBaselineRunner(CompilerTestType.Regressions));
+        runners.push(new CompilerBaselineRunner(CompilerTestType.Syn));
 
         runners.push(new project.ProjectRunner());
 

@@ -1,0 +1,4 @@
+const foo = () => {}
+const f = foo
+(f as () => void)
+

@@ -1,0 +1,27 @@
+componentInitBody.syn(13,9): error TS1108: A 'return' statement can only be used within a function body.
+componentInitBody.syn(13,9): error TS95205: Return statement is not allowed in component body
+
+
+==== componentInitBody.syn (2 errors) ====
+    {
+        // component with init body
+        <#component WithBody(x: string) {
+            const y = `hello: ${x}`
+        }>
+            <div>{y}</div>
+        </>
+        const r6 = <WithBody x="world" />
+    }
+    
+    {
+        <#component BadReturn(x: string) {
+            return x
+            ~~~~~~
+!!! error TS1108: A 'return' statement can only be used within a function body.
+            ~~~~~~
+!!! error TS95205: Return statement is not allowed in component body
+        }>
+            <div>{x}</div>
+        </>
+    }
+    

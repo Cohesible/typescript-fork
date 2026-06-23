@@ -1,0 +1,485 @@
+//// [tests/cases/syn/autoAwait.syn] ////
+
+=== autoAwait.syn ===
+async function foo() {
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+    return 2
+>2 : 2
+>  : ^
+}
+
+// auto TLA -> number
+const tla = foo()
+>tla : number
+>    : ^^^^^^
+>foo() : number
+>      : ^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+// as const should not crash
+const cc = foo() as const
+>cc : Promise<number>
+>   : ^^^^^^^^^^^^^^^
+>foo() as const : Promise<number>
+>               : ^^^^^^^^^^^^^^^
+>foo() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+async function bar() {
+>bar : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+    const p = foo() as async
+>p : Promise<number>
+>  : ^^^^^^^^^^^^^^^
+>foo() as async : Promise<number>
+>               : ^^^^^^^^^^^^^^^
+>foo() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+    const y = 1 + await p
+>y : number
+>  : ^^^^^^
+>1 + await p : number
+>            : ^^^^^^
+>1 : 1
+>  : ^
+>await p : number
+>        : ^^^^^^
+>p : Promise<number>
+>  : ^^^^^^^^^^^^^^^
+
+    return y
+>y : number
+>  : ^^^^^^
+}
+
+function bar2() {
+>bar2 : () => void
+>     : ^^^^^^^^^^
+
+    const p: Promise<number> = foo() as async
+>p : Promise<number>
+>  : ^^^^^^^^^^^^^^^
+>foo() as async : Promise<number>
+>               : ^^^^^^^^^^^^^^^
+>foo() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+}
+
+async function z() {
+>z : () => Promise<void>
+>  : ^^^^^^^^^^^^^^^^^^^
+
+    const q = bar()
+>q : number
+>  : ^^^^^^
+>bar() : number
+>      : ^^^^^^
+>bar : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+    const q2 = bar() as async
+>q2 : Promise<number>
+>   : ^^^^^^^^^^^^^^^
+>bar() as async : Promise<number>
+>               : ^^^^^^^^^^^^^^^
+>bar() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>bar : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+    // should stay as a Promise
+    const p = new Promise<void>(r => r())
+>p : Promise<void>
+>  : ^^^^^^^^^^^^^
+>new Promise<void>(r => r()) : Promise<void>
+>                            : ^^^^^^^^^^^^^
+>Promise : PromiseConstructor
+>        : ^^^^^^^^^^^^^^^^^^
+>r => r() : (r: (value: void | PromiseLike<void>) => void) => void
+>         : ^ ^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^^^^^^^
+>r : (value: void | PromiseLike<void>) => void
+>  : ^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    
+>r() : void
+>    : ^^^^
+>r : (value: void | PromiseLike<void>) => void
+>  : ^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    
+}
+
+// async return type elision
+{
+    async function elided(): number { return 1 }
+>elided : () => Promise<number>
+>       : ^^^^^^^^^^^^^^^^^^^^^
+>1 : 1
+>  : ^
+
+    async function testElided() {
+>testElided : () => Promise<void>
+>           : ^^^^^^^^^^^^^^^^^^^
+
+        const v = elided()  // number
+>v : number
+>  : ^^^^^^
+>elided() : number
+>         : ^^^^^^
+>elided : () => Promise<number>
+>       : ^^^^^^^^^^^^^^^^^^^^^
+    }
+
+    async function explicit(): Promise<number> { return 1 }
+>explicit : () => Promise<number>
+>         : ^^^^^^               
+>1 : 1
+>  : ^
+
+    async function testExplicit() {
+>testExplicit : () => Promise<void>
+>             : ^^^^^^^^^^^^^^^^^^^
+
+        const v = explicit()  // number
+>v : number
+>  : ^^^^^^
+>explicit() : number
+>           : ^^^^^^
+>explicit : () => Promise<number>
+>         : ^^^^^^               
+    }
+
+    async function inferred() { return 1 }
+>inferred : () => Promise<number>
+>         : ^^^^^^^^^^^^^^^^^^^^^
+>1 : 1
+>  : ^
+
+    async function testInferred() {
+>testInferred : () => Promise<void>
+>             : ^^^^^^^^^^^^^^^^^^^
+
+        const v = inferred()  // number
+>v : number
+>  : ^^^^^^
+>inferred() : number
+>           : ^^^^^^
+>inferred : () => Promise<number>
+>         : ^^^^^^^^^^^^^^^^^^^^^
+    }
+}
+
+{
+    async function foo() {
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+        return 1 as number
+>1 as number : number
+>            : ^^^^^^
+>1 : 1
+>  : ^
+    }
+
+    function sync() {
+>sync : () => void
+>     : ^^^^^^^^^^
+
+        const p = foo() as async // OK
+>p : Promise<number>
+>  : ^^^^^^^^^^^^^^^
+>foo() as async : Promise<number>
+>               : ^^^^^^^^^^^^^^^
+>foo() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+        const p2 = foo() // checker error
+>p2 : Promise<number>
+>   : ^^^^^^^^^^^^^^^
+>foo() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+        foo() as async // OK
+>foo() as async : Promise<number>
+>               : ^^^^^^^^^^^^^^^
+>foo() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+        foo() // checker error
+>foo() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+        // `await` is still an error inside sync context
+        await p
+>await p : number
+>        : ^^^^^^
+>p : Promise<number>
+>  : ^^^^^^^^^^^^^^^
+    }
+
+    async function _async() {
+>_async : () => Promise<void>
+>       : ^^^^^^^^^^^^^^^^^^^
+
+        const v = foo()
+>v : number
+>  : ^^^^^^
+>foo() : number
+>      : ^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+        await v // await without a Promise in the type is treated as a possible mistake
+>await v : number
+>        : ^^^^^^
+>v : number
+>  : ^^^^^^
+
+        // but superfluous awaits are OK
+        await foo()
+>await foo() : number
+>            : ^^^^^^
+>foo() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+    }
+
+    async function bar() {
+>bar : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+        return 2
+>2 : 2
+>  : ^
+    }
+
+    function f8<T>(p: Promise<T> | T): void {}
+>f8 : <T>(p: Promise<T> | T) => void
+>   : ^ ^^ ^^              ^^^^^    
+>p : T | Promise<T>
+>  : ^^^^^^^^^^^^^^
+
+    f8(bar()) // error, ambiguous, use `await` or `as async`
+>f8(bar()) : void
+>          : ^^^^
+>f8 : <T>(p: Promise<T> | T) => void
+>   : ^ ^^ ^^              ^^^^^    
+>bar() : number
+>      : ^^^^^^
+>bar : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+    function f9() {
+>f9 : () => void
+>   : ^^^^^^^^^^
+
+        function f(p1: Promise<number>, p2: Promise<number>) {}
+>f : (p1: Promise<number>, p2: Promise<number>) => void
+>  : ^  ^^               ^^  ^^               ^^^^^^^^^
+>p1 : Promise<number>
+>   : ^^^^^^^^^^^^^^^
+>p2 : Promise<number>
+>   : ^^^^^^^^^^^^^^^
+
+        // both calls require `as async`
+        f(bar(), bar())
+>f(bar(), bar()) : void
+>                : ^^^^
+>f : (p1: Promise<number>, p2: Promise<number>) => void
+>  : ^  ^^               ^^  ^^               ^^^^^^^^^
+>bar() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>bar : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+>bar() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>bar : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+    }
+
+    // this one is subtle: we require `as async` regardless of the return type annotation
+    function foo2(): Promise<number>  {
+>foo2 : () => Promise<number>
+>     : ^^^^^^               
+
+        try {
+            return bar() // error, needs `as async`
+>bar() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>bar : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+
+        } catch {
+            return Promise.resolve(0)
+>Promise.resolve(0) : Promise<number>
+>                   : ^^^^^^^^^^^^^^^
+>Promise.resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }
+>                : ^^^^^^             ^^^ ^^     ^^ ^^^                   ^^^ ^^     ^^                  ^^^                   ^^^
+>Promise : PromiseConstructor
+>        : ^^^^^^^^^^^^^^^^^^
+>resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }
+>        : ^^^^^^             ^^^ ^^     ^^ ^^^                   ^^^ ^^     ^^                  ^^^                   ^^^
+>0 : 0
+>  : ^
+        }
+    }
+
+    async function foo3() {
+>foo3 : () => Promise<void>
+>     : ^^^^^^^^^^^^^^^^^^^
+
+        // Promise.resolve / Promise.reject are special-cased — not auto-awaited
+        const x1 = Promise.resolve(0) // Promise<number>
+>x1 : number
+>   : ^^^^^^
+>Promise.resolve(0) : number
+>                   : ^^^^^^
+>Promise.resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }
+>                : ^^^^^^             ^^^ ^^     ^^ ^^^                   ^^^ ^^     ^^                  ^^^                   ^^^
+>Promise : PromiseConstructor
+>        : ^^^^^^^^^^^^^^^^^^
+>resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }
+>        : ^^^^^^             ^^^ ^^     ^^ ^^^                   ^^^ ^^     ^^                  ^^^                   ^^^
+>0 : 0
+>  : ^
+
+        const x2 = Promise.reject(0) // Promise<number>
+>x2 : never
+>   : ^^^^^
+>Promise.reject(0) : never
+>                  : ^^^^^
+>Promise.reject : <T = never>(reason?: any) => Promise<T>
+>               : ^ ^^^^^^^^^^      ^^^   ^^^^^          
+>Promise : PromiseConstructor
+>        : ^^^^^^^^^^^^^^^^^^
+>reject : <T = never>(reason?: any) => Promise<T>
+>       : ^ ^^^^^^^^^^      ^^^   ^^^^^          
+>0 : 0
+>  : ^
+    }
+}
+
+{
+    async function getValue() { return 42 }
+>getValue : () => Promise<number>
+>         : ^^^^^^^^^^^^^^^^^^^^^
+>42 : 42
+>   : ^^
+
+    async function testAutoAwait() {
+>testAutoAwait : () => Promise<void>
+>              : ^^^^^^^^^^^^^^^^^^^
+
+        const v = getValue()  // number
+>v : number
+>  : ^^^^^^
+>getValue() : number
+>           : ^^^^^^
+>getValue : () => Promise<number>
+>         : ^^^^^^^^^^^^^^^^^^^^^
+    }
+
+    declare function fetchNum(): Promise<number>
+>fetchNum : () => Promise<number>
+>         : ^^^^^^               
+
+    async function testDeclared() {
+>testDeclared : () => Promise<void>
+>             : ^^^^^^^^^^^^^^^^^^^
+
+        const n = fetchNum()  // number
+>n : number
+>  : ^^^^^^
+>fetchNum() : number
+>           : ^^^^^^
+>fetchNum : () => Promise<number>
+>         : ^^^^^^               
+    }
+
+    declare function passThrough<T>(x: T): T
+>passThrough : <T>(x: T) => T
+>            : ^ ^^ ^^ ^^^^^ 
+>x : T
+>  : ^
+
+    async function testPassThrough() {
+>testPassThrough : () => Promise<void>
+>                : ^^^^^^^^^^^^^^^^^^^
+
+        const p: Promise<number> = Promise.resolve(1)
+>p : Promise<number>
+>  : ^^^^^^^^^^^^^^^
+>Promise.resolve(1) : number
+>                   : ^^^^^^
+>Promise.resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }
+>                : ^^^^^^             ^^^ ^^     ^^ ^^^                   ^^^ ^^     ^^                  ^^^                   ^^^
+>Promise : PromiseConstructor
+>        : ^^^^^^^^^^^^^^^^^^
+>resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }
+>        : ^^^^^^             ^^^ ^^     ^^ ^^^                   ^^^ ^^     ^^                  ^^^                   ^^^
+>1 : 1
+>  : ^
+
+        const r = passThrough(p)  // Promise<number>, not number
+>r : Promise<number>
+>  : ^^^^^^^^^^^^^^^
+>passThrough(p) : Promise<number>
+>               : ^^^^^^^^^^^^^^^
+>passThrough : <T>(x: T) => T
+>            : ^ ^^ ^^ ^^^^^ 
+>p : Promise<number>
+>  : ^^^^^^^^^^^^^^^
+    }
+
+    declare function memoize<T extends () => any>(fn: T): T
+>memoize : <T extends () => any>(fn: T) => T
+>        : ^ ^^^^^^^^^         ^^  ^^ ^^^^^ 
+>fn : T
+>   : ^
+
+    async function testMemoize() {
+>testMemoize : () => Promise<void>
+>            : ^^^^^^^^^^^^^^^^^^^
+
+        async function inner() { return 1 }
+>inner : () => Promise<number>
+>      : ^^^^^^^^^^^^^^^^^^^^^
+>1 : 1
+>  : ^
+
+        const m = memoize(inner)
+>m : () => Promise<number>
+>  : ^^^^^^^^^^^^^^^^^^^^^
+>memoize(inner) : () => Promise<number>
+>               : ^^^^^^^^^^^^^^^^^^^^^
+>memoize : <T extends () => any>(fn: T) => T
+>        : ^ ^^^^^^^^^         ^^  ^^ ^^^^^ 
+>inner : () => Promise<number>
+>      : ^^^^^^^^^^^^^^^^^^^^^
+
+        const v = m()  // number
+>v : number
+>  : ^^^^^^
+>m() : number
+>    : ^^^^^^
+>m : () => Promise<number>
+>  : ^^^^^^^^^^^^^^^^^^^^^
+    }
+}
+

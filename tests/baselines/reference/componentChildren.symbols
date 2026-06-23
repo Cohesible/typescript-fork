@@ -1,0 +1,421 @@
+//// [tests/cases/syn/componentChildren.syn] ////
+
+=== componentChildren.syn ===
+{
+    <#component One(children)>
+>children : Symbol(children, Decl(componentChildren.syn, 1, 20))
+
+        <div>{...children}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>children : Symbol(children, Decl(componentChildren.syn, 1, 20))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+
+    <#component Two(children)>
+>children : Symbol(children, Decl(componentChildren.syn, 5, 20))
+
+        <div>{children[0]}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>children : Symbol(children, Decl(componentChildren.syn, 5, 20))
+>0 : Symbol(0)
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+
+    <#component Three(children)>
+>children : Symbol(children, Decl(componentChildren.syn, 9, 22))
+
+        <One>{...children}</One>
+>One : Symbol(One, Decl(componentChildren.syn, 0, 1))
+>children : Symbol(children, Decl(componentChildren.syn, 9, 22))
+>One : Symbol(One, Decl(componentChildren.syn, 0, 1))
+
+    </>
+
+    <#component Four(children)>
+>children : Symbol(children, Decl(componentChildren.syn, 13, 21))
+
+        <#component Inner(children: string[])>
+>children : Symbol(children, Decl(componentChildren.syn, 14, 26))
+
+            <div>{...children}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>children : Symbol(children, Decl(componentChildren.syn, 14, 26))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        </>
+        <Inner>{...children}</Inner>
+>Inner : Symbol(Inner, Decl(componentChildren.syn, 14, 8))
+>children : Symbol(children, Decl(componentChildren.syn, 13, 21))
+>Inner : Symbol(Inner, Decl(componentChildren.syn, 14, 8))
+
+    </>
+
+    <#component Five(id)>
+>id : Symbol(id, Decl(componentChildren.syn, 20, 21))
+
+        <div id={id} />
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>id : Symbol(id, Decl(componentChildren.syn, 21, 12))
+>id : Symbol(id, Decl(componentChildren.syn, 20, 21))
+
+    </>
+
+    <#component Six(id)>
+>id : Symbol(id, Decl(componentChildren.syn, 24, 20))
+
+        <div id={id}>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>id : Symbol(id, Decl(componentChildren.syn, 25, 12))
+>id : Symbol(id, Decl(componentChildren.syn, 24, 20))
+
+            {id}
+>id : Symbol(id, Decl(componentChildren.syn, 24, 20))
+
+        </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+
+    <#component Seven(id)>
+>id : Symbol(id, Decl(componentChildren.syn, 30, 22))
+
+        <div id={id}>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>id : Symbol(id, Decl(componentChildren.syn, 31, 12))
+>id : Symbol(id, Decl(componentChildren.syn, 30, 22))
+
+            <#run>
+                const f = `${id}`
+>f : Symbol(f, Decl(componentChildren.syn, 33, 21))
+>id : Symbol(id, Decl(componentChildren.syn, 30, 22))
+
+            </>
+            {f}
+>f : Symbol(f, Decl(componentChildren.syn, 33, 21))
+
+        </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+}
+
+{
+    // plain labeled fragment
+    <#component Foo(children: { content: [Text, string] })>
+>children : Symbol(children, Decl(componentChildren.syn, 42, 20))
+>content : Symbol(content, Decl(componentChildren.syn, 42, 31))
+>Text : Symbol(Text, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+
+        <div>{...children.content}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>children.content : Symbol(content, Decl(componentChildren.syn, 42, 31))
+>children : Symbol(children, Decl(componentChildren.syn, 42, 20))
+>content : Symbol(content, Decl(componentChildren.syn, 42, 31))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    const r_lf1 = <Foo>
+>r_lf1 : Symbol(r_lf1, Decl(componentChildren.syn, 45, 9))
+>Foo : Symbol(Foo, Decl(componentChildren.syn, 40, 1))
+
+        <:content>hi{'there'}</>
+>content : Symbol(content)
+
+    </Foo>
+>Foo : Symbol(Foo, Decl(componentChildren.syn, 40, 1))
+
+    // callable labeled fragment
+    ;<#component Bar(children: { item: (val: string) => [HTMLSpanElement] })>
+>children : Symbol(children, Decl(componentChildren.syn, 50, 21))
+>item : Symbol(item, Decl(componentChildren.syn, 50, 32))
+>val : Symbol(val, Decl(componentChildren.syn, 50, 40))
+>HTMLSpanElement : Symbol(HTMLSpanElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+
+        <div>{...children.item("test")}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>children.item : Symbol(item, Decl(componentChildren.syn, 50, 32))
+>children : Symbol(children, Decl(componentChildren.syn, 50, 21))
+>item : Symbol(item, Decl(componentChildren.syn, 50, 32))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    const r_lf2 = <Bar>
+>r_lf2 : Symbol(r_lf2, Decl(componentChildren.syn, 53, 9))
+>Bar : Symbol(Bar, Decl(componentChildren.syn, 50, 5))
+
+        <:item(val: string)><span>{val}</span></>
+>item : Symbol(item)
+>val : Symbol(val, Decl(componentChildren.syn, 54, 15))
+>span : Symbol(JSX.IntrinsicElements.span, Decl(lib.jsx.d.ts, --, --))
+>val : Symbol(val, Decl(componentChildren.syn, 54, 15))
+>span : Symbol(JSX.IntrinsicElements.span, Decl(lib.jsx.d.ts, --, --))
+
+    </Bar>
+>Bar : Symbol(Bar, Decl(componentChildren.syn, 50, 5))
+
+    // contextual typing
+    ;<#component Ctx(children: { slot: (n: number, s: string) => [HTMLDivElement] })>
+>children : Symbol(children, Decl(componentChildren.syn, 58, 21))
+>slot : Symbol(slot, Decl(componentChildren.syn, 58, 32))
+>n : Symbol(n, Decl(componentChildren.syn, 58, 40))
+>s : Symbol(s, Decl(componentChildren.syn, 58, 50))
+>HTMLDivElement : Symbol(HTMLDivElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+
+        <div>{...children.slot(1, 'hi')}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>children.slot : Symbol(slot, Decl(componentChildren.syn, 58, 32))
+>children : Symbol(children, Decl(componentChildren.syn, 58, 21))
+>slot : Symbol(slot, Decl(componentChildren.syn, 58, 32))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    const r_ctx = <Ctx>
+>r_ctx : Symbol(r_ctx, Decl(componentChildren.syn, 61, 9))
+>Ctx : Symbol(Ctx, Decl(componentChildren.syn, 58, 5))
+
+        <:slot(n, s)><div>{n.toFixed()}{s.toUpperCase()}</div></>
+>slot : Symbol(slot)
+>n : Symbol(n, Decl(componentChildren.syn, 62, 15))
+>s : Symbol(s, Decl(componentChildren.syn, 62, 17))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>n.toFixed : Symbol(Number.toFixed, Decl(lib.es5.d.ts, --, --))
+>n : Symbol(n, Decl(componentChildren.syn, 62, 15))
+>toFixed : Symbol(Number.toFixed, Decl(lib.es5.d.ts, --, --))
+>s.toUpperCase : Symbol(String.toUpperCase, Decl(lib.es5.d.ts, --, --))
+>s : Symbol(s, Decl(componentChildren.syn, 62, 17))
+>toUpperCase : Symbol(String.toUpperCase, Decl(lib.es5.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </Ctx>
+>Ctx : Symbol(Ctx, Decl(componentChildren.syn, 58, 5))
+
+    ;<#component Ctx2(children: { slot: (s: string) => [string] })>
+>children : Symbol(children, Decl(componentChildren.syn, 65, 22))
+>slot : Symbol(slot, Decl(componentChildren.syn, 65, 33))
+>s : Symbol(s, Decl(componentChildren.syn, 65, 41))
+
+        <div>{...children.slot('hi')}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>children.slot : Symbol(slot, Decl(componentChildren.syn, 65, 33))
+>children : Symbol(children, Decl(componentChildren.syn, 65, 22))
+>slot : Symbol(slot, Decl(componentChildren.syn, 65, 33))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    const r_ctx2 = <Ctx2>
+>r_ctx2 : Symbol(r_ctx2, Decl(componentChildren.syn, 68, 9))
+>Ctx2 : Symbol(Ctx2, Decl(componentChildren.syn, 65, 5))
+
+        <:slot(s)>{s}</>
+>slot : Symbol(slot)
+>s : Symbol(s, Decl(componentChildren.syn, 69, 15))
+>s : Symbol(s, Decl(componentChildren.syn, 69, 15))
+
+    </Ctx2>
+>Ctx2 : Symbol(Ctx2, Decl(componentChildren.syn, 65, 5))
+
+    const r_ctx3 = <Ctx2>
+>r_ctx3 : Symbol(r_ctx3, Decl(componentChildren.syn, 72, 9))
+>Ctx2 : Symbol(Ctx2, Decl(componentChildren.syn, 65, 5))
+
+        {...{
+            slot: s => <>{s}</>
+>slot : Symbol(slot, Decl(componentChildren.syn, 73, 13))
+>s : Symbol(s, Decl(componentChildren.syn, 74, 17))
+>s : Symbol(s, Decl(componentChildren.syn, 74, 17))
+
+        }}
+    </Ctx2>
+>Ctx2 : Symbol(Ctx2, Decl(componentChildren.syn, 65, 5))
+
+    const r_dup = <Foo>
+>r_dup : Symbol(r_dup, Decl(componentChildren.syn, 78, 9))
+>Foo : Symbol(Foo, Decl(componentChildren.syn, 40, 1))
+
+        <:content>hi{'there'}</>
+>content : Symbol(content)
+
+        <:content>oh{'no'}</>
+>content : Symbol(content)
+
+    </Foo>
+>Foo : Symbol(Foo, Decl(componentChildren.syn, 40, 1))
+
+    const r_mix = <Foo>
+>r_mix : Symbol(r_mix, Decl(componentChildren.syn, 83, 9))
+>Foo : Symbol(Foo, Decl(componentChildren.syn, 40, 1))
+
+        <div>hi</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <:content>there{'!'}</>
+    </Foo>
+>Foo : Symbol(Foo, Decl(componentChildren.syn, 40, 1))
+
+    <#component OptChildren(children: { slot?: (s: string) => [string] })>
+>children : Symbol(children, Decl(componentChildren.syn, 88, 28))
+>slot : Symbol(slot, Decl(componentChildren.syn, 88, 39))
+>s : Symbol(s, Decl(componentChildren.syn, 88, 48))
+
+        <div>{...(children.slot?.('hi') ?? [])}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>children.slot : Symbol(slot, Decl(componentChildren.syn, 88, 39))
+>children : Symbol(children, Decl(componentChildren.syn, 88, 28))
+>slot : Symbol(slot, Decl(componentChildren.syn, 88, 39))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+
+    const opt_cond = true as boolean
+>opt_cond : Symbol(opt_cond, Decl(componentChildren.syn, 92, 9))
+
+    const opt_1 = <OptChildren>
+>opt_1 : Symbol(opt_1, Decl(componentChildren.syn, 93, 9))
+>OptChildren : Symbol(OptChildren, Decl(componentChildren.syn, 86, 10))
+
+        <#if (opt_cond)>
+>opt_cond : Symbol(opt_cond, Decl(componentChildren.syn, 92, 9))
+
+            <:slot(v2)>
+>slot : Symbol(slot)
+>v2 : Symbol(v2, Decl(componentChildren.syn, 95, 19))
+
+                {v2}
+>v2 : Symbol(v2, Decl(componentChildren.syn, 95, 19))
+
+            </>
+        </>
+    </OptChildren>
+>OptChildren : Symbol(OptChildren, Decl(componentChildren.syn, 86, 10))
+
+    const opt_2 = <OptChildren>
+>opt_2 : Symbol(opt_2, Decl(componentChildren.syn, 100, 9))
+>OptChildren : Symbol(OptChildren, Decl(componentChildren.syn, 86, 10))
+
+        <#if (opt_cond)>
+>opt_cond : Symbol(opt_cond, Decl(componentChildren.syn, 92, 9))
+
+            <:slot(v2)>
+>slot : Symbol(slot)
+>v2 : Symbol(v2, Decl(componentChildren.syn, 102, 19))
+
+                {v2}
+>v2 : Symbol(v2, Decl(componentChildren.syn, 102, 19))
+
+            </>
+        </><#else>
+            <:slot(v2)>
+>slot : Symbol(slot)
+>v2 : Symbol(v2, Decl(componentChildren.syn, 106, 19))
+
+                {v2}{v2}
+>v2 : Symbol(v2, Decl(componentChildren.syn, 106, 19))
+>v2 : Symbol(v2, Decl(componentChildren.syn, 106, 19))
+
+            </>
+        </>
+    </OptChildren>
+>OptChildren : Symbol(OptChildren, Decl(componentChildren.syn, 86, 10))
+}
+
+{
+    <#component List<T>(items: T[], children: [(x: T) => ChildNode], key?: (x: T) => string | number)>
+>T : Symbol(T, Decl(componentChildren.syn, 114, 21))
+>items : Symbol(items, Decl(componentChildren.syn, 114, 24))
+>T : Symbol(T, Decl(componentChildren.syn, 114, 21))
+>children : Symbol(children, Decl(componentChildren.syn, 114, 35))
+>x : Symbol(x, Decl(componentChildren.syn, 114, 48))
+>T : Symbol(T, Decl(componentChildren.syn, 114, 21))
+>ChildNode : Symbol(ChildNode, Decl(lib.dom.d.ts, --, --))
+>key : Symbol(key, Decl(componentChildren.syn, 114, 68))
+>x : Symbol(x, Decl(componentChildren.syn, 114, 76))
+>T : Symbol(T, Decl(componentChildren.syn, 114, 21))
+
+        <div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+            {children[0](items[0])}
+>children : Symbol(children, Decl(componentChildren.syn, 114, 35))
+>0 : Symbol(0)
+>items : Symbol(items, Decl(componentChildren.syn, 114, 24))
+
+        </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    const items = [
+>items : Symbol(items, Decl(componentChildren.syn, 119, 9))
+
+        { id: 1, first: '1', last: '2' },
+>id : Symbol(id, Decl(componentChildren.syn, 120, 9))
+>first : Symbol(first, Decl(componentChildren.syn, 120, 16))
+>last : Symbol(last, Decl(componentChildren.syn, 120, 28))
+
+        { id: 2, first: '3', last: '4' }
+>id : Symbol(id, Decl(componentChildren.syn, 121, 9))
+>first : Symbol(first, Decl(componentChildren.syn, 121, 16))
+>last : Symbol(last, Decl(componentChildren.syn, 121, 28))
+
+    ]
+    const l = <List {items} key={x => x.id}>
+>l : Symbol(l, Decl(componentChildren.syn, 123, 9))
+>List : Symbol(List, Decl(componentChildren.syn, 113, 1))
+>items : Symbol(items, Decl(componentChildren.syn, 119, 9))
+>key : Symbol(key, Decl(componentChildren.syn, 123, 27))
+>x : Symbol(x, Decl(componentChildren.syn, 123, 33))
+>x.id : Symbol(id, Decl(componentChildren.syn, 120, 9))
+>x : Symbol(x, Decl(componentChildren.syn, 123, 33))
+>id : Symbol(id, Decl(componentChildren.syn, 120, 9))
+
+        {x => <div>{x.first} {x.last}</div>}
+>x : Symbol(x, Decl(componentChildren.syn, 124, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>x.first : Symbol(first, Decl(componentChildren.syn, 120, 16))
+>x : Symbol(x, Decl(componentChildren.syn, 124, 9))
+>first : Symbol(first, Decl(componentChildren.syn, 120, 16))
+>x.last : Symbol(last, Decl(componentChildren.syn, 120, 28))
+>x : Symbol(x, Decl(componentChildren.syn, 124, 9))
+>last : Symbol(last, Decl(componentChildren.syn, 120, 28))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </List>
+>List : Symbol(List, Decl(componentChildren.syn, 113, 1))
+
+    function List2<T>(attrs: { items: T[] }, children: [(x: T) => ChildNode]) {
+>List2 : Symbol(List2, Decl(componentChildren.syn, 125, 11))
+>T : Symbol(T, Decl(componentChildren.syn, 127, 19))
+>attrs : Symbol(attrs, Decl(componentChildren.syn, 127, 22))
+>items : Symbol(items, Decl(componentChildren.syn, 127, 30))
+>T : Symbol(T, Decl(componentChildren.syn, 127, 19))
+>children : Symbol(children, Decl(componentChildren.syn, 127, 44))
+>x : Symbol(x, Decl(componentChildren.syn, 127, 57))
+>T : Symbol(T, Decl(componentChildren.syn, 127, 19))
+>ChildNode : Symbol(ChildNode, Decl(lib.dom.d.ts, --, --))
+
+        return <div></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+    }
+    const l2 = <List2 {items}>
+>l2 : Symbol(l2, Decl(componentChildren.syn, 130, 9))
+>List2 : Symbol(List2, Decl(componentChildren.syn, 125, 11))
+>items : Symbol(items, Decl(componentChildren.syn, 119, 9))
+
+        {x => <div>{x.first} {x.last}</div>}
+>x : Symbol(x, Decl(componentChildren.syn, 131, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>x.first : Symbol(first, Decl(componentChildren.syn, 120, 16))
+>x : Symbol(x, Decl(componentChildren.syn, 131, 9))
+>first : Symbol(first, Decl(componentChildren.syn, 120, 16))
+>x.last : Symbol(last, Decl(componentChildren.syn, 120, 28))
+>x : Symbol(x, Decl(componentChildren.syn, 131, 9))
+>last : Symbol(last, Decl(componentChildren.syn, 120, 28))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </List2>
+>List2 : Symbol(List2, Decl(componentChildren.syn, 125, 11))
+}
+

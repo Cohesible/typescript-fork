@@ -1,0 +1,76 @@
+//// [tests/cases/syn/defer.syn] ////
+
+=== defer.syn ===
+{
+    let x: 0 | 1 | 2 = 0
+>x : Symbol(x, Decl(defer.syn, 1, 7))
+
+    defer {
+        x // 2
+>x : Symbol(x, Decl(defer.syn, 1, 7))
+    }
+    defer {
+        x = 2
+>x : Symbol(x, Decl(defer.syn, 1, 7))
+    }
+    function deferTest(cond: boolean) {
+>deferTest : Symbol(deferTest, Decl(defer.syn, 7, 5))
+>cond : Symbol(cond, Decl(defer.syn, 8, 23))
+
+        let y: 0 | 1 | 2 = 0
+>y : Symbol(y, Decl(defer.syn, 9, 11))
+
+        defer {
+            y // 1 | 2
+>y : Symbol(y, Decl(defer.syn, 9, 11))
+        }
+        if (cond) {
+>cond : Symbol(cond, Decl(defer.syn, 8, 23))
+
+            y = 1
+>y : Symbol(y, Decl(defer.syn, 9, 11))
+
+            return
+        }
+        y = 2
+>y : Symbol(y, Decl(defer.syn, 9, 11))
+    }
+}
+
+{
+    function deferFinally() {
+>deferFinally : Symbol(deferFinally, Decl(defer.syn, 21, 1))
+
+        let z: 0 | 1 | 2 = 0
+>z : Symbol(z, Decl(defer.syn, 23, 11))
+
+        defer finally {
+            z // 0 | 2
+>z : Symbol(z, Decl(defer.syn, 23, 11))
+        }
+        console.log('') // ...this can throw
+>console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>console : Symbol(console, Decl(lib.dom.d.ts, --, --))
+>log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+
+        z = 2
+>z : Symbol(z, Decl(defer.syn, 23, 11))
+    }
+}
+
+{
+    let x: number | undefined
+>x : Symbol(x, Decl(defer.syn, 33, 7))
+    {
+        defer if (!x) throw 'x not truthy!'
+>x : Symbol(x, Decl(defer.syn, 33, 7))
+    }
+    declare function check(x: number): void
+>check : Symbol(check, Decl(defer.syn, 36, 5))
+>x : Symbol(x, Decl(defer.syn, 37, 27))
+
+    check(x) // OK
+>check : Symbol(check, Decl(defer.syn, 36, 5))
+>x : Symbol(x, Decl(defer.syn, 33, 7))
+}
+

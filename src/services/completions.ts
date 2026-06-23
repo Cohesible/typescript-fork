@@ -355,6 +355,7 @@ import {
     SortedArray,
     SourceFile,
     SpreadAssignment,
+    SwitchStatement,
     startsWith,
     stringToToken,
     stripQuotes,
@@ -467,6 +468,8 @@ export enum CompletionSource {
     ObjectLiteralMethodSnippet = "ObjectLiteralMethodSnippet/",
     /** Case completions for switch statements */
     SwitchCases = "SwitchCases/",
+    /** Completion for the `{ ... }` body of a switch statement */
+    SwitchBody = "SwitchBody/",
     /** Completions for an Object literal expression */
     ObjectLiteralMemberWithComma = "ObjectLiteralMemberWithComma/",
 }
@@ -1427,6 +1430,26 @@ function completionInfoFromData(
         }
     }
 
+    if (
+        preferences.includeCompletionsWithInsertText
+        && contextToken
+        && !isRightOfOpenTag
+        //&& !isRightOfDotOrQuestionDot
+        && (contextToken.parent.kind === SyntaxKind.SwitchStatement || contextToken.parent.parent?.kind === SyntaxKind.SwitchStatement)
+    ) {
+        const switchStmt = contextToken.parent.kind === SyntaxKind.SwitchStatement ? contextToken.parent as SwitchStatement : contextToken.parent.parent as SwitchStatement;
+        if (switchStmt.caseBlock.clauses.length === 0) {
+            getSwitchBodySnippet(switchStmt, contextToken, entries, sourceFile, preferences, compilerOptions, host, program, formatContext);
+        }
+    }
+    if (completionKind !== CompletionKind.String) {
+        for (const entry of entries) {
+            if (!entry.symbol) {
+                delete (entry as any)._symbol;
+            }
+        }
+    }
+
     return {
         flags: completionData.flags,
         isGlobalCompletion: isInSnippetScope,
@@ -1519,7 +1542,7 @@ function getExhaustiveCaseSnippets(
             : (node: Node) => printer.printNode(EmitHint.Unspecified, node, sourceFile);
         const insertText = map(newClauses, (clause, i) => {
             if (preferences.includeCompletionsWithSnippetText) {
-                return `${printNode(clause)}$${i + 1}`;
+                return `${printNode(clause)} $${i + 1}`;
             }
             return `${printNode(clause)}`;
         }).join(newLineChar);
@@ -1540,6 +1563,118 @@ function getExhaustiveCaseSnippets(
     }
 
     return undefined;
+}
+
+
+function getSwitchBodySnippet(
+    switchStmt: SwitchStatement,
+    contextToken: Node,
+    entries: SortedArray<CompletionEntry>,
+    sourceFile: SourceFile,
+    preferences: UserPreferences,
+    options: CompilerOptions,
+    host: LanguageServiceHost,
+    program: Program,
+    formatContext: formatting.FormatContext | undefined,
+): void {
+    if (switchStmt.expression.kind === SyntaxKind.VariableDeclarationList) return;
+    if (switchStmt.expression.kind !== SyntaxKind.Identifier && switchStmt.expression.kind !== SyntaxKind.PropertyAccessExpression) return;
+
+    const end = sourceFile.getLineAndCharacterOfPosition(switchStmt.end);
+    if (sourceFile.getLineAndCharacterOfPosition(switchStmt.pos).line - end.line > 1) return;
+
+    const checker = program.getTypeChecker();
+    const newLineChar = getNewLineOrDefaultFromHost(host, formatContext?.options);
+    const withSnippet = preferences.includeCompletionsWithSnippetText;
+    let printer: ReturnType<typeof createSnippetPrinter> | undefined
+
+    for (let i = 0; i < entries.length; i++) {
+        const entry = entries[i];
+        switch (entry.kind) {
+            case ScriptElementKind.alias:
+            case ScriptElementKind.constElement:
+            case ScriptElementKind.letElement:
+            case ScriptElementKind.localVariableElement:
+            // case ScriptElementKind.variableElement:
+            case ScriptElementKind.parameterElement:
+            case ScriptElementKind.memberVariableElement:
+                break;
+            default: continue;
+        }
+        const sym = (entry as any)._symbol as Symbol;
+        if (!sym) continue;
+
+        const switchType = checker.getTypeOfSymbol(sym); // FIXME: treat `null | undefined` as one type for the purpose of counting
+
+        const isSmallSwitch = switchType.isUnion() && 
+            switchType.types.length > 2 && 
+            switchType.types.length <= 7 && 
+            every(switchType.types, t => t.isLiteral());
+        if (!isSmallSwitch) continue;
+        printer ??= createSnippetPrinter({
+            removeComments: true,
+            module: options.module,
+            moduleResolution: options.moduleResolution,
+            target: options.target,
+            newLine: getNewLineKind(newLineChar),
+        });
+        const printNode = formatContext
+            ? (node: Node) => printer!.printAndFormatNode(EmitHint.Unspecified, node, sourceFile, formatContext)
+            : (node: Node) => printer!.printNode(EmitHint.Unspecified, node, sourceFile);
+        const quotePreference = getQuotePreference(sourceFile, preferences);
+
+        const elements: Expression[] = [];
+        for (const type of switchType.types as LiteralType[]) {
+            switch (typeof type.value) {
+                case "number":
+                    elements.push(type.value < 0
+                        ? factory.createPrefixUnaryExpression(SyntaxKind.MinusToken, factory.createNumericLiteral(-type.value))
+                        : factory.createNumericLiteral(type.value));
+                    break;
+                case "string":
+                    elements.push(factory.createStringLiteral(type.value, quotePreference === QuotePreference.Single));
+                    break;
+                case "object":
+                    elements.push(type.value.negative
+                        ? factory.createPrefixUnaryExpression(SyntaxKind.MinusToken, factory.createBigIntLiteral({ negative: false, base10Value: type.value.base10Value }))
+                        : factory.createBigIntLiteral(type.value));
+                    break;
+            }
+        }
+        if (elements.length !== switchType.types.length) continue;
+
+        const clauses = map(elements, element => factory.createCaseClause(element, []));
+        const caseLines = map(clauses, (clause, i) => {
+            let indent = '';
+            if (formatContext?.options.indentSwitchCase ?? true) {
+                indent = ' '.repeat(formatContext?.options.indentSize ?? 4)
+            }
+            const printed = printNode(clause);
+            return `${indent}${withSnippet ? `${printed} $${i + 1}` : printed}`;
+        }).join(newLineChar);
+
+        const insertText = `${entry.name}) {${newLineChar}${caseLines}${newLineChar}}`;
+        const start = switchStmt.expression.kind === SyntaxKind.Identifier
+            ? switchStmt.expression.pos
+            : (switchStmt.expression as PropertyAccessExpression).name.pos
+        // const firstName = printNode(clauses[0]);
+        const newEntry: CompletionEntry = {
+            name: `${entry.name}) { case ...`,
+            kind: entry.kind,
+            sortText: entry.sortText,
+            insertText,
+            filterText: entry.name,
+            source: CompletionSource.SwitchBody,
+            isSnippet: withSnippet ? true : undefined,
+            replacementSpan: {
+                start: start,
+                length: switchStmt.end - start,
+            },
+        };
+
+        entries.splice(i, 0, newEntry);
+        i += 1;
+    }
 }
 
 function typeNodeToExpression(typeNode: TypeNode, languageVersion: ScriptTarget, quotePreference: QuotePreference): Expression | undefined {
@@ -1887,9 +2022,10 @@ function createCompletionEntry(
             else {
                 const callSigs = typeChecker.getSignaturesOfType(typeChecker.getNonNullableType(type), SignatureKind.Call);
                 if (callSigs.length && sourceFile.scriptKind === ScriptKind.Syn) {
-                    const sig = callSigs[0];
-                    const params = sig.parameters.map((p, i) => `\${${i + 1}:${unescapeLeadingUnderscores(p.escapedName)}}`).join(", ");
-                    insertText = `${escapeSnippetText(name)}(${params}) {$${sig.parameters.length + 1}}`;
+                    // const sig = callSigs[0];
+                    // sig.parameters.map((p, i) => `\${${i + 1}:${unescapeLeadingUnderscores(p.escapedName)}}`).join(", ");
+                    // insertText = `${escapeSnippetText(name)}(${params}) {$${sig.parameters.length + 1}}`;
+                    insertText = `${escapeSnippetText(name)}() {$1}`;
                     isSnippet = true;
                 }
                 else {
@@ -2746,6 +2882,9 @@ export function getCompletionEntriesFromSymbols(
         if (!entry) {
             continue;
         }
+        if (!includeSymbol && kind !== CompletionKind.String) {
+            (entry as any)._symbol = symbol; // XXX
+        }
 
         /** True for locals; false for globals, module exports from other files, `this.` completions. */
         const shouldShadowLaterSymbols = (!origin || originIsTypeOnlyAlias(origin)) && !(symbol.parent === undefined && !some(symbol.declarations, d => d.getSourceFile() === location.getSourceFile()));
@@ -2904,9 +3043,12 @@ function getSymbolCompletionFromEntryId(
     entryId: CompletionEntryIdentifier,
     host: LanguageServiceHost,
     preferences: UserPreferences,
-): SymbolCompletion | { type: "request"; request: Request; } | { type: "literal"; literal: string | number | PseudoBigInt; } | { type: "cases"; } | { type: "none"; } {
+): SymbolCompletion | { type: "request"; request: Request; } | { type: "literal"; literal: string | number | PseudoBigInt; } | { type: "cases"; } | { type: "switchBody"; } | { type: "none"; } {
     if (entryId.source === CompletionSource.SwitchCases) {
         return { type: "cases" };
+    }
+    if (entryId.source === CompletionSource.SwitchBody) {
+        return { type: "switchBody" };
     }
     if (entryId.data) {
         const autoImport = getAutoImportSymbolFromCompletionEntryData(entryId.name, entryId.data, program, host);
@@ -3051,6 +3193,14 @@ export function getCompletionEntryDetails(
                 sourceDisplay: undefined,
             };
         }
+        case "switchBody":
+            return {
+                name,
+                kind: ScriptElementKind.unknown,
+                kindModifiers: "",
+                displayParts: [],
+                sourceDisplay: undefined,
+            };
         case "none":
             // Didn't find a symbol with this name.  See if we can find a keyword instead.
             return allKeywordsCompletions().some(c => c.name === name) ? createSimpleDetails(name, ScriptElementKind.keyword, SymbolDisplayPartKind.keyword) : undefined;

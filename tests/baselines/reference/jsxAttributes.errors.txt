@@ -1,0 +1,87 @@
+jsxAttributes.syn(13,16): error TS2739: Type '{ o: { x: string; y: string; }; }' is missing the following properties from type '{ x: string; y: string; }': x, y
+jsxAttributes.syn(13,20): error TS95211: JSX shorthand attribute 'o' has an object type; did you mean to spread it with '{...o}'?
+jsxAttributes.syn(40,9): error TS2322: Type '{ async: true; "on:click": () => Promise<void>; }' is not assignable to type 'HTMLAttributes<HTMLDivElement>'.
+  Property 'async' does not exist on type 'HTMLAttributes<HTMLDivElement>'.
+
+
+==== jsxAttributes.syn (3 errors) ====
+    {
+        // shorthand prop
+        const value = ''
+        const d2 = <input {value}/>
+    }
+    
+    {
+        const value = 'hello'
+        const d = <input {value} />
+    
+        <#component Foo(x: string, y: string)></>
+        const o = { x: '1', y: '1' }
+        const e = <Foo {o} /> // did you mean spread?
+                   ~~~
+!!! error TS2739: Type '{ o: { x: string; y: string; }; }' is missing the following properties from type '{ x: string; y: string; }': x, y
+                       ~~~
+!!! error TS95211: JSX shorthand attribute 'o' has an object type; did you mean to spread it with '{...o}'?
+    }
+    
+    {
+        // numeric literal attrs
+        const a = <input min=0 max=100 step=5 />
+        const b = <input value=3.14 />
+        const c = <input min=-10 />
+    }
+    
+    {
+        // jsx attr methods
+        const attrMethod = <div on:click() {
+            this // HTMLDivElement
+        }>click</div>
+    
+        <#component Foo(cb: () => void) {
+            cb()
+        }>
+          <div/>
+        </>
+    
+        const fooAttrMethod = <Foo cb() {
+            this // Foo
+        } />;
+    
+        <div
+            async
+            ~~~~~
+!!! error TS2322: Type '{ async: true; "on:click": () => Promise<void>; }' is not assignable to type 'HTMLAttributes<HTMLDivElement>'.
+!!! error TS2322:   Property 'async' does not exist on type 'HTMLAttributes<HTMLDivElement>'.
+            async on:click() {}
+        />
+    
+        <#component Foo2<T>(cb: () => T) {
+            const v = cb()
+            public function f() { return v }
+        }>
+          <div/>
+        </>
+    
+        const f = <Foo2 cb() { return 1 } />
+        const v = f.f() // number
+    }
+    
+    {
+        <div> 
+            <#run>
+                let c = 0
+            </>
+            <div @ v>{c}</div>
+            <div on:click() {
+                update v { c += 1 }
+                console.log(this)
+            }>
+                click
+            </div>
+        </div>;
+    
+        <div on:keypress(ev) {
+            ev.code
+        } />
+    }
+    

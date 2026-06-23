@@ -1,0 +1,131 @@
+//// [tests/cases/syn/defer.syn] ////
+
+=== defer.syn ===
+{
+    let x: 0 | 1 | 2 = 0
+>x : 0 | 1 | 2
+>  : ^^^^^^^^^
+>0 : 0
+>  : ^
+
+    defer {
+        x // 2
+>x : 2
+>  : ^
+    }
+    defer {
+        x = 2
+>x = 2 : 2
+>      : ^
+>x : 0 | 1 | 2
+>  : ^^^^^^^^^
+>2 : 2
+>  : ^
+    }
+    function deferTest(cond: boolean) {
+>deferTest : (cond: boolean) => void
+>          : ^    ^^       ^^^^^^^^^
+>cond : boolean
+>     : ^^^^^^^
+
+        let y: 0 | 1 | 2 = 0
+>y : 0 | 1 | 2
+>  : ^^^^^^^^^
+>0 : 0
+>  : ^
+
+        defer {
+            y // 1 | 2
+>y : 1 | 2
+>  : ^^^^^
+        }
+        if (cond) {
+>cond : boolean
+>     : ^^^^^^^
+
+            y = 1
+>y = 1 : 1
+>      : ^
+>y : 0 | 1 | 2
+>  : ^^^^^^^^^
+>1 : 1
+>  : ^
+
+            return
+        }
+        y = 2
+>y = 2 : 2
+>      : ^
+>y : 0 | 1 | 2
+>  : ^^^^^^^^^
+>2 : 2
+>  : ^
+    }
+}
+
+{
+    function deferFinally() {
+>deferFinally : () => void
+>             : ^^^^^^^^^^
+
+        let z: 0 | 1 | 2 = 0
+>z : 0 | 1 | 2
+>  : ^^^^^^^^^
+>0 : 0
+>  : ^
+
+        defer finally {
+            z // 0 | 2
+>z : 0 | 2
+>  : ^^^^^
+        }
+        console.log('') // ...this can throw
+>console.log('') : void
+>                : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>'' : ""
+>   : ^^
+
+        z = 2
+>z = 2 : 2
+>      : ^
+>z : 0 | 1 | 2
+>  : ^^^^^^^^^
+>2 : 2
+>  : ^
+    }
+}
+
+{
+    let x: number | undefined
+>x : number | undefined
+>  : ^^^^^^^^^^^^^^^^^^
+    {
+        defer if (!x) throw 'x not truthy!'
+>!x : boolean
+>   : ^^^^^^^
+>x : number | undefined
+>  : ^^^^^^^^^^^^^^^^^^
+>'x not truthy!' : "x not truthy!"
+>                : ^^^^^^^^^^^^^^^
+    }
+    declare function check(x: number): void
+>check : (x: number) => void
+>      : ^ ^^      ^^^^^    
+>x : number
+>  : ^^^^^^
+
+    check(x) // OK
+>check(x) : void
+>         : ^^^^
+>check : (x: number) => void
+>      : ^ ^^      ^^^^^    
+>x : number
+>  : ^^^^^^
+}
+

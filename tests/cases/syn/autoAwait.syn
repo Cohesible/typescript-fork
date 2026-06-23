@@ -1,0 +1,119 @@
+async function foo() {
+    return 2
+}
+
+// auto TLA -> number
+const tla = foo()
+// as const should not crash
+const cc = foo() as const
+
+async function bar() {
+    const p = foo() as async
+    const y = 1 + await p
+    return y
+}
+
+function bar2() {
+    const p: Promise<number> = foo() as async
+}
+
+async function z() {
+    const q = bar()
+    const q2 = bar() as async
+    // should stay as a Promise
+    const p = new Promise<void>(r => r())
+}
+
+// async return type elision
+{
+    async function elided(): number { return 1 }
+    async function testElided() {
+        const v = elided()  // number
+    }
+
+    async function explicit(): Promise<number> { return 1 }
+    async function testExplicit() {
+        const v = explicit()  // number
+    }
+
+    async function inferred() { return 1 }
+    async function testInferred() {
+        const v = inferred()  // number
+    }
+}
+
+{
+    async function foo() {
+        return 1 as number
+    }
+
+    function sync() {
+        const p = foo() as async // OK
+        const p2 = foo() // checker error
+        foo() as async // OK
+        foo() // checker error
+
+        // `await` is still an error inside sync context
+        await p
+    }
+
+    async function _async() {
+        const v = foo()
+        await v // await without a Promise in the type is treated as a possible mistake
+        // but superfluous awaits are OK
+        await foo()
+    }
+
+    async function bar() {
+        return 2
+    }
+
+    function f8<T>(p: Promise<T> | T): void {}
+    f8(bar()) // error, ambiguous, use `await` or `as async`
+
+    function f9() {
+        function f(p1: Promise<number>, p2: Promise<number>) {}
+        // both calls require `as async`
+        f(bar(), bar())
+    }
+
+    // this one is subtle: we require `as async` regardless of the return type annotation
+    function foo2(): Promise<number>  {
+        try {
+            return bar() // error, needs `as async`
+        } catch {
+            return Promise.resolve(0)
+        }
+    }
+
+    async function foo3() {
+        // Promise.resolve / Promise.reject are special-cased — not auto-awaited
+        const x1 = Promise.resolve(0) // Promise<number>
+        const x2 = Promise.reject(0) // Promise<number>
+    }
+}
+
+{
+    async function getValue() { return 42 }
+    async function testAutoAwait() {
+        const v = getValue()  // number
+    }
+
+    declare function fetchNum(): Promise<number>
+    async function testDeclared() {
+        const n = fetchNum()  // number
+    }
+
+    declare function passThrough<T>(x: T): T
+    async function testPassThrough() {
+        const p: Promise<number> = Promise.resolve(1)
+        const r = passThrough(p)  // Promise<number>, not number
+    }
+
+    declare function memoize<T extends () => any>(fn: T): T
+    async function testMemoize() {
+        async function inner() { return 1 }
+        const m = memoize(inner)
+        const v = m()  // number
+    }
+}

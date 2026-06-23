@@ -1074,6 +1074,9 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                 node.flags |= emitFlags;
                 (node as SourceFile).endFlowNode = currentFlow;
             }
+            if (node.kind === SyntaxKind.JsxComponentDirective) {
+                (node as JsxComponentDirective).endFlowNode = currentFlow;
+            }
 
             if (currentReturnTarget) {
                 addAntecedent(currentReturnTarget, currentFlow);
@@ -1712,6 +1715,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
         bindCondition(node.condition, thenLabel, elseLabel);
         currentFlow = finishFlowLabel(thenLabel);
         bindEach(node.children);
+        node.endFlowNode = currentFlow;
         addAntecedent(postLabel, currentFlow);
         currentFlow = finishFlowLabel(elseLabel);
         if (elseClause) {
@@ -1730,9 +1734,11 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             const saveCurrentFlow = currentFlow;
             currentFlow = node.elseFlowNode;
             bindEach(node.children);
+            node.endFlowNode = currentFlow;
             currentFlow = saveCurrentFlow;
         } else {
             bindEach(node.children);
+            node.endFlowNode = currentFlow;
         }
     }
 

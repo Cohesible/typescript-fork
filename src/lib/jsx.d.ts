@@ -1,7 +1,5 @@
 /// <reference lib="dom" />
 
-// TODO: don't leak these types into ambient scope
-
 /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/ToggleEvent) */
 interface ToggleEvent extends Event {
 	readonly newState: string;
@@ -60,6 +58,27 @@ interface Updatable {
 
 interface Element {
 	[Symbol.update]?(): void
+}
+
+type SelectedDOMTag<T extends string> = intrinsic;
+type SelectedDOMElement<
+	T extends string, 
+	U extends null | never = null
+> = SelectedDOMTag<T> extends never ? never
+	: (SelectedDOMTag<T> extends '*' ? Element
+		: SelectedDOMTag<T> extends keyof HTMLElementTagNameMap 
+			? HTMLElementTagNameMap[SelectedDOMTag<T>]
+		: SelectedDOMTag<T> extends keyof SVGElementTagNameMap 
+			? SVGElementTagNameMap[SelectedDOMTag<T>]
+		: MathMLElementTagNameMap[SelectedDOMTag<T>]) | U;
+
+interface ParentNode {
+	querySelector<K extends string>(selectors: K): SelectedDOMElement<K>;
+	querySelectorAll<K extends string>(selectors: K): NodeListOf<SelectedDOMElement<K, never>>;
+}
+
+interface Element {
+	closest<K extends string>(selector: K): SelectedDOMElement<K>;
 }
 
 // global { interface Element { [Symbol.update]: (() => void) | undefined } }

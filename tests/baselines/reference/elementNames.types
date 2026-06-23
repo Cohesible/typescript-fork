@@ -1,0 +1,91 @@
+//// [tests/cases/syn/elementNames.syn] ////
+
+=== elementNames.syn ===
+// element names
+{
+    // b can be seen within the tree, but not outside
+    const a = <div>
+>a : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div>        <div @ b></div>        <#run>            console.log(a, b)        </>    </div> : HTMLDivElement
+>                                                                                             : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <div @ b></div>
+><div @ b></div> : HTMLDivElement
+>                : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>b : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <#run>
+            console.log(a, b)
+>console.log(a, b) : void
+>                  : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>a : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+>b : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+        </>
+    </div>
+>div : any
+>    : ^^^
+
+    console.log(a, b);
+>console.log(a, b) : void
+>                  : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>a : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+>b : any
+>  : ^^^
+
+    <div @ c id="aaa" />;
+><div @ c id="aaa" /> : HTMLDivElement
+>                     : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>c : any
+>  : ^^^
+>id : string
+>   : ^^^^^^
+}
+
+{
+    <div @ d />;
+><div @ d /> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d : any
+>  : ^^^
+
+    console.log(d) // should error
+>console.log(d) : void
+>               : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>d : any
+>  : ^^^
+}
+

@@ -1,0 +1,124 @@
+//// [tests/cases/syn/switchCaseIs.syn] ////
+
+=== switchCaseIs.syn ===
+{
+    const x: string | number = 1
+>x : string | number
+>  : ^^^^^^^^^^^^^^^
+>1 : 1
+>  : ^
+
+    switch (x) {
+>x : string | number
+>  : ^^^^^^^^^^^^^^^
+
+        case is string:
+            console.log('got string', x)
+>console.log('got string', x) : void
+>                             : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>'got string' : "got string"
+>             : ^^^^^^^^^^^^
+>x : string
+>  : ^^^^^^
+
+        case is number:
+            console.log('got number', x)
+>console.log('got number', x) : void
+>                             : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>'got number' : "got number"
+>             : ^^^^^^^^^^^^
+>x : number
+>  : ^^^^^^
+    }
+
+    const x2: unknown = {}
+>x2 : unknown
+>   : ^^^^^^^
+>{} : {}
+>   : ^^
+
+    switch (x2) {
+>x2 : unknown
+>   : ^^^^^^^
+
+        case is { y: number }:
+>y : number
+>  : ^^^^^^
+
+            console.log('y', x2.y)
+>console.log('y', x2.y) : void
+>                       : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>'y' : "y"
+>    : ^^^
+>x2.y : number
+>     : ^^^^^^
+>x2 : { y: number; }
+>   : ^^^^^      ^^^
+>y : number
+>  : ^^^^^^
+
+        case is 1:
+        case is 2:
+            fallthrough
+        case is 3:
+            x2 // 1 | 2 | 3
+>x2 : 1 | 2 | 3
+>   : ^^^^^^^^^
+    }
+
+    const x3: string | 10 = 10
+>x3 : string | 10
+>   : ^^^^^^^^^^^
+>10 : 10
+>   : ^^
+
+    switch (x3) {
+>x3 : string | 10
+>   : ^^^^^^^^^^^
+
+        case 10: console.log(x3)
+>10 : 10
+>   : ^^
+>console.log(x3) : void
+>                : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>x3 : 10
+>   : ^^
+
+        case is string: console.log(x3)
+>console.log(x3) : void
+>                : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>x3 : string
+>   : ^^^^^^
+    }
+}
+

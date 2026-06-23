@@ -1,0 +1,14 @@
+//// [tests/cases/syn/asiTweaks.syn] ////
+
+=== asiTweaks.syn ===
+const foo = () => {}
+>foo : Symbol(foo, Decl(asiTweaks.syn, 0, 5))
+
+const f = foo
+>f : Symbol(f, Decl(asiTweaks.syn, 1, 5))
+>foo : Symbol(foo, Decl(asiTweaks.syn, 0, 5))
+
+(f as () => void)
+>f : Symbol(f, Decl(asiTweaks.syn, 1, 5))
+
+

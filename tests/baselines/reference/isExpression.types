@@ -1,0 +1,111 @@
+//// [tests/cases/syn/isExpression.syn] ////
+
+=== isExpression.syn ===
+let arr!: number[] | number
+>arr : number | number[]
+>    : ^^^^^^^^^^^^^^^^^
+
+if (arr is number[]) {
+>arr is number[] : boolean
+>                : ^^^^^^^
+>arr : number | number[]
+>    : ^^^^^^^^^^^^^^^^^
+
+    const x = arr[0]
+>x : number
+>  : ^^^^^^
+>arr[0] : number
+>       : ^^^^^^
+>arr : number[]
+>    : ^^^^^^^^
+>0 : 0
+>  : ^
+}
+
+{
+    type F = { x: number } | { y: string }
+>F : { x: number; } | { y: string; }
+>  : ^^^^^      ^^^^^^^^^^^      ^^^
+>x : number
+>  : ^^^^^^
+>y : string
+>  : ^^^^^^
+
+    function x(f: F) {
+>x : (f: { x: number; } | { y: string; }) => string | number
+>  : ^ ^^^^^^^      ^^^^^^^^^^^      ^^^^^^^^^^^^^^^^^^^^^^^
+>f : { x: number; } | { y: string; }
+>  : ^^^^^      ^^^^^^^^^^^      ^^^
+
+        if (f is { x: number }) {
+>f is { x: number } : boolean
+>                   : ^^^^^^^
+>f : { x: number; } | { y: string; }
+>  : ^^^^^      ^^^^^^^^^^^      ^^^
+>x : number
+>  : ^^^^^^
+
+            return f.x
+>f.x : number
+>    : ^^^^^^
+>f : { x: number; }
+>  : ^^^^^      ^^^
+>x : number
+>  : ^^^^^^
+        }
+        return f.y
+>f.y : string
+>    : ^^^^^^
+>f : { y: string; }
+>  : ^^^^^      ^^^
+>y : string
+>  : ^^^^^^
+    }
+}
+
+{
+    // Using 'is' expression instead of typeof
+    const isString3 = (val: any) => {
+>isString3 : (val: any) => asserts val is string
+>          : ^   ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>(val: any) => {        if (!(val is string)) throw "Nope"    } : (val: any) => asserts val is string
+>                                                               : ^   ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>val : any
+
+        if (!(val is string)) throw "Nope"
+>!(val is string) : boolean
+>                 : ^^^^^^^
+>(val is string) : boolean
+>                : ^^^^^^^
+>val is string : boolean
+>              : ^^^^^^^
+>val : any
+>"Nope" : "Nope"
+>       : ^^^^^^
+    }
+
+    const z: string | number = "hello";
+>z : string | number
+>  : ^^^^^^^^^^^^^^^
+>"hello" : "hello"
+>        : ^^^^^^^
+
+    isString3(z);
+>isString3(z) : void
+>             : ^^^^
+>isString3 : (val: any) => asserts val is string
+>          : ^   ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>z : string | number
+>  : ^^^^^^^^^^^^^^^
+
+    z.toLowerCase() // should also work with 'is' expression!
+>z.toLowerCase() : string
+>                : ^^^^^^
+>z.toLowerCase : () => string
+>              : ^^^^^^      
+>z : string
+>  : ^^^^^^
+>toLowerCase : () => string
+>            : ^^^^^^      
+}
+

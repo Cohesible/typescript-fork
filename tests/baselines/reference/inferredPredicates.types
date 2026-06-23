@@ -1,0 +1,169 @@
+//// [tests/cases/syn/inferredPredicates.syn] ////
+
+=== inferredPredicates.syn ===
+{
+    // Explicit annotation
+    function isString(val: any): asserts val is string {
+>isString : (val: any) => asserts val is string
+>         : ^   ^^   ^^^^^                     
+>val : any
+
+        if (typeof val !== "string") throw "Nope"
+>typeof val !== "string" : boolean
+>                        : ^^^^^^^
+>typeof val : "string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function"
+>           : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>val : any
+>"string" : "string"
+>         : ^^^^^^^^
+>"Nope" : "Nope"
+>       : ^^^^^^
+    }
+
+    // Inferred assertion signature
+    function isString2(val: any) {
+>isString2 : (val: any) => asserts val is string
+>          : ^   ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>val : any
+
+        if (typeof val !== "string") throw "Nope"
+>typeof val !== "string" : boolean
+>                        : ^^^^^^^
+>typeof val : "string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function"
+>           : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>val : any
+>"string" : "string"
+>         : ^^^^^^^^
+>"Nope" : "Nope"
+>       : ^^^^^^
+    }
+
+    const x: string | number = "3";
+>x : string | number
+>  : ^^^^^^^^^^^^^^^
+>"3" : "3"
+>    : ^^^
+
+    isString(x);
+>isString(x) : void
+>            : ^^^^
+>isString : (val: any) => asserts val is string
+>         : ^   ^^   ^^^^^                     
+>x : string | number
+>  : ^^^^^^^^^^^^^^^
+
+    x.toLowerCase() // should work, x is now string
+>x.toLowerCase() : string
+>                : ^^^^^^
+>x.toLowerCase : () => string
+>              : ^^^^^^      
+>x : string
+>  : ^^^^^^
+>toLowerCase : () => string
+>            : ^^^^^^      
+
+    const y: string | number = "test";
+>y : string | number
+>  : ^^^^^^^^^^^^^^^
+>"test" : "test"
+>       : ^^^^^^
+
+    isString2(y);
+>isString2(y) : void
+>             : ^^^^
+>isString2 : (val: any) => asserts val is string
+>          : ^   ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>y : string | number
+>  : ^^^^^^^^^^^^^^^
+
+    y.toLowerCase() // should also work, inferred asserts
+>y.toLowerCase() : string
+>                : ^^^^^^
+>y.toLowerCase : () => string
+>              : ^^^^^^      
+>y : string
+>  : ^^^^^^
+>toLowerCase : () => string
+>            : ^^^^^^      
+
+    // Using 'is' expression instead of typeof
+    const isString3 = (val: any) => {
+>isString3 : (val: any) => asserts val is string
+>          : ^   ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>(val: any) => {        if (!(val is string)) throw "Nope"    } : (val: any) => asserts val is string
+>                                                               : ^   ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>val : any
+
+        if (!(val is string)) throw "Nope"
+>!(val is string) : boolean
+>                 : ^^^^^^^
+>(val is string) : boolean
+>                : ^^^^^^^
+>val is string : boolean
+>              : ^^^^^^^
+>val : any
+>"Nope" : "Nope"
+>       : ^^^^^^
+    }
+
+    const z: string | number = "hello";
+>z : string | number
+>  : ^^^^^^^^^^^^^^^
+>"hello" : "hello"
+>        : ^^^^^^^
+
+    isString3(z);
+>isString3(z) : void
+>             : ^^^^
+>isString3 : (val: any) => asserts val is string
+>          : ^   ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>z : string | number
+>  : ^^^^^^^^^^^^^^^
+
+    z.toLowerCase() // should also work with 'is' expression
+>z.toLowerCase() : string
+>                : ^^^^^^
+>z.toLowerCase : () => string
+>              : ^^^^^^      
+>z : string
+>  : ^^^^^^
+>toLowerCase : () => string
+>            : ^^^^^^      
+}
+
+{
+    // `is` expressions should produce an `is` type directly
+    const isString = (val: any) => {
+>isString : (val: any) => val is string
+>         : ^   ^^   ^^^^^^^^^^^^^^^^^^
+>(val: any) => {        return val is string    } : (val: any) => val is string
+>                                                 : ^   ^^   ^^^^^^^^^^^^^^^^^^
+>val : any
+
+        return val is string
+>val is string : boolean
+>              : ^^^^^^^
+>val : any
+    }
+    const x: string | number = "3";
+>x : string | number
+>  : ^^^^^^^^^^^^^^^
+>"3" : "3"
+>    : ^^^
+
+    if (isString(x)) x.toLowerCase()
+>isString(x) : boolean
+>            : ^^^^^^^
+>isString : (val: any) => val is string
+>         : ^   ^^   ^^^^^^^^^^^^^^^^^^
+>x : string | number
+>  : ^^^^^^^^^^^^^^^
+>x.toLowerCase() : string
+>                : ^^^^^^
+>x.toLowerCase : () => string
+>              : ^^^^^^      
+>x : string
+>  : ^^^^^^
+>toLowerCase : () => string
+>            : ^^^^^^      
+}

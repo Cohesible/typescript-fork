@@ -1,0 +1,25 @@
+let arr!: number[] | number
+if (arr is number[]) {
+    const x = arr[0]
+}
+
+{
+    type F = { x: number } | { y: string }
+    function x(f: F) {
+        if (f is { x: number }) {
+            return f.x
+        }
+        return f.y
+    }
+}
+
+{
+    // Using 'is' expression instead of typeof
+    const isString3 = (val: any) => {
+        if (!(val is string)) throw "Nope"
+    }
+
+    const z: string | number = "hello";
+    isString3(z);
+    z.toLowerCase() // should also work with 'is' expression!
+}

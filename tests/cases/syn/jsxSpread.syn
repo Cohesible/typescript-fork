@@ -1,0 +1,42 @@
+{
+    declare function Comp(): { root: Element[] } & Updatable;
+    const spread1 = <div><...Comp /></div> // ok
+    const noSpread1 = <div><Comp /></div> // error
+
+    // errors on intrinsics
+    const spread2 = <div><...div /></div>
+    const spread3 = <div><...div></div></div>
+
+    declare function Comp2(): { root: (() => void)[] } & Updatable
+    const spread4 = <div><...Comp2 /></div>  // error, intrinsics want something NodeLike
+
+    declare function Comp3(): { root: Element } & Updatable;
+    const noSpread2 = <div><Comp3 /></div> // ok
+    const spread5 = <div><...Comp3 /></div> // error
+
+    declare function Comp4(attrs: {}, children: Element[]): { root: Element } & Updatable;
+    // ok
+    const spread6 = <Comp4>
+      <Comp3 />
+      <...Comp />
+      <...Comp></Comp>
+    </Comp4>
+
+    // error
+    const spread7 = <Comp4>
+      <Comp3 />
+      <Comp />
+    </Comp4>
+
+    declare function Comp5(): { root: [Element] | [] } & Updatable;
+    // ok
+    const spread8 = <Comp4>
+        <...Comp5 />
+    </Comp4>
+}
+
+{
+    const d = <div>
+        <...Unresolved />
+    </div>
+}

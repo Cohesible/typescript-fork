@@ -1,0 +1,62 @@
+{
+    const cond = true;
+    <div .foo/>;
+    <div .foo></div>;
+    // class attributes should not conflict with normal attributes
+    <input .min min=500></input>;
+    <input (.min.min2)></input>;
+    <input (.min.min2={cond})></input>;
+    <input (.min.min2={cond}, .bar)></input>;
+    <input .min.min2={cond}></input>;
+    <input .min.min2={cond} @ i></input>;
+    <input (.m) @ i2></input>;
+
+    // errors emitted during parse
+    <div id="foo" .a.a></div>;
+    <div id="foo" (.a)></div>;
+    <div @ foo_1 (.a)></div>;
+    <div @ foo_2 .a></div>;
+    <div .a .b .c></div>;
+    <div .a .b .c={cond}></div>;
+    <div .a .c={cond} .b></div>;
+    <div (.a, .c={cond} .b)></div>;
+
+    // errors
+    <div .a.a></div>;
+    <div (.a, .a)></div>;
+    <div (.a={cond}, .a)></div>;
+    <div (.a.b={cond}, .a)></div>;
+    <div (.a, .a={cond})></div>;
+    <div (.a, .a.b={cond})></div>;
+    <div (.a={cond}, .a.b={cond})></div>;
+
+    // class attribute cannot be used with class list
+    <div .a class="b" />;
+    <div .a {...{ class: 'b' }} />;
+
+    // ok
+    <div class="b" />;
+
+    // ok
+    const cond2 = false as boolean
+    const cond3 = false as boolean;
+    <div (.a={cond}, .a.b={cond2}, .a={cond3})></div>;
+
+    // errors
+    <div ({...['a', 'b', 'a']})></div>;
+    <div (.a, {...['a', 'b']})></div>;
+    <div ({...['a']}, .a)></div>;
+    <div ({...123})></div>;
+    <div ({..."123"})></div>;
+
+    // ok
+    <div ({...['a', 'b']})></div>;
+    <div ({...['a', 'b']}, .c)></div>;
+    <div ({...(['a', 'b'] as string[])})></div>;
+    const arr = ['a', 'b'];
+    <div ({...arr})></div>;
+
+    // suggest use class list
+    <div {...(['a', 'b'] as string[])} />;
+    <div {...['a', 'b'] as const} />;
+}

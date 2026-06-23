@@ -1,0 +1,70 @@
+//// [tests/cases/syn/switchCaseIs.syn] ////
+
+=== switchCaseIs.syn ===
+{
+    const x: string | number = 1
+>x : Symbol(x, Decl(switchCaseIs.syn, 1, 9))
+
+    switch (x) {
+>x : Symbol(x, Decl(switchCaseIs.syn, 1, 9))
+
+        case is string:
+            console.log('got string', x)
+>console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>console : Symbol(console, Decl(lib.dom.d.ts, --, --))
+>log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>x : Symbol(x, Decl(switchCaseIs.syn, 1, 9))
+
+        case is number:
+            console.log('got number', x)
+>console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>console : Symbol(console, Decl(lib.dom.d.ts, --, --))
+>log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>x : Symbol(x, Decl(switchCaseIs.syn, 1, 9))
+    }
+
+    const x2: unknown = {}
+>x2 : Symbol(x2, Decl(switchCaseIs.syn, 9, 9))
+
+    switch (x2) {
+>x2 : Symbol(x2, Decl(switchCaseIs.syn, 9, 9))
+
+        case is { y: number }:
+>y : Symbol(y, Decl(switchCaseIs.syn, 11, 17))
+
+            console.log('y', x2.y)
+>console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>console : Symbol(console, Decl(lib.dom.d.ts, --, --))
+>log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>x2.y : Symbol(y, Decl(switchCaseIs.syn, 11, 17))
+>x2 : Symbol(x2, Decl(switchCaseIs.syn, 9, 9))
+>y : Symbol(y, Decl(switchCaseIs.syn, 11, 17))
+
+        case is 1:
+        case is 2:
+            fallthrough
+        case is 3:
+            x2 // 1 | 2 | 3
+>x2 : Symbol(x2, Decl(switchCaseIs.syn, 9, 9))
+    }
+
+    const x3: string | 10 = 10
+>x3 : Symbol(x3, Decl(switchCaseIs.syn, 20, 9))
+
+    switch (x3) {
+>x3 : Symbol(x3, Decl(switchCaseIs.syn, 20, 9))
+
+        case 10: console.log(x3)
+>console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>console : Symbol(console, Decl(lib.dom.d.ts, --, --))
+>log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>x3 : Symbol(x3, Decl(switchCaseIs.syn, 20, 9))
+
+        case is string: console.log(x3)
+>console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>console : Symbol(console, Decl(lib.dom.d.ts, --, --))
+>log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>x3 : Symbol(x3, Decl(switchCaseIs.syn, 20, 9))
+    }
+}
+

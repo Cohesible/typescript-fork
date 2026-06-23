@@ -1,0 +1,10 @@
+ifStatementVariableDecl.syn(3,15): error TS2881: This expression is never nullish.
+
+
+==== ifStatementVariableDecl.syn (1 errors) ====
+    const m = new Map<string, number>()
+    if (const x = m.get('x')) { x }
+    if (const x = m.get('x')!) {}
+                  ~~~~~~~~~~~
+!!! error TS2881: This expression is never nullish.
+    

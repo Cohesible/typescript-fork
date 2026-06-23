@@ -1,0 +1,501 @@
+//// [tests/cases/syn/jsxChildren.syn] ////
+
+=== jsxChildren.syn ===
+{
+    const elements: Element[] = []
+>elements : Element[]
+>         : ^^^^^^^^^
+>[] : never[]
+>   : ^^^^^^^
+
+    function Foo(attrs: {}, children: Element[]) {
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
+>attrs : {}
+>      : ^^
+>children : Element[]
+>         : ^^^^^^^^^
+
+        return <div>{...children}</div>
+><div>{...children}</div> : HTMLDivElement
+>                         : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>children : Element[]
+>         : ^^^^^^^^^
+>div : any
+>    : ^^^
+    }
+    const f = <Foo>{...elements}</Foo>
+>f : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><Foo>{...elements}</Foo> : HTMLDivElement
+>                         : ^^^^^^^^^^^^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
+>elements : Element[]
+>         : ^^^^^^^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
+
+    const y = <Foo>{elements}</Foo> // error
+>y : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><Foo>{elements}</Foo> : HTMLDivElement
+>                      : ^^^^^^^^^^^^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
+>elements : Element[]
+>         : ^^^^^^^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
+
+    const x0 = <Foo></Foo> // no error
+>x0 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><Foo></Foo> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
+
+    const x1 = <Foo><div/></Foo> // no error
+>x1 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><Foo><div/></Foo> : HTMLDivElement
+>                  : ^^^^^^^^^^^^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
+><div/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
+
+    const x2 = <Foo><div/><div/></Foo> // no error
+>x2 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><Foo><div/><div/></Foo> : HTMLDivElement
+>                        : ^^^^^^^^^^^^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
+><div/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+><div/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
+
+    const x3 = <Foo>a</Foo> // error (string is not Element)
+>x3 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><Foo>a</Foo> : HTMLDivElement
+>             : ^^^^^^^^^^^^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
+
+    const x4 = <Foo/> // error (this is explicitly no elements)
+>x4 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><Foo/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
+
+    function Foo2(attrs: {}, children: [string, number]) {
+>Foo2 : (attrs: {}, children: [string, number]) => HTMLDivElement
+>     : ^     ^^  ^^        ^^                ^^^^^^^^^^^^^^^^^^^
+>attrs : {}
+>      : ^^
+>children : [string, number]
+>         : ^^^^^^^^^^^^^^^^
+
+        return <div></div>
+><div></div> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+    }
+    const f2 = <Foo2>{'hi'}{...([1,2] as number[])}</Foo2> // error
+>f2 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><Foo2>{'hi'}{...([1,2] as number[])}</Foo2> : HTMLDivElement
+>                                            : ^^^^^^^^^^^^^^
+>Foo2 : (attrs: {}, children: [string, number]) => HTMLDivElement
+>     : ^     ^^  ^^        ^^                ^^^^^^^^^^^^^^^^^^^
+>'hi' : "hi"
+>     : ^^^^
+>([1,2] as number[]) : number[]
+>                    : ^^^^^^^^
+>[1,2] as number[] : number[]
+>                  : ^^^^^^^^
+>[1,2] : number[]
+>      : ^^^^^^^^
+>1 : 1
+>  : ^
+>2 : 2
+>  : ^
+>Foo2 : (attrs: {}, children: [string, number]) => HTMLDivElement
+>     : ^     ^^  ^^        ^^                ^^^^^^^^^^^^^^^^^^^
+
+    const f3 = <Foo2>{'hi'}{...([1] as [number])}</Foo2> // no error
+>f3 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><Foo2>{'hi'}{...([1] as [number])}</Foo2> : HTMLDivElement
+>                                          : ^^^^^^^^^^^^^^
+>Foo2 : (attrs: {}, children: [string, number]) => HTMLDivElement
+>     : ^     ^^  ^^        ^^                ^^^^^^^^^^^^^^^^^^^
+>'hi' : "hi"
+>     : ^^^^
+>([1] as [number]) : [number]
+>                  : ^^^^^^^^
+>[1] as [number] : [number]
+>                : ^^^^^^^^
+>[1] : [number]
+>    : ^^^^^^^^
+>1 : 1
+>  : ^
+>Foo2 : (attrs: {}, children: [string, number]) => HTMLDivElement
+>     : ^     ^^  ^^        ^^                ^^^^^^^^^^^^^^^^^^^
+
+    function FooOpt(attrs?: never, children?: Element[]) {
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
+>attrs : undefined
+>      : ^^^^^^^^^
+>children : Element[] | undefined
+>         : ^^^^^^^^^^^^^^^^^^^^^
+
+        return <div>{...(children ?? [])}</div>
+><div>{...(children ?? [])}</div> : HTMLDivElement
+>                                 : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>(children ?? []) : Element[]
+>                 : ^^^^^^^^^
+>children ?? [] : Element[]
+>               : ^^^^^^^^^
+>children : Element[] | undefined
+>         : ^^^^^^^^^^^^^^^^^^^^^
+>[] : never[]
+>   : ^^^^^^^
+>div : any
+>    : ^^^
+    }
+    {
+        const f = <FooOpt>{...elements}</FooOpt> // no error
+>f : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><FooOpt>{...elements}</FooOpt> : HTMLDivElement
+>                               : ^^^^^^^^^^^^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
+>elements : Element[]
+>         : ^^^^^^^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
+
+        const y = <FooOpt>{elements}</FooOpt> // error
+>y : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><FooOpt>{elements}</FooOpt> : HTMLDivElement
+>                            : ^^^^^^^^^^^^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
+>elements : Element[]
+>         : ^^^^^^^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
+
+        const x0 = <FooOpt></FooOpt> // no error
+>x0 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><FooOpt></FooOpt> : HTMLDivElement
+>                  : ^^^^^^^^^^^^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
+
+        const x1 = <FooOpt><div/></FooOpt> // no error
+>x1 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><FooOpt><div/></FooOpt> : HTMLDivElement
+>                        : ^^^^^^^^^^^^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
+><div/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
+
+        const x2 = <FooOpt><div/><div/></FooOpt> // no error
+>x2 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><FooOpt><div/><div/></FooOpt> : HTMLDivElement
+>                              : ^^^^^^^^^^^^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
+><div/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+><div/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
+
+        const x3 = <FooOpt>a</FooOpt> // error
+>x3 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><FooOpt>a</FooOpt> : HTMLDivElement
+>                   : ^^^^^^^^^^^^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
+
+        const x4 = <FooOpt/> // no error
+>x4 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><FooOpt/> : HTMLDivElement
+>          : ^^^^^^^^^^^^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
+    }
+
+    {
+        function F1(attrs: { v: string }) {
+>F1 : (attrs: { v: string; }) => HTMLSpanElement
+>   : ^     ^^              ^^^^^^^^^^^^^^^^^^^^
+>attrs : { v: string; }
+>      : ^^^^^      ^^^
+>v : string
+>  : ^^^^^^
+
+            return <span>{attrs.v}</span>
+><span>{attrs.v}</span> : HTMLSpanElement
+>                       : ^^^^^^^^^^^^^^^
+>span : any
+>     : ^^^
+>attrs.v : string
+>        : ^^^^^^
+>attrs : { v: string; }
+>      : ^^^^^      ^^^
+>v : string
+>  : ^^^^^^
+>span : any
+>     : ^^^
+        }
+        function Main() {
+>Main : () => HTMLSpanElement
+>     : ^^^^^^^^^^^^^^^^^^^^^
+
+            const v = 'aaa'
+>v : "aaa"
+>  : ^^^^^
+>'aaa' : "aaa"
+>      : ^^^^^
+
+            return <F1 v={v}></F1> // no error
+><F1 v={v}></F1> : HTMLSpanElement
+>                : ^^^^^^^^^^^^^^^
+>F1 : (attrs: { v: string; }) => HTMLSpanElement
+>   : ^     ^^              ^^^^^^^^^^^^^^^^^^^^
+>v : string
+>  : ^^^^^^
+>v : "aaa"
+>  : ^^^^^
+>F1 : (attrs: { v: string; }) => HTMLSpanElement
+>   : ^     ^^              ^^^^^^^^^^^^^^^^^^^^
+        }
+    }
+
+    {
+        const x = <>aaa{1}</>
+>x : [Text, number]
+>  : ^^^^^^^^^^^^^^
+><>aaa{1}</> : [Text, number]
+>            : ^^^^^^^^^^^^^^
+>1 : 1
+>  : ^
+    }
+}
+
+{
+    const items = ['a']
+>items : string[]
+>      : ^^^^^^^^
+>['a'] : string[]
+>      : ^^^^^^^^
+>'a' : "a"
+>    : ^^^
+
+    <#component Many(items: string[])>
+>Many : any
+>     : ^^^
+>items : string[]
+>      : ^^^^^^^^
+
+        <div>{...items}</div>
+><div>{...items}</div> : HTMLDivElement
+>                      : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>items : string[]
+>      : ^^^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+    const d = <Many {items}/>
+>d : Many
+>  : ^^^^
+><Many {items}/> : Many
+>                : ^^^^
+>Many : (attributes: { items: string[]; }) => Many
+>     : ^^^^^^^^^^^^^^^^^^^^^^        ^^^^^^^^^^^^
+>items : string[]
+>      : ^^^^^^^^
+
+    update d {
+>d : Many
+>  : ^^^^
+
+        items.push('aa')
+>items.push('aa') : number
+>                 : ^^^^^^
+>items.push : (...items: string[]) => number
+>           : ^^^^     ^^^^^^^^^^^^^^^      
+>items : string[]
+>      : ^^^^^^^^
+>push : (...items: string[]) => number
+>     : ^^^^     ^^^^^^^^^^^^^^^      
+>'aa' : "aa"
+>     : ^^^^
+    }
+}
+
+{
+    <#component *Wrapper() {
+>Wrapper : any
+>        : ^^^
+
+        const a = document.createComment('')
+>a : Comment
+>  : ^^^^^^^
+>document.createComment('') : Comment
+>                           : ^^^^^^^
+>document.createComment : (data: string) => Comment
+>                       : ^    ^^      ^^^^^       
+>document : Document
+>         : ^^^^^^^^
+>createComment : (data: string) => Comment
+>              : ^    ^^      ^^^^^       
+>'' : ""
+>   : ^^
+
+    }>
+        {a}
+>a : Comment
+>  : ^^^^^^^
+
+    </>
+
+    // this should _not_ be a single root
+    const w = <Wrapper />
+>w : Wrapper
+>  : ^^^^^^^
+><Wrapper /> : Wrapper
+>            : ^^^^^^^
+>Wrapper : () => Wrapper
+>        : ^^^^^^^^^^^^^
+}
+
+{
+    <#component Wrapper(children: (ChildNode | string)[]) {
+>Wrapper : any
+>        : ^^^
+>children : (string | ChildNode)[]
+>         : ^^^^^^^^^^^^^^^^^^^^^^
+
+        const a = document.createComment('')
+>a : Comment
+>  : ^^^^^^^
+>document.createComment('') : Comment
+>                           : ^^^^^^^
+>document.createComment : (data: string) => Comment
+>                       : ^    ^^      ^^^^^       
+>document : Document
+>         : ^^^^^^^^
+>createComment : (data: string) => Comment
+>              : ^    ^^      ^^^^^       
+>'' : ""
+>   : ^^
+
+    }>
+        <div>
+><div>            <#run>                const q = a as ChildNode                while (true) {}            </>        </div> : HTMLDivElement
+>                                                                                                                            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+            <#run>
+                const q = a as ChildNode
+>q : ChildNode
+>  : ^^^^^^^^^
+>a as ChildNode : ChildNode
+>               : ^^^^^^^^^
+>a : Comment
+>  : ^^^^^^^
+
+                while (true) {}
+>true : true
+>     : ^^^^
+
+            </>
+        </div>
+>div : any
+>    : ^^^
+
+    </>
+
+    const q = <div>
+>q : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div>        <Wrapper>a</Wrapper>    </div> : HTMLDivElement
+>                                            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <Wrapper>a</Wrapper>
+><Wrapper>a</Wrapper> : Wrapper
+>                     : ^^^^^^^
+>Wrapper : (attributes: {}, children: (string | ChildNode)[]) => Wrapper
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>Wrapper : (attributes: {}, children: (string | ChildNode)[]) => Wrapper
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    </div>
+>div : any
+>    : ^^^
+
+    update q {}
+>q : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+}
+

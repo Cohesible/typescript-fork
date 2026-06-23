@@ -1,0 +1,115 @@
+//// [tests/cases/syn/jsxIf.syn] ////
+
+=== jsxIf.syn ===
+{
+    const d3 = <div>
+>d3 : Symbol(d3, Decl(jsxIf.syn, 1, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <#if (true)>
+            <div></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        </>
+    </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    const cond = true
+>cond : Symbol(cond, Decl(jsxIf.syn, 7, 9))
+
+    const d4 = <div><#if (cond)></></div>
+>d4 : Symbol(d4, Decl(jsxIf.syn, 8, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>cond : Symbol(cond, Decl(jsxIf.syn, 7, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+}
+
+{
+    // cfa should work inside <#if>
+    let v = undefined as { x: () => number } | undefined
+>v : Symbol(v, Decl(jsxIf.syn, 13, 7))
+>undefined : Symbol(undefined)
+>x : Symbol(x, Decl(jsxIf.syn, 13, 26))
+
+    const d = <div>
+>d : Symbol(d, Decl(jsxIf.syn, 14, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <#if (v)>
+>v : Symbol(v, Decl(jsxIf.syn, 13, 7))
+
+          <div>{v.x()}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>v.x : Symbol(x, Decl(jsxIf.syn, 13, 26))
+>v : Symbol(v, Decl(jsxIf.syn, 13, 7))
+>x : Symbol(x, Decl(jsxIf.syn, 13, 26))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        </>
+    </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+}
+
+{
+    const cond = true as boolean
+>cond : Symbol(cond, Decl(jsxIf.syn, 22, 9))
+
+    // [] | [HtmlDivElement]
+    const if1 = <#if (cond)>
+>if1 : Symbol(if1, Decl(jsxIf.syn, 24, 9))
+>cond : Symbol(cond, Decl(jsxIf.syn, 22, 9))
+
+      <div></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    // [HtmlDivElement]
+    const if2 = <#if (true)>
+>if2 : Symbol(if2, Decl(jsxIf.syn, 28, 9))
+
+      <div></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    // []
+    const if3 = <#if (false)>
+>if3 : Symbol(if3, Decl(jsxIf.syn, 32, 9))
+
+      <div></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+}
+
+{
+    let filterState: 'all' | 'completed' | 'active' = 'all';
+>filterState : Symbol(filterState, Decl(jsxIf.syn, 38, 7))
+
+    <div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <#run>
+            let c
+>c : Symbol(c, Decl(jsxIf.syn, 41, 15))
+
+            switch (filterState) {
+>filterState : Symbol(filterState, Decl(jsxIf.syn, 38, 7))
+
+                case 'all': c = 1;
+>c : Symbol(c, Decl(jsxIf.syn, 41, 15))
+
+                case 'completed': c = 2;
+>c : Symbol(c, Decl(jsxIf.syn, 41, 15))
+
+                case 'active': c = 3;
+>c : Symbol(c, Decl(jsxIf.syn, 41, 15))
+            }
+        </>
+    </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+}
+

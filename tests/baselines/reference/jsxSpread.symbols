@@ -1,0 +1,134 @@
+//// [tests/cases/syn/jsxSpread.syn] ////
+
+=== jsxSpread.syn ===
+{
+    declare function Comp(): { root: Element[] } & Updatable;
+>Comp : Symbol(Comp, Decl(jsxSpread.syn, 0, 1))
+>root : Symbol(root, Decl(jsxSpread.syn, 1, 30))
+>Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
+>Updatable : Symbol(Updatable, Decl(lib.jsx.d.ts, --, --))
+
+    const spread1 = <div><...Comp /></div> // ok
+>spread1 : Symbol(spread1, Decl(jsxSpread.syn, 2, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>Comp : Symbol(Comp, Decl(jsxSpread.syn, 0, 1))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    const noSpread1 = <div><Comp /></div> // error
+>noSpread1 : Symbol(noSpread1, Decl(jsxSpread.syn, 3, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>Comp : Symbol(Comp, Decl(jsxSpread.syn, 0, 1))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    // errors on intrinsics
+    const spread2 = <div><...div /></div>
+>spread2 : Symbol(spread2, Decl(jsxSpread.syn, 6, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    const spread3 = <div><...div></div></div>
+>spread3 : Symbol(spread3, Decl(jsxSpread.syn, 7, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    declare function Comp2(): { root: (() => void)[] } & Updatable
+>Comp2 : Symbol(Comp2, Decl(jsxSpread.syn, 7, 45))
+>root : Symbol(root, Decl(jsxSpread.syn, 9, 31))
+>Updatable : Symbol(Updatable, Decl(lib.jsx.d.ts, --, --))
+
+    const spread4 = <div><...Comp2 /></div>  // error, intrinsics want something NodeLike
+>spread4 : Symbol(spread4, Decl(jsxSpread.syn, 10, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>Comp2 : Symbol(Comp2, Decl(jsxSpread.syn, 7, 45))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    declare function Comp3(): { root: Element } & Updatable;
+>Comp3 : Symbol(Comp3, Decl(jsxSpread.syn, 10, 43))
+>root : Symbol(root, Decl(jsxSpread.syn, 12, 31))
+>Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
+>Updatable : Symbol(Updatable, Decl(lib.jsx.d.ts, --, --))
+
+    const noSpread2 = <div><Comp3 /></div> // ok
+>noSpread2 : Symbol(noSpread2, Decl(jsxSpread.syn, 13, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>Comp3 : Symbol(Comp3, Decl(jsxSpread.syn, 10, 43))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    const spread5 = <div><...Comp3 /></div> // error
+>spread5 : Symbol(spread5, Decl(jsxSpread.syn, 14, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>Comp3 : Symbol(Comp3, Decl(jsxSpread.syn, 10, 43))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    declare function Comp4(attrs: {}, children: Element[]): { root: Element } & Updatable;
+>Comp4 : Symbol(Comp4, Decl(jsxSpread.syn, 14, 43))
+>attrs : Symbol(attrs, Decl(jsxSpread.syn, 16, 27))
+>children : Symbol(children, Decl(jsxSpread.syn, 16, 37))
+>Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
+>root : Symbol(root, Decl(jsxSpread.syn, 16, 61))
+>Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
+>Updatable : Symbol(Updatable, Decl(lib.jsx.d.ts, --, --))
+
+    // ok
+    const spread6 = <Comp4>
+>spread6 : Symbol(spread6, Decl(jsxSpread.syn, 18, 9))
+>Comp4 : Symbol(Comp4, Decl(jsxSpread.syn, 14, 43))
+
+      <Comp3 />
+>Comp3 : Symbol(Comp3, Decl(jsxSpread.syn, 10, 43))
+
+      <...Comp />
+>Comp : Symbol(Comp, Decl(jsxSpread.syn, 0, 1))
+
+      <...Comp></Comp>
+>Comp : Symbol(Comp, Decl(jsxSpread.syn, 0, 1))
+>Comp : Symbol(Comp, Decl(jsxSpread.syn, 0, 1))
+
+    </Comp4>
+>Comp4 : Symbol(Comp4, Decl(jsxSpread.syn, 14, 43))
+
+    // error
+    const spread7 = <Comp4>
+>spread7 : Symbol(spread7, Decl(jsxSpread.syn, 25, 9))
+>Comp4 : Symbol(Comp4, Decl(jsxSpread.syn, 14, 43))
+
+      <Comp3 />
+>Comp3 : Symbol(Comp3, Decl(jsxSpread.syn, 10, 43))
+
+      <Comp />
+>Comp : Symbol(Comp, Decl(jsxSpread.syn, 0, 1))
+
+    </Comp4>
+>Comp4 : Symbol(Comp4, Decl(jsxSpread.syn, 14, 43))
+
+    declare function Comp5(): { root: [Element] | [] } & Updatable;
+>Comp5 : Symbol(Comp5, Decl(jsxSpread.syn, 28, 12))
+>root : Symbol(root, Decl(jsxSpread.syn, 30, 31))
+>Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
+>Updatable : Symbol(Updatable, Decl(lib.jsx.d.ts, --, --))
+
+    // ok
+    const spread8 = <Comp4>
+>spread8 : Symbol(spread8, Decl(jsxSpread.syn, 32, 9))
+>Comp4 : Symbol(Comp4, Decl(jsxSpread.syn, 14, 43))
+
+        <...Comp5 />
+>Comp5 : Symbol(Comp5, Decl(jsxSpread.syn, 28, 12))
+
+    </Comp4>
+>Comp4 : Symbol(Comp4, Decl(jsxSpread.syn, 14, 43))
+}
+
+{
+    const d = <div>
+>d : Symbol(d, Decl(jsxSpread.syn, 38, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <...Unresolved />
+    </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+}
+

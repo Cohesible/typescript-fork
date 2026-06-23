@@ -1,0 +1,290 @@
+//// [tests/cases/syn/autoAwait.syn] ////
+
+=== autoAwait.syn ===
+async function foo() {
+>foo : Symbol(foo, Decl(autoAwait.syn, 0, 0))
+
+    return 2
+}
+
+// auto TLA -> number
+const tla = foo()
+>tla : Symbol(tla, Decl(autoAwait.syn, 5, 5))
+>foo : Symbol(foo, Decl(autoAwait.syn, 0, 0))
+
+// as const should not crash
+const cc = foo() as const
+>cc : Symbol(cc, Decl(autoAwait.syn, 7, 5))
+>foo : Symbol(foo, Decl(autoAwait.syn, 0, 0))
+>const : Symbol(const)
+
+async function bar() {
+>bar : Symbol(bar, Decl(autoAwait.syn, 7, 25))
+
+    const p = foo() as async
+>p : Symbol(p, Decl(autoAwait.syn, 10, 9))
+>foo : Symbol(foo, Decl(autoAwait.syn, 0, 0))
+>async : Symbol(async)
+
+    const y = 1 + await p
+>y : Symbol(y, Decl(autoAwait.syn, 11, 9))
+>p : Symbol(p, Decl(autoAwait.syn, 10, 9))
+
+    return y
+>y : Symbol(y, Decl(autoAwait.syn, 11, 9))
+}
+
+function bar2() {
+>bar2 : Symbol(bar2, Decl(autoAwait.syn, 13, 1))
+
+    const p: Promise<number> = foo() as async
+>p : Symbol(p, Decl(autoAwait.syn, 16, 9))
+>Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --), Decl(lib.es2018.promise.d.ts, --, --))
+>foo : Symbol(foo, Decl(autoAwait.syn, 0, 0))
+>async : Symbol(async)
+}
+
+async function z() {
+>z : Symbol(z, Decl(autoAwait.syn, 17, 1))
+
+    const q = bar()
+>q : Symbol(q, Decl(autoAwait.syn, 20, 9))
+>bar : Symbol(bar, Decl(autoAwait.syn, 7, 25))
+
+    const q2 = bar() as async
+>q2 : Symbol(q2, Decl(autoAwait.syn, 21, 9))
+>bar : Symbol(bar, Decl(autoAwait.syn, 7, 25))
+>async : Symbol(async)
+
+    // should stay as a Promise
+    const p = new Promise<void>(r => r())
+>p : Symbol(p, Decl(autoAwait.syn, 23, 9))
+>Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --), Decl(lib.es2018.promise.d.ts, --, --))
+>r : Symbol(r, Decl(autoAwait.syn, 23, 32))
+>r : Symbol(r, Decl(autoAwait.syn, 23, 32))
+}
+
+// async return type elision
+{
+    async function elided(): number { return 1 }
+>elided : Symbol(elided, Decl(autoAwait.syn, 27, 1))
+
+    async function testElided() {
+>testElided : Symbol(testElided, Decl(autoAwait.syn, 28, 48))
+
+        const v = elided()  // number
+>v : Symbol(v, Decl(autoAwait.syn, 30, 13))
+>elided : Symbol(elided, Decl(autoAwait.syn, 27, 1))
+    }
+
+    async function explicit(): Promise<number> { return 1 }
+>explicit : Symbol(explicit, Decl(autoAwait.syn, 31, 5))
+>Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --), Decl(lib.es2018.promise.d.ts, --, --))
+
+    async function testExplicit() {
+>testExplicit : Symbol(testExplicit, Decl(autoAwait.syn, 33, 59))
+
+        const v = explicit()  // number
+>v : Symbol(v, Decl(autoAwait.syn, 35, 13))
+>explicit : Symbol(explicit, Decl(autoAwait.syn, 31, 5))
+    }
+
+    async function inferred() { return 1 }
+>inferred : Symbol(inferred, Decl(autoAwait.syn, 36, 5))
+
+    async function testInferred() {
+>testInferred : Symbol(testInferred, Decl(autoAwait.syn, 38, 42))
+
+        const v = inferred()  // number
+>v : Symbol(v, Decl(autoAwait.syn, 40, 13))
+>inferred : Symbol(inferred, Decl(autoAwait.syn, 36, 5))
+    }
+}
+
+{
+    async function foo() {
+>foo : Symbol(foo, Decl(autoAwait.syn, 44, 1))
+
+        return 1 as number
+    }
+
+    function sync() {
+>sync : Symbol(sync, Decl(autoAwait.syn, 47, 5))
+
+        const p = foo() as async // OK
+>p : Symbol(p, Decl(autoAwait.syn, 50, 13))
+>foo : Symbol(foo, Decl(autoAwait.syn, 44, 1))
+>async : Symbol(async)
+
+        const p2 = foo() // checker error
+>p2 : Symbol(p2, Decl(autoAwait.syn, 51, 13))
+>foo : Symbol(foo, Decl(autoAwait.syn, 44, 1))
+
+        foo() as async // OK
+>foo : Symbol(foo, Decl(autoAwait.syn, 44, 1))
+>async : Symbol(async)
+
+        foo() // checker error
+>foo : Symbol(foo, Decl(autoAwait.syn, 44, 1))
+
+        // `await` is still an error inside sync context
+        await p
+>p : Symbol(p, Decl(autoAwait.syn, 50, 13))
+    }
+
+    async function _async() {
+>_async : Symbol(_async, Decl(autoAwait.syn, 57, 5))
+
+        const v = foo()
+>v : Symbol(v, Decl(autoAwait.syn, 60, 13))
+>foo : Symbol(foo, Decl(autoAwait.syn, 44, 1))
+
+        await v // await without a Promise in the type is treated as a possible mistake
+>v : Symbol(v, Decl(autoAwait.syn, 60, 13))
+
+        // but superfluous awaits are OK
+        await foo()
+>foo : Symbol(foo, Decl(autoAwait.syn, 44, 1))
+    }
+
+    async function bar() {
+>bar : Symbol(bar, Decl(autoAwait.syn, 64, 5))
+
+        return 2
+    }
+
+    function f8<T>(p: Promise<T> | T): void {}
+>f8 : Symbol(f8, Decl(autoAwait.syn, 68, 5))
+>T : Symbol(T, Decl(autoAwait.syn, 70, 16))
+>p : Symbol(p, Decl(autoAwait.syn, 70, 19))
+>Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --), Decl(lib.es2018.promise.d.ts, --, --))
+>T : Symbol(T, Decl(autoAwait.syn, 70, 16))
+>T : Symbol(T, Decl(autoAwait.syn, 70, 16))
+
+    f8(bar()) // error, ambiguous, use `await` or `as async`
+>f8 : Symbol(f8, Decl(autoAwait.syn, 68, 5))
+>bar : Symbol(bar, Decl(autoAwait.syn, 64, 5))
+
+    function f9() {
+>f9 : Symbol(f9, Decl(autoAwait.syn, 71, 13))
+
+        function f(p1: Promise<number>, p2: Promise<number>) {}
+>f : Symbol(f, Decl(autoAwait.syn, 73, 19))
+>p1 : Symbol(p1, Decl(autoAwait.syn, 74, 19))
+>Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --), Decl(lib.es2018.promise.d.ts, --, --))
+>p2 : Symbol(p2, Decl(autoAwait.syn, 74, 39))
+>Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --), Decl(lib.es2018.promise.d.ts, --, --))
+
+        // both calls require `as async`
+        f(bar(), bar())
+>f : Symbol(f, Decl(autoAwait.syn, 73, 19))
+>bar : Symbol(bar, Decl(autoAwait.syn, 64, 5))
+>bar : Symbol(bar, Decl(autoAwait.syn, 64, 5))
+    }
+
+    // this one is subtle: we require `as async` regardless of the return type annotation
+    function foo2(): Promise<number>  {
+>foo2 : Symbol(foo2, Decl(autoAwait.syn, 77, 5))
+>Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --), Decl(lib.es2018.promise.d.ts, --, --))
+
+        try {
+            return bar() // error, needs `as async`
+>bar : Symbol(bar, Decl(autoAwait.syn, 64, 5))
+
+        } catch {
+            return Promise.resolve(0)
+>Promise.resolve : Symbol(PromiseConstructor.resolve, Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --))
+>Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --), Decl(lib.es2018.promise.d.ts, --, --))
+>resolve : Symbol(PromiseConstructor.resolve, Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --))
+        }
+    }
+
+    async function foo3() {
+>foo3 : Symbol(foo3, Decl(autoAwait.syn, 86, 5))
+
+        // Promise.resolve / Promise.reject are special-cased — not auto-awaited
+        const x1 = Promise.resolve(0) // Promise<number>
+>x1 : Symbol(x1, Decl(autoAwait.syn, 90, 13))
+>Promise.resolve : Symbol(PromiseConstructor.resolve, Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --))
+>Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --), Decl(lib.es2018.promise.d.ts, --, --))
+>resolve : Symbol(PromiseConstructor.resolve, Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --))
+
+        const x2 = Promise.reject(0) // Promise<number>
+>x2 : Symbol(x2, Decl(autoAwait.syn, 91, 13))
+>Promise.reject : Symbol(PromiseConstructor.reject, Decl(lib.es2015.promise.d.ts, --, --))
+>Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --), Decl(lib.es2018.promise.d.ts, --, --))
+>reject : Symbol(PromiseConstructor.reject, Decl(lib.es2015.promise.d.ts, --, --))
+    }
+}
+
+{
+    async function getValue() { return 42 }
+>getValue : Symbol(getValue, Decl(autoAwait.syn, 95, 1))
+
+    async function testAutoAwait() {
+>testAutoAwait : Symbol(testAutoAwait, Decl(autoAwait.syn, 96, 43))
+
+        const v = getValue()  // number
+>v : Symbol(v, Decl(autoAwait.syn, 98, 13))
+>getValue : Symbol(getValue, Decl(autoAwait.syn, 95, 1))
+    }
+
+    declare function fetchNum(): Promise<number>
+>fetchNum : Symbol(fetchNum, Decl(autoAwait.syn, 99, 5))
+>Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --), Decl(lib.es2018.promise.d.ts, --, --))
+
+    async function testDeclared() {
+>testDeclared : Symbol(testDeclared, Decl(autoAwait.syn, 101, 48))
+
+        const n = fetchNum()  // number
+>n : Symbol(n, Decl(autoAwait.syn, 103, 13))
+>fetchNum : Symbol(fetchNum, Decl(autoAwait.syn, 99, 5))
+    }
+
+    declare function passThrough<T>(x: T): T
+>passThrough : Symbol(passThrough, Decl(autoAwait.syn, 104, 5))
+>T : Symbol(T, Decl(autoAwait.syn, 106, 33))
+>x : Symbol(x, Decl(autoAwait.syn, 106, 36))
+>T : Symbol(T, Decl(autoAwait.syn, 106, 33))
+>T : Symbol(T, Decl(autoAwait.syn, 106, 33))
+
+    async function testPassThrough() {
+>testPassThrough : Symbol(testPassThrough, Decl(autoAwait.syn, 106, 44))
+
+        const p: Promise<number> = Promise.resolve(1)
+>p : Symbol(p, Decl(autoAwait.syn, 108, 13))
+>Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --), Decl(lib.es2018.promise.d.ts, --, --))
+>Promise.resolve : Symbol(PromiseConstructor.resolve, Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --))
+>Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --), Decl(lib.es2018.promise.d.ts, --, --))
+>resolve : Symbol(PromiseConstructor.resolve, Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --))
+
+        const r = passThrough(p)  // Promise<number>, not number
+>r : Symbol(r, Decl(autoAwait.syn, 109, 13))
+>passThrough : Symbol(passThrough, Decl(autoAwait.syn, 104, 5))
+>p : Symbol(p, Decl(autoAwait.syn, 108, 13))
+    }
+
+    declare function memoize<T extends () => any>(fn: T): T
+>memoize : Symbol(memoize, Decl(autoAwait.syn, 110, 5))
+>T : Symbol(T, Decl(autoAwait.syn, 112, 29))
+>fn : Symbol(fn, Decl(autoAwait.syn, 112, 50))
+>T : Symbol(T, Decl(autoAwait.syn, 112, 29))
+>T : Symbol(T, Decl(autoAwait.syn, 112, 29))
+
+    async function testMemoize() {
+>testMemoize : Symbol(testMemoize, Decl(autoAwait.syn, 112, 59))
+
+        async function inner() { return 1 }
+>inner : Symbol(inner, Decl(autoAwait.syn, 113, 34))
+
+        const m = memoize(inner)
+>m : Symbol(m, Decl(autoAwait.syn, 115, 13))
+>memoize : Symbol(memoize, Decl(autoAwait.syn, 110, 5))
+>inner : Symbol(inner, Decl(autoAwait.syn, 113, 34))
+
+        const v = m()  // number
+>v : Symbol(v, Decl(autoAwait.syn, 116, 13))
+>m : Symbol(m, Decl(autoAwait.syn, 115, 13))
+    }
+}
+

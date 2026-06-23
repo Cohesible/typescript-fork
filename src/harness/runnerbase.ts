@@ -5,7 +5,7 @@ import {
 import * as ts from "./_namespaces/ts.js";
 
 export type TestRunnerKind = CompilerTestKind | FourslashTestKind | "project" | "transpile";
-export type CompilerTestKind = "conformance" | "compiler";
+export type CompilerTestKind = "conformance" | "compiler" | "syn";
 export type FourslashTestKind = "fourslash" | "fourslash-server";
 
 export let shards = 1;

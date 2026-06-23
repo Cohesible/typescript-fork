@@ -812,7 +812,7 @@ export function emitFiles(
         }
 
         // Make sure not to write js file and source map file if any of them cannot be written
-        if (host.isEmitBlocked(jsFilePath) || compilerOptions.noEmit) {
+        if (host.isEmitBlocked(jsFilePath) || compilerOptions.noEmit || (sourceFileOrBundle.kind === SyntaxKind.SourceFile && sourceFileOrBundle.scriptKind === ts.ScriptKind.Syn)) {
             emitSkipped = true;
             return;
         }

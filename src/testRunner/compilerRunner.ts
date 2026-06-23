@@ -18,6 +18,7 @@ import * as vpath from "./_namespaces/vpath.js";
 export const enum CompilerTestType {
     Conformance,
     Regressions,
+    Syn,
 }
 
 interface CompilerFileBasedTest extends FileBasedTest {
@@ -40,6 +41,9 @@ export class CompilerBaselineRunner extends RunnerBase {
         else if (testType === CompilerTestType.Regressions) {
             this.testSuiteName = "compiler";
         }
+        else if (testType === CompilerTestType.Syn) {
+            this.testSuiteName = "syn";
+        }
         else {
             this.testSuiteName = "compiler"; // default to this for historical reasons
         }
@@ -53,7 +57,7 @@ export class CompilerBaselineRunner extends RunnerBase {
     private testFiles: string[] | undefined;
     public enumerateTestFiles(): string[] {
         // see also: `enumerateTestFiles` in tests/webTestServer.ts
-        return this.testFiles ??= this.enumerateFiles(this.basePath, /\.tsx?$/, { recursive: true });
+        return this.testFiles ??= this.enumerateFiles(this.basePath, /\.(?:tsx?|syn)$/, { recursive: true });
     }
 
     public initializeTests(): void {
@@ -202,6 +206,10 @@ class CompilerTest {
         this.otherFiles = [];
         this.hasNonDtsFiles = units.some(unit => !ts.fileExtensionIs(unit.name, ts.Extension.Dts));
         this.harnessSettings = testCaseContent.settings;
+        if (ts.endsWith(this.justName, '.syn')) {
+            this.harnessSettings.target ||= 'ES2022'
+            this.harnessSettings.strict ??= 'true'
+        }
         let tsConfigOptions: ts.CompilerOptions | undefined;
         this.tsConfigFiles = [];
         if (testCaseContent.tsConfig) {

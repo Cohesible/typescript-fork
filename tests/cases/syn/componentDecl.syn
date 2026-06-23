@@ -1,0 +1,55 @@
+{
+    <#component Foo(x: string)>
+        <div>{x}</div>
+    </>
+    const r1 = <Foo x="hi" />
+
+    <#component Bar(x: string)>
+        <div>{x}</div>
+        <div>{x}</div>
+    </>
+    const r2 = <Bar x="hi" />
+
+    <#component Baz(x: string)>
+        <div>{x}</div>
+    </>
+    const r3 = <Baz x="hi" />
+
+    <#component WithOpt(x: string, y?: number)>
+        <div>{x}</div>
+    </>
+    const r4a = <WithOpt x="hi" />       // ok
+    const r4b = <WithOpt x="hi" y={1} /> // ok
+
+    const r1_typed: Foo = r1
+    const r3_typed: Baz = r3
+    const r_cross: Foo = r3
+    const r_cross2: Foo = r4a
+}
+
+{
+    // expression form
+    const Expr = <#component(x: string)>
+        <div>{x}</div>
+    </>
+    const r5 = <Expr x="hello" />
+}
+
+{
+    <#component Foo()>
+        <div/>
+    </>
+    type AAA = typeof Foo
+}
+
+{
+    function Foo(attrs: {}): { root: HTMLDivElement; bar: () => 'aaa' } {
+        return {
+            root: <div/>,
+            bar: () => 'aaa',
+        }
+    }
+
+    const x = <Foo />
+    const y = x.bar()
+}

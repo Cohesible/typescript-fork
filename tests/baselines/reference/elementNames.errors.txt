@@ -1,0 +1,35 @@
+elementNames.syn(7,25): error TS2448: Block-scoped variable 'a' used before its declaration.
+elementNames.syn(7,25): error TS2454: Variable 'a' is used before being assigned.
+elementNames.syn(10,20): error TS2304: Cannot find name 'b'.
+elementNames.syn(17,17): error TS2304: Cannot find name 'd'.
+
+
+==== elementNames.syn (4 errors) ====
+    // element names
+    {
+        // b can be seen within the tree, but not outside
+        const a = <div>
+            <div @ b></div>
+            <#run>
+                console.log(a, b)
+                            ~
+!!! error TS2448: Block-scoped variable 'a' used before its declaration.
+!!! related TS2728 elementNames.syn:4:11: 'a' is declared here.
+                            ~
+!!! error TS2454: Variable 'a' is used before being assigned.
+            </>
+        </div>
+        console.log(a, b);
+                       ~
+!!! error TS2304: Cannot find name 'b'.
+    
+        <div @ c id="aaa" />;
+    }
+    
+    {
+        <div @ d />;
+        console.log(d) // should error
+                    ~
+!!! error TS2304: Cannot find name 'd'.
+    }
+    

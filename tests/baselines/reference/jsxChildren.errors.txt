@@ -1,0 +1,124 @@
+jsxChildren.syn(7,16): error TS2882: This JSX tag's 'children' prop expects type 'Element[]', but the child has array type 'Element[]'. Did you mean to spread it with '{...}'?
+jsxChildren.syn(11,21): error TS2747: 'Foo' components don't accept text as child elements. Text in JSX has the type 'string', but the expected type of 'children' is 'Element[]'.
+  Type 'Text' is missing the following properties from type 'Element': attributes, classList, className, clientHeight, and 124 more.
+jsxChildren.syn(12,17): error TS2741: Property 'children' is missing in type '{}' but required in type '{ children: Element[]; }'.
+jsxChildren.syn(17,17): error TS2322: Type '{ children: [string, ...number[]]; }' is not assignable to type '{ children: [string, number]; }'.
+  Types of property 'children' are incompatible.
+    Type '[string, ...number[]]' is not assignable to type '[string, number]'.
+      Target requires 2 element(s) but source may have fewer.
+jsxChildren.syn(25,20): error TS2882: This JSX tag's 'children' prop expects type 'Element[] | undefined', but the child has array type 'Element[]'. Did you mean to spread it with '{...}'?
+jsxChildren.syn(29,28): error TS2747: 'FooOpt' components don't accept text as child elements. Text in JSX has the type 'string', but the expected type of 'children' is 'Element[] | undefined'.
+  Type 'Text' is missing the following properties from type 'Element': attributes, classList, className, clientHeight, and 124 more.
+jsxChildren.syn(30,21): error TS2741: Property 'children' is missing in type '{}' but required in type '{ children: Element[] | undefined; }'.
+jsxChildren.syn(85,12): error TS95210: update has no plausible effect on 'q', the block does not reference any variable that 'q' depends on.
+
+
+==== jsxChildren.syn (8 errors) ====
+    {
+        const elements: Element[] = []
+        function Foo(attrs: {}, children: Element[]) {
+            return <div>{...children}</div>
+        }
+        const f = <Foo>{...elements}</Foo>
+        const y = <Foo>{elements}</Foo> // error
+                   ~~~
+!!! error TS2882: This JSX tag's 'children' prop expects type 'Element[]', but the child has array type 'Element[]'. Did you mean to spread it with '{...}'?
+        const x0 = <Foo></Foo> // no error
+        const x1 = <Foo><div/></Foo> // no error
+        const x2 = <Foo><div/><div/></Foo> // no error
+        const x3 = <Foo>a</Foo> // error (string is not Element)
+                        ~
+!!! error TS2747: 'Foo' components don't accept text as child elements. Text in JSX has the type 'string', but the expected type of 'children' is 'Element[]'.
+!!! error TS2747:   Type 'Text' is missing the following properties from type 'Element': attributes, classList, className, clientHeight, and 124 more.
+        const x4 = <Foo/> // error (this is explicitly no elements)
+                    ~~~
+!!! error TS2741: Property 'children' is missing in type '{}' but required in type '{ children: Element[]; }'.
+    
+        function Foo2(attrs: {}, children: [string, number]) {
+            return <div></div>
+        }
+        const f2 = <Foo2>{'hi'}{...([1,2] as number[])}</Foo2> // error
+                    ~~~~
+!!! error TS2322: Type '{ children: [string, ...number[]]; }' is not assignable to type '{ children: [string, number]; }'.
+!!! error TS2322:   Types of property 'children' are incompatible.
+!!! error TS2322:     Type '[string, ...number[]]' is not assignable to type '[string, number]'.
+!!! error TS2322:       Target requires 2 element(s) but source may have fewer.
+        const f3 = <Foo2>{'hi'}{...([1] as [number])}</Foo2> // no error
+    
+        function FooOpt(attrs?: never, children?: Element[]) {
+            return <div>{...(children ?? [])}</div>
+        }
+        {
+            const f = <FooOpt>{...elements}</FooOpt> // no error
+            const y = <FooOpt>{elements}</FooOpt> // error
+                       ~~~~~~
+!!! error TS2882: This JSX tag's 'children' prop expects type 'Element[] | undefined', but the child has array type 'Element[]'. Did you mean to spread it with '{...}'?
+            const x0 = <FooOpt></FooOpt> // no error
+            const x1 = <FooOpt><div/></FooOpt> // no error
+            const x2 = <FooOpt><div/><div/></FooOpt> // no error
+            const x3 = <FooOpt>a</FooOpt> // error
+                               ~
+!!! error TS2747: 'FooOpt' components don't accept text as child elements. Text in JSX has the type 'string', but the expected type of 'children' is 'Element[] | undefined'.
+!!! error TS2747:   Type 'Text' is missing the following properties from type 'Element': attributes, classList, className, clientHeight, and 124 more.
+            const x4 = <FooOpt/> // no error
+                        ~~~~~~
+!!! error TS2741: Property 'children' is missing in type '{}' but required in type '{ children: Element[] | undefined; }'.
+        }
+    
+        {
+            function F1(attrs: { v: string }) {
+                return <span>{attrs.v}</span>
+            }
+            function Main() {
+                const v = 'aaa'
+                return <F1 v={v}></F1> // no error
+            }
+        }
+    
+        {
+            const x = <>aaa{1}</>
+        }
+    }
+    
+    {
+        const items = ['a']
+        <#component Many(items: string[])>
+            <div>{...items}</div>
+        </>
+        const d = <Many {items}/>
+        update d {
+            items.push('aa')
+        }
+    }
+    
+    {
+        <#component *Wrapper() {
+            const a = document.createComment('')
+        }>
+            {a}
+        </>
+    
+        // this should _not_ be a single root
+        const w = <Wrapper />
+    }
+    
+    {
+        <#component Wrapper(children: (ChildNode | string)[]) {
+            const a = document.createComment('')
+        }>
+            <div>
+                <#run>
+                    const q = a as ChildNode
+                    while (true) {}
+                </>
+            </div>
+        </>
+    
+        const q = <div>
+            <Wrapper>a</Wrapper>
+        </div>
+        update q {}
+               ~
+!!! error TS95210: update has no plausible effect on 'q', the block does not reference any variable that 'q' depends on.
+    }
+    

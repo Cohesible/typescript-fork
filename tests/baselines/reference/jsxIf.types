@@ -1,0 +1,211 @@
+//// [tests/cases/syn/jsxIf.syn] ////
+
+=== jsxIf.syn ===
+{
+    const d3 = <div>
+>d3 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div>        <#if (true)>            <div></div>        </>    </div> : HTMLDivElement
+>                                                                      : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <#if (true)>
+>true : true
+>     : ^^^^
+
+            <div></div>
+><div></div> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+        </>
+    </div>
+>div : any
+>    : ^^^
+
+    const cond = true
+>cond : true
+>     : ^^^^
+>true : true
+>     : ^^^^
+
+    const d4 = <div><#if (cond)></></div>
+>d4 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div><#if (cond)></></div> : HTMLDivElement
+>                           : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>cond : true
+>     : ^^^^
+>div : any
+>    : ^^^
+}
+
+{
+    // cfa should work inside <#if>
+    let v = undefined as { x: () => number } | undefined
+>v : { x: () => number; } | undefined
+>  : ^^^^^            ^^^^^^^^^^^^^^^
+>undefined as { x: () => number } | undefined : { x: () => number; } | undefined
+>                                             : ^^^^^            ^^^^^^^^^^^^^^^
+>undefined : undefined
+>          : ^^^^^^^^^
+>x : () => number
+>  : ^^^^^^      
+
+    const d = <div>
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div>        <#if (v)>          <div>{v.x()}</div>        </>    </div> : HTMLDivElement
+>                                                                        : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <#if (v)>
+>v : { x: () => number; } | undefined
+>  : ^^^^^            ^^^^^^^^^^^^^^^
+
+          <div>{v.x()}</div>
+><div>{v.x()}</div> : HTMLDivElement
+>                   : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>v.x() : number
+>      : ^^^^^^
+>v.x : () => number
+>    : ^^^^^^      
+>v : { x: () => number; }
+>  : ^^^^^            ^^^
+>x : () => number
+>  : ^^^^^^      
+>div : any
+>    : ^^^
+
+        </>
+    </div>
+>div : any
+>    : ^^^
+}
+
+{
+    const cond = true as boolean
+>cond : boolean
+>     : ^^^^^^^
+>true as boolean : boolean
+>                : ^^^^^^^
+>true : true
+>     : ^^^^
+
+    // [] | [HtmlDivElement]
+    const if1 = <#if (cond)>
+>if1 : [HTMLDivElement] | []
+>    : ^^^^^^^^^^^^^^^^^^^^^
+>cond : boolean
+>     : ^^^^^^^
+
+      <div></div>
+><div></div> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+    </>
+    // [HtmlDivElement]
+    const if2 = <#if (true)>
+>if2 : [HTMLDivElement]
+>    : ^^^^^^^^^^^^^^^^
+>true : true
+>     : ^^^^
+
+      <div></div>
+><div></div> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+    </>
+    // []
+    const if3 = <#if (false)>
+>if3 : []
+>    : ^^
+>false : false
+>      : ^^^^^
+
+      <div></div>
+><div></div> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+    </>
+}
+
+{
+    let filterState: 'all' | 'completed' | 'active' = 'all';
+>filterState : "all" | "completed" | "active"
+>            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>'all' : "all"
+>      : ^^^^^
+
+    <div>
+><div>        <#run>            let c            switch (filterState) {                case 'all': c = 1;                case 'completed': c = 2;                case 'active': c = 3;            }        </>    </div> : HTMLDivElement
+>                                                                                                                                                                                                                        : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <#run>
+            let c
+>c : any
+>  : ^^^
+
+            switch (filterState) {
+>filterState : "all"
+>            : ^^^^^
+
+                case 'all': c = 1;
+>'all' : "all"
+>      : ^^^^^
+>c = 1 : 1
+>      : ^
+>c : any
+>  : ^^^
+>1 : 1
+>  : ^
+
+                case 'completed': c = 2;
+>'completed' : "completed"
+>            : ^^^^^^^^^^^
+>c = 2 : 2
+>      : ^
+>c : any
+>  : ^^^
+>2 : 2
+>  : ^
+
+                case 'active': c = 3;
+>'active' : "active"
+>         : ^^^^^^^^
+>c = 3 : 3
+>      : ^
+>c : any
+>  : ^^^
+>3 : 3
+>  : ^
+            }
+        </>
+    </div>
+>div : any
+>    : ^^^
+}
+

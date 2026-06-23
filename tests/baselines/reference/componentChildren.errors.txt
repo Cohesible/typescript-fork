@@ -1,0 +1,155 @@
+componentChildren.syn(31,23): error TS95227: The type of 'id' cannot be inferred from its usage in this component. An explicit type annotation is needed.
+componentChildren.syn(81,11): error TS95207: Duplicate labeled fragment ':content'.
+componentChildren.syn(84,20): error TS2746: This component expects a single child of type '{ content: [Text, string]; }', but multiple children were provided.
+componentChildren.syn(86,9): error TS95206: Named children must be used consistently: either all children must be labeled fragments or none.
+componentChildren.syn(107,15): error TS2322: Type '[string, string]' is not assignable to type '[string]'.
+  Source has 2 element(s) but target allows only 1.
+
+
+==== componentChildren.syn (5 errors) ====
+    {
+        <#component One(children)>
+            <div>{...children}</div>
+        </>
+    
+        <#component Two(children)>
+            <div>{children[0]}</div>
+        </>
+    
+        <#component Three(children)>
+            <One>{...children}</One>
+        </>
+    
+        <#component Four(children)>
+            <#component Inner(children: string[])>
+                <div>{...children}</div>
+            </>
+            <Inner>{...children}</Inner>
+        </>
+    
+        <#component Five(id)>
+            <div id={id} />
+        </>
+    
+        <#component Six(id)>
+            <div id={id}>
+                {id}
+            </div>
+        </>
+    
+        <#component Seven(id)>
+                          ~~
+!!! error TS95227: The type of 'id' cannot be inferred from its usage in this component. An explicit type annotation is needed.
+            <div id={id}>
+                <#run>
+                    const f = `${id}`
+                </>
+                {f}
+            </div>
+        </>
+    }
+    
+    {
+        // plain labeled fragment
+        <#component Foo(children: { content: [Text, string] })>
+            <div>{...children.content}</div>
+        </>
+        const r_lf1 = <Foo>
+            <:content>hi{'there'}</>
+        </Foo>
+    
+        // callable labeled fragment
+        ;<#component Bar(children: { item: (val: string) => [HTMLSpanElement] })>
+            <div>{...children.item("test")}</div>
+        </>
+        const r_lf2 = <Bar>
+            <:item(val: string)><span>{val}</span></>
+        </Bar>
+    
+        // contextual typing
+        ;<#component Ctx(children: { slot: (n: number, s: string) => [HTMLDivElement] })>
+            <div>{...children.slot(1, 'hi')}</div>
+        </>
+        const r_ctx = <Ctx>
+            <:slot(n, s)><div>{n.toFixed()}{s.toUpperCase()}</div></>
+        </Ctx>
+    
+        ;<#component Ctx2(children: { slot: (s: string) => [string] })>
+            <div>{...children.slot('hi')}</div>
+        </>
+        const r_ctx2 = <Ctx2>
+            <:slot(s)>{s}</>
+        </Ctx2>
+    
+        const r_ctx3 = <Ctx2>
+            {...{
+                slot: s => <>{s}</>
+            }}
+        </Ctx2>
+    
+        const r_dup = <Foo>
+            <:content>hi{'there'}</>
+            <:content>oh{'no'}</>
+              ~~~~~~~
+!!! error TS95207: Duplicate labeled fragment ':content'.
+        </Foo>
+    
+        const r_mix = <Foo>
+                       ~~~
+!!! error TS2746: This component expects a single child of type '{ content: [Text, string]; }', but multiple children were provided.
+            <div>hi</div>
+            <:content>there{'!'}</>
+            ~~~~~~~~~~~~~~~~~~~~~~~
+!!! error TS95206: Named children must be used consistently: either all children must be labeled fragments or none.
+        </Foo>
+    
+        <#component OptChildren(children: { slot?: (s: string) => [string] })>
+            <div>{...(children.slot?.('hi') ?? [])}</div>
+        </>
+    
+        const opt_cond = true as boolean
+        const opt_1 = <OptChildren>
+            <#if (opt_cond)>
+                <:slot(v2)>
+                    {v2}
+                </>
+            </>
+        </OptChildren>
+        const opt_2 = <OptChildren>
+            <#if (opt_cond)>
+                <:slot(v2)>
+                    {v2}
+                </>
+            </><#else>
+                <:slot(v2)>
+                  ~~~~
+!!! error TS2322: Type '[string, string]' is not assignable to type '[string]'.
+!!! error TS2322:   Source has 2 element(s) but target allows only 1.
+                    {v2}{v2}
+                </>
+            </>
+        </OptChildren>
+    }
+    
+    {
+        <#component List<T>(items: T[], children: [(x: T) => ChildNode], key?: (x: T) => string | number)>
+            <div>
+                {children[0](items[0])}
+            </div>
+        </>
+        const items = [
+            { id: 1, first: '1', last: '2' },
+            { id: 2, first: '3', last: '4' }
+        ]
+        const l = <List {items} key={x => x.id}>
+            {x => <div>{x.first} {x.last}</div>}
+        </List>
+    
+        function List2<T>(attrs: { items: T[] }, children: [(x: T) => ChildNode]) {
+            return <div></div>
+        }
+        const l2 = <List2 {items}>
+            {x => <div>{x.first} {x.last}</div>}
+        </List2>
+    }
+    

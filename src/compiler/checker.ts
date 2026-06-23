@@ -1161,7 +1161,6 @@ import {
     findJsxElseDirective,
     JsxElseDirective,
     isJsxContainer,
-    isJsxChild,
     isJsxClassAttribute,
     isJsxClassList,
 } from "./_namespaces/ts.js";
@@ -1454,6 +1453,7 @@ const enum IntrinsicTypeKind {
     Lowercase,
     Capitalize,
     Uncapitalize,
+    SelectedDOMTag,
     NoInfer,
 }
 
@@ -1462,6 +1462,7 @@ const intrinsicTypeKinds: ReadonlyMap<string, IntrinsicTypeKind> = new Map(Objec
     Lowercase: IntrinsicTypeKind.Lowercase,
     Capitalize: IntrinsicTypeKind.Capitalize,
     Uncapitalize: IntrinsicTypeKind.Uncapitalize,
+    SelectedDOMTag: IntrinsicTypeKind.SelectedDOMTag,
     NoInfer: IntrinsicTypeKind.NoInfer,
 }));
 
@@ -1643,6 +1644,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         getTypeOfSymbolAtLocation: (symbol, locationIn) => {
             const location = getParseTreeNode(locationIn);
             return location ? getTypeOfSymbolAtLocation(symbol, location) : errorType;
+        },
+        getInferredTypeForAutoVariable: (declIn) => {
+            const decl = getParseTreeNode(declIn, isVariableDeclaration);
+            return decl ? getInferredTypeForAutoVariable(decl) : undefined;
         },
         getTypeOfSymbol,
         getSymbolsOfParameterPropertyDeclaration: (parameterIn, parameterName) => {
@@ -12095,6 +12100,36 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return getFlowTypeOfReference(reference, autoType, initialType);
     }
 
+    function getInferredTypeForAutoVariable(decl: VariableDeclaration): Type | undefined {
+        if (tryGetTypeFromEffectiveTypeNode(decl)) return undefined;
+        const symbol = getSymbolOfDeclaration(decl);
+        if (!symbol) return undefined;
+        if ((symbol as any)._resolvedAutoType) {
+            return (symbol as any)._resolvedAutoType;
+        }
+        const declaredType = getTypeOfSymbol(symbol);
+        (symbol as any)._resolvedAutoType = declaredType;
+        if (declaredType !== autoType && declaredType !== autoArrayType) return undefined;
+        
+        const scope = findAncestor(decl.parent, n =>
+            isJsxContainer(n) ||
+            isFunctionLike(n) ||
+            isSourceFile(n));
+        if (!scope) return undefined;
+        const endFlowNode: FlowNode | undefined = (scope as any).endFlowNode;
+        if (!endFlowNode) return undefined;
+
+        const reference = factory.createIdentifier(unescapeLeadingUnderscores(symbol.escapedName));
+        setParent(reference, decl.parent);
+        reference.flowNode = endFlowNode;
+        getNodeLinks(reference).resolvedSymbol = symbol;
+
+        const flowType = getFlowTypeOfReference(reference, declaredType, undefinedType);
+        if (flowType === autoType || flowType === autoArrayType) return undefined;
+        if (everyType(flowType, isNullableType)) return undefined;
+        return (symbol as any)._resolvedAutoType = convertAutoToAny(flowType);
+    }
+
     function getWidenedTypeForAssignmentDeclaration(symbol: Symbol, resolvedSymbol?: Symbol) {
         // function/class/{} initializers are themselves containers, so they won't merge in the same way as other initializers
         const container = getAssignedExpandoInitializer(symbol.valueDeclaration);
@@ -17135,7 +17170,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         if (type === intrinsicMarkerType) {
             const typeKind = intrinsicTypeKinds.get(symbol.escapedName as string);
             if (typeKind !== undefined && typeArguments && typeArguments.length === 1) {
-                return typeKind === IntrinsicTypeKind.NoInfer ? getNoInferType(typeArguments[0]) : getStringMappingType(symbol, typeArguments[0]);
+                return typeKind === IntrinsicTypeKind.NoInfer ? getNoInferType(typeArguments[0]) :
+                    getStringMappingType(symbol, typeArguments[0], typeKind);
             }
         }
         const links = getSymbolLinks(symbol);
@@ -17658,6 +17694,151 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
     function getGlobalErrType() {
         return (deferredGlobalErrType ||= getGlobalType("Err" as __String, /*arity*/ 1, /*reportErrors*/ false)) || emptyGenericType;
+    }
+
+    // crude css selector scanner
+    function scanLeafTagNamesFromSelector(text: string): string | string[] | undefined {
+        const result: string[] = [];
+        let start = 0;
+        let end = 0;
+        let i = 0;
+        let tmpResult: string[] | undefined;
+        let canScanTypeTag = true;
+        while (i < text.length) {
+            const ch = text[i++];
+            switch (ch) {
+                case '\\':
+                    scanEscape();
+                    canScanTypeTag = false; // TODO: maybe support escapes, each name has to be constructed from code points
+                    break;
+                case '(':
+                case '[':
+                    if (!scanSimpleBlock(ch)) return undefined;
+                    canScanTypeTag = false;
+                    break;
+                case '\t':
+                case '\r':
+                case '\n':
+                case ' ':
+                    if (text[i] === ' ' || text[i] === '\t' || text[i] === '\r' || text[i] === '\n' || !text[i]) continue;
+                    // falls through
+                case '+':
+                case '~':
+                case '>':
+                case '|':
+                    start = i;
+                    canScanTypeTag = true;
+                    tmpResult = undefined;
+                    break;
+                case '*':
+                    if (canScanTypeTag) start = i;
+                    canScanTypeTag = false;
+                    break;
+                case ':':
+                    let parenStart;
+                    if (text[i] === 'i' && text[i+1] === 's' && text[i+2] === '(') {
+                        parenStart = i+3;
+                    } else if (text[i] === 'w' && text.slice(i, i+6) === 'where(') {
+                        parenStart = i+6;
+                    }
+                    if (parenStart) {
+                        i = parenStart;
+                        if (!scanSimpleBlock('(')) return undefined;
+                        const inner = scanLeafTagNamesFromSelector(text.slice(parenStart, i-1));
+                        if (!inner) return undefined;
+                        if (inner !== '*') {
+                            tmpResult ??= []
+                            if (typeof inner === 'string') tmpResult.push(inner)
+                            else tmpResult.push(...inner);    
+                        }
+                    }
+                    canScanTypeTag = false;
+                    break;
+                case ',':
+                    if (tmpResult) {
+                        result.push(...tmpResult);
+                        tmpResult = undefined;
+                    } else {
+                        if (start < end) result.push(text.slice(start, end));
+                        else return '*'; // conservatively bail out to avoid overly precise types
+                    }
+                    start = i;
+                    canScanTypeTag = true;
+                    break;
+                default:
+                    if (canScanTypeTag) {
+                        const code = ch.charCodeAt(0);
+                        if (isTypeIdentCodePoint(code)) end = i;
+                        else canScanTypeTag = false;
+                    }
+                    break;
+            }
+        }
+        if (tmpResult) {
+            result.push(...tmpResult);
+            return result;
+        }
+        if (start >= end) return canScanTypeTag ? undefined : '*';
+        if (!result.length) return text.slice(start, end);
+        result.push(text.slice(start, end));
+        return result;
+
+        function scanString(quote: string) {
+            while (i < text.length) {
+                switch (text[i++]) {
+                    case quote: return true;
+                    case '\\': scanEscape();
+                }
+            }
+        }
+
+        function scanEscape() {
+            let digits = 0;
+            while (i < text.length) {
+                const ch = text.charCodeAt(i++);
+                if (
+                    (ch >= 48 /*0*/ && ch <= 57 /*9*/) ||
+                    (ch >= 65 /*A*/ && ch <= 70 /*F*/) ||
+                    (ch >= 97 /*a*/ && ch <= 102 /*f*/) 
+                ) {
+                    digits += 1;
+                    if (digits === 6) break;
+                } else break;
+            }
+            if (digits === 0 || text[i] === ' ') i += 1;
+        }
+
+        function scanSimpleBlock(start: string) {
+            const end = start === '(' ? ')' : ']'
+            while (i < text.length) {
+                const ch = text[i++];
+                if (ch === end) return start !== '[' || (text[i-1] !== start && text[i-2] !== '\\');
+                else if (ch === '\\') scanEscape();
+                else if (ch === '(' || ch === '[') {
+                    if (!scanSimpleBlock(ch)) return false;
+                }
+                else if (ch === '\'' || ch === '"') {
+                    if (!scanString(ch)) return false;
+                }
+            }
+        }
+
+        // only handles ascii
+        function isTypeIdentCodePoint(code: number) {
+            return (code >= 97 /*a*/ && code <= 122 /*z*/) ||
+                (code >= 65 /*A*/ && code <= 90 /*Z*/) ||
+                (code >= 48 /*0*/ && code <= 57 /*9*/) || code === 45 /*-*/ || code === 95 /*_*/;
+        }
+    }
+
+    function getSelectedDOMTag(type: Type): Type {
+        if (type.flags & TypeFlags.StringLiteral) {
+            const names = scanLeafTagNamesFromSelector((type as StringLiteralType).value);
+            if (!names) return neverType;
+            if (typeof names === 'string') return getStringLiteralType(names);
+            return getUnionType(names.map(n => getStringLiteralType(n)))
+        }
+        return neverType;
     }
 
     function isErrorArmType(t: Type): boolean {
@@ -19187,18 +19368,11 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return links.resolvedType;
     }
 
-    /**
-     * Returns a "Did you forget 'try'?" related-info diagnostic when `source` is a
-     * fallible union (contains Error subtypes) and stripping those errors would make
-     * it assignable to `target`.
-     */
     function getFallibleTryHint(source: Type, target: Type, errorNode: Node): Diagnostic | undefined {
-        // source must be a union that contains at least one error-arm type
         if (!(source.flags & TypeFlags.Union)) return undefined;
         const parts = (source as UnionType).types;
         const errorParts = parts.filter(t => isErrorArmType(t));
         if (!errorParts.length) return undefined;
-        // stripping the errors must make the remaining type(s) assignable to target
         const nonErrorParts = parts.filter(t => !isErrorArmType(t));
         if (!nonErrorParts.length) return undefined;
         const strippedSource = nonErrorParts.length === 1 ? nonErrorParts[0] : getUnionType(nonErrorParts);
@@ -19293,10 +19467,25 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return type;
     }
 
-    function getStringMappingType(symbol: Symbol, type: Type): Type {
-        return type.flags & (TypeFlags.Union | TypeFlags.Never) ? mapType(type, t => getStringMappingType(symbol, t)) :
-            type.flags & TypeFlags.StringLiteral ? getStringLiteralType(applyStringMapping(symbol, (type as StringLiteralType).value)) :
-            type.flags & TypeFlags.TemplateLiteral ? getTemplateLiteralType(...applyTemplateStringMapping(symbol, (type as TemplateLiteralType).texts, (type as TemplateLiteralType).types)) :
+    function getStringMappingType(symbol: Symbol, type: Type, kindHint?: IntrinsicTypeKind): Type {
+        if (kindHint === undefined) {
+            kindHint = intrinsicTypeKinds.get(symbol.escapedName as string);
+        }
+        if (kindHint === IntrinsicTypeKind.SelectedDOMTag) {
+            if (type === stringType) return getStringLiteralType('*');
+            if (type.flags & TypeFlags.StringLiteral) {
+                return getSelectedDOMTag(type);
+            }
+            if (type.flags & TypeFlags.TemplateLiteral) {
+                // we treat the type portions as being '*'
+                // this is not totally correct but works well in practice
+                const texts = (type as TemplateLiteralType).texts;
+                return getSelectedDOMTag(getStringLiteralType(texts.join('*')));
+            }
+        }
+        return type.flags & (TypeFlags.Union | TypeFlags.Never) ? mapType(type, t => getStringMappingType(symbol, t, kindHint)) :
+            type.flags & TypeFlags.StringLiteral ? getStringLiteralType(applyStringMapping(symbol, (type as StringLiteralType).value, kindHint)) :
+            type.flags & TypeFlags.TemplateLiteral ? getTemplateLiteralType(...applyTemplateStringMapping(symbol, (type as TemplateLiteralType).texts, (type as TemplateLiteralType).types, kindHint)) :
             // Mapping<Mapping<T>> === Mapping<T>
             type.flags & TypeFlags.StringMapping && symbol === type.symbol ? type :
             type.flags & (TypeFlags.Any | TypeFlags.String | TypeFlags.StringMapping) || isGenericIndexType(type) ? getStringMappingTypeForGenericType(symbol, type) :
@@ -19305,8 +19494,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             type;
     }
 
-    function applyStringMapping(symbol: Symbol, str: string) {
-        switch (intrinsicTypeKinds.get(symbol.escapedName as string)) {
+    function applyStringMapping(symbol: Symbol, str: string, kindHint?: IntrinsicTypeKind) {
+        switch (kindHint ?? intrinsicTypeKinds.get(symbol.escapedName as string)) {
             case IntrinsicTypeKind.Uppercase:
                 return str.toUpperCase();
             case IntrinsicTypeKind.Lowercase:
@@ -19319,16 +19508,16 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return str;
     }
 
-    function applyTemplateStringMapping(symbol: Symbol, texts: readonly string[], types: readonly Type[]): [texts: readonly string[], types: readonly Type[]] {
-        switch (intrinsicTypeKinds.get(symbol.escapedName as string)) {
+    function applyTemplateStringMapping(symbol: Symbol, texts: readonly string[], types: readonly Type[], kindHint?: IntrinsicTypeKind): [texts: readonly string[], types: readonly Type[]] {
+        switch (kindHint ?? intrinsicTypeKinds.get(symbol.escapedName as string)) {
             case IntrinsicTypeKind.Uppercase:
-                return [texts.map(t => t.toUpperCase()), types.map(t => getStringMappingType(symbol, t))];
+                return [texts.map(t => t.toUpperCase()), types.map(t => getStringMappingType(symbol, t, IntrinsicTypeKind.Uppercase))];
             case IntrinsicTypeKind.Lowercase:
-                return [texts.map(t => t.toLowerCase()), types.map(t => getStringMappingType(symbol, t))];
+                return [texts.map(t => t.toLowerCase()), types.map(t => getStringMappingType(symbol, t, IntrinsicTypeKind.Lowercase))];
             case IntrinsicTypeKind.Capitalize:
-                return [texts[0] === "" ? texts : [texts[0].charAt(0).toUpperCase() + texts[0].slice(1), ...texts.slice(1)], texts[0] === "" ? [getStringMappingType(symbol, types[0]), ...types.slice(1)] : types];
+                return [texts[0] === "" ? texts : [texts[0].charAt(0).toUpperCase() + texts[0].slice(1), ...texts.slice(1)], texts[0] === "" ? [getStringMappingType(symbol, types[0], IntrinsicTypeKind.Capitalize), ...types.slice(1)] : types];
             case IntrinsicTypeKind.Uncapitalize:
-                return [texts[0] === "" ? texts : [texts[0].charAt(0).toLowerCase() + texts[0].slice(1), ...texts.slice(1)], texts[0] === "" ? [getStringMappingType(symbol, types[0]), ...types.slice(1)] : types];
+                return [texts[0] === "" ? texts : [texts[0].charAt(0).toLowerCase() + texts[0].slice(1), ...texts.slice(1)], texts[0] === "" ? [getStringMappingType(symbol, types[0], IntrinsicTypeKind.Uncapitalize), ...types.slice(1)] : types];
         }
         return [texts, types];
     }
@@ -30739,7 +30928,13 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         // to it at the given location. Since we have no control flow information for the
         // hypothetical reference (control flow information is created and attached by the
         // binder), we simply return the declared type of the symbol.
-        return isRightSideOfAccessExpression(location) && isWriteAccess(location.parent) ? getWriteTypeOfSymbol(symbol) : getNonMissingTypeOfSymbol(symbol);
+        const baseType = isRightSideOfAccessExpression(location) && isWriteAccess(location.parent) ? getWriteTypeOfSymbol(symbol) : getNonMissingTypeOfSymbol(symbol);
+        // For unannotated auto-typed variables, try to surface the inferred type from
+        // control-flow assignments so hover shows the real type rather than `any`/`any[]`.
+        if ((baseType === autoType || baseType === autoArrayType) && isDeclarationName(location) && isVariableDeclaration(location.parent)) {
+            return getInferredTypeForAutoVariable(location.parent as VariableDeclaration) ?? baseType;
+        }
+        return baseType;
     }
 
     function getControlFlowContainer(node: Node): Node {
@@ -32438,6 +32633,12 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return getTypeAtPosition(contextualSig, frag.parameters!.indexOf(parameter));
             }
             return;
+        }
+        if ((func as Node).kind === SyntaxKind.JsxComponentDirective) {
+            const decl = func as unknown as JsxComponentDirective;
+            if (!parameter.initializer && !parameter.type) {
+                return inferComponentParamType(parameter, decl);
+            }
         }
         if (!isContextSensitiveFunctionOrObjectLiteralMethod(func) && func.kind !== SyntaxKind.JsxMethodAttribute) {
             return undefined;
@@ -34345,13 +34546,16 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
         if (localTypeParameters || outerTypeParameters?.length) {
             type.objectFlags |= ObjectFlags.Reference;
+            type.target = type;
             type.typeParameters = concatenate(outerTypeParameters, localTypeParameters);
             type.outerTypeParameters = outerTypeParameters;
             type.localTypeParameters = localTypeParameters;
             type.instantiations = new Map();
             type.instantiations.set(getTypeListId(type.typeParameters), type);
-            type.target = type;
             type.resolvedTypeArguments = type.typeParameters;
+        } else if (node.symbol) {
+            type.objectFlags |= ObjectFlags.Reference;
+            type.target = type;
         }
 
         return type;
@@ -34486,7 +34690,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             if (inClosure && isIdentifier(node) && !isDeclarationName(node) && nodeMaybeHasLexicalScopedSymbol(node)) {
                 const sym = getResolvedSymbol(node);
                 if (treeLocalSymbols.has(sym)) {
-                    error(node, Diagnostics.Static_declarations_cannot_capture_the_non_static_tree_local_0, idText(node));
+                    error(node, Diagnostics.Static_declarations_cannot_capture_non_static_tree_locals_0, idText(node));
                 }
             }
             forEachChild(node, child => walkForCaptures(child, inClosure));
@@ -34654,6 +34858,13 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function inferComponentParamType(param: ParameterDeclaration, componentNode: JsxComponentDirective): Type | undefined {
+        if (param.initializer) {
+            let initializerType = checkDeclarationInitializer(param, CheckMode.Normal);
+            if (!param.type) {
+                initializerType = widenTypeInferredFromInitializer(param, initializerType);
+            }
+            return initializerType;
+        }
         const paramSym = param.symbol;
         const links = getSymbolLinks(paramSym);
         if (links.type) return links.type;
@@ -34785,6 +34996,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         function visitJsxAttributes(attributes: JsxAttributes) {
             for (const attr of attributes.properties) {
                 switch (attr.kind) {
+                    case SyntaxKind.JsxMethodAttribute:
+                        visitInvalidPosition(attr);
+                        break;
                     case SyntaxKind.JsxAttribute:
                         if (attr.initializer && attr.initializer.kind === SyntaxKind.JsxExpression) {
                             visitExpr(attr.initializer, getEscapedTextOfJsxAttributeName(attr.name));
@@ -34864,6 +35078,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             }
             const optional = !!param.questionToken || !!param.initializer;
             const propSym = createProperty(paramName, optional ? getOptionalType(paramType, /*isProperty*/ true) : paramType);
+            propSym.declarations ??= [param];
             if (optional) propSym.flags |= SymbolFlags.Optional;
             members.set(paramName, propSym);
         }
@@ -35628,8 +35843,13 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             // In React, JSX text that contains only whitespaces will be ignored so we don't want to type-check that
             // because then type of children property will have constituent of string type.
             if (child.kind === SyntaxKind.JsxText) {
-                if (!child.containsOnlyTriviaWhiteSpaces) {
-                    elementTypes.push(stringType);
+                if (!child.containsOnlyTriviaWhiteSpaces || (isSynFile && !child.text.includes('\n'))) {
+                    if (isSynFile) {
+                        const elementType = getGlobalType("Text" as __String, 0, /*reportErrors*/ true);
+                        elementTypes.push(elementType);
+                    } else {
+                        elementTypes.push(stringType);
+                    }
                     elementFlags.push(ElementFlags.Required);
                 }
             }
@@ -40064,7 +40284,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         links.assertionExpressionType = exprType;
         checkSourceElement(node.type);
         checkNodeDeferred(node);
-        return getTypeFromTypeNode(node.type);
+        return booleanType;
     }
 
     function isValidConstAssertionArgument(node: Node): boolean {
@@ -51628,6 +51848,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
     function nodeMaybeHasLexicalScopedSymbol(node: Node) {
         if (isJsxClassAttribute(node.parent)) return false;
+        if (node.parent.kind === SyntaxKind.JsxNamespacedName) return false;
         if ((isJsxAttribute(node.parent)) && node.parent.name === node) return false;
         if (isJsxOpeningLikeElement(node.parent) && node.parent.tagName === node) return false;
         if (node.parent.kind === SyntaxKind.JsxClosingElement) return false;
@@ -53443,6 +53664,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             if (symbol) {
                 return getTypeOfSymbol(symbol);
             }
+        }
+
+        if (node.kind === SyntaxKind.JsxComponentDirective) {
+            return getJsxComponentDirectiveType(node as JsxComponentDirective);
         }
 
         return errorType;

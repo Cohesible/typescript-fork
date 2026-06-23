@@ -438,8 +438,8 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 
 {
     const elements: Element[] = []
-    function Foo(props: { children: Element[] }) {
-        return <div>{...props.children}</div>
+    function Foo(attrs: {}, children: Element[]) {
+        return <div>{...children}</div>
     }
     const f = <Foo>{...elements}</Foo>
     const y = <Foo>{elements}</Foo> // error
@@ -449,14 +449,14 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
     const x3 = <Foo>a</Foo> // error (string is not Element)
     const x4 = <Foo/> // error (this is explictly no elements)
 
-    function Foo2(props: { children: [string, number] }) {
+    function Foo2(attrs: {}, children: [string, number]) {
         return <div></div>
     }
     const f2 = <Foo2>{'hi'}{...([1,2] as number[])}</Foo2> // error
     const f3 = <Foo2>{'hi'}{...([1] as [number])}</Foo2> // no error
 
-    function FooOpt(props: { children?: Element[] }) {
-        return <div>{...(props.children ?? [])}</div>
+    function FooOpt(attrs?: never, children?: Element[]) {
+        return <div>{...(children ?? [])}</div>
     }
     {
         const f = <FooOpt>{...elements}</FooOpt> // no error
@@ -469,8 +469,8 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
     }
 
     {
-        function F1(props: { v: string }) {
-            return <span>{props.v}</span>
+        function F1(attrs: { v: string }) {
+            return <span>{attrs.v}</span>
         }
         function Main() {
             const v = 'aaa'
@@ -830,6 +830,71 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 }
 
 {
+    let filterState: 'all' | 'completed' | 'active' = 'all'
+    ;<div @ d>
+        <#run>
+            let c
+            switch (filterState) {
+                case 'all': c = 1;
+                case 'completed': c = 2;
+                case 'active': c = 3;
+            }
+        </>
+    </div>
+}
+
+{
+    type X = SelectedDOMTag<'input[type=text]'>
+    type Y = SelectedDOMElement<'input[type=text]'>
+    const r1 = document.querySelector('input[type=text]')
+    const r2 = document.querySelector<HTMLInputElement>('.aa')
+    const r3 = document.querySelector('div' as string)
+    const r4 = document.querySelectorAll('button, [role="button"]')
+    const r5 = document.querySelectorAll('button, div[role=button]')
+    const r6 = document.querySelector('' as `my-ns-${string}`)
+    const r7 = document.querySelector('' as `input.${string}`)
+    const r8 = document.querySelector('' as `input ${string}`)
+    const r9 = document.querySelector('' as `input > ${string}`)
+    const r10 = document.querySelector('' as `input:has(${string})`)
+    const r11 = document.querySelector('' as `input[data-x=${string}]`)
+    const r12 = document.querySelector('a#link')
+    const r13 = document.querySelector(`
+    :is(a, div)
+    :is(button, input)    
+    `)
+    const r14 = document.querySelector('table:not(:has(> caption))')
+    const r15 = document.querySelector('a.status-actions:is(a[href^="/"])')
+    const r16 = document.querySelector(':is(a, button).c')
+    const r17 = document.querySelector(':is(h1, h2, h3, h4):where(.foo)')
+    const r18 = document.querySelector('div:first-child')
+
+    const m1 = document.querySelector('a[foo')
+}
+
+{
+    <#component Foo(children)>
+        <div>{...children}</div>
+    </>
+    document.body.append(<div @ d>
+        <#run>
+            static let cond = false
+            static let count = 0
+        </>
+        <Foo>
+            <#if (cond)>
+                test
+            </>
+        </Foo>
+        <button on:click() {
+            update d {
+                cond = !cond
+            }
+        }>click</button>
+    </div>)
+}
+
+
+{
     ;<div @ p>
         <#run>
             let c = ''
@@ -927,7 +992,7 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
         {x => <div>{x.first} {x.last}</div>}
     </List>
 
-    function List2<T>(props: { items: T[], children: [(x: T) => ChildNode]}) {
+    function List2<T>(attrs: { items: T[] }, children: [(x: T) => ChildNode]) {
         return <div></div>
     }
     const l2 = <List2 {items}>
@@ -1624,7 +1689,7 @@ export <#component ExportedComp()>
 //   <div />
 // </>
 //
-// Foo is then typed as `(props: { x: string }) => HTMLDivElement`
+// Foo is then typed as `(attrs: { x: string }) => HTMLDivElement`
 //
 //
 //
@@ -1731,7 +1796,7 @@ export <#component ExportedComp()>
         <div>{x}</div>
     </>
     const r1 = <Foo x="hi" />
-    // Foo is typed as (props: { x: string }) => HTMLDivElement
+    // Foo is typed as (attrs: { x: string }) => HTMLDivElement
 
     ;<#component Bar(x: string)>
         <div>{x}</div>
@@ -1761,7 +1826,7 @@ export <#component ExportedComp()>
     const Expr = <#component(x: string): HTMLDivElement>
         <div>{x}</div>
     </>
-    // Expr is (props: { x: string }) => HTMLDivElement
+    // Expr is (attrs: { x: string }) => HTMLDivElement
     const r5 = <Expr x="hello" />
 }
 
@@ -1785,7 +1850,7 @@ export <#component ExportedComp()>
 
 {
     // plain labeled fragment
-    <#component Foo(children: { content: [string, string] })>
+    <#component Foo(children: { content: [Text, string] })>
         <div>{...children.content}</div>
     </>
     const r_lf1 = <Foo>
@@ -1800,7 +1865,7 @@ export <#component ExportedComp()>
         <:item(val: string)><span>{val}</span></>
     </Bar>
 
-    // contextual typingg
+    // contextual typing
     ;<#component Ctx(children: { slot: (n: number, s: string) => [HTMLDivElement] })>
         <div>{...children.slot(1, 'hi')}</div>
     </>

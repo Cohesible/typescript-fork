@@ -1,0 +1,131 @@
+//// [tests/cases/syn/switchFallthrough.syn] ////
+
+=== switchFallthrough.syn ===
+const x = 1 as number
+>x : number
+>  : ^^^^^^
+>1 as number : number
+>            : ^^^^^^
+>1 : 1
+>  : ^
+
+switch (x) {
+>x : number
+>  : ^^^^^^
+
+    case 0:
+>0 : 0
+>  : ^
+
+    case 1:
+>1 : 1
+>  : ^
+
+        const x2 = 1 // should not error
+>x2 : 1
+>   : ^
+>1 : 1
+>  : ^
+
+        if (x === 0) {
+>x === 0 : boolean
+>        : ^^^^^^^
+>x : 0 | 1
+>  : ^^^^^
+>0 : 0
+>  : ^
+
+            console.log('got 0')
+>console.log('got 0') : void
+>                     : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>'got 0' : "got 0"
+>        : ^^^^^^^
+
+            fallthrough
+        }
+        console.log('got 1')
+>console.log('got 1') : void
+>                     : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>'got 1' : "got 1"
+>        : ^^^^^^^
+
+    case 2:
+>2 : 2
+>  : ^
+
+        const x2 = 2
+>x2 : 2
+>   : ^
+>2 : 2
+>  : ^
+
+        const y = x // 0 | 2
+>y : 0 | 2
+>  : ^^^^^
+>x : 0 | 2
+>  : ^^^^^
+}
+
+{
+    const f = (): 1 | 2 => 1
+>f : () => 1 | 2
+>  : ^^^^^^     
+>(): 1 | 2 => 1 : () => 1 | 2
+>               : ^^^^^^     
+>1 : 1
+>  : ^
+
+    switch (const v = f()) {
+>v : 1 | 2
+>  : ^^^^^
+>f() : 1 | 2
+>    : ^^^^^
+>f : () => 1 | 2
+>  : ^^^^^^     
+
+        case 1: console.log('got 1', v)
+>1 : 1
+>  : ^
+>console.log('got 1', v) : void
+>                        : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>'got 1' : "got 1"
+>        : ^^^^^^^
+>v : 1
+>  : ^
+
+        case 2: console.log('got 2', v)
+>2 : 2
+>  : ^
+>console.log('got 2', v) : void
+>                        : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>'got 2' : "got 2"
+>        : ^^^^^^^
+>v : 2
+>  : ^
+    }
+}
+

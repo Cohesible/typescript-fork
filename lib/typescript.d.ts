@@ -8577,6 +8577,7 @@ declare namespace ts {
         readonly includeInlayVariableTypeHints?: boolean;
         readonly includeInlayVariableTypeHintsWhenTypeMatchesName?: boolean;
         readonly includeInlayPropertyDeclarationTypeHints?: boolean;
+        readonly includeInlayUninitializedTypeHints?: boolean;
         readonly includeInlayFunctionLikeReturnTypeHints?: boolean;
         readonly includeInlayEnumMemberValueHints?: boolean;
         readonly interactiveInlayHints?: boolean;

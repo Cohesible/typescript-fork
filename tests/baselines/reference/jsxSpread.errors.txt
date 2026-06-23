@@ -1,0 +1,88 @@
+jsxSpread.syn(2,5): error TS1184: Modifiers cannot appear here.
+jsxSpread.syn(4,29): error TS95200: 'Comp' returns 'Element[]' and cannot be used as a single JSX element. Did you mean '...Comp'?
+jsxSpread.syn(7,30): error TS2304: Cannot find name 'div'.
+jsxSpread.syn(8,30): error TS2304: Cannot find name 'div'.
+jsxSpread.syn(10,5): error TS1184: Modifiers cannot appear here.
+jsxSpread.syn(11,22): error TS2322: Type '{ children: (() => void)[]; }' is not assignable to type 'HTMLAttributes<HTMLDivElement>'.
+  Types of property 'children' are incompatible.
+    Type '(() => void)[]' is not assignable to type '(string | number | ChildNode)[]'.
+      Type '() => void' is not assignable to type 'string | number | ChildNode'.
+jsxSpread.syn(13,5): error TS1184: Modifiers cannot appear here.
+jsxSpread.syn(15,26): error TS95198: Spread JSX element type 'Element' is not an array type.
+jsxSpread.syn(17,5): error TS1184: Modifiers cannot appear here.
+jsxSpread.syn(28,8): error TS95200: 'Comp' returns 'Element[]' and cannot be used as a single JSX element. Did you mean '...Comp'?
+jsxSpread.syn(31,5): error TS1184: Modifiers cannot appear here.
+jsxSpread.syn(40,13): error TS2304: Cannot find name 'Unresolved'.
+
+
+==== jsxSpread.syn (12 errors) ====
+    {
+        declare function Comp(): { root: Element[] } & Updatable;
+        ~~~~~~~
+!!! error TS1184: Modifiers cannot appear here.
+        const spread1 = <div><...Comp /></div> // ok
+        const noSpread1 = <div><Comp /></div> // error
+                                ~~~~
+!!! error TS95200: 'Comp' returns 'Element[]' and cannot be used as a single JSX element. Did you mean '...Comp'?
+    
+        // errors on intrinsics
+        const spread2 = <div><...div /></div>
+                                 ~~~
+!!! error TS2304: Cannot find name 'div'.
+        const spread3 = <div><...div></div></div>
+                                 ~~~
+!!! error TS2304: Cannot find name 'div'.
+    
+        declare function Comp2(): { root: (() => void)[] } & Updatable
+        ~~~~~~~
+!!! error TS1184: Modifiers cannot appear here.
+        const spread4 = <div><...Comp2 /></div>  // error, intrinsics want something NodeLike
+                         ~~~
+!!! error TS2322: Type '{ children: (() => void)[]; }' is not assignable to type 'HTMLAttributes<HTMLDivElement>'.
+!!! error TS2322:   Types of property 'children' are incompatible.
+!!! error TS2322:     Type '(() => void)[]' is not assignable to type '(string | number | ChildNode)[]'.
+!!! error TS2322:       Type '() => void' is not assignable to type 'string | number | ChildNode'.
+    
+        declare function Comp3(): { root: Element } & Updatable;
+        ~~~~~~~
+!!! error TS1184: Modifiers cannot appear here.
+        const noSpread2 = <div><Comp3 /></div> // ok
+        const spread5 = <div><...Comp3 /></div> // error
+                             ~~~~~~~~~~~~
+!!! error TS95198: Spread JSX element type 'Element' is not an array type.
+    
+        declare function Comp4(attrs: {}, children: Element[]): { root: Element } & Updatable;
+        ~~~~~~~
+!!! error TS1184: Modifiers cannot appear here.
+        // ok
+        const spread6 = <Comp4>
+          <Comp3 />
+          <...Comp />
+          <...Comp></Comp>
+        </Comp4>
+    
+        // error
+        const spread7 = <Comp4>
+          <Comp3 />
+          <Comp />
+           ~~~~
+!!! error TS95200: 'Comp' returns 'Element[]' and cannot be used as a single JSX element. Did you mean '...Comp'?
+        </Comp4>
+    
+        declare function Comp5(): { root: [Element] | [] } & Updatable;
+        ~~~~~~~
+!!! error TS1184: Modifiers cannot appear here.
+        // ok
+        const spread8 = <Comp4>
+            <...Comp5 />
+        </Comp4>
+    }
+    
+    {
+        const d = <div>
+            <...Unresolved />
+                ~~~~~~~~~~
+!!! error TS2304: Cannot find name 'Unresolved'.
+        </div>
+    }
+    

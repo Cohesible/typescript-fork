@@ -1,0 +1,24 @@
+//// [tests/cases/syn/asiTweaks.syn] ////
+
+=== asiTweaks.syn ===
+const foo = () => {}
+>foo : () => void
+>    : ^^^^^^^^^^
+>() => {} : () => void
+>         : ^^^^^^^^^^
+
+const f = foo
+>f : () => void
+>  : ^^^^^^^^^^
+>foo : () => void
+>    : ^^^^^^^^^^
+
+(f as () => void)
+>(f as () => void) : () => void
+>                  : ^^^^^^    
+>f as () => void : () => void
+>                : ^^^^^^    
+>f : () => void
+>  : ^^^^^^^^^^
+
+

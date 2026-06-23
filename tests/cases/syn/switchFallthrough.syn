@@ -1,0 +1,22 @@
+const x = 1 as number
+switch (x) {
+    case 0:
+    case 1:
+        const x2 = 1 // should not error
+        if (x === 0) {
+            console.log('got 0')
+            fallthrough
+        }
+        console.log('got 1')
+    case 2:
+        const x2 = 2
+        const y = x // 0 | 2
+}
+
+{
+    const f = (): 1 | 2 => 1
+    switch (const v = f()) {
+        case 1: console.log('got 1', v)
+        case 2: console.log('got 2', v)
+    }
+}

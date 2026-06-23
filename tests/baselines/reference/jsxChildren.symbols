@@ -1,0 +1,253 @@
+//// [tests/cases/syn/jsxChildren.syn] ////
+
+=== jsxChildren.syn ===
+{
+    const elements: Element[] = []
+>elements : Symbol(elements, Decl(jsxChildren.syn, 1, 9))
+>Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
+
+    function Foo(attrs: {}, children: Element[]) {
+>Foo : Symbol(Foo, Decl(jsxChildren.syn, 1, 34))
+>attrs : Symbol(attrs, Decl(jsxChildren.syn, 2, 17))
+>children : Symbol(children, Decl(jsxChildren.syn, 2, 27))
+>Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
+
+        return <div>{...children}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>children : Symbol(children, Decl(jsxChildren.syn, 2, 27))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+    }
+    const f = <Foo>{...elements}</Foo>
+>f : Symbol(f, Decl(jsxChildren.syn, 5, 9))
+>Foo : Symbol(Foo, Decl(jsxChildren.syn, 1, 34))
+>elements : Symbol(elements, Decl(jsxChildren.syn, 1, 9))
+>Foo : Symbol(Foo, Decl(jsxChildren.syn, 1, 34))
+
+    const y = <Foo>{elements}</Foo> // error
+>y : Symbol(y, Decl(jsxChildren.syn, 6, 9))
+>Foo : Symbol(Foo, Decl(jsxChildren.syn, 1, 34))
+>elements : Symbol(elements, Decl(jsxChildren.syn, 1, 9))
+>Foo : Symbol(Foo, Decl(jsxChildren.syn, 1, 34))
+
+    const x0 = <Foo></Foo> // no error
+>x0 : Symbol(x0, Decl(jsxChildren.syn, 7, 9))
+>Foo : Symbol(Foo, Decl(jsxChildren.syn, 1, 34))
+>Foo : Symbol(Foo, Decl(jsxChildren.syn, 1, 34))
+
+    const x1 = <Foo><div/></Foo> // no error
+>x1 : Symbol(x1, Decl(jsxChildren.syn, 8, 9))
+>Foo : Symbol(Foo, Decl(jsxChildren.syn, 1, 34))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>Foo : Symbol(Foo, Decl(jsxChildren.syn, 1, 34))
+
+    const x2 = <Foo><div/><div/></Foo> // no error
+>x2 : Symbol(x2, Decl(jsxChildren.syn, 9, 9))
+>Foo : Symbol(Foo, Decl(jsxChildren.syn, 1, 34))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>Foo : Symbol(Foo, Decl(jsxChildren.syn, 1, 34))
+
+    const x3 = <Foo>a</Foo> // error (string is not Element)
+>x3 : Symbol(x3, Decl(jsxChildren.syn, 10, 9))
+>Foo : Symbol(Foo, Decl(jsxChildren.syn, 1, 34))
+>Foo : Symbol(Foo, Decl(jsxChildren.syn, 1, 34))
+
+    const x4 = <Foo/> // error (this is explicitly no elements)
+>x4 : Symbol(x4, Decl(jsxChildren.syn, 11, 9))
+>Foo : Symbol(Foo, Decl(jsxChildren.syn, 1, 34))
+
+    function Foo2(attrs: {}, children: [string, number]) {
+>Foo2 : Symbol(Foo2, Decl(jsxChildren.syn, 11, 21))
+>attrs : Symbol(attrs, Decl(jsxChildren.syn, 13, 18))
+>children : Symbol(children, Decl(jsxChildren.syn, 13, 28))
+
+        return <div></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+    }
+    const f2 = <Foo2>{'hi'}{...([1,2] as number[])}</Foo2> // error
+>f2 : Symbol(f2, Decl(jsxChildren.syn, 16, 9))
+>Foo2 : Symbol(Foo2, Decl(jsxChildren.syn, 11, 21))
+>Foo2 : Symbol(Foo2, Decl(jsxChildren.syn, 11, 21))
+
+    const f3 = <Foo2>{'hi'}{...([1] as [number])}</Foo2> // no error
+>f3 : Symbol(f3, Decl(jsxChildren.syn, 17, 9))
+>Foo2 : Symbol(Foo2, Decl(jsxChildren.syn, 11, 21))
+>Foo2 : Symbol(Foo2, Decl(jsxChildren.syn, 11, 21))
+
+    function FooOpt(attrs?: never, children?: Element[]) {
+>FooOpt : Symbol(FooOpt, Decl(jsxChildren.syn, 17, 56))
+>attrs : Symbol(attrs, Decl(jsxChildren.syn, 19, 20))
+>children : Symbol(children, Decl(jsxChildren.syn, 19, 34))
+>Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
+
+        return <div>{...(children ?? [])}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>children : Symbol(children, Decl(jsxChildren.syn, 19, 34))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+    }
+    {
+        const f = <FooOpt>{...elements}</FooOpt> // no error
+>f : Symbol(f, Decl(jsxChildren.syn, 23, 13))
+>FooOpt : Symbol(FooOpt, Decl(jsxChildren.syn, 17, 56))
+>elements : Symbol(elements, Decl(jsxChildren.syn, 1, 9))
+>FooOpt : Symbol(FooOpt, Decl(jsxChildren.syn, 17, 56))
+
+        const y = <FooOpt>{elements}</FooOpt> // error
+>y : Symbol(y, Decl(jsxChildren.syn, 24, 13))
+>FooOpt : Symbol(FooOpt, Decl(jsxChildren.syn, 17, 56))
+>elements : Symbol(elements, Decl(jsxChildren.syn, 1, 9))
+>FooOpt : Symbol(FooOpt, Decl(jsxChildren.syn, 17, 56))
+
+        const x0 = <FooOpt></FooOpt> // no error
+>x0 : Symbol(x0, Decl(jsxChildren.syn, 25, 13))
+>FooOpt : Symbol(FooOpt, Decl(jsxChildren.syn, 17, 56))
+>FooOpt : Symbol(FooOpt, Decl(jsxChildren.syn, 17, 56))
+
+        const x1 = <FooOpt><div/></FooOpt> // no error
+>x1 : Symbol(x1, Decl(jsxChildren.syn, 26, 13))
+>FooOpt : Symbol(FooOpt, Decl(jsxChildren.syn, 17, 56))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>FooOpt : Symbol(FooOpt, Decl(jsxChildren.syn, 17, 56))
+
+        const x2 = <FooOpt><div/><div/></FooOpt> // no error
+>x2 : Symbol(x2, Decl(jsxChildren.syn, 27, 13))
+>FooOpt : Symbol(FooOpt, Decl(jsxChildren.syn, 17, 56))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>FooOpt : Symbol(FooOpt, Decl(jsxChildren.syn, 17, 56))
+
+        const x3 = <FooOpt>a</FooOpt> // error
+>x3 : Symbol(x3, Decl(jsxChildren.syn, 28, 13))
+>FooOpt : Symbol(FooOpt, Decl(jsxChildren.syn, 17, 56))
+>FooOpt : Symbol(FooOpt, Decl(jsxChildren.syn, 17, 56))
+
+        const x4 = <FooOpt/> // no error
+>x4 : Symbol(x4, Decl(jsxChildren.syn, 29, 13))
+>FooOpt : Symbol(FooOpt, Decl(jsxChildren.syn, 17, 56))
+    }
+
+    {
+        function F1(attrs: { v: string }) {
+>F1 : Symbol(F1, Decl(jsxChildren.syn, 32, 5))
+>attrs : Symbol(attrs, Decl(jsxChildren.syn, 33, 20))
+>v : Symbol(v, Decl(jsxChildren.syn, 33, 28))
+
+            return <span>{attrs.v}</span>
+>span : Symbol(JSX.IntrinsicElements.span, Decl(lib.jsx.d.ts, --, --))
+>attrs.v : Symbol(v, Decl(jsxChildren.syn, 33, 28))
+>attrs : Symbol(attrs, Decl(jsxChildren.syn, 33, 20))
+>v : Symbol(v, Decl(jsxChildren.syn, 33, 28))
+>span : Symbol(JSX.IntrinsicElements.span, Decl(lib.jsx.d.ts, --, --))
+        }
+        function Main() {
+>Main : Symbol(Main, Decl(jsxChildren.syn, 35, 9))
+
+            const v = 'aaa'
+>v : Symbol(v, Decl(jsxChildren.syn, 37, 17))
+
+            return <F1 v={v}></F1> // no error
+>F1 : Symbol(F1, Decl(jsxChildren.syn, 32, 5))
+>v : Symbol(v, Decl(jsxChildren.syn, 38, 22))
+>v : Symbol(v, Decl(jsxChildren.syn, 37, 17))
+>F1 : Symbol(F1, Decl(jsxChildren.syn, 32, 5))
+        }
+    }
+
+    {
+        const x = <>aaa{1}</>
+>x : Symbol(x, Decl(jsxChildren.syn, 43, 13))
+    }
+}
+
+{
+    const items = ['a']
+>items : Symbol(items, Decl(jsxChildren.syn, 48, 9))
+
+    <#component Many(items: string[])>
+>items : Symbol(items, Decl(jsxChildren.syn, 49, 21))
+
+        <div>{...items}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>items : Symbol(items, Decl(jsxChildren.syn, 49, 21))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    const d = <Many {items}/>
+>d : Symbol(d, Decl(jsxChildren.syn, 52, 9))
+>Many : Symbol(Many, Decl(jsxChildren.syn, 48, 23))
+>items : Symbol(items, Decl(jsxChildren.syn, 48, 9))
+
+    update d {
+>d : Symbol(d, Decl(jsxChildren.syn, 52, 9))
+
+        items.push('aa')
+>items.push : Symbol(Array.push, Decl(lib.es5.d.ts, --, --))
+>items : Symbol(items, Decl(jsxChildren.syn, 48, 9))
+>push : Symbol(Array.push, Decl(lib.es5.d.ts, --, --))
+    }
+}
+
+{
+    <#component *Wrapper() {
+        const a = document.createComment('')
+>a : Symbol(a, Decl(jsxChildren.syn, 60, 13))
+>document.createComment : Symbol(Document.createComment, Decl(lib.dom.d.ts, --, --))
+>document : Symbol(document, Decl(lib.dom.d.ts, --, --))
+>createComment : Symbol(Document.createComment, Decl(lib.dom.d.ts, --, --))
+
+    }>
+        {a}
+>a : Symbol(a, Decl(jsxChildren.syn, 60, 13))
+
+    </>
+
+    // this should _not_ be a single root
+    const w = <Wrapper />
+>w : Symbol(w, Decl(jsxChildren.syn, 66, 9))
+>Wrapper : Symbol(Wrapper, Decl(jsxChildren.syn, 58, 1))
+}
+
+{
+    <#component Wrapper(children: (ChildNode | string)[]) {
+>children : Symbol(children, Decl(jsxChildren.syn, 70, 24))
+>ChildNode : Symbol(ChildNode, Decl(lib.dom.d.ts, --, --))
+
+        const a = document.createComment('')
+>a : Symbol(a, Decl(jsxChildren.syn, 71, 13))
+>document.createComment : Symbol(Document.createComment, Decl(lib.dom.d.ts, --, --))
+>document : Symbol(document, Decl(lib.dom.d.ts, --, --))
+>createComment : Symbol(Document.createComment, Decl(lib.dom.d.ts, --, --))
+
+    }>
+        <div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+            <#run>
+                const q = a as ChildNode
+>q : Symbol(q, Decl(jsxChildren.syn, 75, 21))
+>a : Symbol(a, Decl(jsxChildren.syn, 71, 13))
+>ChildNode : Symbol(ChildNode, Decl(lib.dom.d.ts, --, --))
+
+                while (true) {}
+            </>
+        </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+
+    const q = <div>
+>q : Symbol(q, Decl(jsxChildren.syn, 81, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <Wrapper>a</Wrapper>
+>Wrapper : Symbol(Wrapper, Decl(jsxChildren.syn, 69, 1))
+>Wrapper : Symbol(Wrapper, Decl(jsxChildren.syn, 69, 1))
+
+    </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    update q {}
+>q : Symbol(q, Decl(jsxChildren.syn, 81, 9))
+}
+

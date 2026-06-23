@@ -1,0 +1,405 @@
+//// [tests/cases/syn/staticBindings.syn] ////
+
+=== staticBindings.syn ===
+{
+    const d = <div>
+>d : Symbol(d, Decl(staticBindings.syn, 1, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <#run>
+            static let c = 0
+>c : Symbol(c, Decl(staticBindings.syn, 3, 22))
+
+            function foo() {
+>foo : Symbol(foo, Decl(staticBindings.syn, 3, 28))
+
+                static let c2 = 0 // error
+>c2 : Symbol(c2, Decl(staticBindings.syn, 5, 26))
+            }
+        </>
+        {c++}
+>c : Symbol(c, Decl(staticBindings.syn, 3, 22))
+
+    </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    let co = 0
+>co : Symbol(co, Decl(staticBindings.syn, 11, 7))
+
+    const d2 = <div>
+>d2 : Symbol(d2, Decl(staticBindings.syn, 12, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <#run>
+            const c = 0
+>c : Symbol(c, Decl(staticBindings.syn, 14, 17))
+
+            static function foo() {
+>foo : Symbol(foo, Decl(staticBindings.syn, 14, 23))
+
+                return c // error
+>c : Symbol(c, Decl(staticBindings.syn, 14, 17))
+            }
+            static class Foo { y = c } // error
+>Foo : Symbol(Foo, Decl(staticBindings.syn, 17, 13))
+>y : Symbol(Foo.y, Decl(staticBindings.syn, 18, 30))
+>c : Symbol(c, Decl(staticBindings.syn, 14, 17))
+
+            static const d = () => c // error
+>d : Symbol(d, Decl(staticBindings.syn, 19, 24))
+>c : Symbol(c, Decl(staticBindings.syn, 14, 17))
+
+            static const c2 = c // OK
+>c2 : Symbol(c2, Decl(staticBindings.syn, 20, 24))
+>c : Symbol(c, Decl(staticBindings.syn, 14, 17))
+
+            static let c3 = c // OK
+>c3 : Symbol(c3, Decl(staticBindings.syn, 21, 22))
+>c : Symbol(c, Decl(staticBindings.syn, 14, 17))
+
+            static const d3 = <div>{c}</div> // error
+>d3 : Symbol(d3, Decl(staticBindings.syn, 22, 24))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>c : Symbol(c, Decl(staticBindings.syn, 14, 17))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+            static const d4 = <div>{co}</div> // OK, outside of a tree
+>d4 : Symbol(d4, Decl(staticBindings.syn, 23, 24))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>co : Symbol(co, Decl(staticBindings.syn, 11, 7))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+            static const d5 = <div>{c2}</div> // OK
+>d5 : Symbol(d5, Decl(staticBindings.syn, 24, 24))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>c2 : Symbol(c2, Decl(staticBindings.syn, 20, 24))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        </>
+        {c}
+>c : Symbol(c, Decl(staticBindings.syn, 14, 17))
+
+    </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    const d3 = <div>
+>d3 : Symbol(d3, Decl(staticBindings.syn, 29, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <#run>
+            const c = 0
+>c : Symbol(c, Decl(staticBindings.syn, 31, 17))
+
+            const d2 = <div>
+>d2 : Symbol(d2, Decl(staticBindings.syn, 32, 17))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+              <#run>
+                static const f = () => c // OK, because the binding is stable
+>f : Symbol(f, Decl(staticBindings.syn, 34, 28))
+>c : Symbol(c, Decl(staticBindings.syn, 31, 17))
+
+              </>
+            </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        </>
+    </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    const d4 = <div>
+>d4 : Symbol(d4, Decl(staticBindings.syn, 40, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <#run>
+          const c = 0
+>c : Symbol(c, Decl(staticBindings.syn, 42, 15))
+
+        </>
+        <div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+            <#run>
+                static const f = () => c // error
+>f : Symbol(f, Decl(staticBindings.syn, 46, 28))
+>c : Symbol(c, Decl(staticBindings.syn, 42, 15))
+
+                static const f2 = () => {
+>f2 : Symbol(f2, Decl(staticBindings.syn, 47, 28))
+
+                    return <div>{c}</div> // error
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>c : Symbol(c, Decl(staticBindings.syn, 42, 15))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+                }
+            </>
+        </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    const d5 = <div>
+>d5 : Symbol(d5, Decl(staticBindings.syn, 54, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <#run>
+            const c = 0
+>c : Symbol(c, Decl(staticBindings.syn, 56, 17))
+
+            // error, components aren't allowed as top-level #run declarations
+            <#component Foo()>
+                <div></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+            </>
+
+            let cx = 0
+>cx : Symbol(cx, Decl(staticBindings.syn, 62, 15))
+
+            static let cx = 0
+>cx : Symbol(cx, Decl(staticBindings.syn, 63, 22))
+
+        </>
+        <#component Foo2()>
+            <div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+                <#run>
+                    // OK, contiguous comp declarations observe the true tree binding
+                    static const c2 = () => c
+>c2 : Symbol(c2, Decl(staticBindings.syn, 69, 32))
+>c : Symbol(c, Decl(staticBindings.syn, 56, 17))
+
+                    const c3 = 0
+>c3 : Symbol(c3, Decl(staticBindings.syn, 70, 25))
+
+                    static const c4 = () => c3 // error
+>c4 : Symbol(c4, Decl(staticBindings.syn, 71, 32))
+>c3 : Symbol(c3, Decl(staticBindings.syn, 70, 25))
+
+                    const q = cx // error, nested components cannot capture mutable non-static tree locals
+>q : Symbol(q, Decl(staticBindings.syn, 73, 25))
+>cx : Symbol(cx, Decl(staticBindings.syn, 62, 15))
+
+                    const q = cx2 // OK
+>q : Symbol(q, Decl(staticBindings.syn, 74, 25))
+
+                </>
+            </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        </>
+    </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+}
+
+{
+    <#component Foo(children)>
+>children : Symbol(children, Decl(staticBindings.syn, 82, 20))
+
+        <div>{...children}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>children : Symbol(children, Decl(staticBindings.syn, 82, 20))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    document.body.append(<div @ d>
+>document.body.append : Symbol(ParentNode.append, Decl(lib.dom.d.ts, --, --))
+>document.body : Symbol(Document.body, Decl(lib.dom.d.ts, --, --))
+>document : Symbol(document, Decl(lib.dom.d.ts, --, --))
+>body : Symbol(Document.body, Decl(lib.dom.d.ts, --, --))
+>append : Symbol(ParentNode.append, Decl(lib.dom.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>d : Symbol(d, Decl(staticBindings.syn, 85, 25))
+
+        <#run>
+            static let cond = false
+>cond : Symbol(cond, Decl(staticBindings.syn, 87, 22))
+
+            static let count = 0
+>count : Symbol(count, Decl(staticBindings.syn, 88, 22))
+
+        </>
+        <Foo>
+>Foo : Symbol(Foo, Decl(staticBindings.syn, 81, 1))
+
+            <#if (cond)>
+>cond : Symbol(cond, Decl(staticBindings.syn, 87, 22))
+
+                test
+            </>
+        </Foo>
+>Foo : Symbol(Foo, Decl(staticBindings.syn, 81, 1))
+
+        <button on:click() {
+>button : Symbol(JSX.IntrinsicElements.button, Decl(lib.jsx.d.ts, --, --))
+>on:click : Symbol(on:click, Decl(staticBindings.syn, 95, 15))
+
+            update d {
+>d : Symbol(d, Decl(staticBindings.syn, 85, 25))
+
+                cond = !cond
+>cond : Symbol(cond, Decl(staticBindings.syn, 87, 22))
+>cond : Symbol(cond, Decl(staticBindings.syn, 87, 22))
+            }
+        }>click</button>
+>button : Symbol(JSX.IntrinsicElements.button, Decl(lib.jsx.d.ts, --, --))
+
+    </div>)
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+}
+
+// unwind
+{
+    <#component EventComp(w: HTMLElement) {
+>w : Symbol(w, Decl(staticBindings.syn, 105, 26))
+>HTMLElement : Symbol(HTMLElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+
+        function onKeyPress(ev: KeyboardEvent) {}
+>onKeyPress : Symbol(onKeyPress, Decl(staticBindings.syn, 105, 43))
+>ev : Symbol(ev, Decl(staticBindings.syn, 106, 28))
+>KeyboardEvent : Symbol(KeyboardEvent, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+
+        w.addEventListener('keypress', onKeyPress)
+>w.addEventListener : Symbol(HTMLElement.addEventListener, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+>w : Symbol(w, Decl(staticBindings.syn, 105, 26))
+>addEventListener : Symbol(HTMLElement.addEventListener, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+>onKeyPress : Symbol(onKeyPress, Decl(staticBindings.syn, 105, 43))
+
+        unwind {
+            w.removeEventListener('keypress', onKeyPress)
+>w.removeEventListener : Symbol(HTMLElement.removeEventListener, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+>w : Symbol(w, Decl(staticBindings.syn, 105, 26))
+>removeEventListener : Symbol(HTMLElement.removeEventListener, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+>onKeyPress : Symbol(onKeyPress, Decl(staticBindings.syn, 105, 43))
+        }
+    }>
+        <div></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <#run>
+            const el = document.createElement('div')
+>el : Symbol(el, Decl(staticBindings.syn, 114, 17))
+>document.createElement : Symbol(Document.createElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+>document : Symbol(document, Decl(lib.dom.d.ts, --, --))
+>createElement : Symbol(Document.createElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+
+            unwind {
+                el.remove()
+>el.remove : Symbol(ChildNode.remove, Decl(lib.dom.d.ts, --, --))
+>el : Symbol(el, Decl(staticBindings.syn, 114, 17))
+>remove : Symbol(ChildNode.remove, Decl(lib.dom.d.ts, --, --))
+            }
+        </>
+    </>
+}
+
+{
+    <#component Timer(n: number) {
+>n : Symbol(n, Decl(staticBindings.syn, 123, 22))
+
+        let active = true
+>active : Symbol(active, Decl(staticBindings.syn, 124, 11))
+
+        let rate = n
+>rate : Symbol(rate, Decl(staticBindings.syn, 125, 11))
+>n : Symbol(n, Decl(staticBindings.syn, 123, 22))
+
+        let c = 0
+>c : Symbol(c, Decl(staticBindings.syn, 126, 11))
+
+        const d = <div>{c}</div>
+>d : Symbol(d, Decl(staticBindings.syn, 127, 13))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>c : Symbol(c, Decl(staticBindings.syn, 126, 11))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        const counter = <div @ counter>
+>counter : Symbol(counter, Decl(staticBindings.syn, 128, 13))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>counter : Symbol(counter, Decl(staticBindings.syn, 128, 23))
+
+            <div @ d>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>d : Symbol(d, Decl(staticBindings.syn, 129, 12))
+
+                count: {c}
+>c : Symbol(c, Decl(staticBindings.syn, 126, 11))
+
+            </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+            <#run>
+                if (active) {
+>active : Symbol(active, Decl(staticBindings.syn, 124, 11))
+
+                    const id = setInterval(() => {
+>id : Symbol(id, Decl(staticBindings.syn, 134, 25))
+>setInterval : Symbol(setInterval, Decl(lib.dom.d.ts, --, --))
+
+                        update d {
+>d : Symbol(d, Decl(staticBindings.syn, 129, 12))
+
+                            c += 1
+>c : Symbol(c, Decl(staticBindings.syn, 126, 11))
+                        }
+                    }, rate)
+>rate : Symbol(rate, Decl(staticBindings.syn, 125, 11))
+
+                    unwind { clearInterval(id) }
+>clearInterval : Symbol(clearInterval, Decl(lib.dom.d.ts, --, --))
+>id : Symbol(id, Decl(staticBindings.syn, 134, 25))
+                }
+            </>
+        </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        update counter {
+>counter : Symbol(counter, Decl(staticBindings.syn, 128, 13))
+
+            rate = n
+>rate : Symbol(rate, Decl(staticBindings.syn, 125, 11))
+>n : Symbol(n, Decl(staticBindings.syn, 123, 22))
+        }
+    }>
+        <div></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+}
+
+// <#style>
+{
+    ;<#style d>
+    </>
+    ;<#style (d)>
+    </>
+    ;<#style d2(d)>
+    </>
+    ;<#style d3(d, d2)>
+    </>
+    const o = d
+>o : Symbol(o, Decl(staticBindings.syn, 162, 9))
+>d : Symbol(d, Decl(staticBindings.syn, 154, 5))
+}
+
+{
+    <#component Foo()>
+        <div/>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <#style>
+            div { color: red }
+        </>
+    </>
+    const d = <div> <Foo/> </div>
+>d : Symbol(d, Decl(staticBindings.syn, 172, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>Foo : Symbol(Foo, Decl(staticBindings.syn, 165, 1))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+}
+

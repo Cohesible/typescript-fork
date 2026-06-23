@@ -1,0 +1,344 @@
+//// [tests/cases/syn/jsxAttributes.syn] ////
+
+=== jsxAttributes.syn ===
+{
+    // shorthand prop
+    const value = ''
+>value : ""
+>      : ^^
+>'' : ""
+>   : ^^
+
+    const d2 = <input {value}/>
+>d2 : HTMLInputElement
+>   : ^^^^^^^^^^^^^^^^
+><input {value}/> : HTMLInputElement
+>                 : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>value : ""
+>      : ^^
+}
+
+{
+    const value = 'hello'
+>value : "hello"
+>      : ^^^^^^^
+>'hello' : "hello"
+>        : ^^^^^^^
+
+    const d = <input {value} />
+>d : HTMLInputElement
+>  : ^^^^^^^^^^^^^^^^
+><input {value} /> : HTMLInputElement
+>                  : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>value : "hello"
+>      : ^^^^^^^
+
+    <#component Foo(x: string, y: string)></>
+>Foo : any
+>    : ^^^
+>x : string
+>  : ^^^^^^
+>y : string
+>  : ^^^^^^
+
+    const o = { x: '1', y: '1' }
+>o : { x: string; y: string; }
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^
+>{ x: '1', y: '1' } : { x: string; y: string; }
+>                   : ^^^^^^^^^^^^^^^^^^^^^^^^^
+>x : string
+>  : ^^^^^^
+>'1' : "1"
+>    : ^^^
+>y : string
+>  : ^^^^^^
+>'1' : "1"
+>    : ^^^
+
+    const e = <Foo {o} /> // did you mean spread?
+>e : Foo
+>  : ^^^
+><Foo {o} /> : Foo
+>            : ^^^
+>Foo : (attributes: { x: string; y: string; }) => Foo
+>    : ^^^^^^^^^^^^^^^^^^      ^^^^^      ^^^^^^^^^^^
+>o : { x: string; y: string; }
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^
+}
+
+{
+    // numeric literal attrs
+    const a = <input min=0 max=100 step=5 />
+>a : HTMLInputElement
+>  : ^^^^^^^^^^^^^^^^
+><input min=0 max=100 step=5 /> : HTMLInputElement
+>                               : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>min : number
+>    : ^^^^^^
+>max : number
+>    : ^^^^^^
+>step : number
+>     : ^^^^^^
+
+    const b = <input value=3.14 />
+>b : HTMLInputElement
+>  : ^^^^^^^^^^^^^^^^
+><input value=3.14 /> : HTMLInputElement
+>                     : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>value : number
+>      : ^^^^^^
+
+    const c = <input min=-10 />
+>c : HTMLInputElement
+>  : ^^^^^^^^^^^^^^^^
+><input min=-10 /> : HTMLInputElement
+>                  : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>min : number
+>    : ^^^^^^
+>-10 : -10
+>    : ^^^
+>10 : 10
+>   : ^^
+}
+
+{
+    // jsx attr methods
+    const attrMethod = <div on:click() {
+>attrMethod : HTMLDivElement
+>           : ^^^^^^^^^^^^^^
+><div on:click() {        this // HTMLDivElement    }>click</div> : HTMLDivElement
+>                                                                 : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>on:click : () => void
+>         : ^^^^^^^^^^
+>on : any
+>   : ^^^
+>click : any
+>      : ^^^
+
+        this // HTMLDivElement
+>this : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+    }>click</div>
+>div : any
+>    : ^^^
+
+    <#component Foo(cb: () => void) {
+>Foo : any
+>    : ^^^
+>cb : () => void
+>   : ^^^^^^    
+
+        cb()
+>cb() : void
+>     : ^^^^
+>cb : () => void
+>   : ^^^^^^    
+
+    }>
+      <div/>
+><div/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+
+    const fooAttrMethod = <Foo cb() {
+>fooAttrMethod : Foo
+>              : ^^^
+><Foo cb() {        this // Foo    } /> : Foo
+>                                       : ^^^
+>Foo : (attributes: { cb: () => void; }) => Foo
+>    : ^^^^^^^^^^^^^^^^^^^          ^^^^^^^^^^^
+>cb : () => void
+>   : ^^^^^^^^^^
+
+        this // Foo
+>this : Foo
+>     : ^^^
+
+    } />;
+
+    <div
+><div        async        async on:click() {}    /> : HTMLDivElement
+>                                                   : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        async
+>async : true
+>      : ^^^^
+
+        async on:click() {}
+>on:click : () => Promise<void>
+>         : ^^^^^^^^^^^^^^^^^^^
+>on : any
+>   : ^^^
+>click : any
+>      : ^^^
+
+    />
+
+    <#component Foo2<T>(cb: () => T) {
+>Foo2 : any
+>     : ^^^
+>cb : () => T
+>   : ^^^^^^ 
+
+        const v = cb()
+>v : T
+>  : ^
+>cb() : T
+>     : ^
+>cb : () => T
+>   : ^^^^^^ 
+
+        public function f() { return v }
+>f : () => T
+>  : ^^^^^^^
+>v : T
+>  : ^
+
+    }>
+      <div/>
+><div/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+
+    const f = <Foo2 cb() { return 1 } />
+>f : Foo2<number>
+>  : ^^^^^^^^^^^^
+><Foo2 cb() { return 1 } /> : Foo2<number>
+>                           : ^^^^^^^^^^^^
+>Foo2 : <T>(attributes: { cb: () => T; }) => Foo2<T>
+>     : ^ ^^^^^^^^^^^^^^^^^^^^       ^^^^^^^^^^^^^^^
+>cb : () => number
+>   : ^^^^^^^^^^^^
+>1 : 1
+>  : ^
+
+    const v = f.f() // number
+>v : number
+>  : ^^^^^^
+>f.f() : number
+>      : ^^^^^^
+>f.f : () => number
+>    : ^^^^^^^^^^^^
+>f : Foo2<number>
+>  : ^^^^^^^^^^^^
+>f : () => number
+>  : ^^^^^^^^^^^^
+}
+
+{
+    <div> 
+><div>         <#run>            let c = 0        </>        <div @ v>{c}</div>        <div on:click() {            update v { c += 1 }            console.log(this)        }>            click        </div>    </div> : HTMLDivElement
+>                                                                                                                                                                                                                       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <#run>
+            let c = 0
+>c : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+        </>
+        <div @ v>{c}</div>
+><div @ v>{c}</div> : HTMLDivElement
+>                   : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>v : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+>c : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+        <div on:click() {
+><div on:click() {            update v { c += 1 }            console.log(this)        }>            click        </div> : HTMLDivElement
+>                                                                                                                       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>on:click : () => void
+>         : ^^^^^^^^^^
+>on : any
+>   : ^^^
+>click : any
+>      : ^^^
+
+            update v { c += 1 }
+>v : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+
+            console.log(this)
+>console.log(this) : void
+>                  : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>this : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+        }>
+            click
+        </div>
+>div : any
+>    : ^^^
+
+    </div>;
+>div : any
+>    : ^^^
+
+    <div on:keypress(ev) {
+><div on:keypress(ev) {        ev.code    } /> : HTMLDivElement
+>                                              : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>on:keypress : (ev: JSX.TargetedEvent<HTMLDivElement, KeyboardEvent>) => void
+>            : ^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>on : any
+>   : ^^^
+>keypress : any
+>         : ^^^
+>ev : JSX.TargetedEvent<HTMLDivElement, KeyboardEvent>
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        ev.code
+>ev.code : string
+>        : ^^^^^^
+>ev : JSX.TargetedEvent<HTMLDivElement, KeyboardEvent>
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>code : string
+>     : ^^^^^^
+
+    } />
+}
+

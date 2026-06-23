@@ -1,0 +1,174 @@
+{
+    const d = <div>
+        <#run>
+            static let c = 0
+            function foo() {
+                static let c2 = 0 // error
+            }
+        </>
+        {c++}
+    </div>
+
+    let co = 0
+    const d2 = <div>
+        <#run>
+            const c = 0
+            static function foo() {
+                return c // error
+            }
+            static class Foo { y = c } // error
+            static const d = () => c // error
+            static const c2 = c // OK
+            static let c3 = c // OK
+            static const d3 = <div>{c}</div> // error
+            static const d4 = <div>{co}</div> // OK, outside of a tree
+            static const d5 = <div>{c2}</div> // OK
+        </>
+        {c}
+    </div>
+
+    const d3 = <div>
+        <#run>
+            const c = 0
+            const d2 = <div>
+              <#run>
+                static const f = () => c // OK, because the binding is stable
+              </>
+            </div>
+        </>
+    </div>
+
+    const d4 = <div>
+        <#run>
+          const c = 0
+        </>
+        <div>
+            <#run>
+                static const f = () => c // error
+                static const f2 = () => {
+                    return <div>{c}</div> // error
+                }
+            </>
+        </div>
+    </div>
+
+    const d5 = <div>
+        <#run>
+            const c = 0
+            // error, components aren't allowed as top-level #run declarations
+            <#component Foo()>
+                <div></div>
+            </>
+
+            let cx = 0
+            static let cx = 0
+        </>
+        <#component Foo2()>
+            <div>
+                <#run>
+                    // OK, contiguous comp declarations observe the true tree binding
+                    static const c2 = () => c
+                    const c3 = 0
+                    static const c4 = () => c3 // error
+
+                    const q = cx // error, nested components cannot capture mutable non-static tree locals
+                    const q = cx2 // OK
+                </>
+            </div>
+        </>
+    </div>
+}
+
+{
+    <#component Foo(children)>
+        <div>{...children}</div>
+    </>
+    document.body.append(<div @ d>
+        <#run>
+            static let cond = false
+            static let count = 0
+        </>
+        <Foo>
+            <#if (cond)>
+                test
+            </>
+        </Foo>
+        <button on:click() {
+            update d {
+                cond = !cond
+            }
+        }>click</button>
+    </div>)
+}
+
+// unwind
+{
+    <#component EventComp(w: HTMLElement) {
+        function onKeyPress(ev: KeyboardEvent) {}
+        w.addEventListener('keypress', onKeyPress)
+        unwind {
+            w.removeEventListener('keypress', onKeyPress)
+        }
+    }>
+        <div></div>
+        <#run>
+            const el = document.createElement('div')
+            unwind {
+                el.remove()
+            }
+        </>
+    </>
+}
+
+{
+    <#component Timer(n: number) {
+        let active = true
+        let rate = n
+        let c = 0
+        const d = <div>{c}</div>
+        const counter = <div @ counter>
+            <div @ d>
+                count: {c}
+            </div>
+            <#run>
+                if (active) {
+                    const id = setInterval(() => {
+                        update d {
+                            c += 1
+                        }
+                    }, rate)
+                    unwind { clearInterval(id) }
+                }
+            </>
+        </div>
+
+        update counter {
+            rate = n
+        }
+    }>
+        <div></div>
+    </>
+}
+
+// <#style>
+{
+    ;<#style d>
+    </>
+    ;<#style (d)>
+    </>
+    ;<#style d2(d)>
+    </>
+    ;<#style d3(d, d2)>
+    </>
+    const o = d
+}
+
+{
+    <#component Foo()>
+        <div/>
+        <#style>
+            div { color: red }
+        </>
+    </>
+    const d = <div> <Foo/> </div>
+}

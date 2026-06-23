@@ -1,0 +1,41 @@
+//// [tests/cases/syn/componentInitBody.syn] ////
+
+=== componentInitBody.syn ===
+{
+    // component with init body
+    <#component WithBody(x: string) {
+>x : Symbol(x, Decl(componentInitBody.syn, 2, 25))
+
+        const y = `hello: ${x}`
+>y : Symbol(y, Decl(componentInitBody.syn, 3, 13))
+>x : Symbol(x, Decl(componentInitBody.syn, 2, 25))
+
+    }>
+        <div>{y}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>y : Symbol(y, Decl(componentInitBody.syn, 3, 13))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    const r6 = <WithBody x="world" />
+>r6 : Symbol(r6, Decl(componentInitBody.syn, 7, 9))
+>WithBody : Symbol(WithBody, Decl(componentInitBody.syn, 0, 1))
+>x : Symbol(x, Decl(componentInitBody.syn, 7, 24))
+}
+
+{
+    <#component BadReturn(x: string) {
+>x : Symbol(x, Decl(componentInitBody.syn, 11, 26))
+
+        return x
+>x : Symbol(x, Decl(componentInitBody.syn, 11, 26))
+
+    }>
+        <div>{x}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>x : Symbol(x, Decl(componentInitBody.syn, 11, 26))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+}
+

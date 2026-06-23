@@ -1,0 +1,17 @@
+//// [tests/cases/syn/catchTyped.syn] ////
+
+=== catchTyped.syn ===
+{
+    try {} catch (e) {}
+>e : Symbol(e, Decl(catchTyped.syn, 1, 18))
+
+    try {} catch (e: Error) { e }
+>e : Symbol(e, Decl(catchTyped.syn, 2, 18))
+>Error : Symbol(Error, Decl(lib.es5.d.ts, --, --), Decl(lib.es5.d.ts, --, --), Decl(lib.es2022.error.d.ts, --, --))
+>e : Symbol(e, Decl(catchTyped.syn, 2, 18))
+
+    try {} catch (e: string) { e }
+>e : Symbol(e, Decl(catchTyped.syn, 3, 18))
+>e : Symbol(e, Decl(catchTyped.syn, 3, 18))
+}
+

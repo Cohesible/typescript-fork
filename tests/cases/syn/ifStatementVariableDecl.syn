@@ -1,0 +1,3 @@
+const m = new Map<string, number>()
+if (const x = m.get('x')) { x }
+if (const x = m.get('x')!) {}

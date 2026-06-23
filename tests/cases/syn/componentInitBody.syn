@@ -1,0 +1,17 @@
+{
+    // component with init body
+    <#component WithBody(x: string) {
+        const y = `hello: ${x}`
+    }>
+        <div>{y}</div>
+    </>
+    const r6 = <WithBody x="world" />
+}
+
+{
+    <#component BadReturn(x: string) {
+        return x
+    }>
+        <div>{x}</div>
+    </>
+}

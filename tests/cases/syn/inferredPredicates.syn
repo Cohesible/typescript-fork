@@ -1,0 +1,37 @@
+{
+    // Explicit annotation
+    function isString(val: any): asserts val is string {
+        if (typeof val !== "string") throw "Nope"
+    }
+
+    // Inferred assertion signature
+    function isString2(val: any) {
+        if (typeof val !== "string") throw "Nope"
+    }
+
+    const x: string | number = "3";
+    isString(x);
+    x.toLowerCase() // should work, x is now string
+
+    const y: string | number = "test";
+    isString2(y);
+    y.toLowerCase() // should also work, inferred asserts
+
+    // Using 'is' expression instead of typeof
+    const isString3 = (val: any) => {
+        if (!(val is string)) throw "Nope"
+    }
+
+    const z: string | number = "hello";
+    isString3(z);
+    z.toLowerCase() // should also work with 'is' expression
+}
+
+{
+    // `is` expressions should produce an `is` type directly
+    const isString = (val: any) => {
+        return val is string
+    }
+    const x: string | number = "3";
+    if (isString(x)) x.toLowerCase()
+}

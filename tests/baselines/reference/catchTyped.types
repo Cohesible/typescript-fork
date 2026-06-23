@@ -1,0 +1,21 @@
+//// [tests/cases/syn/catchTyped.syn] ////
+
+=== catchTyped.syn ===
+{
+    try {} catch (e) {}
+>e : Error
+>  : ^^^^^
+
+    try {} catch (e: Error) { e }
+>e : Error
+>  : ^^^^^
+>e : Error
+>  : ^^^^^
+
+    try {} catch (e: string) { e }
+>e : string
+>  : ^^^^^^
+>e : string
+>  : ^^^^^^
+}
+

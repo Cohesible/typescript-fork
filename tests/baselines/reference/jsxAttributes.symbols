@@ -1,0 +1,185 @@
+//// [tests/cases/syn/jsxAttributes.syn] ////
+
+=== jsxAttributes.syn ===
+{
+    // shorthand prop
+    const value = ''
+>value : Symbol(value, Decl(jsxAttributes.syn, 2, 9))
+
+    const d2 = <input {value}/>
+>d2 : Symbol(d2, Decl(jsxAttributes.syn, 3, 9))
+>input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
+>value : Symbol(value, Decl(jsxAttributes.syn, 2, 9))
+}
+
+{
+    const value = 'hello'
+>value : Symbol(value, Decl(jsxAttributes.syn, 7, 9))
+
+    const d = <input {value} />
+>d : Symbol(d, Decl(jsxAttributes.syn, 8, 9))
+>input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
+>value : Symbol(value, Decl(jsxAttributes.syn, 7, 9))
+
+    <#component Foo(x: string, y: string)></>
+>x : Symbol(x, Decl(jsxAttributes.syn, 10, 20))
+>y : Symbol(y, Decl(jsxAttributes.syn, 10, 30))
+
+    const o = { x: '1', y: '1' }
+>o : Symbol(o, Decl(jsxAttributes.syn, 11, 9))
+>x : Symbol(x, Decl(jsxAttributes.syn, 11, 15))
+>y : Symbol(y, Decl(jsxAttributes.syn, 11, 23))
+
+    const e = <Foo {o} /> // did you mean spread?
+>e : Symbol(e, Decl(jsxAttributes.syn, 12, 9))
+>Foo : Symbol(Foo, Decl(jsxAttributes.syn, 8, 31))
+>o : Symbol(o, Decl(jsxAttributes.syn, 11, 9))
+}
+
+{
+    // numeric literal attrs
+    const a = <input min=0 max=100 step=5 />
+>a : Symbol(a, Decl(jsxAttributes.syn, 17, 9))
+>input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
+>min : Symbol(min, Decl(jsxAttributes.syn, 17, 20))
+>max : Symbol(max, Decl(jsxAttributes.syn, 17, 26))
+>step : Symbol(step, Decl(jsxAttributes.syn, 17, 34))
+
+    const b = <input value=3.14 />
+>b : Symbol(b, Decl(jsxAttributes.syn, 18, 9))
+>input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
+>value : Symbol(value, Decl(jsxAttributes.syn, 18, 20))
+
+    const c = <input min=-10 />
+>c : Symbol(c, Decl(jsxAttributes.syn, 19, 9))
+>input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
+>min : Symbol(min, Decl(jsxAttributes.syn, 19, 20))
+}
+
+{
+    // jsx attr methods
+    const attrMethod = <div on:click() {
+>attrMethod : Symbol(attrMethod, Decl(jsxAttributes.syn, 24, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>on:click : Symbol(on:click, Decl(jsxAttributes.syn, 24, 27))
+
+        this // HTMLDivElement
+>this : Symbol(HTMLDivElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+
+    }>click</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    <#component Foo(cb: () => void) {
+>cb : Symbol(cb, Decl(jsxAttributes.syn, 28, 20))
+
+        cb()
+>cb : Symbol(cb, Decl(jsxAttributes.syn, 28, 20))
+
+    }>
+      <div/>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+
+    const fooAttrMethod = <Foo cb() {
+>fooAttrMethod : Symbol(fooAttrMethod, Decl(jsxAttributes.syn, 34, 9))
+>Foo : Symbol(Foo, Decl(jsxAttributes.syn, 26, 17))
+>cb : Symbol(cb, Decl(jsxAttributes.syn, 34, 30))
+
+        this // Foo
+>this : Symbol(Foo, Decl(jsxAttributes.syn, 26, 17))
+
+    } />;
+
+    <div
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        async
+>async : Symbol(async, Decl(jsxAttributes.syn, 38, 8))
+
+        async on:click() {}
+>on:click : Symbol(on:click, Decl(jsxAttributes.syn, 39, 13))
+
+    />
+
+    <#component Foo2<T>(cb: () => T) {
+>T : Symbol(T, Decl(jsxAttributes.syn, 43, 21))
+>cb : Symbol(cb, Decl(jsxAttributes.syn, 43, 24))
+>T : Symbol(T, Decl(jsxAttributes.syn, 43, 21))
+
+        const v = cb()
+>v : Symbol(v, Decl(jsxAttributes.syn, 44, 13))
+>cb : Symbol(cb, Decl(jsxAttributes.syn, 43, 24))
+
+        public function f() { return v }
+>f : Symbol(f, Decl(jsxAttributes.syn, 44, 22))
+>v : Symbol(v, Decl(jsxAttributes.syn, 44, 13))
+
+    }>
+      <div/>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+
+    const f = <Foo2 cb() { return 1 } />
+>f : Symbol(f, Decl(jsxAttributes.syn, 50, 9))
+>Foo2 : Symbol(Foo2, Decl(jsxAttributes.syn, 41, 6))
+>cb : Symbol(cb, Decl(jsxAttributes.syn, 50, 19))
+
+    const v = f.f() // number
+>v : Symbol(v, Decl(jsxAttributes.syn, 51, 9))
+>f.f : Symbol(f, Decl(jsxAttributes.syn, 44, 22))
+>f : Symbol(f, Decl(jsxAttributes.syn, 50, 9))
+>f : Symbol(f, Decl(jsxAttributes.syn, 44, 22))
+}
+
+{
+    <div> 
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <#run>
+            let c = 0
+>c : Symbol(c, Decl(jsxAttributes.syn, 57, 15))
+
+        </>
+        <div @ v>{c}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>v : Symbol(v, Decl(jsxAttributes.syn, 59, 8))
+>c : Symbol(c, Decl(jsxAttributes.syn, 57, 15))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <div on:click() {
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>on:click : Symbol(on:click, Decl(jsxAttributes.syn, 60, 12))
+
+            update v { c += 1 }
+>v : Symbol(v, Decl(jsxAttributes.syn, 59, 8))
+>c : Symbol(c, Decl(jsxAttributes.syn, 57, 15))
+
+            console.log(this)
+>console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>console : Symbol(console, Decl(lib.dom.d.ts, --, --))
+>log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>this : Symbol(HTMLDivElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+
+        }>
+            click
+        </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </div>;
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    <div on:keypress(ev) {
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>on:keypress : Symbol(on:keypress, Decl(jsxAttributes.syn, 68, 8))
+>ev : Symbol(ev, Decl(jsxAttributes.syn, 68, 21))
+
+        ev.code
+>ev.code : Symbol(code, Decl(lib.dom.d.ts, --, --))
+>ev : Symbol(ev, Decl(jsxAttributes.syn, 68, 21))
+>code : Symbol(code, Decl(lib.dom.d.ts, --, --))
+
+    } />
+}
+

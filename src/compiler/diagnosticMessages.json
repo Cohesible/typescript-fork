@@ -3137,11 +3137,11 @@
         "category": "Error",
         "code": 95228
     },
-    "Static declarations cannot capture the non-static tree local '{0}'.": {
+    "Static declarations cannot capture non-static tree locals '{0}'.": {
         "category": "Error",
         "code": 95229
     },
-    "A component declaration cannot appear inside a '#run' directive.": {
+    "A #component declaration cannot appear inside a '#run' directive.": {
         "category": "Error",
         "code": 95230
     },

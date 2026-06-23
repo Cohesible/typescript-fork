@@ -5797,7 +5797,7 @@ namespace Parser {
             }
 
             if (scriptKind === ScriptKind.Syn && token() === SyntaxKind.LessThanToken) {
-                // ASI for JSX directives:
+                // ASI for tree declarations:
                 //   const y = foo()
                 //   <#component Bar()>...
                 if (scanner.hasPrecedingLineBreak()) {
@@ -5811,6 +5811,9 @@ namespace Parser {
                     })) break;
                 } else if (parsingContext & ParsingContext.JsxRunDirectiveStatements) {
                     if (lookAhead(() => nextTokenIsSlash() && nextToken() === SyntaxKind.GreaterThanToken)) 
+                        break;
+                } else {
+                    if (lookAhead(() => nextToken() === SyntaxKind.SlashToken && nextToken() === SyntaxKind.GreaterThanToken)) 
                         break;
                 }
             }
@@ -5931,14 +5934,14 @@ namespace Parser {
 
     function parseUpdateExpressionExpression() {
         const pos = getNodePos();
-        nextToken(); // consume `update`
+        nextToken(); // `update`
         const expression = parseSimpleUnaryExpression();
         return finishNode(factory.createUpdateExpressionExpression(expression), pos);
     }
 
     function parseTryExpression(): TryExpression {
         const pos = getNodePos();
-        nextToken(); // consume `try`
+        nextToken(); // `try`
         return finishNode(factory.createTryExpression(parseSimpleUnaryExpression()), pos);
     }
 
@@ -6108,6 +6111,7 @@ namespace Parser {
             const pos = getNodePos();
             const jsx = parseJsxNode(/*inExpressionContext*/ true) as Node as MemberExpression;
             const memberExpr = parseMemberExpressionRest(pos, jsx, /*allowOptionalChain*/ true);
+            if (memberExpr === jsx) return jsx;
             return parseCallExpressionRest(pos, memberExpr) as Node as UpdateExpression;
         }
 
@@ -6983,9 +6987,12 @@ namespace Parser {
         tagName: PrivateIdentifier,
         openingTag: JsxOpeningElement | JsxOpeningFragment | undefined,
     ) {
+        // TODO: error recovery for `<#if (foo bar)>`, need to stuff the expression slot with a malformed exp
         const openParenPosition = getNodePos();
         const openParenParsed = parseExpected(SyntaxKind.OpenParenToken);
-        const condition = allowInAnd(parseExpression);
+        const condition = !openParenParsed && token() === SyntaxKind.GreaterThanToken
+            ? createMissingNode<Expression>(SyntaxKind.Identifier, false)
+            : allowInAnd(parseExpression);
         parseExpectedMatchingBrackets(SyntaxKind.OpenParenToken, SyntaxKind.CloseParenToken, openParenParsed, openParenPosition);
         const { children, hasError } = parseJsxDirectiveBody(pos, tagName, openingTag);
         const n = finishNode(factory.createJsxIfDirective(condition, children), pos);
@@ -7155,6 +7162,7 @@ namespace Parser {
                 }
             }
             if (typeArguments || token() === SyntaxKind.OpenParenToken) {
+                if (!typeArguments && scanner.hasPrecedingLineBreak()) break;
                 // Absorb type arguments into CallExpression when preceding expression is ExpressionWithTypeArguments
                 if (!questionDotToken && expression.kind === SyntaxKind.ExpressionWithTypeArguments) {
                     typeArguments = (expression as ExpressionWithTypeArguments).typeArguments;

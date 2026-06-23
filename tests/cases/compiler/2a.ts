@@ -442,8 +442,8 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 
 {
     const elements: Element[] = []
-    function Foo(props: { children: Element[] }) {
-        return <div>{...props.children}</div>
+    function Foo(attrs: {}, children: Element[]) {
+        return <div>{...children}</div>
     }
     const f = <Foo>{...elements}</Foo>
     const y = <Foo>{elements}</Foo> // error
@@ -453,14 +453,14 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
     const x3 = <Foo>a</Foo> // error (string is not Element)
     const x4 = <Foo/> // error (this is explictly no elements)
 
-    function Foo2(props: { children: [string, number] }) {
+    function Foo2(attrs: {}, children: [string, number]) {
         return <div></div>
     }
     const f2 = <Foo2>{'hi'}{...([1,2] as number[])}</Foo2> // error
     const f3 = <Foo2>{'hi'}{...([1] as [number])}</Foo2> // no error
 
-    function FooOpt(props: { children?: Element[] }) {
-        return <div>{...(props.children ?? [])}</div>
+    function FooOpt(attrs?: never, children?: Element[]) {
+        return <div>{...(children ?? [])}</div>
     }
     {
         const f = <FooOpt>{...elements}</FooOpt> // no error
@@ -473,8 +473,8 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
     }
 
     {
-        function F1(props: { v: string }) {
-            return <span>{props.v}</span>
+        function F1(attrs: { v: string }) {
+            return <span>{attrs.v}</span>
         }
         function Main() {
             const v = 'aaa'
@@ -626,7 +626,7 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 }
 
 {
-    <#component Reactive(v: number) {
+    <#component Comp(v: number) {
         let count = v
 
         function increment() {
@@ -834,6 +834,71 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 }
 
 {
+    let filterState: 'all' | 'completed' | 'active' = 'all'
+    ;<div @ d>
+        <#run>
+            let c
+            switch (filterState) {
+                case 'all': c = 1;
+                case 'completed': c = 2;
+                case 'active': c = 3;
+            }
+        </>
+    </div>
+}
+
+{
+    type X = SelectedDOMTag<'input[type=text]'>
+    type Y = SelectedDOMElement<'input[type=text]'>
+    const r1 = document.querySelector('input[type=text]')
+    const r2 = document.querySelector<HTMLInputElement>('.aa')
+    const r3 = document.querySelector('div' as string)
+    const r4 = document.querySelectorAll('button, [role="button"]')
+    const r5 = document.querySelectorAll('button, div[role=button]')
+    const r6 = document.querySelector('' as `my-ns-${string}`)
+    const r7 = document.querySelector('' as `input.${string}`)
+    const r8 = document.querySelector('' as `input ${string}`)
+    const r9 = document.querySelector('' as `input > ${string}`)
+    const r10 = document.querySelector('' as `input:has(${string})`)
+    const r11 = document.querySelector('' as `input[data-x=${string}]`)
+    const r12 = document.querySelector('a#link')
+    const r13 = document.querySelector(`
+    :is(a, div)
+    :is(button, input)    
+    `)
+    const r14 = document.querySelector('table:not(:has(> caption))')
+    const r15 = document.querySelector('a.status-actions:is(a[href^="/"])')
+    const r16 = document.querySelector(':is(a, button).c')
+    const r17 = document.querySelector(':is(h1, h2, h3, h4):where(.foo)')
+    const r18 = document.querySelector('div:first-child')
+
+    const m1 = document.querySelector('a[foo')
+}
+
+{
+    <#component Foo(children)>
+        <div>{...children}</div>
+    </>
+    document.body.append(<div @ d>
+        <#run>
+            static let cond = false
+            static let count = 0
+        </>
+        <Foo>
+            <#if (cond)>
+                test
+            </>
+        </Foo>
+        <button on:click() {
+            update d {
+                cond = !cond
+            }
+        }>click</button>
+    </div>)
+}
+
+
+{
     ;<div @ p>
         <#run>
             let c = ''
@@ -931,7 +996,7 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
         {x => <div>{x.first} {x.last}</div>}
     </List>
 
-    function List2<T>(props: { items: T[], children: [(x: T) => ChildNode]}) {
+    function List2<T>(attrs: { items: T[] }, children: [(x: T) => ChildNode]) {
         return <div></div>
     }
     const l2 = <List2 {items}>
@@ -1593,149 +1658,12 @@ export <#component ExportedComp()>
     // >
 }
 
-// --- component directive ---
-// - essentially parsed as a fn declaration within the opening tag
-//  * body is optional
-//  * empty body with no trivia inside `{}` should be diagnostic in checker: remove dead code
-//  * using `return` produces a checker diagnostic, prefer throw if needing to bail out
-// - similar to Flow's `component` declaration syntax; the params correspond to fields of `props` in fn components
-// - its children become the return type with one exception: truly singular elements (intrinics/components) are kept singular
-//  * this is true even if the component has block directives as siblings to the root
-// - `Foo` is accessible in the current scope as a normal symbol like any other function declaration
-// - when used as an expression, it behaves like a function expression, name can be elided
-//
-// <#component Foo(x: string) {
-//   // component init code, runs once
-//   const y = `hello: ${x}`
-// }>
-//   <div>{y}</div>
-// </> 
-//
-// <Foo x="hi" />
-//
-// <#component Foo2(x: string): [HTMLDivElement, HTMLDivElement]>
-//   <div>{x}</div>
-//   <div>{x}</div>
-// </> 
-//
-// <...Foo2 x="hi" />
-//
-// <#component Foo(x: string): HTMLDivElement>
-//   <div />
-// </>
-//
-// const Foo = <#component(x: string): HTMLDivElement>
-//   <div />
-// </>
-//
-// Foo is then typed as `(props: { x: string }) => HTMLDivElement`
-//
-//
-//
-// --- named children via `<:name>` aka labeled fragments ---
-// - only works for components
-// - children are passed as a record instead of an array
-// - all or nothing: if any children are named, all must be named.
-//
-// <#component Foo(children: { x: [string] })>
-//   <div>{children.x[0]}</div>
-// </> 
-//
-// <Foo>
-//   <:x>
-//      hi
-//   </>
-// </Foo>
-//
-//
-// --- callable fragments (similar to Svelte's "snippets") ---
-// - labeled fragments can be annotated with parameters, parsed as normal fn param list, turning it into a function
-// - callee observes a function producing a fragment e.g. v => <>{v}</>
-// - caller observes retained identity after materialization
-//   * a callable fragment does **not** produce new elements on subsequent calls beyond whatever JSX expressions produce
-// - `update` does not cascade into callable fragments directly, rather, they are updated when the component is
-//   * this is because callable fragments are essentially callbacks
-// - labeled fragments cannot use element name syntax in their opening element
-//   * callable fragments create new element name scopes, same as `#if` directives
-// - callable fragments are intentionally _not_ components. They are explicit, parameterized patch points.
-// - a callable, labeled fragments are analogous to JS method syntax for object literals
-//
-// <#component Foo<T>(v: T, children: { x: (v: T) => [string] })>
-//   <div>{...children.x(v)}</div>
-// </> 
-//
-// <Foo v="hi">
-//   <:x(v)>
-//      {v}
-//   </>
-// </Foo>
-//
-//
-// --- approximate desugar, if :x were elided, #init is not real directive but represents init statements ---
-// <:x>
-//     <#init> 
-//         let el, el_v
-//     </>
-//     {v => { 
-//         el_v = v 
-//         if (!el) { 
-//             el = <>{v}</>
-//         } else { 
-//             update el 
-//         } 
-//         return el 
-//     }} 
-// </>
-//
-// <:x(v)>
-//  <div @ d />
-// </>
-//
-// <:y>
-//  <div @ d />
-// </>
-//
-// `d` is not accessible outside of `:x` but is accessible outside of `:y`
-//
-// You can pass in computed/dynamic named children using spread. 
-// The following is almost identical to `<:x(v)>{v}</>` except it creates a new closure and fragment on every update:
-//
-// <Foo v="hi">
-//  {...{ x: v => <>{v}</> }}
-// </Foo>
-//
-//
-//
-// --- WIP: explicit (JSX) resource management ---
-// - `unwind { ... }` inside #run or #component body: registers cleanup to run when the component is cleaned up
-//      <#component Foo(w: HTMLElement) {
-//      }>
-//          <#run>
-//              function onKeyPress(ev) {}
-//              w.addEventListener('keypress', onKeyPress)
-//              unwind { w.removeEventListener('keypress', onKeyPress) }
-//          </>
-//      </>
-//
-// - the block form is required (statement must be a block); may be lifted later
-// - when it executes is component-defined ("unwind"), not block-exit like `defer`
-//
-//
-// TBD: should inference add `Disposable` to types explicitly via
-// intersection, or should it be closer to `update` where anything
-// that has the dispose symbol method in their type, even if optional?
-//
-// type LooseDisposable = intrinsic // strips off StrictDisposable when used in AsExpression _or_ in an intersection type
-// type StrictDisposable = intrinsic // this is a branded Disposable alias
-
-
-
 {
     <#component Foo(x: string)>
         <div>{x}</div>
     </>
     const r1 = <Foo x="hi" />
-    // Foo is typed as (props: { x: string }) => HTMLDivElement
+    // Foo is typed as (attrs: { x: string }) => HTMLDivElement
 
     ;<#component Bar(x: string)>
         <div>{x}</div>
@@ -1765,7 +1693,7 @@ export <#component ExportedComp()>
     const Expr = <#component(x: string): HTMLDivElement>
         <div>{x}</div>
     </>
-    // Expr is (props: { x: string }) => HTMLDivElement
+    // Expr is (attrs: { x: string }) => HTMLDivElement
     const r5 = <Expr x="hello" />
 }
 
@@ -1789,7 +1717,7 @@ export <#component ExportedComp()>
 
 {
     // plain labeled fragment
-    <#component Foo(children: { content: [string, string] })>
+    <#component Foo(children: { content: [Text, string] })>
         <div>{...children.content}</div>
     </>
     const r_lf1 = <Foo>
@@ -1804,7 +1732,7 @@ export <#component ExportedComp()>
         <:item(val: string)><span>{val}</span></>
     </Bar>
 
-    // contextual typingg
+    // contextual typing
     ;<#component Ctx(children: { slot: (n: number, s: string) => [HTMLDivElement] })>
         <div>{...children.slot(1, 'hi')}</div>
     </>

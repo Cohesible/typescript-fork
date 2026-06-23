@@ -1,0 +1,237 @@
+//// [tests/cases/syn/jsxSpread.syn] ////
+
+=== jsxSpread.syn ===
+{
+    declare function Comp(): { root: Element[] } & Updatable;
+>Comp : () => { root: Element[]; } & Updatable
+>     : ^^^^^^                                
+>root : Element[]
+>     : ^^^^^^^^^
+
+    const spread1 = <div><...Comp /></div> // ok
+>spread1 : HTMLDivElement
+>        : ^^^^^^^^^^^^^^
+><div><...Comp /></div> : HTMLDivElement
+>                       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+><...Comp /> : { root: Element[]; } & Updatable
+>            : ^^^^^^^^         ^^^^^^^^^^^^^^^
+>Comp : () => { root: Element[]; } & Updatable
+>     : ^^^^^^                                
+>div : any
+>    : ^^^
+
+    const noSpread1 = <div><Comp /></div> // error
+>noSpread1 : HTMLDivElement
+>          : ^^^^^^^^^^^^^^
+><div><Comp /></div> : HTMLDivElement
+>                    : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+><Comp /> : { root: Element[]; } & Updatable
+>         : ^^^^^^^^         ^^^^^^^^^^^^^^^
+>Comp : () => { root: Element[]; } & Updatable
+>     : ^^^^^^                                
+>div : any
+>    : ^^^
+
+    // errors on intrinsics
+    const spread2 = <div><...div /></div>
+>spread2 : HTMLDivElement
+>        : ^^^^^^^^^^^^^^
+><div><...div /></div> : HTMLDivElement
+>                      : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+><...div /> : HTMLDivElement
+>           : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+    const spread3 = <div><...div></div></div>
+>spread3 : HTMLDivElement
+>        : ^^^^^^^^^^^^^^
+><div><...div></div></div> : HTMLDivElement
+>                          : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+><...div></div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+    declare function Comp2(): { root: (() => void)[] } & Updatable
+>Comp2 : () => { root: (() => void)[]; } & Updatable
+>      : ^^^^^^                                     
+>root : (() => void)[]
+>     : ^^^^^^^    ^^^
+
+    const spread4 = <div><...Comp2 /></div>  // error, intrinsics want something NodeLike
+>spread4 : HTMLDivElement
+>        : ^^^^^^^^^^^^^^
+><div><...Comp2 /></div> : HTMLDivElement
+>                        : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+><...Comp2 /> : { root: (() => void)[]; } & Updatable
+>             : ^^^^^^^^              ^^^^^^^^^^^^^^^
+>Comp2 : () => { root: (() => void)[]; } & Updatable
+>      : ^^^^^^                                     
+>div : any
+>    : ^^^
+
+    declare function Comp3(): { root: Element } & Updatable;
+>Comp3 : () => { root: Element; } & Updatable
+>      : ^^^^^^                              
+>root : Element
+>     : ^^^^^^^
+
+    const noSpread2 = <div><Comp3 /></div> // ok
+>noSpread2 : HTMLDivElement
+>          : ^^^^^^^^^^^^^^
+><div><Comp3 /></div> : HTMLDivElement
+>                     : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+><Comp3 /> : { root: Element; } & Updatable
+>          : ^^^^^^^^       ^^^^^^^^^^^^^^^
+>Comp3 : () => { root: Element; } & Updatable
+>      : ^^^^^^                              
+>div : any
+>    : ^^^
+
+    const spread5 = <div><...Comp3 /></div> // error
+>spread5 : HTMLDivElement
+>        : ^^^^^^^^^^^^^^
+><div><...Comp3 /></div> : HTMLDivElement
+>                        : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+><...Comp3 /> : { root: Element; } & Updatable
+>             : ^^^^^^^^       ^^^^^^^^^^^^^^^
+>Comp3 : () => { root: Element; } & Updatable
+>      : ^^^^^^                              
+>div : any
+>    : ^^^
+
+    declare function Comp4(attrs: {}, children: Element[]): { root: Element } & Updatable;
+>Comp4 : (attrs: {}, children: Element[]) => { root: Element; } & Updatable
+>      : ^     ^^  ^^        ^^         ^^^^^                              
+>attrs : {}
+>      : ^^
+>children : Element[]
+>         : ^^^^^^^^^
+>root : Element
+>     : ^^^^^^^
+
+    // ok
+    const spread6 = <Comp4>
+>spread6 : { root: Element; } & Updatable
+>        : ^^^^^^^^       ^^^^^^^^^^^^^^^
+><Comp4>      <Comp3 />      <...Comp />      <...Comp></Comp>    </Comp4> : { root: Element; } & Updatable
+>                                                                          : ^^^^^^^^       ^^^^^^^^^^^^^^^
+>Comp4 : (attrs: {}, children: Element[]) => { root: Element; } & Updatable
+>      : ^     ^^  ^^        ^^         ^^^^^                              
+
+      <Comp3 />
+><Comp3 /> : { root: Element; } & Updatable
+>          : ^^^^^^^^       ^^^^^^^^^^^^^^^
+>Comp3 : () => { root: Element; } & Updatable
+>      : ^^^^^^                              
+
+      <...Comp />
+><...Comp /> : { root: Element[]; } & Updatable
+>            : ^^^^^^^^         ^^^^^^^^^^^^^^^
+>Comp : () => { root: Element[]; } & Updatable
+>     : ^^^^^^                                
+
+      <...Comp></Comp>
+><...Comp></Comp> : { root: Element[]; } & Updatable
+>                 : ^^^^^^^^         ^^^^^^^^^^^^^^^
+>Comp : () => { root: Element[]; } & Updatable
+>     : ^^^^^^                                
+>Comp : () => { root: Element[]; } & Updatable
+>     : ^^^^^^                                
+
+    </Comp4>
+>Comp4 : (attrs: {}, children: Element[]) => { root: Element; } & Updatable
+>      : ^     ^^  ^^        ^^         ^^^^^                              
+
+    // error
+    const spread7 = <Comp4>
+>spread7 : { root: Element; } & Updatable
+>        : ^^^^^^^^       ^^^^^^^^^^^^^^^
+><Comp4>      <Comp3 />      <Comp />    </Comp4> : { root: Element; } & Updatable
+>                                                 : ^^^^^^^^       ^^^^^^^^^^^^^^^
+>Comp4 : (attrs: {}, children: Element[]) => { root: Element; } & Updatable
+>      : ^     ^^  ^^        ^^         ^^^^^                              
+
+      <Comp3 />
+><Comp3 /> : { root: Element; } & Updatable
+>          : ^^^^^^^^       ^^^^^^^^^^^^^^^
+>Comp3 : () => { root: Element; } & Updatable
+>      : ^^^^^^                              
+
+      <Comp />
+><Comp /> : { root: Element[]; } & Updatable
+>         : ^^^^^^^^         ^^^^^^^^^^^^^^^
+>Comp : () => { root: Element[]; } & Updatable
+>     : ^^^^^^                                
+
+    </Comp4>
+>Comp4 : (attrs: {}, children: Element[]) => { root: Element; } & Updatable
+>      : ^     ^^  ^^        ^^         ^^^^^                              
+
+    declare function Comp5(): { root: [Element] | [] } & Updatable;
+>Comp5 : () => { root: [Element] | []; } & Updatable
+>      : ^^^^^^                                     
+>root : [] | [Element]
+>     : ^^^^^^^^^^^^^^
+
+    // ok
+    const spread8 = <Comp4>
+>spread8 : { root: Element; } & Updatable
+>        : ^^^^^^^^       ^^^^^^^^^^^^^^^
+><Comp4>        <...Comp5 />    </Comp4> : { root: Element; } & Updatable
+>                                        : ^^^^^^^^       ^^^^^^^^^^^^^^^
+>Comp4 : (attrs: {}, children: Element[]) => { root: Element; } & Updatable
+>      : ^     ^^  ^^        ^^         ^^^^^                              
+
+        <...Comp5 />
+><...Comp5 /> : { root: [Element] | []; } & Updatable
+>             : ^^^^^^^^              ^^^^^^^^^^^^^^^
+>Comp5 : () => { root: [Element] | []; } & Updatable
+>      : ^^^^^^                                     
+
+    </Comp4>
+>Comp4 : (attrs: {}, children: Element[]) => { root: Element; } & Updatable
+>      : ^     ^^  ^^        ^^         ^^^^^                              
+}
+
+{
+    const d = <div>
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div>        <...Unresolved />    </div> : HTMLDivElement
+>                                         : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <...Unresolved />
+><...Unresolved /> : any
+>                  : ^^^
+>Unresolved : any
+>           : ^^^
+
+    </div>
+>div : any
+>    : ^^^
+}
+

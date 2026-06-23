@@ -713,7 +713,7 @@ export namespace Compiler {
     }
 
     export function doErrorBaseline(baselinePath: string, inputFiles: readonly TestFile[], errors: readonly ts.Diagnostic[], pretty?: boolean): void {
-        Baseline.runBaseline(baselinePath.replace(/\.tsx?$/, ".errors.txt"), !errors || (errors.length === 0) ? null : getErrorBaseline(inputFiles, errors, pretty)); // eslint-disable-line no-restricted-syntax
+        Baseline.runBaseline(baselinePath.replace(/\.(?:tsx?|syn)$/, ".errors.txt"), !errors || (errors.length === 0) ? null : getErrorBaseline(inputFiles, errors, pretty)); // eslint-disable-line no-restricted-syntax
     }
 
     export function doTypeAndSymbolBaseline(
@@ -780,8 +780,8 @@ export namespace Compiler {
             // When calling this function from rwc-runner, the baselinePath will have no extension.
             // As rwc test- file is stored in json which ".json" will get stripped off.
             // When calling this function from compiler-runner, the baselinePath will then has either ".ts" or ".tsx" extension
-            const outputFileName = ts.endsWith(baselinePath, ts.Extension.Ts) || ts.endsWith(baselinePath, ts.Extension.Tsx) ?
-                baselinePath.replace(/\.tsx?/, "") : baselinePath;
+            const outputFileName = ts.endsWith(baselinePath, ts.Extension.Ts) || ts.endsWith(baselinePath, ts.Extension.Tsx) || ts.endsWith(baselinePath, ".syn") ?
+                baselinePath.replace(/\.(?:tsx?|syn)/, "") : baselinePath;
 
             if (!multifile) {
                 const fullBaseLine = generateBaseLine(isSymbolBaseLine, isSymbolBaseLine ? skipSymbolBaselines : skipTypeBaselines);
@@ -974,6 +974,7 @@ export namespace Compiler {
         harnessSettings: TestCaseParser.CompilerSettings,
     ): void {
         if (!options.noEmit && !options.emitDeclarationOnly && result.js.size === 0 && result.diagnostics.length === 0) {
+            if (toBeCompiled.every(x => x.unitName.endsWith('.syn'))) return;
             throw new Error("Expected at least one js file to be emitted or at least one error to be created.");
         }
 

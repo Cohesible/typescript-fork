@@ -1,0 +1,721 @@
+//// [tests/cases/syn/staticBindings.syn] ////
+
+=== staticBindings.syn ===
+{
+    const d = <div>
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div>        <#run>            static let c = 0            function foo() {                static let c2 = 0 // error            }        </>        {c++}    </div> : HTMLDivElement
+>                                                                                                                                                                     : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <#run>
+            static let c = 0
+>c : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+            function foo() {
+>foo : () => void
+>    : ^^^^^^^^^^
+
+                static let c2 = 0 // error
+>c2 : number
+>   : ^^^^^^
+>0 : 0
+>  : ^
+            }
+        </>
+        {c++}
+>c++ : number
+>    : ^^^^^^
+>c : number
+>  : ^^^^^^
+
+    </div>
+>div : any
+>    : ^^^
+
+    let co = 0
+>co : number
+>   : ^^^^^^
+>0 : 0
+>  : ^
+
+    const d2 = <div>
+>d2 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div>        <#run>            const c = 0            static function foo() {                return c // error            }            static class Foo { y = c } // error            static const d = () => c // error            static const c2 = c // OK            static let c3 = c // OK            static const d3 = <div>{c}</div> // error            static const d4 = <div>{co}</div> // OK, outside of a tree            static const d5 = <div>{c2}</div> // OK        </>        {c}    </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <#run>
+            const c = 0
+>c : 0
+>  : ^
+>0 : 0
+>  : ^
+
+            static function foo() {
+>foo : () => number
+>    : ^^^^^^^^^^^^
+
+                return c // error
+>c : 0
+>  : ^
+            }
+            static class Foo { y = c } // error
+>Foo : Foo
+>    : ^^^
+>y : number
+>  : ^^^^^^
+>c : 0
+>  : ^
+
+            static const d = () => c // error
+>d : () => number
+>  : ^^^^^^^^^^^^
+>() => c : () => number
+>        : ^^^^^^^^^^^^
+>c : 0
+>  : ^
+
+            static const c2 = c // OK
+>c2 : 0
+>   : ^
+>c : 0
+>  : ^
+
+            static let c3 = c // OK
+>c3 : number
+>   : ^^^^^^
+>c : 0
+>  : ^
+
+            static const d3 = <div>{c}</div> // error
+>d3 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div>{c}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>c : 0
+>  : ^
+>div : any
+>    : ^^^
+
+            static const d4 = <div>{co}</div> // OK, outside of a tree
+>d4 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div>{co}</div> : HTMLDivElement
+>                : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>co : number
+>   : ^^^^^^
+>div : any
+>    : ^^^
+
+            static const d5 = <div>{c2}</div> // OK
+>d5 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div>{c2}</div> : HTMLDivElement
+>                : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>c2 : 0
+>   : ^
+>div : any
+>    : ^^^
+
+        </>
+        {c}
+>c : 0
+>  : ^
+
+    </div>
+>div : any
+>    : ^^^
+
+    const d3 = <div>
+>d3 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div>        <#run>            const c = 0            const d2 = <div>              <#run>                static const f = () => c // OK, because the binding is stable              </>            </div>        </>    </div> : HTMLDivElement
+>                                                                                                                                                                                                                                : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <#run>
+            const c = 0
+>c : 0
+>  : ^
+>0 : 0
+>  : ^
+
+            const d2 = <div>
+>d2 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div>              <#run>                static const f = () => c // OK, because the binding is stable              </>            </div> : HTMLDivElement
+>                                                                                                                                          : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+              <#run>
+                static const f = () => c // OK, because the binding is stable
+>f : () => number
+>  : ^^^^^^^^^^^^
+>() => c : () => number
+>        : ^^^^^^^^^^^^
+>c : 0
+>  : ^
+
+              </>
+            </div>
+>div : any
+>    : ^^^
+
+        </>
+    </div>
+>div : any
+>    : ^^^
+
+    const d4 = <div>
+>d4 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div>        <#run>          const c = 0        </>        <div>            <#run>                static const f = () => c // error                static const f2 = () => {                    return <div>{c}</div> // error                }            </>        </div>    </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <#run>
+          const c = 0
+>c : 0
+>  : ^
+>0 : 0
+>  : ^
+
+        </>
+        <div>
+><div>            <#run>                static const f = () => c // error                static const f2 = () => {                    return <div>{c}</div> // error                }            </>        </div> : HTMLDivElement
+>                                                                                                                                                                                                                  : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+            <#run>
+                static const f = () => c // error
+>f : () => number
+>  : ^^^^^^^^^^^^
+>() => c : () => number
+>        : ^^^^^^^^^^^^
+>c : 0
+>  : ^
+
+                static const f2 = () => {
+>f2 : () => HTMLDivElement
+>   : ^^^^^^^^^^^^^^^^^^^^
+>() => {                    return <div>{c}</div> // error                } : () => HTMLDivElement
+>                                                                           : ^^^^^^^^^^^^^^^^^^^^
+
+                    return <div>{c}</div> // error
+><div>{c}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>c : 0
+>  : ^
+>div : any
+>    : ^^^
+                }
+            </>
+        </div>
+>div : any
+>    : ^^^
+
+    </div>
+>div : any
+>    : ^^^
+
+    const d5 = <div>
+>d5 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div>        <#run>            const c = 0            // error, components aren't allowed as top-level #run declarations            <#component Foo()>                <div></div>            </>            let cx = 0            static let cx = 0        </>        <#component Foo2()>            <div>                <#run>                    // OK, contiguous comp declarations observe the true tree binding                    static const c2 = () => c                    const c3 = 0                    static const c4 = () => c3 // error                    const q = cx // error, nested components cannot capture mutable non-static tree locals                    const q = cx2 // OK                </>            </div>        </>    </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <#run>
+            const c = 0
+>c : 0
+>  : ^
+>0 : 0
+>  : ^
+
+            // error, components aren't allowed as top-level #run declarations
+            <#component Foo()>
+>Foo : any
+>    : ^^^
+
+                <div></div>
+><div></div> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+            </>
+
+            let cx = 0
+>cx : number
+>   : ^^^^^^
+>0 : 0
+>  : ^
+
+            static let cx = 0
+>cx : number
+>   : ^^^^^^
+>0 : 0
+>  : ^
+
+        </>
+        <#component Foo2()>
+>Foo2 : any
+>     : ^^^
+
+            <div>
+><div>                <#run>                    // OK, contiguous comp declarations observe the true tree binding                    static const c2 = () => c                    const c3 = 0                    static const c4 = () => c3 // error                    const q = cx // error, nested components cannot capture mutable non-static tree locals                    const q = cx2 // OK                </>            </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                                                                                                                                                                           : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+                <#run>
+                    // OK, contiguous comp declarations observe the true tree binding
+                    static const c2 = () => c
+>c2 : () => number
+>   : ^^^^^^^^^^^^
+>() => c : () => number
+>        : ^^^^^^^^^^^^
+>c : 0
+>  : ^
+
+                    const c3 = 0
+>c3 : 0
+>   : ^
+>0 : 0
+>  : ^
+
+                    static const c4 = () => c3 // error
+>c4 : () => number
+>   : ^^^^^^^^^^^^
+>() => c3 : () => number
+>         : ^^^^^^^^^^^^
+>c3 : 0
+>   : ^
+
+                    const q = cx // error, nested components cannot capture mutable non-static tree locals
+>q : number
+>  : ^^^^^^
+>cx : number
+>   : ^^^^^^
+
+                    const q = cx2 // OK
+>q : any
+>  : ^^^
+>cx2 : any
+>    : ^^^
+
+                </>
+            </div>
+>div : any
+>    : ^^^
+
+        </>
+    </div>
+>div : any
+>    : ^^^
+}
+
+{
+    <#component Foo(children)>
+>Foo : any
+>    : ^^^
+>children : JSX.Children
+>         : ^^^^^^^^^^^^
+
+        <div>{...children}</div>
+><div>{...children}</div> : HTMLDivElement
+>                         : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>children : JSX.Children
+>         : ^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+    document.body.append(<div @ d>
+>document.body.append(<div @ d>        <#run>            static let cond = false            static let count = 0        </>        <Foo>            <#if (cond)>                test            </>        </Foo>        <button on:click() {            update d {                cond = !cond            }        }>click</button>    </div>) : void
+>                                                                                                                                                                                                                                                                                                                                               : ^^^^
+>document.body.append : (...nodes: (Node | string)[]) => void
+>                     : ^^^^     ^^                 ^^^^^    
+>document.body : HTMLElement
+>              : ^^^^^^^^^^^
+>document : Document
+>         : ^^^^^^^^
+>body : HTMLElement
+>     : ^^^^^^^^^^^
+>append : (...nodes: (Node | string)[]) => void
+>       : ^^^^     ^^                 ^^^^^    
+><div @ d>        <#run>            static let cond = false            static let count = 0        </>        <Foo>            <#if (cond)>                test            </>        </Foo>        <button on:click() {            update d {                cond = !cond            }        }>click</button>    </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                                                         : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+        <#run>
+            static let cond = false
+>cond : boolean
+>     : ^^^^^^^
+>false : false
+>      : ^^^^^
+
+            static let count = 0
+>count : number
+>      : ^^^^^^
+>0 : 0
+>  : ^
+
+        </>
+        <Foo>
+><Foo>            <#if (cond)>                test            </>        </Foo> : Foo
+>                                                                               : ^^^
+>Foo : (attributes: {}, children: JSX.Children) => Foo
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+            <#if (cond)>
+>cond : false
+>     : ^^^^^
+
+                test
+            </>
+        </Foo>
+>Foo : (attributes: {}, children: JSX.Children) => Foo
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        <button on:click() {
+><button on:click() {            update d {                cond = !cond            }        }>click</button> : HTMLButtonElement
+>                                                                                                            : ^^^^^^^^^^^^^^^^^
+>button : any
+>       : ^^^
+>on:click : () => void
+>         : ^^^^^^^^^^
+>on : any
+>   : ^^^
+>click : any
+>      : ^^^
+
+            update d {
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+                cond = !cond
+>cond = !cond : boolean
+>             : ^^^^^^^
+>cond : boolean
+>     : ^^^^^^^
+>!cond : boolean
+>      : ^^^^^^^
+>cond : boolean
+>     : ^^^^^^^
+            }
+        }>click</button>
+>button : any
+>       : ^^^
+
+    </div>)
+>div : any
+>    : ^^^
+}
+
+// unwind
+{
+    <#component EventComp(w: HTMLElement) {
+>EventComp : any
+>          : ^^^
+>w : HTMLElement
+>  : ^^^^^^^^^^^
+
+        function onKeyPress(ev: KeyboardEvent) {}
+>onKeyPress : (ev: KeyboardEvent) => void
+>           : ^  ^^             ^^^^^^^^^
+>ev : KeyboardEvent
+>   : ^^^^^^^^^^^^^
+
+        w.addEventListener('keypress', onKeyPress)
+>w.addEventListener('keypress', onKeyPress) : void
+>                                           : ^^^^
+>w.addEventListener : { <K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void; (type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void; }
+>                   : ^^^ ^^^^^^^^^                         ^^    ^^ ^^        ^^                                                      ^^       ^^^                                 ^^^    ^^^    ^^      ^^        ^^                                  ^^       ^^^                                 ^^^    ^^^
+>w : HTMLElement
+>  : ^^^^^^^^^^^
+>addEventListener : { <K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void; (type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void; }
+>                 : ^^^ ^^^^^^^^^                         ^^    ^^ ^^        ^^                                                      ^^       ^^^                                 ^^^    ^^^    ^^      ^^        ^^                                  ^^       ^^^                                 ^^^    ^^^
+>'keypress' : "keypress"
+>           : ^^^^^^^^^^
+>onKeyPress : (ev: KeyboardEvent) => void
+>           : ^  ^^             ^^^^^^^^^
+
+        unwind {
+            w.removeEventListener('keypress', onKeyPress)
+>w.removeEventListener('keypress', onKeyPress) : void
+>                                              : ^^^^
+>w.removeEventListener : { <K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void; (type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void; }
+>                      : ^^^ ^^^^^^^^^                         ^^    ^^ ^^        ^^                                                      ^^       ^^^                              ^^^    ^^^    ^^      ^^        ^^                                  ^^       ^^^                              ^^^    ^^^
+>w : HTMLElement
+>  : ^^^^^^^^^^^
+>removeEventListener : { <K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void; (type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void; }
+>                    : ^^^ ^^^^^^^^^                         ^^    ^^ ^^        ^^                                                      ^^       ^^^                              ^^^    ^^^    ^^      ^^        ^^                                  ^^       ^^^                              ^^^    ^^^
+>'keypress' : "keypress"
+>           : ^^^^^^^^^^
+>onKeyPress : (ev: KeyboardEvent) => void
+>           : ^  ^^             ^^^^^^^^^
+        }
+    }>
+        <div></div>
+><div></div> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+        <#run>
+            const el = document.createElement('div')
+>el : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+>document.createElement('div') : HTMLDivElement
+>                              : ^^^^^^^^^^^^^^
+>document.createElement : { <K extends keyof HTMLElementTagNameMap>(tagName: K, options?: ElementCreationOptions): HTMLElementTagNameMap[K]; <K extends keyof HTMLElementDeprecatedTagNameMap>(tagName: K, options?: ElementCreationOptions): HTMLElementDeprecatedTagNameMap[K]; (tagName: string, options?: ElementCreationOptions): HTMLElement; }
+>                       : ^^^ ^^^^^^^^^                           ^^       ^^ ^^       ^^^                      ^^^                        ^^^ ^^^^^^^^^                                     ^^       ^^ ^^       ^^^                      ^^^                                  ^^^       ^^      ^^       ^^^                      ^^^           ^^^
+>document : Document
+>         : ^^^^^^^^
+>createElement : { <K extends keyof HTMLElementTagNameMap>(tagName: K, options?: ElementCreationOptions): HTMLElementTagNameMap[K]; <K extends keyof HTMLElementDeprecatedTagNameMap>(tagName: K, options?: ElementCreationOptions): HTMLElementDeprecatedTagNameMap[K]; (tagName: string, options?: ElementCreationOptions): HTMLElement; }
+>              : ^^^ ^^^^^^^^^                           ^^       ^^ ^^       ^^^                      ^^^                        ^^^ ^^^^^^^^^                                     ^^       ^^ ^^       ^^^                      ^^^                                  ^^^       ^^      ^^       ^^^                      ^^^           ^^^
+>'div' : "div"
+>      : ^^^^^
+
+            unwind {
+                el.remove()
+>el.remove() : void
+>            : ^^^^
+>el.remove : () => void
+>          : ^^^^^^    
+>el : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+>remove : () => void
+>       : ^^^^^^    
+            }
+        </>
+    </>
+}
+
+{
+    <#component Timer(n: number) {
+>Timer : any
+>      : ^^^
+>n : number
+>  : ^^^^^^
+
+        let active = true
+>active : boolean
+>       : ^^^^^^^
+>true : true
+>     : ^^^^
+
+        let rate = n
+>rate : number
+>     : ^^^^^^
+>n : number
+>  : ^^^^^^
+
+        let c = 0
+>c : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+        const d = <div>{c}</div>
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div>{c}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>c : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+        const counter = <div @ counter>
+>counter : HTMLDivElement
+>        : ^^^^^^^^^^^^^^
+><div @ counter>            <div @ d>                count: {c}            </div>            <#run>                if (active) {                    const id = setInterval(() => {                        update d {                            c += 1                        }                    }, rate)                    unwind { clearInterval(id) }                }            </>        </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                                                                                                                                         : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>counter : HTMLDivElement
+>        : ^^^^^^^^^^^^^^
+
+            <div @ d>
+><div @ d>                count: {c}            </div> : HTMLDivElement
+>                                                      : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+                count: {c}
+>c : number
+>  : ^^^^^^
+
+            </div>
+>div : any
+>    : ^^^
+
+            <#run>
+                if (active) {
+>active : true
+>       : ^^^^
+
+                    const id = setInterval(() => {
+>id : number
+>   : ^^^^^^
+>setInterval(() => {                        update d {                            c += 1                        }                    }, rate) : number
+>                                                                                                                                             : ^^^^^^
+>setInterval : (handler: TimerHandler, timeout?: number, ...arguments: any[]) => number
+>            : ^       ^^            ^^       ^^^      ^^^^^         ^^     ^^^^^      
+>() => {                        update d {                            c += 1                        }                    } : () => void
+>                                                                                                                          : ^^^^^^^^^^
+
+                        update d {
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+                            c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+                        }
+                    }, rate)
+>rate : number
+>     : ^^^^^^
+
+                    unwind { clearInterval(id) }
+>clearInterval(id) : void
+>                  : ^^^^
+>clearInterval : (id: number | undefined) => void
+>              : ^  ^^                  ^^^^^    
+>id : number
+>   : ^^^^^^
+                }
+            </>
+        </div>
+>div : any
+>    : ^^^
+
+        update counter {
+>counter : HTMLDivElement
+>        : ^^^^^^^^^^^^^^
+
+            rate = n
+>rate = n : number
+>         : ^^^^^^
+>rate : number
+>     : ^^^^^^
+>n : number
+>  : ^^^^^^
+        }
+    }>
+        <div></div>
+><div></div> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+    </>
+}
+
+// <#style>
+{
+    ;<#style d>
+>d : any
+>  : ^^^
+
+    </>
+    ;<#style (d)>
+>d : any
+>  : ^^^
+
+    </>
+    ;<#style d2(d)>
+>d2 : any
+>   : ^^^
+>d : any
+>  : ^^^
+
+    </>
+    ;<#style d3(d, d2)>
+>d3 : any
+>   : ^^^
+>d : any
+>  : ^^^
+>d2 : any
+>   : ^^^
+
+    </>
+    const o = d
+>o : any
+>  : ^^^
+>d : any
+>  : ^^^
+}
+
+{
+    <#component Foo()>
+>Foo : any
+>    : ^^^
+
+        <div/>
+><div/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <#style>
+            div { color: red }
+        </>
+    </>
+    const d = <div> <Foo/> </div>
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div> <Foo/> </div> : HTMLDivElement
+>                    : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+><Foo/> : Foo
+>       : ^^^
+>Foo : () => Foo
+>    : ^^^^^^^^^
+>div : any
+>    : ^^^
+}
+

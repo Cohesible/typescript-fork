@@ -1,0 +1,26 @@
+{
+    const x: string | number = 1
+    switch (x) {
+        case is string:
+            console.log('got string', x)
+        case is number:
+            console.log('got number', x)
+    }
+
+    const x2: unknown = {}
+    switch (x2) {
+        case is { y: number }:
+            console.log('y', x2.y)
+        case is 1:
+        case is 2:
+            fallthrough
+        case is 3:
+            x2 // 1 | 2 | 3
+    }
+
+    const x3: string | 10 = 10
+    switch (x3) {
+        case 10: console.log(x3)
+        case is string: console.log(x3)
+    }
+}

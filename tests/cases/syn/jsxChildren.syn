@@ -1,0 +1,86 @@
+{
+    const elements: Element[] = []
+    function Foo(attrs: {}, children: Element[]) {
+        return <div>{...children}</div>
+    }
+    const f = <Foo>{...elements}</Foo>
+    const y = <Foo>{elements}</Foo> // error
+    const x0 = <Foo></Foo> // no error
+    const x1 = <Foo><div/></Foo> // no error
+    const x2 = <Foo><div/><div/></Foo> // no error
+    const x3 = <Foo>a</Foo> // error (string is not Element)
+    const x4 = <Foo/> // error (this is explicitly no elements)
+
+    function Foo2(attrs: {}, children: [string, number]) {
+        return <div></div>
+    }
+    const f2 = <Foo2>{'hi'}{...([1,2] as number[])}</Foo2> // error
+    const f3 = <Foo2>{'hi'}{...([1] as [number])}</Foo2> // no error
+
+    function FooOpt(attrs?: never, children?: Element[]) {
+        return <div>{...(children ?? [])}</div>
+    }
+    {
+        const f = <FooOpt>{...elements}</FooOpt> // no error
+        const y = <FooOpt>{elements}</FooOpt> // error
+        const x0 = <FooOpt></FooOpt> // no error
+        const x1 = <FooOpt><div/></FooOpt> // no error
+        const x2 = <FooOpt><div/><div/></FooOpt> // no error
+        const x3 = <FooOpt>a</FooOpt> // error
+        const x4 = <FooOpt/> // no error
+    }
+
+    {
+        function F1(attrs: { v: string }) {
+            return <span>{attrs.v}</span>
+        }
+        function Main() {
+            const v = 'aaa'
+            return <F1 v={v}></F1> // no error
+        }
+    }
+
+    {
+        const x = <>aaa{1}</>
+    }
+}
+
+{
+    const items = ['a']
+    <#component Many(items: string[])>
+        <div>{...items}</div>
+    </>
+    const d = <Many {items}/>
+    update d {
+        items.push('aa')
+    }
+}
+
+{
+    <#component *Wrapper() {
+        const a = document.createComment('')
+    }>
+        {a}
+    </>
+
+    // this should _not_ be a single root
+    const w = <Wrapper />
+}
+
+{
+    <#component Wrapper(children: (ChildNode | string)[]) {
+        const a = document.createComment('')
+    }>
+        <div>
+            <#run>
+                const q = a as ChildNode
+                while (true) {}
+            </>
+        </div>
+    </>
+
+    const q = <div>
+        <Wrapper>a</Wrapper>
+    </div>
+    update q {}
+}

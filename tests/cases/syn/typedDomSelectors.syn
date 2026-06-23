@@ -1,0 +1,25 @@
+type X = SelectedDOMTag<'input[type=text]'>
+type Y = SelectedDOMElement<'input[type=text]'>
+const r1 = document.querySelector('input[type=text]')
+const r2 = document.querySelector<HTMLInputElement>('.aa')
+const r3 = document.querySelector('div' as string)
+const r4 = document.querySelectorAll('button, [role="button"]')
+const r5 = document.querySelectorAll('button, div[role=button]')
+const r6 = document.querySelector('' as `my-ns-${string}`)
+const r7 = document.querySelector('' as `input.${string}`)
+const r8 = document.querySelector('' as `input ${string}`)
+const r9 = document.querySelector('' as `input > ${string}`)
+const r10 = document.querySelector('' as `input:has(${string})`)
+const r11 = document.querySelector('' as `input[data-x=${string}]`)
+const r12 = document.querySelector('a#link')
+const r13 = document.querySelector(`
+:is(a, div)
+:is(button, input)    
+`)
+const r14 = document.querySelector('table:not(:has(> caption))')
+const r15 = document.querySelector('a.status-actions:is(a[href^="/"])')
+const r16 = document.querySelector(':is(a, button).c')
+const r17 = document.querySelector(':is(h1, h2, h3, h4):where(.foo)')
+const r18 = document.querySelector('div:first-child')
+
+const m1 = document.querySelector('a[foo')

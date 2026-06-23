@@ -1,0 +1,574 @@
+//// [tests/cases/syn/jsxClassList.syn] ////
+
+=== jsxClassList.syn ===
+{
+    const cond = true;
+>cond : true
+>     : ^^^^
+>true : true
+>     : ^^^^
+
+    <div .foo/>;
+><div .foo/> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>foo : any
+>    : ^^^
+
+    <div .foo></div>;
+><div .foo></div> : HTMLDivElement
+>                 : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>foo : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+    // class attributes should not conflict with normal attributes
+    <input .min min=500></input>;
+><input .min min=500></input> : HTMLInputElement
+>                             : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>min : any
+>    : ^^^
+>min : number
+>    : ^^^^^^
+>input : any
+>      : ^^^
+
+    <input (.min.min2)></input>;
+><input (.min.min2)></input> : HTMLInputElement
+>                            : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>min : any
+>    : ^^^
+>min2 : any
+>     : ^^^
+>input : any
+>      : ^^^
+
+    <input (.min.min2={cond})></input>;
+><input (.min.min2={cond})></input> : HTMLInputElement
+>                                   : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>min : any
+>    : ^^^
+>min2 : any
+>     : ^^^
+>cond : true
+>     : ^^^^
+>input : any
+>      : ^^^
+
+    <input (.min.min2={cond}, .bar)></input>;
+><input (.min.min2={cond}, .bar)></input> : HTMLInputElement
+>                                         : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>min : any
+>    : ^^^
+>min2 : any
+>     : ^^^
+>cond : true
+>     : ^^^^
+>bar : any
+>    : ^^^
+>input : any
+>      : ^^^
+
+    <input .min.min2={cond}></input>;
+><input .min.min2={cond}></input> : HTMLInputElement
+>                                 : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>min : any
+>    : ^^^
+>min2 : any
+>     : ^^^
+>cond : true
+>     : ^^^^
+>input : any
+>      : ^^^
+
+    <input .min.min2={cond} @ i></input>;
+><input .min.min2={cond} @ i></input> : HTMLInputElement
+>                                     : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>min : any
+>    : ^^^
+>min2 : any
+>     : ^^^
+>cond : true
+>     : ^^^^
+>i : HTMLInputElement
+>  : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+
+    <input (.m) @ i2></input>;
+><input (.m) @ i2></input> : HTMLInputElement
+>                          : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>m : any
+>  : ^^^
+>i2 : HTMLInputElement
+>   : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+
+    // errors emitted during parse
+    <div id="foo" .a.a></div>;
+><div id="foo" .a.a></div> : HTMLDivElement
+>                          : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>id : string
+>   : ^^^^^^
+> : true
+> : ^^^^
+>div : any
+>    : ^^^
+
+    <div id="foo" (.a)></div>;
+><div id="foo" (.a)></div> : HTMLDivElement
+>                          : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>id : string
+>   : ^^^^^^
+> : true
+> : ^^^^
+>div : any
+>    : ^^^
+
+    <div @ foo_1 (.a)></div>;
+><div @ foo_1 (.a)></div> : HTMLDivElement
+>                         : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>foo_1 : HTMLDivElement
+>      : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+    <div @ foo_2 .a></div>;
+><div @ foo_2 .a></div> : HTMLDivElement
+>                       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>foo_2 : HTMLDivElement
+>      : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+    <div .a .b .c></div>;
+><div .a .b .c></div> : HTMLDivElement
+>                     : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>b : any
+>  : ^^^
+>c : any
+>  : ^^^
+>div : any
+>    : ^^^
+
+    <div .a .b .c={cond}></div>;
+><div .a .b .c={cond}></div> : HTMLDivElement
+>                            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>b : any
+>  : ^^^
+>c : any
+>  : ^^^
+>cond : true
+>     : ^^^^
+>div : any
+>    : ^^^
+
+    <div .a .c={cond} .b></div>;
+><div .a .c={cond} .b></div> : HTMLDivElement
+>                            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>c : any
+>  : ^^^
+>cond : true
+>     : ^^^^
+>div : any
+>    : ^^^
+
+    <div (.a, .c={cond} .b)></div>;
+><div (.a, .c={cond} .b)></div> : HTMLDivElement
+>                               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>c : any
+>  : ^^^
+>cond : true
+>     : ^^^^
+>b : any
+>  : ^^^
+>div : any
+>    : ^^^
+
+    // errors
+    <div .a.a></div>;
+><div .a.a></div> : HTMLDivElement
+>                 : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>a : any
+>  : ^^^
+>div : any
+>    : ^^^
+
+    <div (.a, .a)></div>;
+><div (.a, .a)></div> : HTMLDivElement
+>                     : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>a : any
+>  : ^^^
+>div : any
+>    : ^^^
+
+    <div (.a={cond}, .a)></div>;
+><div (.a={cond}, .a)></div> : HTMLDivElement
+>                            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>cond : true
+>     : ^^^^
+>a : any
+>  : ^^^
+>div : any
+>    : ^^^
+
+    <div (.a.b={cond}, .a)></div>;
+><div (.a.b={cond}, .a)></div> : HTMLDivElement
+>                              : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>b : any
+>  : ^^^
+>cond : true
+>     : ^^^^
+>a : any
+>  : ^^^
+>div : any
+>    : ^^^
+
+    <div (.a, .a={cond})></div>;
+><div (.a, .a={cond})></div> : HTMLDivElement
+>                            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>a : any
+>  : ^^^
+>cond : true
+>     : ^^^^
+>div : any
+>    : ^^^
+
+    <div (.a, .a.b={cond})></div>;
+><div (.a, .a.b={cond})></div> : HTMLDivElement
+>                              : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>a : any
+>  : ^^^
+>b : any
+>  : ^^^
+>cond : true
+>     : ^^^^
+>div : any
+>    : ^^^
+
+    <div (.a={cond}, .a.b={cond})></div>;
+><div (.a={cond}, .a.b={cond})></div> : HTMLDivElement
+>                                     : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>cond : true
+>     : ^^^^
+>a : any
+>  : ^^^
+>b : any
+>  : ^^^
+>cond : true
+>     : ^^^^
+>div : any
+>    : ^^^
+
+    // class attribute cannot be used with class list
+    <div .a class="b" />;
+><div .a class="b" /> : HTMLDivElement
+>                     : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>class : string
+>      : ^^^^^^
+
+    <div .a {...{ class: 'b' }} />;
+><div .a {...{ class: 'b' }} /> : HTMLDivElement
+>                               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>{ class: 'b' } : { class: string; }
+>               : ^^^^^^^^^^^^^^^^^^
+>class : string
+>      : ^^^^^^
+>'b' : "b"
+>    : ^^^
+
+    // ok
+    <div class="b" />;
+><div class="b" /> : HTMLDivElement
+>                  : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>class : string
+>      : ^^^^^^
+
+    // ok
+    const cond2 = false as boolean
+>cond2 : boolean
+>      : ^^^^^^^
+>false as boolean : boolean
+>                 : ^^^^^^^
+>false : false
+>      : ^^^^^
+
+    const cond3 = false as boolean;
+>cond3 : boolean
+>      : ^^^^^^^
+>false as boolean : boolean
+>                 : ^^^^^^^
+>false : false
+>      : ^^^^^
+
+    <div (.a={cond}, .a.b={cond2}, .a={cond3})></div>;
+><div (.a={cond}, .a.b={cond2}, .a={cond3})></div> : HTMLDivElement
+>                                                  : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>cond : true
+>     : ^^^^
+>a : any
+>  : ^^^
+>b : any
+>  : ^^^
+>cond2 : boolean
+>      : ^^^^^^^
+>a : any
+>  : ^^^
+>cond3 : boolean
+>      : ^^^^^^^
+>div : any
+>    : ^^^
+
+    // errors
+    <div ({...['a', 'b', 'a']})></div>;
+><div ({...['a', 'b', 'a']})></div> : HTMLDivElement
+>                                   : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>['a', 'b', 'a'] : string[]
+>                : ^^^^^^^^
+>'a' : "a"
+>    : ^^^
+>'b' : "b"
+>    : ^^^
+>'a' : "a"
+>    : ^^^
+>div : any
+>    : ^^^
+
+    <div (.a, {...['a', 'b']})></div>;
+><div (.a, {...['a', 'b']})></div> : HTMLDivElement
+>                                  : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>['a', 'b'] : string[]
+>           : ^^^^^^^^
+>'a' : "a"
+>    : ^^^
+>'b' : "b"
+>    : ^^^
+>div : any
+>    : ^^^
+
+    <div ({...['a']}, .a)></div>;
+><div ({...['a']}, .a)></div> : HTMLDivElement
+>                             : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>['a'] : string[]
+>      : ^^^^^^^^
+>'a' : "a"
+>    : ^^^
+>a : any
+>  : ^^^
+>div : any
+>    : ^^^
+
+    <div ({...123})></div>;
+><div ({...123})></div> : HTMLDivElement
+>                       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>123 : 123
+>    : ^^^
+>div : any
+>    : ^^^
+
+    <div ({..."123"})></div>;
+><div ({..."123"})></div> : HTMLDivElement
+>                         : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>"123" : "123"
+>      : ^^^^^
+>div : any
+>    : ^^^
+
+    // ok
+    <div ({...['a', 'b']})></div>;
+><div ({...['a', 'b']})></div> : HTMLDivElement
+>                              : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>['a', 'b'] : string[]
+>           : ^^^^^^^^
+>'a' : "a"
+>    : ^^^
+>'b' : "b"
+>    : ^^^
+>div : any
+>    : ^^^
+
+    <div ({...['a', 'b']}, .c)></div>;
+><div ({...['a', 'b']}, .c)></div> : HTMLDivElement
+>                                  : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>['a', 'b'] : string[]
+>           : ^^^^^^^^
+>'a' : "a"
+>    : ^^^
+>'b' : "b"
+>    : ^^^
+>c : any
+>  : ^^^
+>div : any
+>    : ^^^
+
+    <div ({...(['a', 'b'] as string[])})></div>;
+><div ({...(['a', 'b'] as string[])})></div> : HTMLDivElement
+>                                            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>(['a', 'b'] as string[]) : string[]
+>                         : ^^^^^^^^
+>['a', 'b'] as string[] : string[]
+>                       : ^^^^^^^^
+>['a', 'b'] : string[]
+>           : ^^^^^^^^
+>'a' : "a"
+>    : ^^^
+>'b' : "b"
+>    : ^^^
+>div : any
+>    : ^^^
+
+    const arr = ['a', 'b'];
+>arr : string[]
+>    : ^^^^^^^^
+>['a', 'b'] : string[]
+>           : ^^^^^^^^
+>'a' : "a"
+>    : ^^^
+>'b' : "b"
+>    : ^^^
+
+    <div ({...arr})></div>;
+><div ({...arr})></div> : HTMLDivElement
+>                       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>arr : string[]
+>    : ^^^^^^^^
+>div : any
+>    : ^^^
+
+    // suggest use class list
+    <div {...(['a', 'b'] as string[])} />;
+><div {...(['a', 'b'] as string[])} /> : HTMLDivElement
+>                                      : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>(['a', 'b'] as string[]) : string[]
+>                         : ^^^^^^^^
+>['a', 'b'] as string[] : string[]
+>                       : ^^^^^^^^
+>['a', 'b'] : string[]
+>           : ^^^^^^^^
+>'a' : "a"
+>    : ^^^
+>'b' : "b"
+>    : ^^^
+
+    <div {...['a', 'b'] as const} />;
+><div {...['a', 'b'] as const} /> : HTMLDivElement
+>                                 : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>['a', 'b'] as const : readonly ["a", "b"]
+>                    : ^^^^^^^^^^^^^^^^^^^
+>['a', 'b'] : readonly ["a", "b"]
+>           : ^^^^^^^^^^^^^^^^^^^
+>'a' : "a"
+>    : ^^^
+>'b' : "b"
+>    : ^^^
+}
+

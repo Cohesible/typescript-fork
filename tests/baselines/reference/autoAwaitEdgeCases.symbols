@@ -1,0 +1,189 @@
+//// [tests/cases/syn/autoAwaitEdgeCases.syn] ////
+
+=== autoAwaitEdgeCases.syn ===
+{
+    type MyPromise = Promise<number>
+>MyPromise : Symbol(MyPromise, Decl(autoAwaitEdgeCases.syn, 0, 1))
+>Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --), Decl(lib.es2018.promise.d.ts, --, --))
+
+    function aliased(): MyPromise {
+>aliased : Symbol(aliased, Decl(autoAwaitEdgeCases.syn, 1, 36))
+>MyPromise : Symbol(MyPromise, Decl(autoAwaitEdgeCases.syn, 0, 1))
+
+        return Promise.resolve(1)
+>Promise.resolve : Symbol(PromiseConstructor.resolve, Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --))
+>Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --), Decl(lib.es2018.promise.d.ts, --, --))
+>resolve : Symbol(PromiseConstructor.resolve, Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --))
+    }
+
+    async function f1() {
+>f1 : Symbol(f1, Decl(autoAwaitEdgeCases.syn, 4, 5))
+
+        const n = aliased() // number
+>n : Symbol(n, Decl(autoAwaitEdgeCases.syn, 7, 13))
+>aliased : Symbol(aliased, Decl(autoAwaitEdgeCases.syn, 1, 36))
+    }
+
+    const m1 = new Map<number, MyPromise>()
+>m1 : Symbol(m1, Decl(autoAwaitEdgeCases.syn, 10, 9))
+>Map : Symbol(Map, Decl(lib.es2015.collection.d.ts, --, --), Decl(lib.es2015.collection.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
+>MyPromise : Symbol(MyPromise, Decl(autoAwaitEdgeCases.syn, 0, 1))
+
+    const m2 = new Map<number, Promise<number>>()
+>m2 : Symbol(m2, Decl(autoAwaitEdgeCases.syn, 11, 9))
+>Map : Symbol(Map, Decl(lib.es2015.collection.d.ts, --, --), Decl(lib.es2015.collection.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --))
+>Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --), Decl(lib.es2018.promise.d.ts, --, --))
+
+    async function f2() {
+>f2 : Symbol(f2, Decl(autoAwaitEdgeCases.syn, 11, 49))
+
+        const n1 = m1.get(0) // Promise<number> | undefined
+>n1 : Symbol(n1, Decl(autoAwaitEdgeCases.syn, 13, 13))
+>m1.get : Symbol(Map.get, Decl(lib.es2015.collection.d.ts, --, --))
+>m1 : Symbol(m1, Decl(autoAwaitEdgeCases.syn, 10, 9))
+>get : Symbol(Map.get, Decl(lib.es2015.collection.d.ts, --, --))
+
+        const n2 = m2.get(0) // Promise<number> | undefined
+>n2 : Symbol(n2, Decl(autoAwaitEdgeCases.syn, 14, 13))
+>m2.get : Symbol(Map.get, Decl(lib.es2015.collection.d.ts, --, --))
+>m2 : Symbol(m2, Decl(autoAwaitEdgeCases.syn, 11, 9))
+>get : Symbol(Map.get, Decl(lib.es2015.collection.d.ts, --, --))
+    }
+
+    function f3(): Promise<number> | undefined {
+>f3 : Symbol(f3, Decl(autoAwaitEdgeCases.syn, 15, 5))
+>Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --), Decl(lib.es2018.promise.d.ts, --, --))
+
+        return m1.get(0)
+>m1.get : Symbol(Map.get, Decl(lib.es2015.collection.d.ts, --, --))
+>m1 : Symbol(m1, Decl(autoAwaitEdgeCases.syn, 10, 9))
+>get : Symbol(Map.get, Decl(lib.es2015.collection.d.ts, --, --))
+    }
+
+    async function f4() {
+>f4 : Symbol(f4, Decl(autoAwaitEdgeCases.syn, 19, 5))
+
+        const n = f3() // Promise<number> | undefined
+>n : Symbol(n, Decl(autoAwaitEdgeCases.syn, 22, 13))
+>f3 : Symbol(f3, Decl(autoAwaitEdgeCases.syn, 15, 5))
+    }
+
+    class Box<T> {
+>Box : Symbol(Box, Decl(autoAwaitEdgeCases.syn, 23, 5))
+>T : Symbol(T, Decl(autoAwaitEdgeCases.syn, 25, 14))
+
+        get(): T {
+>get : Symbol(Box.get, Decl(autoAwaitEdgeCases.syn, 25, 18))
+>T : Symbol(T, Decl(autoAwaitEdgeCases.syn, 25, 14))
+
+            throw ""
+        }
+    }
+
+    const b: Box<Promise<number>> = new Box()
+>b : Symbol(b, Decl(autoAwaitEdgeCases.syn, 31, 9))
+>Box : Symbol(Box, Decl(autoAwaitEdgeCases.syn, 23, 5))
+>Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --), Decl(lib.es2018.promise.d.ts, --, --))
+>Box : Symbol(Box, Decl(autoAwaitEdgeCases.syn, 23, 5))
+
+    async function f5() {
+>f5 : Symbol(f5, Decl(autoAwaitEdgeCases.syn, 31, 45))
+
+        const n = b.get() // Promise<number>
+>n : Symbol(n, Decl(autoAwaitEdgeCases.syn, 33, 13))
+>b.get : Symbol(Box.get, Decl(autoAwaitEdgeCases.syn, 25, 18))
+>b : Symbol(b, Decl(autoAwaitEdgeCases.syn, 31, 9))
+>get : Symbol(Box.get, Decl(autoAwaitEdgeCases.syn, 25, 18))
+
+        const n2 = b.get().then(x => x + 1) // number
+>n2 : Symbol(n2, Decl(autoAwaitEdgeCases.syn, 34, 13))
+>b.get().then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
+>b.get : Symbol(Box.get, Decl(autoAwaitEdgeCases.syn, 25, 18))
+>b : Symbol(b, Decl(autoAwaitEdgeCases.syn, 31, 9))
+>get : Symbol(Box.get, Decl(autoAwaitEdgeCases.syn, 25, 18))
+>then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
+>x : Symbol(x, Decl(autoAwaitEdgeCases.syn, 34, 32))
+>x : Symbol(x, Decl(autoAwaitEdgeCases.syn, 34, 32))
+    }
+
+    // special case: promise chains
+    // the end result is auto-awaited, not the initial call
+    async function foo() { return 2 }
+>foo : Symbol(foo, Decl(autoAwaitEdgeCases.syn, 35, 5))
+
+    async function f6() {
+>f6 : Symbol(f6, Decl(autoAwaitEdgeCases.syn, 39, 37))
+
+        // number | void
+        const n = foo().then(x => x + 1).catch(e => {})
+>n : Symbol(n, Decl(autoAwaitEdgeCases.syn, 42, 13))
+>foo().then(x => x + 1).catch : Symbol(Promise.catch, Decl(lib.es5.d.ts, --, --))
+>foo().then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
+>foo : Symbol(foo, Decl(autoAwaitEdgeCases.syn, 35, 5))
+>then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
+>x : Symbol(x, Decl(autoAwaitEdgeCases.syn, 42, 29))
+>x : Symbol(x, Decl(autoAwaitEdgeCases.syn, 42, 29))
+>catch : Symbol(Promise.catch, Decl(lib.es5.d.ts, --, --))
+>e : Symbol(e, Decl(autoAwaitEdgeCases.syn, 42, 47))
+
+        // Promise<number | void>
+        const n2 = foo().then(x => x + 1).catch(e => {}) as async
+>n2 : Symbol(n2, Decl(autoAwaitEdgeCases.syn, 44, 13))
+>foo().then(x => x + 1).catch : Symbol(Promise.catch, Decl(lib.es5.d.ts, --, --))
+>foo().then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
+>foo : Symbol(foo, Decl(autoAwaitEdgeCases.syn, 35, 5))
+>then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
+>x : Symbol(x, Decl(autoAwaitEdgeCases.syn, 44, 30))
+>x : Symbol(x, Decl(autoAwaitEdgeCases.syn, 44, 30))
+>catch : Symbol(Promise.catch, Decl(lib.es5.d.ts, --, --))
+>e : Symbol(e, Decl(autoAwaitEdgeCases.syn, 44, 48))
+>async : Symbol(async)
+
+        const n3 = foo().then(x => x + 1).toFixed(1) // string
+>n3 : Symbol(n3, Decl(autoAwaitEdgeCases.syn, 45, 13))
+>foo().then(x => x + 1).toFixed : Symbol(Number.toFixed, Decl(lib.es5.d.ts, --, --))
+>foo().then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
+>foo : Symbol(foo, Decl(autoAwaitEdgeCases.syn, 35, 5))
+>then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
+>x : Symbol(x, Decl(autoAwaitEdgeCases.syn, 45, 30))
+>x : Symbol(x, Decl(autoAwaitEdgeCases.syn, 45, 30))
+>toFixed : Symbol(Number.toFixed, Decl(lib.es5.d.ts, --, --))
+    }
+
+    class Catchable {
+>Catchable : Symbol(Catchable, Decl(autoAwaitEdgeCases.syn, 46, 5))
+
+        catch() { return 0 }
+>catch : Symbol(Catchable.catch, Decl(autoAwaitEdgeCases.syn, 48, 21))
+
+        finally() { return 0 }
+>finally : Symbol(Catchable.finally, Decl(autoAwaitEdgeCases.syn, 49, 28))
+    }
+
+    async function f7() {
+>f7 : Symbol(f7, Decl(autoAwaitEdgeCases.syn, 51, 5))
+
+        const f = async () => new Catchable()
+>f : Symbol(f, Decl(autoAwaitEdgeCases.syn, 54, 13))
+>Catchable : Symbol(Catchable, Decl(autoAwaitEdgeCases.syn, 46, 5))
+
+        f().catch() // number
+>f().catch : Symbol(Promise.catch, Decl(lib.es5.d.ts, --, --))
+>f : Symbol(f, Decl(autoAwaitEdgeCases.syn, 54, 13))
+>catch : Symbol(Promise.catch, Decl(lib.es5.d.ts, --, --))
+
+        f().finally() // number
+>f().finally : Symbol(Promise.finally, Decl(lib.es2018.promise.d.ts, --, --))
+>f : Symbol(f, Decl(autoAwaitEdgeCases.syn, 54, 13))
+>finally : Symbol(Promise.finally, Decl(lib.es2018.promise.d.ts, --, --))
+
+        // error, emits as `(await f().catch()).then()` because we must materialize after `.catch`
+        f().catch().then()
+>f().catch().then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
+>f().catch : Symbol(Promise.catch, Decl(lib.es5.d.ts, --, --))
+>f : Symbol(f, Decl(autoAwaitEdgeCases.syn, 54, 13))
+>catch : Symbol(Promise.catch, Decl(lib.es5.d.ts, --, --))
+>then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
+    }
+}
+

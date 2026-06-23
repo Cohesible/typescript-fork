@@ -1,0 +1,153 @@
+jsxClassList.syn(15,18): error TS95218: An element's class list must appear before its attributes.
+jsxClassList.syn(16,18): error TS95218: An element's class list must appear before its attributes.
+jsxClassList.syn(17,17): error TS95219: An element's class list must appear before its binding name.
+jsxClassList.syn(18,17): error TS95219: An element's class list must appear before its binding name.
+jsxClassList.syn(19,9): error TS95221: Multiple classes must be enclosed in '()' and separated by commas. Did you mean '.a.b.c'?
+jsxClassList.syn(20,9): error TS95220: Multiple classes must be enclosed in '()' and separated by commas.
+jsxClassList.syn(21,9): error TS95220: Multiple classes must be enclosed in '()' and separated by commas.
+jsxClassList.syn(22,25): error TS1005: ',' expected.
+jsxClassList.syn(25,11): error TS95214: Duplicate class name 'a'.
+jsxClassList.syn(25,13): error TS95214: Duplicate class name 'a'.
+jsxClassList.syn(26,12): error TS95214: Duplicate class name 'a'.
+jsxClassList.syn(26,16): error TS95214: Duplicate class name 'a'.
+jsxClassList.syn(27,12): error TS95215: Class name 'a' is always added unconditionally; this conditional application is redundant.
+jsxClassList.syn(28,12): error TS95215: Class name 'a' is always added unconditionally; this conditional application is redundant.
+jsxClassList.syn(29,16): error TS95215: Class name 'a' is always added unconditionally; this conditional application is redundant.
+jsxClassList.syn(30,16): error TS95215: Class name 'a' is always added unconditionally; this conditional application is redundant.
+jsxClassList.syn(31,12): error TS95214: Duplicate class name 'a'.
+jsxClassList.syn(31,23): error TS95214: Duplicate class name 'a'.
+jsxClassList.syn(34,13): error TS95216: 'class' attribute will always overwrite the class list.
+jsxClassList.syn(35,13): error TS95216: 'class' attribute will always overwrite the class list.
+jsxClassList.syn(46,11): error TS95214: Duplicate class name 'a'.
+jsxClassList.syn(47,12): error TS95214: Duplicate class name 'a'.
+jsxClassList.syn(47,15): error TS95214: Duplicate class name 'a'.
+jsxClassList.syn(48,11): error TS95214: Duplicate class name 'a'.
+jsxClassList.syn(48,24): error TS95214: Duplicate class name 'a'.
+jsxClassList.syn(49,15): error TS2322: Type 'number' is not assignable to type 'readonly string[]'.
+jsxClassList.syn(50,15): error TS2322: Type 'string' is not assignable to type 'readonly string[]'.
+jsxClassList.syn(60,10): error TS95217: Type 'string[]' is being spread as attributes. Did you mean to use a class list '( {...} )'?
+jsxClassList.syn(61,10): error TS95217: Type 'readonly ["a", "b"]' is being spread as attributes. Did you mean to use a class list '( {...} )'?
+
+
+==== jsxClassList.syn (29 errors) ====
+    {
+        const cond = true;
+        <div .foo/>;
+        <div .foo></div>;
+        // class attributes should not conflict with normal attributes
+        <input .min min=500></input>;
+        <input (.min.min2)></input>;
+        <input (.min.min2={cond})></input>;
+        <input (.min.min2={cond}, .bar)></input>;
+        <input .min.min2={cond}></input>;
+        <input .min.min2={cond} @ i></input>;
+        <input (.m) @ i2></input>;
+    
+        // errors emitted during parse
+        <div id="foo" .a.a></div>;
+                     ~~~~~
+!!! error TS95218: An element's class list must appear before its attributes.
+        <div id="foo" (.a)></div>;
+                     ~~~~~
+!!! error TS95218: An element's class list must appear before its attributes.
+        <div @ foo_1 (.a)></div>;
+                    ~~~~~
+!!! error TS95219: An element's class list must appear before its binding name.
+        <div @ foo_2 .a></div>;
+                    ~~~
+!!! error TS95219: An element's class list must appear before its binding name.
+        <div .a .b .c></div>;
+            ~~~~~~~~~
+!!! error TS95221: Multiple classes must be enclosed in '()' and separated by commas. Did you mean '.a.b.c'?
+        <div .a .b .c={cond}></div>;
+            ~~~~~~~~~~~~~~~~
+!!! error TS95220: Multiple classes must be enclosed in '()' and separated by commas.
+        <div .a .c={cond} .b></div>;
+            ~~~~~~~~~~~~~~~~
+!!! error TS95220: Multiple classes must be enclosed in '()' and separated by commas.
+        <div (.a, .c={cond} .b)></div>;
+                            ~
+!!! error TS1005: ',' expected.
+    
+        // errors
+        <div .a.a></div>;
+              ~
+!!! error TS95214: Duplicate class name 'a'.
+                ~
+!!! error TS95214: Duplicate class name 'a'.
+        <div (.a, .a)></div>;
+               ~
+!!! error TS95214: Duplicate class name 'a'.
+                   ~
+!!! error TS95214: Duplicate class name 'a'.
+        <div (.a={cond}, .a)></div>;
+               ~
+!!! error TS95215: Class name 'a' is always added unconditionally; this conditional application is redundant.
+        <div (.a.b={cond}, .a)></div>;
+               ~
+!!! error TS95215: Class name 'a' is always added unconditionally; this conditional application is redundant.
+        <div (.a, .a={cond})></div>;
+                   ~
+!!! error TS95215: Class name 'a' is always added unconditionally; this conditional application is redundant.
+        <div (.a, .a.b={cond})></div>;
+                   ~
+!!! error TS95215: Class name 'a' is always added unconditionally; this conditional application is redundant.
+        <div (.a={cond}, .a.b={cond})></div>;
+               ~
+!!! error TS95214: Duplicate class name 'a'.
+                          ~
+!!! error TS95214: Duplicate class name 'a'.
+    
+        // class attribute cannot be used with class list
+        <div .a class="b" />;
+                ~~~~~
+!!! error TS95216: 'class' attribute will always overwrite the class list.
+        <div .a {...{ class: 'b' }} />;
+                ~~~~~~~~~~~~~~~~~~~
+!!! error TS95216: 'class' attribute will always overwrite the class list.
+    
+        // ok
+        <div class="b" />;
+    
+        // ok
+        const cond2 = false as boolean
+        const cond3 = false as boolean;
+        <div (.a={cond}, .a.b={cond2}, .a={cond3})></div>;
+    
+        // errors
+        <div ({...['a', 'b', 'a']})></div>;
+              ~~~~~~~~~~~~~~~~~~~~
+!!! error TS95214: Duplicate class name 'a'.
+        <div (.a, {...['a', 'b']})></div>;
+               ~
+!!! error TS95214: Duplicate class name 'a'.
+                  ~~~~~~~~~~~~~~~
+!!! error TS95214: Duplicate class name 'a'.
+        <div ({...['a']}, .a)></div>;
+              ~~~~~~~~~~
+!!! error TS95214: Duplicate class name 'a'.
+                           ~
+!!! error TS95214: Duplicate class name 'a'.
+        <div ({...123})></div>;
+                  ~~~
+!!! error TS2322: Type 'number' is not assignable to type 'readonly string[]'.
+        <div ({..."123"})></div>;
+                  ~~~~~
+!!! error TS2322: Type 'string' is not assignable to type 'readonly string[]'.
+    
+        // ok
+        <div ({...['a', 'b']})></div>;
+        <div ({...['a', 'b']}, .c)></div>;
+        <div ({...(['a', 'b'] as string[])})></div>;
+        const arr = ['a', 'b'];
+        <div ({...arr})></div>;
+    
+        // suggest use class list
+        <div {...(['a', 'b'] as string[])} />;
+             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!!! error TS95217: Type 'string[]' is being spread as attributes. Did you mean to use a class list '( {...} )'?
+        <div {...['a', 'b'] as const} />;
+             ~~~~~~~~~~~~~~~~~~~~~~~~
+!!! error TS95217: Type 'readonly ["a", "b"]' is being spread as attributes. Did you mean to use a class list '( {...} )'?
+    }
+    

@@ -1548,23 +1548,19 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >[] : never[]
 >   : ^^^^^^^
 
-    function Foo(props: { children: Element[] }) {
->Foo : (props: { children: Element[]; }) => HTMLDivElement
->    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
->props : { children: Element[]; }
->      : ^^^^^^^^^^^^         ^^^
+    function Foo(attrs: {}, children: Element[]) {
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
+>attrs : {}
+>      : ^^
 >children : Element[]
 >         : ^^^^^^^^^
 
-        return <div>{...props.children}</div>
-><div>{...props.children}</div> : HTMLDivElement
->                               : ^^^^^^^^^^^^^^
+        return <div>{...children}</div>
+><div>{...children}</div> : HTMLDivElement
+>                         : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->props.children : Element[]
->               : ^^^^^^^^^
->props : { children: Element[]; }
->      : ^^^^^^^^^^^^         ^^^
 >children : Element[]
 >         : ^^^^^^^^^
 >div : any
@@ -1575,56 +1571,56 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >  : ^^^^^^^^^^^^^^
 ><Foo>{...elements}</Foo> : HTMLDivElement
 >                         : ^^^^^^^^^^^^^^
->Foo : (props: { children: Element[]; }) => HTMLDivElement
->    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
 >elements : Element[]
 >         : ^^^^^^^^^
->Foo : (props: { children: Element[]; }) => HTMLDivElement
->    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
 
     const y = <Foo>{elements}</Foo> // error
 >y : HTMLDivElement
 >  : ^^^^^^^^^^^^^^
 ><Foo>{elements}</Foo> : HTMLDivElement
 >                      : ^^^^^^^^^^^^^^
->Foo : (props: { children: Element[]; }) => HTMLDivElement
->    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
 >elements : Element[]
 >         : ^^^^^^^^^
->Foo : (props: { children: Element[]; }) => HTMLDivElement
->    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
 
     const x0 = <Foo></Foo> // no error
 >x0 : HTMLDivElement
 >   : ^^^^^^^^^^^^^^
 ><Foo></Foo> : HTMLDivElement
 >            : ^^^^^^^^^^^^^^
->Foo : (props: { children: Element[]; }) => HTMLDivElement
->    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
->Foo : (props: { children: Element[]; }) => HTMLDivElement
->    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
 
     const x1 = <Foo><div/></Foo> // no error
 >x1 : HTMLDivElement
 >   : ^^^^^^^^^^^^^^
 ><Foo><div/></Foo> : HTMLDivElement
 >                  : ^^^^^^^^^^^^^^
->Foo : (props: { children: Element[]; }) => HTMLDivElement
->    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
 ><div/> : HTMLDivElement
 >       : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->Foo : (props: { children: Element[]; }) => HTMLDivElement
->    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
 
     const x2 = <Foo><div/><div/></Foo> // no error
 >x2 : HTMLDivElement
 >   : ^^^^^^^^^^^^^^
 ><Foo><div/><div/></Foo> : HTMLDivElement
 >                        : ^^^^^^^^^^^^^^
->Foo : (props: { children: Element[]; }) => HTMLDivElement
->    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
 ><div/> : HTMLDivElement
 >       : ^^^^^^^^^^^^^^
 >div : any
@@ -1633,32 +1629,32 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >       : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->Foo : (props: { children: Element[]; }) => HTMLDivElement
->    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
 
     const x3 = <Foo>a</Foo> // error (string is not Element)
 >x3 : HTMLDivElement
 >   : ^^^^^^^^^^^^^^
 ><Foo>a</Foo> : HTMLDivElement
 >             : ^^^^^^^^^^^^^^
->Foo : (props: { children: Element[]; }) => HTMLDivElement
->    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
->Foo : (props: { children: Element[]; }) => HTMLDivElement
->    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
 
     const x4 = <Foo/> // error (this is explictly no elements)
 >x4 : HTMLDivElement
 >   : ^^^^^^^^^^^^^^
 ><Foo/> : HTMLDivElement
 >       : ^^^^^^^^^^^^^^
->Foo : (props: { children: Element[]; }) => HTMLDivElement
->    : ^     ^^                        ^^^^^^^^^^^^^^^^^^^
+>Foo : (attrs: {}, children: Element[]) => HTMLDivElement
+>    : ^     ^^  ^^        ^^         ^^^^^^^^^^^^^^^^^^^
 
-    function Foo2(props: { children: [string, number] }) {
->Foo2 : (props: { children: [string, number]; }) => HTMLDivElement
->     : ^     ^^                               ^^^^^^^^^^^^^^^^^^^
->props : { children: [string, number]; }
->      : ^^^^^^^^^^^^                ^^^
+    function Foo2(attrs: {}, children: [string, number]) {
+>Foo2 : (attrs: {}, children: [string, number]) => HTMLDivElement
+>     : ^     ^^  ^^        ^^                ^^^^^^^^^^^^^^^^^^^
+>attrs : {}
+>      : ^^
 >children : [string, number]
 >         : ^^^^^^^^^^^^^^^^
 
@@ -1675,8 +1671,8 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >   : ^^^^^^^^^^^^^^
 ><Foo2>{'hi'}{...([1,2] as number[])}</Foo2> : HTMLDivElement
 >                                            : ^^^^^^^^^^^^^^
->Foo2 : (props: { children: [string, number]; }) => HTMLDivElement
->     : ^     ^^                               ^^^^^^^^^^^^^^^^^^^
+>Foo2 : (attrs: {}, children: [string, number]) => HTMLDivElement
+>     : ^     ^^  ^^        ^^                ^^^^^^^^^^^^^^^^^^^
 >'hi' : "hi"
 >     : ^^^^
 >([1,2] as number[]) : number[]
@@ -1689,16 +1685,16 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >  : ^
 >2 : 2
 >  : ^
->Foo2 : (props: { children: [string, number]; }) => HTMLDivElement
->     : ^     ^^                               ^^^^^^^^^^^^^^^^^^^
+>Foo2 : (attrs: {}, children: [string, number]) => HTMLDivElement
+>     : ^     ^^  ^^        ^^                ^^^^^^^^^^^^^^^^^^^
 
     const f3 = <Foo2>{'hi'}{...([1] as [number])}</Foo2> // no error
 >f3 : HTMLDivElement
 >   : ^^^^^^^^^^^^^^
 ><Foo2>{'hi'}{...([1] as [number])}</Foo2> : HTMLDivElement
 >                                          : ^^^^^^^^^^^^^^
->Foo2 : (props: { children: [string, number]; }) => HTMLDivElement
->     : ^     ^^                               ^^^^^^^^^^^^^^^^^^^
+>Foo2 : (attrs: {}, children: [string, number]) => HTMLDivElement
+>     : ^     ^^  ^^        ^^                ^^^^^^^^^^^^^^^^^^^
 >'hi' : "hi"
 >     : ^^^^
 >([1] as [number]) : [number]
@@ -1709,30 +1705,26 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >    : ^^^^^^^^
 >1 : 1
 >  : ^
->Foo2 : (props: { children: [string, number]; }) => HTMLDivElement
->     : ^     ^^                               ^^^^^^^^^^^^^^^^^^^
+>Foo2 : (attrs: {}, children: [string, number]) => HTMLDivElement
+>     : ^     ^^  ^^        ^^                ^^^^^^^^^^^^^^^^^^^
 
-    function FooOpt(props: { children?: Element[] }) {
->FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
->       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
->props : { children?: Element[]; }
->      : ^^^^^^^^^^^^^         ^^^
+    function FooOpt(attrs?: never, children?: Element[]) {
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
+>attrs : undefined
+>      : ^^^^^^^^^
 >children : Element[] | undefined
 >         : ^^^^^^^^^^^^^^^^^^^^^
 
-        return <div>{...(props.children ?? [])}</div>
-><div>{...(props.children ?? [])}</div> : HTMLDivElement
->                                       : ^^^^^^^^^^^^^^
+        return <div>{...(children ?? [])}</div>
+><div>{...(children ?? [])}</div> : HTMLDivElement
+>                                 : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->(props.children ?? []) : Element[]
->                       : ^^^^^^^^^
->props.children ?? [] : Element[]
->                     : ^^^^^^^^^
->props.children : Element[] | undefined
->               : ^^^^^^^^^^^^^^^^^^^^^
->props : { children?: Element[]; }
->      : ^^^^^^^^^^^^^         ^^^
+>(children ?? []) : Element[]
+>                 : ^^^^^^^^^
+>children ?? [] : Element[]
+>               : ^^^^^^^^^
 >children : Element[] | undefined
 >         : ^^^^^^^^^^^^^^^^^^^^^
 >[] : never[]
@@ -1746,56 +1738,56 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >  : ^^^^^^^^^^^^^^
 ><FooOpt>{...elements}</FooOpt> : HTMLDivElement
 >                               : ^^^^^^^^^^^^^^
->FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
->       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
 >elements : Element[]
 >         : ^^^^^^^^^
->FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
->       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
 
         const y = <FooOpt>{elements}</FooOpt> // error
 >y : HTMLDivElement
 >  : ^^^^^^^^^^^^^^
 ><FooOpt>{elements}</FooOpt> : HTMLDivElement
 >                            : ^^^^^^^^^^^^^^
->FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
->       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
 >elements : Element[]
 >         : ^^^^^^^^^
->FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
->       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
 
         const x0 = <FooOpt></FooOpt> // no error
 >x0 : HTMLDivElement
 >   : ^^^^^^^^^^^^^^
 ><FooOpt></FooOpt> : HTMLDivElement
 >                  : ^^^^^^^^^^^^^^
->FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
->       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
->FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
->       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
 
         const x1 = <FooOpt><div/></FooOpt> // no error
 >x1 : HTMLDivElement
 >   : ^^^^^^^^^^^^^^
 ><FooOpt><div/></FooOpt> : HTMLDivElement
 >                        : ^^^^^^^^^^^^^^
->FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
->       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
 ><div/> : HTMLDivElement
 >       : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
->       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
 
         const x2 = <FooOpt><div/><div/></FooOpt> // no error
 >x2 : HTMLDivElement
 >   : ^^^^^^^^^^^^^^
 ><FooOpt><div/><div/></FooOpt> : HTMLDivElement
 >                              : ^^^^^^^^^^^^^^
->FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
->       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
 ><div/> : HTMLDivElement
 >       : ^^^^^^^^^^^^^^
 >div : any
@@ -1804,45 +1796,45 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >       : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
->       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
 
         const x3 = <FooOpt>a</FooOpt> // error
 >x3 : HTMLDivElement
 >   : ^^^^^^^^^^^^^^
 ><FooOpt>a</FooOpt> : HTMLDivElement
 >                   : ^^^^^^^^^^^^^^
->FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
->       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
->FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
->       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
 
         const x4 = <FooOpt/> // no error
 >x4 : HTMLDivElement
 >   : ^^^^^^^^^^^^^^
 ><FooOpt/> : HTMLDivElement
 >          : ^^^^^^^^^^^^^^
->FooOpt : (props: { children?: Element[]; }) => HTMLDivElement
->       : ^     ^^                         ^^^^^^^^^^^^^^^^^^^
+>FooOpt : (attrs?: never, children?: Element[]) => HTMLDivElement
+>       : ^     ^^^     ^^        ^^^         ^^^^^^^^^^^^^^^^^^^
     }
 
     {
-        function F1(props: { v: string }) {
->F1 : (props: { v: string; }) => HTMLSpanElement
+        function F1(attrs: { v: string }) {
+>F1 : (attrs: { v: string; }) => HTMLSpanElement
 >   : ^     ^^              ^^^^^^^^^^^^^^^^^^^^
->props : { v: string; }
+>attrs : { v: string; }
 >      : ^^^^^      ^^^
 >v : string
 >  : ^^^^^^
 
-            return <span>{props.v}</span>
-><span>{props.v}</span> : HTMLSpanElement
+            return <span>{attrs.v}</span>
+><span>{attrs.v}</span> : HTMLSpanElement
 >                       : ^^^^^^^^^^^^^^^
 >span : any
 >     : ^^^
->props.v : string
+>attrs.v : string
 >        : ^^^^^^
->props : { v: string; }
+>attrs : { v: string; }
 >      : ^^^^^      ^^^
 >v : string
 >  : ^^^^^^
@@ -1862,23 +1854,23 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
             return <F1 v={v}></F1> // no error
 ><F1 v={v}></F1> : HTMLSpanElement
 >                : ^^^^^^^^^^^^^^^
->F1 : (props: { v: string; }) => HTMLSpanElement
+>F1 : (attrs: { v: string; }) => HTMLSpanElement
 >   : ^     ^^              ^^^^^^^^^^^^^^^^^^^^
 >v : string
 >  : ^^^^^^
 >v : "aaa"
 >  : ^^^^^
->F1 : (props: { v: string; }) => HTMLSpanElement
+>F1 : (attrs: { v: string; }) => HTMLSpanElement
 >   : ^     ^^              ^^^^^^^^^^^^^^^^^^^^
         }
     }
 
     {
         const x = <>aaa{1}</>
->x : [string, number]
->  : ^^^^^^^^^^^^^^^^
-><>aaa{1}</> : [string, number]
->            : ^^^^^^^^^^^^^^^^
+>x : [Text, number]
+>  : ^^^^^^^^^^^^^^
+><>aaa{1}</> : [Text, number]
+>            : ^^^^^^^^^^^^^^
 >1 : 1
 >  : ^
     }
@@ -2032,12 +2024,12 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >                                    : ^^^^^^^^^^^^^^
 >document.querySelector('.a') : Element | null
 >                             : ^^^^^^^^^^^^^^
->document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
->                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
 >document : Document
 >         : ^^^^^^^^
->querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
->              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
 >'.a' : ".a"
 >     : ^^^^
 
@@ -2046,12 +2038,12 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >  : ^^^^^^^
 >document.querySelector('.a') : Element | null
 >                             : ^^^^^^^^^^^^^^
->document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
->                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
 >document : Document
 >         : ^^^^^^^^
->querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
->              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
 >'.a' : ".a"
 >     : ^^^^
 
@@ -3127,12 +3119,12 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 
     </>
     const inner = <Inner />
->inner : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
-><Inner /> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Inner : () => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>inner : Inner
+>      : ^^^^^
+><Inner /> : Inner
+>          : ^^^^^
+>Inner : () => Inner
+>      : ^^^^^^^^^^^
 
     const root = <div>
 >root : HTMLDivElement
@@ -3143,10 +3135,10 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >    : ^^^
 
         <Inner />
-><Inner /> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Inner : () => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Inner /> : Inner
+>          : ^^^^^
+>Inner : () => Inner
+>      : ^^^^^^^^^^^
 
     </div>
 >div : any
@@ -3208,12 +3200,12 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >     : ^^^^^^^^^^^^^^
 
         <InnerB @ d1 />
-><InnerB @ d1 /> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->                : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->InnerB : () => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->       : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->d1 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><InnerB @ d1 /> : InnerB
+>                : ^^^^^^
+>InnerB : () => InnerB
+>       : ^^^^^^^^^^^^
+>d1 : InnerB
+>   : ^^^^^^
 
         <div @ d2>{c}</div>
 ><div @ d2>{c}</div> : HTMLDivElement
@@ -3237,8 +3229,8 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >                                                                                                                                                                 : ^^^^^^^^^^
 
                 update d1 {
->d1 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>d1 : InnerB
+>   : ^^^^^^
 
                     c += 1
 >c += 1 : number
@@ -3309,6 +3301,463 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >  : ^
     }
 }
+
+{
+    let filterState: 'all' | 'completed' | 'active' = 'all'
+>filterState : "all" | "completed" | "active"
+>            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>'all' : "all"
+>      : ^^^^^
+
+    ;<div @ d>
+><div @ d>        <#run>            let c            switch (filterState) {                case 'all': c = 1;                case 'completed': c = 2;                case 'active': c = 3;            }        </>    </div> : HTMLDivElement
+>                                                                                                                                                                                                                            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+        <#run>
+            let c
+>c : any
+>  : ^^^
+
+            switch (filterState) {
+>filterState : "all"
+>            : ^^^^^
+
+                case 'all': c = 1;
+>'all' : "all"
+>      : ^^^^^
+>c = 1 : 1
+>      : ^
+>c : any
+>  : ^^^
+>1 : 1
+>  : ^
+
+                case 'completed': c = 2;
+>'completed' : "completed"
+>            : ^^^^^^^^^^^
+>c = 2 : 2
+>      : ^
+>c : any
+>  : ^^^
+>2 : 2
+>  : ^
+
+                case 'active': c = 3;
+>'active' : "active"
+>         : ^^^^^^^^
+>c = 3 : 3
+>      : ^
+>c : any
+>  : ^^^
+>3 : 3
+>  : ^
+            }
+        </>
+    </div>
+>div : any
+>    : ^^^
+}
+
+{
+    type X = SelectedDOMTag<'input[type=text]'>
+>X : "input"
+>  : ^^^^^^^
+
+    type Y = SelectedDOMElement<'input[type=text]'>
+>Y : HTMLInputElement | null
+>  : ^^^^^^^^^^^^^^^^^^^^^^^
+
+    const r1 = document.querySelector('input[type=text]')
+>r1 : HTMLInputElement | null
+>   : ^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector('input[type=text]') : HTMLInputElement | null
+>                                           : ^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>'input[type=text]' : "input[type=text]"
+>                   : ^^^^^^^^^^^^^^^^^^
+
+    const r2 = document.querySelector<HTMLInputElement>('.aa')
+>r2 : HTMLInputElement | null
+>   : ^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector<HTMLInputElement>('.aa') : HTMLInputElement | null
+>                                                : ^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>'.aa' : ".aa"
+>      : ^^^^^
+
+    const r3 = document.querySelector('div' as string)
+>r3 : Element | null
+>   : ^^^^^^^^^^^^^^
+>document.querySelector('div' as string) : Element | null
+>                                        : ^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>'div' as string : string
+>                : ^^^^^^
+>'div' : "div"
+>      : ^^^^^
+
+    const r4 = document.querySelectorAll('button, [role="button"]')
+>r4 : NodeListOf<Element>
+>   : ^^^^^^^^^^^^^^^^^^^
+>document.querySelectorAll('button, [role="button"]') : NodeListOf<Element>
+>                                                     : ^^^^^^^^^^^^^^^^^^^
+>document.querySelectorAll : { <K extends keyof HTMLElementTagNameMap>(selectors: K): NodeListOf<HTMLElementTagNameMap[K]>; <K extends keyof SVGElementTagNameMap>(selectors: K): NodeListOf<SVGElementTagNameMap[K]>; <K extends keyof MathMLElementTagNameMap>(selectors: K): NodeListOf<MathMLElementTagNameMap[K]>; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): NodeListOf<HTMLElementDeprecatedTagNameMap[K]>; <E extends Element = Element>(selectors: string): NodeListOf<E>; <K extends string>(selectors: K): NodeListOf<SelectedDOMElement<K, never>>; }
+>                          : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                                    ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                                   ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                      ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                              ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^             ^^^ ^^^^^^^^^      ^^         ^^ ^^^                                        ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelectorAll : { <K extends keyof HTMLElementTagNameMap>(selectors: K): NodeListOf<HTMLElementTagNameMap[K]>; <K extends keyof SVGElementTagNameMap>(selectors: K): NodeListOf<SVGElementTagNameMap[K]>; <K extends keyof MathMLElementTagNameMap>(selectors: K): NodeListOf<MathMLElementTagNameMap[K]>; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): NodeListOf<HTMLElementDeprecatedTagNameMap[K]>; <E extends Element = Element>(selectors: string): NodeListOf<E>; <K extends string>(selectors: K): NodeListOf<SelectedDOMElement<K, never>>; }
+>                 : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                                    ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                                   ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                      ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                              ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^             ^^^ ^^^^^^^^^      ^^         ^^ ^^^                                        ^^^
+>'button, [role="button"]' : "button, [role=\"button\"]"
+>                          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    const r5 = document.querySelectorAll('button, div[role=button]')
+>r5 : NodeListOf<HTMLDivElement | HTMLButtonElement>
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelectorAll('button, div[role=button]') : NodeListOf<HTMLDivElement | HTMLButtonElement>
+>                                                      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelectorAll : { <K extends keyof HTMLElementTagNameMap>(selectors: K): NodeListOf<HTMLElementTagNameMap[K]>; <K extends keyof SVGElementTagNameMap>(selectors: K): NodeListOf<SVGElementTagNameMap[K]>; <K extends keyof MathMLElementTagNameMap>(selectors: K): NodeListOf<MathMLElementTagNameMap[K]>; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): NodeListOf<HTMLElementDeprecatedTagNameMap[K]>; <E extends Element = Element>(selectors: string): NodeListOf<E>; <K extends string>(selectors: K): NodeListOf<SelectedDOMElement<K, never>>; }
+>                          : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                                    ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                                   ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                      ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                              ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^             ^^^ ^^^^^^^^^      ^^         ^^ ^^^                                        ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelectorAll : { <K extends keyof HTMLElementTagNameMap>(selectors: K): NodeListOf<HTMLElementTagNameMap[K]>; <K extends keyof SVGElementTagNameMap>(selectors: K): NodeListOf<SVGElementTagNameMap[K]>; <K extends keyof MathMLElementTagNameMap>(selectors: K): NodeListOf<MathMLElementTagNameMap[K]>; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): NodeListOf<HTMLElementDeprecatedTagNameMap[K]>; <E extends Element = Element>(selectors: string): NodeListOf<E>; <K extends string>(selectors: K): NodeListOf<SelectedDOMElement<K, never>>; }
+>                 : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                                    ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                                   ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                      ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                              ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^             ^^^ ^^^^^^^^^      ^^         ^^ ^^^                                        ^^^
+>'button, div[role=button]' : "button, div[role=button]"
+>                           : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    const r6 = document.querySelector('' as `my-ns-${string}`)
+>r6 : Element | null
+>   : ^^^^^^^^^^^^^^
+>document.querySelector('' as `my-ns-${string}`) : Element | null
+>                                                : ^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>'' as `my-ns-${string}` : `my-ns-${string}`
+>                        : ^^^^^^^^^^^^^^^^^
+>'' : ""
+>   : ^^
+
+    const r7 = document.querySelector('' as `input.${string}`)
+>r7 : HTMLInputElement | null
+>   : ^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector('' as `input.${string}`) : HTMLInputElement | null
+>                                                : ^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>'' as `input.${string}` : `input.${string}`
+>                        : ^^^^^^^^^^^^^^^^^
+>'' : ""
+>   : ^^
+
+    const r8 = document.querySelector('' as `input ${string}`)
+>r8 : Element | null
+>   : ^^^^^^^^^^^^^^
+>document.querySelector('' as `input ${string}`) : Element | null
+>                                                : ^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>'' as `input ${string}` : `input ${string}`
+>                        : ^^^^^^^^^^^^^^^^^
+>'' : ""
+>   : ^^
+
+    const r9 = document.querySelector('' as `input > ${string}`)
+>r9 : Element | null
+>   : ^^^^^^^^^^^^^^
+>document.querySelector('' as `input > ${string}`) : Element | null
+>                                                  : ^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>'' as `input > ${string}` : `input > ${string}`
+>                          : ^^^^^^^^^^^^^^^^^^^
+>'' : ""
+>   : ^^
+
+    const r10 = document.querySelector('' as `input:has(${string})`)
+>r10 : HTMLInputElement | null
+>    : ^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector('' as `input:has(${string})`) : HTMLInputElement | null
+>                                                     : ^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>'' as `input:has(${string})` : `input:has(${string})`
+>                             : ^^^^^^^^^^^^^^^^^^^^^^
+>'' : ""
+>   : ^^
+
+    const r11 = document.querySelector('' as `input[data-x=${string}]`)
+>r11 : HTMLInputElement | null
+>    : ^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector('' as `input[data-x=${string}]`) : HTMLInputElement | null
+>                                                        : ^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>'' as `input[data-x=${string}]` : `input[data-x=${string}]`
+>                                : ^^^^^^^^^^^^^^^^^^^^^^^^^
+>'' : ""
+>   : ^^
+
+    const r12 = document.querySelector('a#link')
+>r12 : HTMLAnchorElement | null
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector('a#link') : HTMLAnchorElement | null
+>                                 : ^^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>'a#link' : "a#link"
+>         : ^^^^^^^^
+
+    const r13 = document.querySelector(`
+>r13 : HTMLInputElement | HTMLButtonElement | null
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector(`    :is(a, div)    :is(button, input)        `) : HTMLInputElement | HTMLButtonElement | null
+>                                                                        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>`    :is(a, div)    :is(button, input)        ` : "\n    :is(a, div)\n    :is(button, input)    \n    "
+>                                                : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    :is(a, div)
+    :is(button, input)    
+    `)
+    const r14 = document.querySelector('table:not(:has(> caption))')
+>r14 : HTMLTableElement | null
+>    : ^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector('table:not(:has(> caption))') : HTMLTableElement | null
+>                                                     : ^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>'table:not(:has(> caption))' : "table:not(:has(> caption))"
+>                             : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    const r15 = document.querySelector('a.status-actions:is(a[href^="/"])')
+>r15 : HTMLAnchorElement | null
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector('a.status-actions:is(a[href^="/"])') : HTMLAnchorElement | null
+>                                                            : ^^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>'a.status-actions:is(a[href^="/"])' : "a.status-actions:is(a[href^=\"/\"])"
+>                                    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    const r16 = document.querySelector(':is(a, button).c')
+>r16 : HTMLButtonElement | HTMLAnchorElement | null
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector(':is(a, button).c') : HTMLButtonElement | HTMLAnchorElement | null
+>                                           : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>':is(a, button).c' : ":is(a, button).c"
+>                   : ^^^^^^^^^^^^^^^^^^
+
+    const r17 = document.querySelector(':is(h1, h2, h3, h4):where(.foo)')
+>r17 : HTMLHeadingElement | null
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector(':is(h1, h2, h3, h4):where(.foo)') : HTMLHeadingElement | null
+>                                                          : ^^^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>':is(h1, h2, h3, h4):where(.foo)' : ":is(h1, h2, h3, h4):where(.foo)"
+>                                  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    const r18 = document.querySelector('div:first-child')
+>r18 : HTMLDivElement | null
+>    : ^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector('div:first-child') : HTMLDivElement | null
+>                                          : ^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>'div:first-child' : "div:first-child"
+>                  : ^^^^^^^^^^^^^^^^^
+
+    const m1 = document.querySelector('a[foo')
+>m1 : never
+>   : ^^^^^
+>document.querySelector('a[foo') : never
+>                                : ^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>'a[foo' : "a[foo"
+>        : ^^^^^^^
+}
+
+{
+    <#component Foo(children)>
+>Foo : any
+>    : ^^^
+>children : JSX.Children
+>         : ^^^^^^^^^^^^
+
+        <div>{...children}</div>
+><div>{...children}</div> : HTMLDivElement
+>                         : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>children : JSX.Children
+>         : ^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+    document.body.append(<div @ d>
+>document.body.append(<div @ d>        <#run>            static let cond = false            static let count = 0        </>        <Foo>            <#if (cond)>                test            </>        </Foo>        <button on:click() {            update d {                cond = !cond            }        }>click</button>    </div>) : void
+>                                                                                                                                                                                                                                                                                                                                               : ^^^^
+>document.body.append : (...nodes: (Node | string)[]) => void
+>                     : ^^^^     ^^                 ^^^^^    
+>document.body : HTMLElement
+>              : ^^^^^^^^^^^
+>document : Document
+>         : ^^^^^^^^
+>body : HTMLElement
+>     : ^^^^^^^^^^^
+>append : (...nodes: (Node | string)[]) => void
+>       : ^^^^     ^^                 ^^^^^    
+><div @ d>        <#run>            static let cond = false            static let count = 0        </>        <Foo>            <#if (cond)>                test            </>        </Foo>        <button on:click() {            update d {                cond = !cond            }        }>click</button>    </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                                                         : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+        <#run>
+            static let cond = false
+>cond : boolean
+>     : ^^^^^^^
+>false : false
+>      : ^^^^^
+
+            static let count = 0
+>count : number
+>      : ^^^^^^
+>0 : 0
+>  : ^
+
+        </>
+        <Foo>
+><Foo>            <#if (cond)>                test            </>        </Foo> : Foo
+>                                                                               : ^^^
+>Foo : (attributes: {}, children: JSX.Children) => Foo
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+            <#if (cond)>
+>cond : false
+>     : ^^^^^
+
+                test
+            </>
+        </Foo>
+>Foo : (attributes: {}, children: JSX.Children) => Foo
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        <button on:click() {
+><button on:click() {            update d {                cond = !cond            }        }>click</button> : HTMLButtonElement
+>                                                                                                            : ^^^^^^^^^^^^^^^^^
+>button : any
+>       : ^^^
+>on:click : () => void
+>         : ^^^^^^^^^^
+>on : any
+>   : ^^^
+>click : any
+>      : ^^^
+
+            update d {
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+                cond = !cond
+>cond = !cond : boolean
+>             : ^^^^^^^
+>cond : boolean
+>     : ^^^^^^^
+>!cond : boolean
+>      : ^^^^^^^
+>cond : boolean
+>     : ^^^^^^^
+            }
+        }>click</button>
+>button : any
+>       : ^^^
+
+    </div>)
+>div : any
+>    : ^^^
+}
+
 
 {
     ;<div @ p>
@@ -3448,18 +3897,18 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 
     </>
     const d = <Many {items}/>
->d : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
-><Many {items}/> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->                : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Many : (attributes: { items: string[]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>d : Many
+>  : ^^^^
+><Many {items}/> : Many
+>                : ^^^^
+>Many : (attributes: { items: string[]; }) => Many
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >items : string[]
 >      : ^^^^^^^^
 
     update d {
->d : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>d : Many
+>  : ^^^^
 
         items.push('aa')
 >items.push('aa') : number
@@ -3503,12 +3952,12 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 
     // this should _not_ be a single root
     const w = <Wrapper /> 
->w : { readonly root: [Comment]; [Symbol.update](): void; }
->  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
-><Wrapper /> : { readonly root: [Comment]; [Symbol.update](): void; }
->            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Wrapper : () => { readonly root: [Comment]; [Symbol.update](): void; }
->        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>w : Wrapper
+>  : ^^^^^^^
+><Wrapper /> : Wrapper
+>            : ^^^^^^^
+>Wrapper : () => Wrapper
+>        : ^^^^^^^^^^^^^
 }
 
 {
@@ -3568,12 +4017,12 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >    : ^^^
 
         <Wrapper>a</Wrapper>
-><Wrapper>a</Wrapper> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->                     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Wrapper : (attributes: {}, children: (string | ChildNode)[]) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Wrapper : (attributes: {}, children: (string | ChildNode)[]) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Wrapper>a</Wrapper> : Wrapper
+>                     : ^^^^^^^
+>Wrapper : (attributes: {}, children: (string | ChildNode)[]) => Wrapper
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>Wrapper : (attributes: {}, children: (string | ChildNode)[]) => Wrapper
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     </div>
 >div : any
@@ -3628,10 +4077,10 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >                    : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
-><Foo/> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->       : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Foo : () => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Foo/> : Foo
+>       : ^^^
+>Foo : () => Foo
+>    : ^^^^^^^^^
 >div : any
 >    : ^^^
 }
@@ -3767,11 +4216,11 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >List : <T>(attributes: { items: T[]; key?: ((x: T) => string | number) | undefined; }, children: [(x: T) => ChildNode]) => List<T>
 >     : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ^^ ^^^^^               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ^^ ^^^^^         ^^^^^^^^^^^^^
 
-    function List2<T>(props: { items: T[], children: [(x: T) => ChildNode]}) {
->List2 : <T>(props: { items: T[]; children: [(x: T) => ChildNode]; }) => HTMLDivElement
->      : ^ ^^     ^^                                                ^^^^^^^^^^^^^^^^^^^
->props : { items: T[]; children: [(x: T) => ChildNode]; }
->      : ^^^^^^^^^   ^^^^^^^^^^^^                     ^^^
+    function List2<T>(attrs: { items: T[] }, children: [(x: T) => ChildNode]) {
+>List2 : <T>(attrs: { items: T[]; }, children: [(x: T) => ChildNode]) => HTMLDivElement
+>      : ^ ^^     ^^               ^^        ^^                     ^^^^^^^^^^^^^^^^^^^
+>attrs : { items: T[]; }
+>      : ^^^^^^^^^   ^^^
 >items : T[]
 >      : ^^^
 >children : [(x: T) => ChildNode]
@@ -3792,8 +4241,8 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >   : ^^^^^^^^^^^^^^
 ><List2 {items}>        {x => <div>{x.first} {x.last}</div>}    </List2> : HTMLDivElement
 >                                                                        : ^^^^^^^^^^^^^^
->List2 : <T>(props: { items: T[]; children: [(x: T) => ChildNode]; }) => HTMLDivElement
->      : ^ ^^     ^^                                                ^^^^^^^^^^^^^^^^^^^
+>List2 : <T>(attrs: { items: T[]; }, children: [(x: T) => ChildNode]) => HTMLDivElement
+>      : ^ ^^     ^^               ^^        ^^                     ^^^^^^^^^^^^^^^^^^^
 >items : { id: number; first: string; last: string; }[]
 >      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -3822,8 +4271,8 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >    : ^^^
 
     </List2>
->List2 : <T>(props: { items: T[]; children: [(x: T) => ChildNode]; }) => HTMLDivElement
->      : ^ ^^     ^^                                                ^^^^^^^^^^^^^^^^^^^
+>List2 : <T>(attrs: { items: T[]; }, children: [(x: T) => ChildNode]) => HTMLDivElement
+>      : ^ ^^     ^^               ^^        ^^                     ^^^^^^^^^^^^^^^^^^^
 }
 
 {
@@ -3970,14 +4419,14 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >         : ^^^^^^^^^^^^
 
         <One>{...children}</One>
-><One>{...children}</One> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->                         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->One : (attributes: {}, children: JSX.Children) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><One>{...children}</One> : One
+>                         : ^^^
+>One : (attributes: {}, children: JSX.Children) => One
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >children : JSX.Children
 >         : ^^^^^^^^^^^^
->One : (attributes: {}, children: JSX.Children) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>One : (attributes: {}, children: JSX.Children) => One
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     </>
 
@@ -4005,14 +4454,14 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 
         </>
         <Inner>{...children}</Inner>
-><Inner>{...children}</Inner> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->                             : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Inner : (attributes: {}, children: string[]) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Inner>{...children}</Inner> : Inner
+>                             : ^^^^^
+>Inner : (attributes: {}, children: string[]) => Inner
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >children : string[]
 >         : ^^^^^^^^
->Inner : (attributes: {}, children: string[]) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Inner : (attributes: {}, children: string[]) => Inner
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     </>
 
@@ -4141,12 +4590,12 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
     </>
 
     const inst = <Foo />
->inst : { readonly root: HTMLDivElement; bar(): number; [Symbol.update](): void; }
->     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
-><Foo /> : { readonly root: HTMLDivElement; bar(): number; [Symbol.update](): void; }
->        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Foo : () => { readonly root: HTMLDivElement; bar(): number; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>inst : Foo
+>     : ^^^
+><Foo /> : Foo
+>        : ^^^
+>Foo : () => Foo
+>    : ^^^^^^^^^
 
     const v = inst.bar()
 >v : number
@@ -4155,8 +4604,8 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >           : ^^^^^^
 >inst.bar : () => number
 >         : ^^^^^^^^^^^^
->inst : { readonly root: HTMLDivElement; bar(): number; [Symbol.update](): void; }
->     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>inst : Foo
+>     : ^^^
 >bar : () => number
 >    : ^^^^^^^^^^^^
 
@@ -4357,10 +4806,10 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 
     </>
     type AAA = typeof Foo
->AAA : () => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Foo : () => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>AAA : () => Foo
+>    : ^^^^^^^^^
+>Foo : () => Foo
+>    : ^^^^^^^^^
 }
 
 {
@@ -4447,18 +4896,18 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 
     </>
     const f = <Foo />
->f : { readonly root: HTMLDivElement; y: 1; [Symbol.update](): void; }
->  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
-><Foo /> : { readonly root: HTMLDivElement; y: 1; [Symbol.update](): void; }
->        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Foo : () => { readonly root: HTMLDivElement; y: 1; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>f : Foo
+>  : ^^^
+><Foo /> : Foo
+>        : ^^^
+>Foo : () => Foo
+>    : ^^^^^^^^^
 
     f.y // number
 >f.y : 1
 >    : ^
->f : { readonly root: HTMLDivElement; y: 1; [Symbol.update](): void; }
->  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>f : Foo
+>  : ^^^
 >y : 1
 >  : ^
 
@@ -4467,20 +4916,20 @@ const arr2 = [1, undefined, 2].filter(x => !!x)
 >    : ^^^
 
       <Foo />
-><Foo /> : { readonly root: HTMLDivElement; y: 1; [Symbol.update](): void; }
->        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Foo : () => { readonly root: HTMLDivElement; y: 1; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Foo /> : Foo
+>        : ^^^
+>Foo : () => Foo
+>    : ^^^^^^^^^
 
     </>
 
     const b = <Bar />
->b : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
-><Bar /> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Bar : () => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>b : Bar
+>  : ^^^
+><Bar /> : Bar
+>        : ^^^
+>Bar : () => Bar
+>    : ^^^^^^^^^
 }
 
 export <#component ExportedComp()>
@@ -4880,18 +5329,18 @@ export <#component ExportedComp()>
     </>
 
     const fooAttrMethod = <Foo cb() {
->fooAttrMethod : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->              : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
-><Foo cb() {        this // Foo     } /> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->                                        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Foo : (attributes: { cb: () => void; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>fooAttrMethod : Foo
+>              : ^^^
+><Foo cb() {        this // Foo     } /> : Foo
+>                                        : ^^^
+>Foo : (attributes: { cb: () => void; }) => Foo
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^^^^^^^^^
 >cb : () => void
 >   : ^^^^^^^^^^
 
         this // Foo 
->this : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>this : Foo
+>     : ^^^
 
     } />
 
@@ -6562,7 +7011,7 @@ export <#component ExportedComp()>
 //   <div />
 // </>
 //
-// Foo is then typed as `(props: { x: string }) => HTMLDivElement`
+// Foo is then typed as `(attrs: { x: string }) => HTMLDivElement`
 //
 //
 //
@@ -6683,16 +7132,16 @@ export <#component ExportedComp()>
 
     </>
     const r1 = <Foo x="hi" />
->r1 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
-><Foo x="hi" /> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->               : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Foo : (attributes: { x: string; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>r1 : Foo
+>   : ^^^
+><Foo x="hi" /> : Foo
+>               : ^^^
+>Foo : (attributes: { x: string; }) => Foo
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >x : string
 >  : ^^^^^^
 
-    // Foo is typed as (props: { x: string }) => HTMLDivElement
+    // Foo is typed as (attrs: { x: string }) => HTMLDivElement
 
     ;<#component Bar(x: string)>
 >Bar : any
@@ -6722,12 +7171,12 @@ export <#component ExportedComp()>
 
     </>
     const r2 = <Bar x="hi" />
->r2 : { readonly root: [HTMLDivElement, HTMLDivElement]; [Symbol.update](): void; }
->   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
-><Bar x="hi" /> : { readonly root: [HTMLDivElement, HTMLDivElement]; [Symbol.update](): void; }
->               : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Bar : (attributes: { x: string; }) => { readonly root: [HTMLDivElement, HTMLDivElement]; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>r2 : Bar
+>   : ^^^
+><Bar x="hi" /> : Bar
+>               : ^^^
+>Bar : (attributes: { x: string; }) => Bar
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >x : string
 >  : ^^^^^^
 
@@ -6749,12 +7198,12 @@ export <#component ExportedComp()>
 
     </>
     const r3 = <Baz x="hi" />
->r3 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
-><Baz x="hi" /> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->               : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Baz : (attributes: { x: string; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>r3 : Baz
+>   : ^^^
+><Baz x="hi" /> : Baz
+>               : ^^^
+>Baz : (attributes: { x: string; }) => Baz
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >x : string
 >  : ^^^^^^
 
@@ -6778,22 +7227,22 @@ export <#component ExportedComp()>
 
     </>
     const r4a = <WithOpt x="hi" />       // ok
->r4a : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
-><WithOpt x="hi" /> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->                   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->WithOpt : (attributes: { x: string; y?: number | undefined; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>r4a : WithOpt
+>    : ^^^^^^^
+><WithOpt x="hi" /> : WithOpt
+>                   : ^^^^^^^
+>WithOpt : (attributes: { x: string; y?: number | undefined; }) => WithOpt
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >x : string
 >  : ^^^^^^
 
     const r4b = <WithOpt x="hi" y={1} /> // ok
->r4b : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
-><WithOpt x="hi" y={1} /> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->                         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->WithOpt : (attributes: { x: string; y?: number | undefined; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>r4b : WithOpt
+>    : ^^^^^^^
+><WithOpt x="hi" y={1} /> : WithOpt
+>                         : ^^^^^^^
+>WithOpt : (attributes: { x: string; y?: number | undefined; }) => WithOpt
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >x : string
 >  : ^^^^^^
 >y : number
@@ -6802,28 +7251,28 @@ export <#component ExportedComp()>
 >  : ^
 
     const r1_typed: Foo = r1
->r1_typed : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->r1 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>r1_typed : Foo
+>         : ^^^
+>r1 : Foo
+>   : ^^^
 
     const r3_typed: Baz = r3
->r3_typed : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->r3 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>r3_typed : Baz
+>         : ^^^
+>r3 : Baz
+>   : ^^^
 
     const r_cross: Foo = r3
->r_cross : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->r3 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>r_cross : Foo
+>        : ^^^
+>r3 : Baz
+>   : ^^^
 
     const r_cross2: Foo = r4a
->r_cross2 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->r4a : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>r_cross2 : Foo
+>         : ^^^
+>r4a : WithOpt
+>    : ^^^^^^^
 }
 
 {
@@ -6845,7 +7294,7 @@ export <#component ExportedComp()>
 >    : ^^^
 
     </>
-    // Expr is (props: { x: string }) => HTMLDivElement
+    // Expr is (attrs: { x: string }) => HTMLDivElement
     const r5 = <Expr x="hello" />
 >r5 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
 >   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
@@ -6886,12 +7335,12 @@ export <#component ExportedComp()>
 
     </>
     const r6 = <WithBody x="world" />
->r6 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
-><WithBody x="world" /> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->                       : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->WithBody : (attributes: { x: string; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>r6 : WithBody
+>   : ^^^^^^^^
+><WithBody x="world" /> : WithBody
+>                       : ^^^^^^^^
+>WithBody : (attributes: { x: string; }) => WithBody
+>         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >x : string
 >  : ^^^^^^
 }
@@ -6923,46 +7372,46 @@ export <#component ExportedComp()>
 
 {
     // plain labeled fragment
-    <#component Foo(children: { content: [string, string] })>
+    <#component Foo(children: { content: [Text, string] })>
 >Foo : any
 >    : ^^^
->children : { content: [string, string]; }
->         : ^^^^^^^^^^^                ^^^
->content : [string, string]
->        : ^^^^^^^^^^^^^^^^
+>children : { content: [Text, string]; }
+>         : ^^^^^^^^^^^              ^^^
+>content : [Text, string]
+>        : ^^^^^^^^^^^^^^
 
         <div>{...children.content}</div>
 ><div>{...children.content}</div> : HTMLDivElement
 >                                 : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->children.content : [string, string]
->                 : ^^^^^^^^^^^^^^^^
->children : { content: [string, string]; }
->         : ^^^^^^^^^^^                ^^^
->content : [string, string]
->        : ^^^^^^^^^^^^^^^^
+>children.content : [Text, string]
+>                 : ^^^^^^^^^^^^^^
+>children : { content: [Text, string]; }
+>         : ^^^^^^^^^^^              ^^^
+>content : [Text, string]
+>        : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 
     </>
     const r_lf1 = <Foo>
->r_lf1 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
-><Foo>        <:content>hi{'there'}</>    </Foo> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->                                                : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Foo : (attributes: {}, children: { content: [string, string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>r_lf1 : Foo
+>      : ^^^
+><Foo>        <:content>hi{'there'}</>    </Foo> : Foo
+>                                                : ^^^
+>Foo : (attributes: {}, children: { content: [Text, string]; }) => Foo
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^              ^^^^^^^^^^^
 
         <:content>hi{'there'}</>
->content : [string, string]
->        : ^^^^^^^^^^^^^^^^
+>content : [Text, string]
+>        : ^^^^^^^^^^^^^^
 >'there' : "there"
 >        : ^^^^^^^
 
     </Foo>
->Foo : (attributes: {}, children: { content: [string, string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Foo : (attributes: {}, children: { content: [Text, string]; }) => Foo
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^              ^^^^^^^^^^^
 
     // callable labeled fragment
     ;<#component Bar(children: { item: (val: string) => [HTMLSpanElement] })>
@@ -6995,12 +7444,12 @@ export <#component ExportedComp()>
 
     </>
     const r_lf2 = <Bar>
->r_lf2 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
-><Bar>        <:item(val: string)><span>{val}</span></>    </Bar> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->                                                                 : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Bar : (attributes: {}, children: { item: (val: string) => [HTMLSpanElement]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>r_lf2 : Bar
+>      : ^^^
+><Bar>        <:item(val: string)><span>{val}</span></>    </Bar> : Bar
+>                                                                 : ^^^
+>Bar : (attributes: {}, children: { item: (val: string) => [HTMLSpanElement]; }) => Bar
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                  ^^^^^^^^^^^
 
         <:item(val: string)><span>{val}</span></>
 >item : (val: string) => [HTMLSpanElement]
@@ -7017,10 +7466,10 @@ export <#component ExportedComp()>
 >     : ^^^
 
     </Bar>
->Bar : (attributes: {}, children: { item: (val: string) => [HTMLSpanElement]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Bar : (attributes: {}, children: { item: (val: string) => [HTMLSpanElement]; }) => Bar
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                  ^^^^^^^^^^^
 
-    // contextual typingg
+    // contextual typing
     ;<#component Ctx(children: { slot: (n: number, s: string) => [HTMLDivElement] })>
 >Ctx : any
 >    : ^^^
@@ -7055,12 +7504,12 @@ export <#component ExportedComp()>
 
     </>
     const r_ctx = <Ctx>
->r_ctx : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
-><Ctx>        <:slot(n, s)><div>{n.toFixed()}{s.toUpperCase()}</div></>    </Ctx> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->                                                                                 : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Ctx : (attributes: {}, children: { slot: (n: number, s: string) => [HTMLDivElement]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>r_ctx : Ctx
+>      : ^^^
+><Ctx>        <:slot(n, s)><div>{n.toFixed()}{s.toUpperCase()}</div></>    </Ctx> : Ctx
+>                                                                                 : ^^^
+>Ctx : (attributes: {}, children: { slot: (n: number, s: string) => [HTMLDivElement]; }) => Ctx
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                          ^^^^^^^^^^^
 
         <:slot(n, s)><div>{n.toFixed()}{s.toUpperCase()}</div></>
 >slot : (n: number, s: string) => [HTMLDivElement]
@@ -7093,8 +7542,8 @@ export <#component ExportedComp()>
 >    : ^^^
 
     </Ctx>
->Ctx : (attributes: {}, children: { slot: (n: number, s: string) => [HTMLDivElement]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Ctx : (attributes: {}, children: { slot: (n: number, s: string) => [HTMLDivElement]; }) => Ctx
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                          ^^^^^^^^^^^
 
     ;<#component Ctx2(children: { slot: (s: string) => [string] })>
 >Ctx2 : any
@@ -7126,12 +7575,12 @@ export <#component ExportedComp()>
 
     </>
     const r_ctx2 = <Ctx2>
->r_ctx2 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->       : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
-><Ctx2>        <:slot(s)>{s}</>    </Ctx2> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->                                          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Ctx2 : (attributes: {}, children: { slot: (s: string) => [string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>r_ctx2 : Ctx2
+>       : ^^^^
+><Ctx2>        <:slot(s)>{s}</>    </Ctx2> : Ctx2
+>                                          : ^^^^
+>Ctx2 : (attributes: {}, children: { slot: (s: string) => [string]; }) => Ctx2
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^
 
         <:slot(s)>{s}</>
 >slot : (s: string) => [string]
@@ -7142,16 +7591,16 @@ export <#component ExportedComp()>
 >  : ^^^^^^
 
     </Ctx2>
->Ctx2 : (attributes: {}, children: { slot: (s: string) => [string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Ctx2 : (attributes: {}, children: { slot: (s: string) => [string]; }) => Ctx2
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^
 
     const r_ctx3 = <Ctx2>
->r_ctx3 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->       : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
-><Ctx2>        {...{            slot: s => <>{s}</>        }}    </Ctx2> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->                                                                        : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Ctx2 : (attributes: {}, children: { slot: (s: string) => [string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>r_ctx3 : Ctx2
+>       : ^^^^
+><Ctx2>        {...{            slot: s => <>{s}</>        }}    </Ctx2> : Ctx2
+>                                                                        : ^^^^
+>Ctx2 : (attributes: {}, children: { slot: (s: string) => [string]; }) => Ctx2
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^
 
         {...{
 >{            slot: s => <>{s}</>        } : { slot: (s: string) => [string]; }
@@ -7171,40 +7620,40 @@ export <#component ExportedComp()>
 
         }}
     </Ctx2>
->Ctx2 : (attributes: {}, children: { slot: (s: string) => [string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Ctx2 : (attributes: {}, children: { slot: (s: string) => [string]; }) => Ctx2
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^
 
     const r_dup = <Foo>
->r_dup : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
-><Foo>        <:content>hi{'there'}</>        <:content>oh{'no'}</>    </Foo> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->                                                                             : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Foo : (attributes: {}, children: { content: [string, string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>r_dup : Foo
+>      : ^^^
+><Foo>        <:content>hi{'there'}</>        <:content>oh{'no'}</>    </Foo> : Foo
+>                                                                             : ^^^
+>Foo : (attributes: {}, children: { content: [Text, string]; }) => Foo
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^              ^^^^^^^^^^^
 
         <:content>hi{'there'}</>
->content : [string, string]
->        : ^^^^^^^^^^^^^^^^
+>content : [Text, string]
+>        : ^^^^^^^^^^^^^^
 >'there' : "there"
 >        : ^^^^^^^
 
         <:content>oh{'no'}</>
->content : [string, string]
->        : ^^^^^^^^^^^^^^^^
+>content : [Text, string]
+>        : ^^^^^^^^^^^^^^
 >'no' : "no"
 >     : ^^^^
 
     </Foo>
->Foo : (attributes: {}, children: { content: [string, string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Foo : (attributes: {}, children: { content: [Text, string]; }) => Foo
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^              ^^^^^^^^^^^
 
     const r_mix = <Foo>
->r_mix : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
-><Foo>        <div>hi</div>        <:content>there{'!'}</>    </Foo> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->                                                                    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Foo : (attributes: {}, children: { content: [string, string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>r_mix : Foo
+>      : ^^^
+><Foo>        <div>hi</div>        <:content>there{'!'}</>    </Foo> : Foo
+>                                                                    : ^^^
+>Foo : (attributes: {}, children: { content: [Text, string]; }) => Foo
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^              ^^^^^^^^^^^
 
         <div>hi</div>
 ><div>hi</div> : HTMLDivElement
@@ -7221,8 +7670,8 @@ export <#component ExportedComp()>
 >    : ^^^
 
     </Foo>
->Foo : (attributes: {}, children: { content: [string, string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Foo : (attributes: {}, children: { content: [Text, string]; }) => Foo
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^              ^^^^^^^^^^^
 
     <#component OptChildren(children: { slot?: (s: string) => [string] })>
 >OptChildren : any
@@ -7269,12 +7718,12 @@ export <#component ExportedComp()>
 >     : ^^^^
 
     const opt_1 = <OptChildren>
->opt_1 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
-><OptChildren>        <#if (opt_cond)>            <:slot(v2)>                {v2}            </>        </>    </OptChildren> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->                                                                                                                             : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->OptChildren : (attributes: {}, children: { slot?: (s: string) => [string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>opt_1 : OptChildren
+>      : ^^^^^^^^^^^
+><OptChildren>        <#if (opt_cond)>            <:slot(v2)>                {v2}            </>        </>    </OptChildren> : OptChildren
+>                                                                                                                             : ^^^^^^^^^^^
+>OptChildren : (attributes: {}, children: { slot?: (s: string) => [string]; }) => OptChildren
+>            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^
 
         <#if (opt_cond)>
 >opt_cond : boolean
@@ -7293,16 +7742,16 @@ export <#component ExportedComp()>
             </>
         </>
     </OptChildren>
->OptChildren : (attributes: {}, children: { slot?: (s: string) => [string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>OptChildren : (attributes: {}, children: { slot?: (s: string) => [string]; }) => OptChildren
+>            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^
 
     const opt_2 = <OptChildren>
->opt_2 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
-><OptChildren>        <#if (opt_cond)>            <:slot(v2)>                {v2}            </>        </><#else>            <:slot(v2)>                {v2}{v2}            </>        </>    </OptChildren> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->                                                                                                                                                                                                             : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->OptChildren : (attributes: {}, children: { slot?: (s: string) => [string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>opt_2 : OptChildren
+>      : ^^^^^^^^^^^
+><OptChildren>        <#if (opt_cond)>            <:slot(v2)>                {v2}            </>        </><#else>            <:slot(v2)>                {v2}{v2}            </>        </>    </OptChildren> : OptChildren
+>                                                                                                                                                                                                             : ^^^^^^^^^^^
+>OptChildren : (attributes: {}, children: { slot?: (s: string) => [string]; }) => OptChildren
+>            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^
 
         <#if (opt_cond)>
 >opt_cond : boolean
@@ -7335,8 +7784,8 @@ export <#component ExportedComp()>
             </>
         </>
     </OptChildren>
->OptChildren : (attributes: {}, children: { slot?: (s: string) => [string]; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>OptChildren : (attributes: {}, children: { slot?: (s: string) => [string]; }) => OptChildren
+>            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                       ^^^^^^^^^^^^^^^^^^^
 
 }
 
@@ -7501,12 +7950,12 @@ export <#component ExportedComp()>
 >    : ^^^
 
     const e = <Foo {o} />
->e : { readonly root: []; [Symbol.update](): void; }
->  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
-><Foo {o} /> : { readonly root: []; [Symbol.update](): void; }
->            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Foo : (attributes: { x: string; y: string; }) => { readonly root: []; [Symbol.update](): void; }
->    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>e : Foo
+>  : ^^^
+><Foo {o} /> : Foo
+>            : ^^^
+>Foo : (attributes: { x: string; y: string; }) => Foo
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >o : { x: string; y: string; }
 >  : ^^^^^^^^^^^^^^^^^^^^^^^^^
 }

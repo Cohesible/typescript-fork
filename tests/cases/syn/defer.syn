@@ -1,0 +1,40 @@
+{
+    let x: 0 | 1 | 2 = 0
+    defer {
+        x // 2
+    }
+    defer {
+        x = 2
+    }
+    function deferTest(cond: boolean) {
+        let y: 0 | 1 | 2 = 0
+        defer {
+            y // 1 | 2
+        }
+        if (cond) {
+            y = 1
+            return
+        }
+        y = 2
+    }
+}
+
+{
+    function deferFinally() {
+        let z: 0 | 1 | 2 = 0
+        defer finally {
+            z // 0 | 2
+        }
+        console.log('') // ...this can throw
+        z = 2
+    }
+}
+
+{
+    let x: number | undefined
+    {
+        defer if (!x) throw 'x not truthy!'
+    }
+    declare function check(x: number): void
+    check(x) // OK
+}

@@ -1,0 +1,361 @@
+//// [tests/cases/syn/componentPublicMembers.syn] ////
+
+=== componentPublicMembers.syn ===
+{
+    // public functions
+    <#component Foo() {
+>Foo : any
+>    : ^^^
+
+        const val = 1
+>val : 1
+>    : ^
+>1 : 1
+>  : ^
+
+        public function bar() { return val }
+>bar : () => number
+>    : ^^^^^^^^^^^^
+>val : 1
+>    : ^
+        {
+            // public functions must be top-level
+            public function bar2() { return val }
+>bar2 : () => number
+>     : ^^^^^^^^^^^^
+>val : 1
+>    : ^
+        }
+    }>
+        <#run>
+            // public functions cannot be inside the component template
+            public function bar2() { return val }
+>bar2 : () => number
+>     : ^^^^^^^^^^^^
+>val : 1
+>    : ^
+
+        </>
+        <div/>
+><div/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+
+    const inst = <Foo />
+>inst : Foo
+>     : ^^^
+><Foo /> : Foo
+>        : ^^^
+>Foo : () => Foo
+>    : ^^^^^^^^^
+
+    const v = inst.bar()
+>v : number
+>  : ^^^^^^
+>inst.bar() : number
+>           : ^^^^^^
+>inst.bar : () => number
+>         : ^^^^^^^^^^^^
+>inst : Foo
+>     : ^^^
+>bar : () => number
+>    : ^^^^^^^^^^^^
+
+    <#component Foo2<const T>(attr: T) {
+>Foo2 : any
+>     : ^^^
+>attr : T
+>     : ^
+
+        public function bar() { return attr }
+>bar : () => T
+>    : ^^^^^^^
+>attr : T
+>     : ^
+
+    }>
+        <div/>
+><div/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+
+    const inst2 = <Foo2 attr="test" />
+>inst2 : Foo2<"test">
+>      : ^^^^^^^^^^^^
+><Foo2 attr="test" /> : Foo2<"test">
+>                     : ^^^^^^^^^^^^
+>Foo2 : <const T>(attributes: { attr: T; }) => Foo2<T>
+>     : ^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^^^^
+>attr : "test"
+>     : ^^^^^^
+
+    const v2 = inst2.bar()
+>v2 : "test"
+>   : ^^^^^^
+>inst2.bar() : "test"
+>            : ^^^^^^
+>inst2.bar : () => "test"
+>          : ^^^^^^^^^^^^
+>inst2 : Foo2<"test">
+>      : ^^^^^^^^^^^^
+>bar : () => "test"
+>    : ^^^^^^^^^^^^
+
+
+    function createCompDecl<T>(v: T) {
+>createCompDecl : <T>(v: T) => <U>(attributes: { a: U; b?: T | undefined; }) => Foo3<U>
+>               : ^ ^^ ^^ ^^^^^^ ^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>v : T
+>  : ^
+
+        <#component Foo3<U>(a: U, b = v) {
+>Foo3 : any
+>     : ^^^
+>a : U
+>  : ^
+>b : T
+>  : ^
+>v : T
+>  : ^
+
+            public function baz() { return { a, b } }
+>baz : () => { a: U; b: T; }
+>    : ^^^^^^^^^^^^^^^^^^^^^
+>{ a, b } : { a: U; b: T; }
+>         : ^^^^^^^^^^^^^^^
+>a : U
+>  : ^
+>b : T
+>  : ^
+
+        }>
+            <div/>
+><div/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        </>
+        return Foo3
+>Foo3 : <U>(attributes: { a: U; b?: T | undefined; }) => Foo3<U>
+>     : ^ ^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    }
+
+    const FooWithDefault = createCompDecl(1)
+>FooWithDefault : <U>(attributes: { a: U; b?: number | undefined; }) => createCompDecl<number>.Foo3<U>
+>               : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>createCompDecl(1) : <U>(attributes: { a: U; b?: number | undefined; }) => createCompDecl<number>.Foo3<U>
+>                  : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>createCompDecl : <T>(v: T) => <U>(attributes: { a: U; b?: T | undefined; }) => Foo3<U>
+>               : ^ ^^ ^^ ^^^^^^ ^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>1 : 1
+>  : ^
+
+    const inst3 = <FooWithDefault a="test" />
+>inst3 : createCompDecl<number>.Foo3<string>
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+><FooWithDefault a="test" /> : createCompDecl<number>.Foo3<string>
+>                            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>FooWithDefault : <U>(attributes: { a: U; b?: number | undefined; }) => createCompDecl<number>.Foo3<U>
+>               : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>a : string
+>  : ^^^^^^
+
+    const v3 = inst3.baz()
+>v3 : { a: string; b: number; }
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^
+>inst3.baz() : { a: string; b: number; }
+>            : ^^^^^^^^^^^^^^^^^^^^^^^^^
+>inst3.baz : () => { a: string; b: number; }
+>          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>inst3 : createCompDecl<number>.Foo3<string>
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>baz : () => { a: string; b: number; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    const inst4 = <FooWithDefault a="test" b=2 />
+>inst4 : createCompDecl<number>.Foo3<string>
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+><FooWithDefault a="test" b=2 /> : createCompDecl<number>.Foo3<string>
+>                                : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>FooWithDefault : <U>(attributes: { a: U; b?: number | undefined; }) => createCompDecl<number>.Foo3<U>
+>               : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>a : string
+>  : ^^^^^^
+>b : number
+>  : ^^^^^^
+
+    const v4 = inst4.baz()
+>v4 : { a: string; b: number; }
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^
+>inst4.baz() : { a: string; b: number; }
+>            : ^^^^^^^^^^^^^^^^^^^^^^^^^
+>inst4.baz : () => { a: string; b: number; }
+>          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>inst4 : createCompDecl<number>.Foo3<string>
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>baz : () => { a: string; b: number; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    const d = <div>
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div>        <FooWithDefault @ f a="test" />        <#run>          const v = f.baz()        </>        {v.a}    </div> : HTMLDivElement
+>                                                                                                                        : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <FooWithDefault @ f a="test" />
+><FooWithDefault @ f a="test" /> : createCompDecl<number>.Foo3<string>
+>                                : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>FooWithDefault : <U>(attributes: { a: U; b?: number | undefined; }) => createCompDecl<number>.Foo3<U>
+>               : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>f : createCompDecl<number>.Foo3<string>
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>a : string
+>  : ^^^^^^
+
+        <#run>
+          const v = f.baz()
+>v : { a: string; b: number; }
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^
+>f.baz() : { a: string; b: number; }
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^
+>f.baz : () => { a: string; b: number; }
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>f : createCompDecl<number>.Foo3<string>
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>baz : () => { a: string; b: number; }
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        </>
+        {v.a}
+>v.a : string
+>    : ^^^^^^
+>v : { a: string; b: number; }
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^
+>a : string
+>  : ^^^^^^
+
+    </div>
+>div : any
+>    : ^^^
+}
+
+{
+    <#component Foo() {
+>Foo : any
+>    : ^^^
+
+        const x = 1
+>x : 1
+>  : ^
+>1 : 1
+>  : ^
+
+        public { x as y }
+>x : 1
+>  : ^
+>y : 1
+>  : ^
+
+    }>
+      <div>{x}</div>
+><div>{x}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>x : 1
+>  : ^
+>div : any
+>    : ^^^
+
+    </>
+    const f = <Foo />
+>f : Foo
+>  : ^^^
+><Foo /> : Foo
+>        : ^^^
+>Foo : () => Foo
+>    : ^^^^^^^^^
+
+    f.y // number
+>f.y : 1
+>    : ^
+>f : Foo
+>  : ^^^
+>y : 1
+>  : ^
+
+    <#component Bar()>
+>Bar : any
+>    : ^^^
+
+      <Foo />
+><Foo /> : Foo
+>        : ^^^
+>Foo : () => Foo
+>    : ^^^^^^^^^
+
+    </>
+
+    const b = <Bar />
+>b : Bar
+>  : ^^^
+><Bar /> : Bar
+>        : ^^^
+>Bar : () => Bar
+>    : ^^^^^^^^^
+}
+
+{
+    <#component Foo() {
+>Foo : any
+>    : ^^^
+
+        // FIXME: emit diag, public block decl must appear last
+        public { x as y }
+>x : 1
+>  : ^
+>y : 1
+>  : ^
+
+        const x = 1
+>x : 1
+>  : ^
+>1 : 1
+>  : ^
+
+    }>
+      <div>{x}</div>
+><div>{x}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>x : 1
+>  : ^
+>div : any
+>    : ^^^
+
+    </>
+}
+
+// FIXME: exported should not report unused
+export <#component ExportedComp()>
+>ExportedComp : any
+>             : ^^^
+
+    <div/>
+><div/> : HTMLDivElement
+>       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+</>
+

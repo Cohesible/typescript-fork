@@ -1,0 +1,1236 @@
+//// [tests/cases/syn/jsxUpdate.syn] ////
+
+=== jsxUpdate.syn ===
+// update expression
+{
+    declare const el: Element;
+>el : Element
+>   : ^^^^^^^
+
+    const d = <div on:click={() => {
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div on:click={() => {        update el    }}></div> : HTMLDivElement
+>                                                     : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>on:click : () => void
+>         : ^^^^^^^^^^
+>on : any
+>   : ^^^
+>click : any
+>      : ^^^
+>() => {        update el    } : () => void
+>                              : ^^^^^^^^^^
+
+        update el
+>update el : Element
+>          : ^^^^^^^
+>el : Element
+>   : ^^^^^^^
+
+    }}></div>
+>div : any
+>    : ^^^
+}
+
+{
+    // error, possibly null
+    update document.querySelector('.a')
+>update document.querySelector('.a') : Element | null
+>                                    : ^^^^^^^^^^^^^^
+>document.querySelector('.a') : Element | null
+>                             : ^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>'.a' : ".a"
+>     : ^^^^
+
+    if (const x = document.querySelector('.a')) {
+>x : Element
+>  : ^^^^^^^
+>document.querySelector('.a') : Element | null
+>                             : ^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^ ^^^^^^^^^      ^^         ^^ ^^^                     ^^^
+>'.a' : ".a"
+>     : ^^^^
+
+        // ok
+        update x
+>update x : Element
+>         : ^^^^^^^
+>x : Element
+>  : ^^^^^^^
+    }
+
+    {
+        let y = 0
+>y : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+        const x = <div>{y}</div>
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div>{y}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>y : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+        update x // ok
+>update x : HTMLDivElement
+>         : ^^^^^^^^^^^^^^
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+    }
+
+    {
+        const x = <div>hi</div>
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div>hi</div> : HTMLDivElement
+>              : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+        update x // error, `x` has no updatable expressions
+>update x : never
+>         : ^^^^^
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+    }
+
+    {
+        let y = 0
+>y : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+        const x = <div><div>{y}</div></div>
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div><div>{y}</div></div> : HTMLDivElement
+>                          : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+><div>{y}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>y : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+        update x // ok
+>update x : HTMLDivElement
+>         : ^^^^^^^^^^^^^^
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+    }
+
+    {
+        let y = '0'
+>y : string
+>  : ^^^^^^
+>'0' : "0"
+>    : ^^^
+
+        const x = <div><div id={y}></div></div>
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div><div id={y}></div></div> : HTMLDivElement
+>                              : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+><div id={y}></div> : HTMLDivElement
+>                   : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>id : string
+>   : ^^^^^^
+>y : string
+>  : ^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+        update x // ok
+>update x : HTMLDivElement
+>         : ^^^^^^^^^^^^^^
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+    }
+
+    {
+        let y = '0'
+>y : string
+>  : ^^^^^^
+>'0' : "0"
+>    : ^^^
+
+        const x = <div id={y}></div>
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div id={y}></div> : HTMLDivElement
+>                   : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>id : string
+>   : ^^^^^^
+>y : string
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+        update x // ok
+>update x : HTMLDivElement
+>         : ^^^^^^^^^^^^^^
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+    }
+
+    {
+        // components can always be updated
+        function Comp() { return <div></div> }
+>Comp : () => HTMLDivElement
+>     : ^^^^^^^^^^^^^^^^^^^^
+><div></div> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+        const el = <Comp/>
+>el : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><Comp/> : HTMLDivElement
+>        : ^^^^^^^^^^^^^^
+>Comp : () => HTMLDivElement
+>     : ^^^^^^^^^^^^^^^^^^^^
+
+        update el // ok
+>update el : HTMLDivElement
+>          : ^^^^^^^^^^^^^^
+>el : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+    }
+
+    {
+        // expressions and blocks always make the element updatable
+        const el = <div>
+>el : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div>            {<span>hi</span>}        </div> : HTMLDivElement
+>                                                 : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+            {<span>hi</span>}
+><span>hi</span> : HTMLSpanElement
+>                : ^^^^^^^^^^^^^^^
+>span : any
+>     : ^^^
+>span : any
+>     : ^^^
+
+        </div>
+>div : any
+>    : ^^^
+
+        update el // ok
+>update el : HTMLDivElement
+>          : ^^^^^^^^^^^^^^
+>el : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+
+        const el2 = <div>
+>el2 : HTMLDivElement
+>    : ^^^^^^^^^^^^^^
+><div>            <#run>                console.log('hi')            </>        </div> : HTMLDivElement
+>                                                                                      : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+            <#run>
+                console.log('hi')
+>console.log('hi') : void
+>                  : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>'hi' : "hi"
+>     : ^^^^
+
+            </>
+        </div>
+>div : any
+>    : ^^^
+
+        update el2 // ok
+>update el2 : HTMLDivElement
+>           : ^^^^^^^^^^^^^^
+>el2 : HTMLDivElement
+>    : ^^^^^^^^^^^^^^
+    }
+}
+
+// update block form
+{
+    let y = 0
+>y : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+    const x = <div>{y}</div>
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div>{y}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>y : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+    update x {
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+        y = 1
+>y = 1 : 1
+>      : ^
+>y : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+    }
+
+    update x
+>update x : HTMLDivElement
+>         : ^^^^^^^^^^^^^^
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+    let a = 0
+>a : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+    let b = ''
+>b : string
+>  : ^^^^^^
+>'' : ""
+>   : ^^
+
+    const xa = <div>{a}</div>
+>xa : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+><div>{a}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+    const xb = <span>{b}</span>
+>xb : HTMLSpanElement
+>   : ^^^^^^^^^^^^^^^
+><span>{b}</span> : HTMLSpanElement
+>                 : ^^^^^^^^^^^^^^^
+>span : any
+>     : ^^^
+>b : string
+>  : ^^^^^^
+>span : any
+>     : ^^^
+
+    update xa, xb {
+>xa : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+>xb : HTMLSpanElement
+>   : ^^^^^^^^^^^^^^^
+
+        a = 1
+>a = 1 : 1
+>      : ^
+>a : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+
+        b = 'hi'
+>b = 'hi' : "hi"
+>         : ^^^^
+>b : string
+>  : ^^^^^^
+>'hi' : "hi"
+>     : ^^^^
+    }
+
+    update xa, xb {
+>xa : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+>xb : HTMLSpanElement
+>   : ^^^^^^^^^^^^^^^
+
+        b = 'only b'
+>b = 'only b' : "only b"
+>             : ^^^^^^^^
+>b : string
+>  : ^^^^^^
+>'only b' : "only b"
+>         : ^^^^^^^^
+    }
+
+    declare const unknown: Element
+>unknown : Element
+>        : ^^^^^^^
+
+    update unknown {
+>update unknown : Element
+>               : ^^^^^^^
+>unknown : Element
+>        : ^^^^^^^
+
+        y = 2
+>y = 2 : 2
+>      : ^
+>y : number
+>  : ^^^^^^
+>2 : 2
+>  : ^
+    }
+}
+
+// catch recursive updates
+{
+    let c = 0
+>c : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+    ;<div @ root>
+><div @ root>        {c}        <#run>            update root {                c += 1            }            if (c < 10) {                // ok                update root {                    c += 1                }            }        </>        <div @ d>            <#run>                update root {                    c += 1                }            </>        </div>    </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                                                                                                                                  : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+        {c}
+>c : number
+>  : ^^^^^^
+
+        <#run>
+            update root {
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+                c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+            }
+            if (c < 10) {
+>c < 10 : boolean
+>       : ^^^^^^^
+>c : number
+>  : ^^^^^^
+>10 : 10
+>   : ^^
+
+                // ok
+                update root {
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+                    c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+                }
+            }
+        </>
+        <div @ d>
+><div @ d>            <#run>                update root {                    c += 1                }            </>        </div> : HTMLDivElement
+>                                                                                                                                 : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+            <#run>
+                update root {
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+                    c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+                }
+            </>
+        </div>
+>div : any
+>    : ^^^
+
+    </div>
+>div : any
+>    : ^^^
+
+    ;<div>
+><div>        <#run>            // error (use-before-init)            update d { c += 1 }        </>        <div @ d>            {c}        </div>    </div> : HTMLDivElement
+>                                                                                                                                                            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <#run>
+            // error (use-before-init)
+            update d { c += 1 }
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+
+        </>
+        <div @ d>
+><div @ d>            {c}        </div> : HTMLDivElement
+>                                       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+            {c}
+>c : number
+>  : ^^^^^^
+
+        </div>
+>div : any
+>    : ^^^
+
+    </div>
+>div : any
+>    : ^^^
+}
+
+{
+    let c = 0
+>c : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+    ;<div @ root>
+><div @ root>        <div @ d1>            {c}        </div>        <div @ d2>            {c}        </div>        <button on:click={() => {            // ok            update root {                c += 1            }            // ok            update d1, d2 {                c += 1            }            // error            update d1 {                c += 1            }        }}>          Increment        </button>    </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                                                                                                                                                                               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+        <div @ d1>
+><div @ d1>            {c}        </div> : HTMLDivElement
+>                                        : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d1 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+
+            {c}
+>c : number
+>  : ^^^^^^
+
+        </div>
+>div : any
+>    : ^^^
+
+        <div @ d2>
+><div @ d2>            {c}        </div> : HTMLDivElement
+>                                        : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d2 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+
+            {c}
+>c : number
+>  : ^^^^^^
+
+        </div>
+>div : any
+>    : ^^^
+
+        <button on:click={() => {
+><button on:click={() => {            // ok            update root {                c += 1            }            // ok            update d1, d2 {                c += 1            }            // error            update d1 {                c += 1            }        }}>          Increment        </button> : HTMLButtonElement
+>                                                                                                                                                                                                                                                                                                                   : ^^^^^^^^^^^^^^^^^
+>button : any
+>       : ^^^
+>on:click : () => void
+>         : ^^^^^^^^^^
+>on : any
+>   : ^^^
+>click : any
+>      : ^^^
+>() => {            // ok            update root {                c += 1            }            // ok            update d1, d2 {                c += 1            }            // error            update d1 {                c += 1            }        } : () => void
+>                                                                                                                                                                                                                                                           : ^^^^^^^^^^
+
+            // ok
+            update root {
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+                c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+            }
+            // ok
+            update d1, d2 {
+>d1 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+>d2 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+
+                c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+            }
+            // error
+            update d1 {
+>d1 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+
+                c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+            }
+        }}>
+          Increment
+        </button>
+>button : any
+>       : ^^^
+
+    </div>
+>div : any
+>    : ^^^
+}
+
+{
+    let c = 0
+>c : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+    ;<div @ root>
+><div @ root>        <div @ d1>            {c}        </div>        {c}        <button on:click={() => {            update d1, root {                c += 1            }            update d1 {                c += 1            }        }}>          Increment        </button>    </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                           : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+        <div @ d1>
+><div @ d1>            {c}        </div> : HTMLDivElement
+>                                        : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d1 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+
+            {c}
+>c : number
+>  : ^^^^^^
+
+        </div>
+>div : any
+>    : ^^^
+
+        {c}
+>c : number
+>  : ^^^^^^
+
+        <button on:click={() => {
+><button on:click={() => {            update d1, root {                c += 1            }            update d1 {                c += 1            }        }}>          Increment        </button> : HTMLButtonElement
+>                                                                                                                                                                                                   : ^^^^^^^^^^^^^^^^^
+>button : any
+>       : ^^^
+>on:click : () => void
+>         : ^^^^^^^^^^
+>on : any
+>   : ^^^
+>click : any
+>      : ^^^
+>() => {            update d1, root {                c += 1            }            update d1 {                c += 1            }        } : () => void
+>                                                                                                                                           : ^^^^^^^^^^
+
+            update d1, root {
+>d1 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+                c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+            }
+            update d1 {
+>d1 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+
+                c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+            }
+        }}>
+          Increment
+        </button>
+>button : any
+>       : ^^^
+
+    </div>
+>div : any
+>    : ^^^
+}
+
+{
+    let c = 0
+>c : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+    ;<div @ root>
+><div @ root>        <div @ d>            {c}        </div>        <button on:click={() => {            update root {                c += 1            }        }}>          Increment        </button>    </div> : HTMLDivElement
+>                                                                                                                                                                                                                 : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+        <div @ d>
+><div @ d>            {c}        </div> : HTMLDivElement
+>                                       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+            {c}
+>c : number
+>  : ^^^^^^
+
+        </div>
+>div : any
+>    : ^^^
+
+        <button on:click={() => {
+><button on:click={() => {            update root {                c += 1            }        }}>          Increment        </button> : HTMLButtonElement
+>                                                                                                                                     : ^^^^^^^^^^^^^^^^^
+>button : any
+>       : ^^^
+>on:click : () => void
+>         : ^^^^^^^^^^
+>on : any
+>   : ^^^
+>click : any
+>      : ^^^
+>() => {            update root {                c += 1            }        } : () => void
+>                                                                             : ^^^^^^^^^^
+
+            update root {
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+                c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+            }
+        }}>
+          Increment
+        </button>
+>button : any
+>       : ^^^
+
+    </div>
+>div : any
+>    : ^^^
+}
+
+{
+    <#component Comp(v: number) {
+>Comp : any
+>     : ^^^
+>v : number
+>  : ^^^^^^
+
+        let count = v
+>count : number
+>      : ^^^^^^
+>v : number
+>  : ^^^^^^
+
+        function increment() {
+>increment : () => void
+>          : ^^^^^^^^^^
+
+            count++
+>count++ : number
+>        : ^^^^^^
+>count : number
+>      : ^^^^^^
+        }
+
+        function unrelated() {
+>unrelated : () => void
+>          : ^^^^^^^^^^
+
+            console.log('hi')
+>console.log('hi') : void
+>                  : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>'hi' : "hi"
+>     : ^^^^
+        }
+
+        const x = <div>{count}</div>
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div>{count}</div> : HTMLDivElement
+>                   : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>count : number
+>      : ^^^^^^
+>div : any
+>    : ^^^
+
+        update x {
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+            increment()
+>increment() : void
+>            : ^^^^
+>increment : () => void
+>          : ^^^^^^^^^^
+        }
+
+        update x {
+>x : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+            unrelated()
+>unrelated() : void
+>            : ^^^^
+>unrelated : () => void
+>          : ^^^^^^^^^^
+        }
+    }>
+        <div></div>
+><div></div> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+    </>
+}
+
+{
+    let c = 0
+>c : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+    <#component Inner() {}>
+>Inner : any
+>      : ^^^
+
+        <div>{c}</div>
+><div>{c}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>c : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+    const inner = <Inner />
+>inner : Inner
+>      : ^^^^^
+><Inner /> : Inner
+>          : ^^^^^
+>Inner : () => Inner
+>      : ^^^^^^^^^^^
+
+    const root = <div>
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+><div>        <Inner />    </div> : HTMLDivElement
+>                                 : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <Inner />
+><Inner /> : Inner
+>          : ^^^^^
+>Inner : () => Inner
+>      : ^^^^^^^^^^^
+
+    </div>
+>div : any
+>    : ^^^
+
+    update root {
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+        c += 1  // ok
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+    }
+    // TODO: the no-effect case should suggest to use the expression form (?)
+    update root {
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+        noop()  // error, no effect
+>noop() : any
+>       : ^^^
+>noop : any
+>     : ^^^
+    }
+}
+
+{
+    let c = 0
+>c : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+    <#component InnerB() {}>
+>InnerB : any
+>       : ^^^
+
+        <div>{c}</div>
+><div>{c}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>c : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+    ;<div @ root>
+><div @ root>        <InnerB @ d1 />        <div @ d2>{c}</div>        <#run>            setTimeout(() => {                update d1 {                    c += 1                }                update d2 {                    c += 1                }            })        </>    </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                          : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+        <InnerB @ d1 />
+><InnerB @ d1 /> : InnerB
+>                : ^^^^^^
+>InnerB : () => InnerB
+>       : ^^^^^^^^^^^^
+>d1 : InnerB
+>   : ^^^^^^
+
+        <div @ d2>{c}</div>
+><div @ d2>{c}</div> : HTMLDivElement
+>                    : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d2 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+>c : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+        <#run>
+            setTimeout(() => {
+>setTimeout(() => {                update d1 {                    c += 1                }                update d2 {                    c += 1                }            }) : number
+>                                                                                                                                                                             : ^^^^^^
+>setTimeout : (handler: TimerHandler, timeout?: number, ...arguments: any[]) => number
+>           : ^       ^^            ^^       ^^^      ^^^^^         ^^     ^^^^^      
+>() => {                update d1 {                    c += 1                }                update d2 {                    c += 1                }            } : () => void
+>                                                                                                                                                                 : ^^^^^^^^^^
+
+                update d1 {
+>d1 : InnerB
+>   : ^^^^^^
+
+                    c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+                }
+                update d2 {
+>d2 : HTMLDivElement
+>   : ^^^^^^^^^^^^^^
+
+                    c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+                }
+            })
+        </>
+    </div>
+>div : any
+>    : ^^^
+}
+
+{
+    let c = 0
+>c : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+    declare const External: any
+>External : any
+>         : ^^^
+
+    const root = <div>
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+><div>        <External />    </div> : HTMLDivElement
+>                                    : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+        <External />
+><External /> : any
+>             : ^^^
+>External : any
+>         : ^^^
+
+    </div>
+>div : any
+>    : ^^^
+
+    update root {
+>root : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+        c += 1
+>c += 1 : number
+>       : ^^^^^^
+>c : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+    }
+}
+
+{
+    let c = 0
+>c : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+    ;<div @ p>
+><div @ p>        <#run>            let c = ''        </>        <div>            <input @ d2                value={c}                on:click={() => {                    // ok                    update d1, d2 {                        c = 'a'                    }                    // ok (assumed self-coherence)                    update d1 {                        c = 'b'                    }                    // error                    update d2 {                        c = 'c'                    }                }}            />        </div>        <input @ d1 value={c} />    </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>p : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+        <#run>
+            let c = ''
+>c : string
+>  : ^^^^^^
+>'' : ""
+>   : ^^
+
+        </>
+        <div>
+><div>            <input @ d2                value={c}                on:click={() => {                    // ok                    update d1, d2 {                        c = 'a'                    }                    // ok (assumed self-coherence)                    update d1 {                        c = 'b'                    }                    // error                    update d2 {                        c = 'c'                    }                }}            />        </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+            <input @ d2
+><input @ d2                value={c}                on:click={() => {                    // ok                    update d1, d2 {                        c = 'a'                    }                    // ok (assumed self-coherence)                    update d1 {                        c = 'b'                    }                    // error                    update d2 {                        c = 'c'                    }                }}            /> : HTMLInputElement
+>                                                                                                                                                                                                                                                                                                                                                                                                                                                                          : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>d2 : HTMLInputElement
+>   : ^^^^^^^^^^^^^^^^
+
+                value={c}
+>value : string
+>      : ^^^^^^
+>c : string
+>  : ^^^^^^
+
+                on:click={() => {
+>on:click : () => void
+>         : ^^^^^^^^^^
+>on : any
+>   : ^^^
+>click : any
+>      : ^^^
+>() => {                    // ok                    update d1, d2 {                        c = 'a'                    }                    // ok (assumed self-coherence)                    update d1 {                        c = 'b'                    }                    // error                    update d2 {                        c = 'c'                    }                } : () => void
+>                                                                                                                                                                                                                                                                                                                                                                                             : ^^^^^^^^^^
+
+                    // ok
+                    update d1, d2 {
+>d1 : HTMLInputElement
+>   : ^^^^^^^^^^^^^^^^
+>d2 : HTMLInputElement
+>   : ^^^^^^^^^^^^^^^^
+
+                        c = 'a'
+>c = 'a' : "a"
+>        : ^^^
+>c : string
+>  : ^^^^^^
+>'a' : "a"
+>    : ^^^
+                    }
+                    // ok (assumed self-coherence)
+                    update d1 {
+>d1 : HTMLInputElement
+>   : ^^^^^^^^^^^^^^^^
+
+                        c = 'b'
+>c = 'b' : "b"
+>        : ^^^
+>c : string
+>  : ^^^^^^
+>'b' : "b"
+>    : ^^^
+                    }
+                    // error
+                    update d2 {
+>d2 : HTMLInputElement
+>   : ^^^^^^^^^^^^^^^^
+
+                        c = 'c'
+>c = 'c' : "c"
+>        : ^^^
+>c : string
+>  : ^^^^^^
+>'c' : "c"
+>    : ^^^
+                    }
+                }}
+            />
+        </div>
+>div : any
+>    : ^^^
+
+        <input @ d1 value={c} />
+><input @ d1 value={c} /> : HTMLInputElement
+>                         : ^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>d1 : HTMLInputElement
+>   : ^^^^^^^^^^^^^^^^
+>value : string
+>      : ^^^^^^
+>c : string
+>  : ^^^^^^
+
+    </div>
+>div : any
+>    : ^^^
+}
+

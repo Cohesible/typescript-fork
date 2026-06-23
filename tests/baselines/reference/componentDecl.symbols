@@ -1,0 +1,151 @@
+//// [tests/cases/syn/componentDecl.syn] ////
+
+=== componentDecl.syn ===
+{
+    <#component Foo(x: string)>
+>x : Symbol(x, Decl(componentDecl.syn, 1, 20))
+
+        <div>{x}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>x : Symbol(x, Decl(componentDecl.syn, 1, 20))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    const r1 = <Foo x="hi" />
+>r1 : Symbol(r1, Decl(componentDecl.syn, 4, 9))
+>Foo : Symbol(Foo, Decl(componentDecl.syn, 0, 1))
+>x : Symbol(x, Decl(componentDecl.syn, 4, 19))
+
+    <#component Bar(x: string)>
+>x : Symbol(x, Decl(componentDecl.syn, 6, 20))
+
+        <div>{x}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>x : Symbol(x, Decl(componentDecl.syn, 6, 20))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <div>{x}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>x : Symbol(x, Decl(componentDecl.syn, 6, 20))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    const r2 = <Bar x="hi" />
+>r2 : Symbol(r2, Decl(componentDecl.syn, 10, 9))
+>Bar : Symbol(Bar, Decl(componentDecl.syn, 4, 29))
+>x : Symbol(x, Decl(componentDecl.syn, 10, 19))
+
+    <#component Baz(x: string)>
+>x : Symbol(x, Decl(componentDecl.syn, 12, 20))
+
+        <div>{x}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>x : Symbol(x, Decl(componentDecl.syn, 12, 20))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    const r3 = <Baz x="hi" />
+>r3 : Symbol(r3, Decl(componentDecl.syn, 15, 9))
+>Baz : Symbol(Baz, Decl(componentDecl.syn, 10, 29))
+>x : Symbol(x, Decl(componentDecl.syn, 15, 19))
+
+    <#component WithOpt(x: string, y?: number)>
+>x : Symbol(x, Decl(componentDecl.syn, 17, 24))
+>y : Symbol(y, Decl(componentDecl.syn, 17, 34))
+
+        <div>{x}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>x : Symbol(x, Decl(componentDecl.syn, 17, 24))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    const r4a = <WithOpt x="hi" />       // ok
+>r4a : Symbol(r4a, Decl(componentDecl.syn, 20, 9))
+>WithOpt : Symbol(WithOpt, Decl(componentDecl.syn, 15, 29))
+>x : Symbol(x, Decl(componentDecl.syn, 20, 24))
+
+    const r4b = <WithOpt x="hi" y={1} /> // ok
+>r4b : Symbol(r4b, Decl(componentDecl.syn, 21, 9))
+>WithOpt : Symbol(WithOpt, Decl(componentDecl.syn, 15, 29))
+>x : Symbol(x, Decl(componentDecl.syn, 21, 24))
+>y : Symbol(y, Decl(componentDecl.syn, 21, 31))
+
+    const r1_typed: Foo = r1
+>r1_typed : Symbol(r1_typed, Decl(componentDecl.syn, 23, 9))
+>Foo : Symbol(Foo, Decl(componentDecl.syn, 0, 1))
+>r1 : Symbol(r1, Decl(componentDecl.syn, 4, 9))
+
+    const r3_typed: Baz = r3
+>r3_typed : Symbol(r3_typed, Decl(componentDecl.syn, 24, 9))
+>Baz : Symbol(Baz, Decl(componentDecl.syn, 10, 29))
+>r3 : Symbol(r3, Decl(componentDecl.syn, 15, 9))
+
+    const r_cross: Foo = r3
+>r_cross : Symbol(r_cross, Decl(componentDecl.syn, 25, 9))
+>Foo : Symbol(Foo, Decl(componentDecl.syn, 0, 1))
+>r3 : Symbol(r3, Decl(componentDecl.syn, 15, 9))
+
+    const r_cross2: Foo = r4a
+>r_cross2 : Symbol(r_cross2, Decl(componentDecl.syn, 26, 9))
+>Foo : Symbol(Foo, Decl(componentDecl.syn, 0, 1))
+>r4a : Symbol(r4a, Decl(componentDecl.syn, 20, 9))
+}
+
+{
+    // expression form
+    const Expr = <#component(x: string)>
+>Expr : Symbol(Expr, Decl(componentDecl.syn, 31, 9))
+>x : Symbol(x, Decl(componentDecl.syn, 31, 29))
+
+        <div>{x}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>x : Symbol(x, Decl(componentDecl.syn, 31, 29))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    const r5 = <Expr x="hello" />
+>r5 : Symbol(r5, Decl(componentDecl.syn, 34, 9))
+>Expr : Symbol(Expr, Decl(componentDecl.syn, 31, 9))
+>x : Symbol(x, Decl(componentDecl.syn, 34, 20))
+}
+
+{
+    <#component Foo()>
+        <div/>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    type AAA = typeof Foo
+>AAA : Symbol(AAA, Decl(componentDecl.syn, 40, 7))
+>Foo : Symbol(Foo, Decl(componentDecl.syn, 37, 1))
+}
+
+{
+    function Foo(attrs: {}): { root: HTMLDivElement; bar: () => 'aaa' } {
+>Foo : Symbol(Foo, Decl(componentDecl.syn, 44, 1))
+>attrs : Symbol(attrs, Decl(componentDecl.syn, 45, 17))
+>root : Symbol(root, Decl(componentDecl.syn, 45, 30))
+>HTMLDivElement : Symbol(HTMLDivElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+>bar : Symbol(bar, Decl(componentDecl.syn, 45, 52))
+
+        return {
+            root: <div/>,
+>root : Symbol(root, Decl(componentDecl.syn, 46, 16))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+            bar: () => 'aaa',
+>bar : Symbol(bar, Decl(componentDecl.syn, 47, 25))
+        }
+    }
+
+    const x = <Foo />
+>x : Symbol(x, Decl(componentDecl.syn, 52, 9))
+>Foo : Symbol(Foo, Decl(componentDecl.syn, 44, 1))
+
+    const y = x.bar()
+>y : Symbol(y, Decl(componentDecl.syn, 53, 9))
+>x.bar : Symbol(bar, Decl(componentDecl.syn, 45, 52))
+>x : Symbol(x, Decl(componentDecl.syn, 52, 9))
+>bar : Symbol(bar, Decl(componentDecl.syn, 45, 52))
+}
+

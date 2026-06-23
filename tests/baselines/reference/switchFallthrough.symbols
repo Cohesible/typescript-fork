@@ -1,0 +1,60 @@
+//// [tests/cases/syn/switchFallthrough.syn] ////
+
+=== switchFallthrough.syn ===
+const x = 1 as number
+>x : Symbol(x, Decl(switchFallthrough.syn, 0, 5))
+
+switch (x) {
+>x : Symbol(x, Decl(switchFallthrough.syn, 0, 5))
+
+    case 0:
+    case 1:
+        const x2 = 1 // should not error
+>x2 : Symbol(x2, Decl(switchFallthrough.syn, 4, 13))
+
+        if (x === 0) {
+>x : Symbol(x, Decl(switchFallthrough.syn, 0, 5))
+
+            console.log('got 0')
+>console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>console : Symbol(console, Decl(lib.dom.d.ts, --, --))
+>log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+
+            fallthrough
+        }
+        console.log('got 1')
+>console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>console : Symbol(console, Decl(lib.dom.d.ts, --, --))
+>log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+
+    case 2:
+        const x2 = 2
+>x2 : Symbol(x2, Decl(switchFallthrough.syn, 11, 13))
+
+        const y = x // 0 | 2
+>y : Symbol(y, Decl(switchFallthrough.syn, 12, 13))
+>x : Symbol(x, Decl(switchFallthrough.syn, 0, 5))
+}
+
+{
+    const f = (): 1 | 2 => 1
+>f : Symbol(f, Decl(switchFallthrough.syn, 16, 9))
+
+    switch (const v = f()) {
+>v : Symbol(v, Decl(switchFallthrough.syn, 17, 17))
+>f : Symbol(f, Decl(switchFallthrough.syn, 16, 9))
+
+        case 1: console.log('got 1', v)
+>console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>console : Symbol(console, Decl(lib.dom.d.ts, --, --))
+>log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>v : Symbol(v, Decl(switchFallthrough.syn, 17, 17))
+
+        case 2: console.log('got 2', v)
+>console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>console : Symbol(console, Decl(lib.dom.d.ts, --, --))
+>log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>v : Symbol(v, Decl(switchFallthrough.syn, 17, 17))
+    }
+}
+

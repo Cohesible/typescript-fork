@@ -1,0 +1,62 @@
+{
+    type MyPromise = Promise<number>
+    function aliased(): MyPromise {
+        return Promise.resolve(1)
+    }
+
+    async function f1() {
+        const n = aliased() // number
+    }
+
+    const m1 = new Map<number, MyPromise>()
+    const m2 = new Map<number, Promise<number>>()
+    async function f2() {
+        const n1 = m1.get(0) // Promise<number> | undefined
+        const n2 = m2.get(0) // Promise<number> | undefined
+    }
+
+    function f3(): Promise<number> | undefined {
+        return m1.get(0)
+    }
+
+    async function f4() {
+        const n = f3() // Promise<number> | undefined
+    }
+
+    class Box<T> {
+        get(): T {
+            throw ""
+        }
+    }
+
+    const b: Box<Promise<number>> = new Box()
+    async function f5() {
+        const n = b.get() // Promise<number>
+        const n2 = b.get().then(x => x + 1) // number
+    }
+
+    // special case: promise chains
+    // the end result is auto-awaited, not the initial call
+    async function foo() { return 2 }
+    async function f6() {
+        // number | void
+        const n = foo().then(x => x + 1).catch(e => {})
+        // Promise<number | void>
+        const n2 = foo().then(x => x + 1).catch(e => {}) as async
+        const n3 = foo().then(x => x + 1).toFixed(1) // string
+    }
+
+    class Catchable {
+        catch() { return 0 }
+        finally() { return 0 }
+    }
+
+    async function f7() {
+        const f = async () => new Catchable()
+        f().catch() // number
+        f().finally() // number
+
+        // error, emits as `(await f().catch()).then()` because we must materialize after `.catch`
+        f().catch().then()
+    }
+}

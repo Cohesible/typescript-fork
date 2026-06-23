@@ -1,0 +1,298 @@
+//// [tests/cases/syn/typedDomSelectors.syn] ////
+
+=== Performance Stats ===
+Subtype cache: 1,000
+Assignability cache: 1,000
+
+=== typedDomSelectors.syn ===
+type X = SelectedDOMTag<'input[type=text]'>
+>X : SelectedDOMTag<"input[type=text]">
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+type Y = SelectedDOMElement<'input[type=text]'>
+>Y : SelectedDOMElement<"input[type=text]">
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+const r1 = document.querySelector('input[type=text]')
+>r1 : Element | null
+>   : ^^^^^^^^^^^^^^
+>document.querySelector('input[type=text]') : Element | null
+>                                           : ^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>'input[type=text]' : "input[type=text]"
+>                   : ^^^^^^^^^^^^^^^^^^
+
+const r2 = document.querySelector<HTMLInputElement>('.aa')
+>r2 : HTMLInputElement | null
+>   : ^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector<HTMLInputElement>('.aa') : HTMLInputElement | null
+>                                                : ^^^^^^^^^^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>'.aa' : ".aa"
+>      : ^^^^^
+
+const r3 = document.querySelector('div' as string)
+>r3 : Element | null
+>   : ^^^^^^^^^^^^^^
+>document.querySelector('div' as string) : Element | null
+>                                        : ^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>'div' as string : string
+>                : ^^^^^^
+>'div' : "div"
+>      : ^^^^^
+
+const r4 = document.querySelectorAll('button, [role="button"]')
+>r4 : NodeListOf<Element>
+>   : ^^^^^^^^^^^^^^^^^^^
+>document.querySelectorAll('button, [role="button"]') : NodeListOf<Element>
+>                                                     : ^^^^^^^^^^^^^^^^^^^
+>document.querySelectorAll : { <K extends keyof HTMLElementTagNameMap>(selectors: K): NodeListOf<HTMLElementTagNameMap[K]>; <K extends keyof SVGElementTagNameMap>(selectors: K): NodeListOf<SVGElementTagNameMap[K]>; <K extends keyof MathMLElementTagNameMap>(selectors: K): NodeListOf<MathMLElementTagNameMap[K]>; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): NodeListOf<HTMLElementDeprecatedTagNameMap[K]>; <E extends Element = Element>(selectors: string): NodeListOf<E>; }
+>                          : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                                    ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                                   ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                      ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                              ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^             ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelectorAll : { <K extends keyof HTMLElementTagNameMap>(selectors: K): NodeListOf<HTMLElementTagNameMap[K]>; <K extends keyof SVGElementTagNameMap>(selectors: K): NodeListOf<SVGElementTagNameMap[K]>; <K extends keyof MathMLElementTagNameMap>(selectors: K): NodeListOf<MathMLElementTagNameMap[K]>; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): NodeListOf<HTMLElementDeprecatedTagNameMap[K]>; <E extends Element = Element>(selectors: string): NodeListOf<E>; }
+>                 : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                                    ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                                   ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                      ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                              ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^             ^^^
+>'button, [role="button"]' : "button, [role=\"button\"]"
+>                          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+const r5 = document.querySelectorAll('button, div[role=button]')
+>r5 : NodeListOf<Element>
+>   : ^^^^^^^^^^^^^^^^^^^
+>document.querySelectorAll('button, div[role=button]') : NodeListOf<Element>
+>                                                      : ^^^^^^^^^^^^^^^^^^^
+>document.querySelectorAll : { <K extends keyof HTMLElementTagNameMap>(selectors: K): NodeListOf<HTMLElementTagNameMap[K]>; <K extends keyof SVGElementTagNameMap>(selectors: K): NodeListOf<SVGElementTagNameMap[K]>; <K extends keyof MathMLElementTagNameMap>(selectors: K): NodeListOf<MathMLElementTagNameMap[K]>; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): NodeListOf<HTMLElementDeprecatedTagNameMap[K]>; <E extends Element = Element>(selectors: string): NodeListOf<E>; }
+>                          : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                                    ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                                   ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                      ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                              ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^             ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelectorAll : { <K extends keyof HTMLElementTagNameMap>(selectors: K): NodeListOf<HTMLElementTagNameMap[K]>; <K extends keyof SVGElementTagNameMap>(selectors: K): NodeListOf<SVGElementTagNameMap[K]>; <K extends keyof MathMLElementTagNameMap>(selectors: K): NodeListOf<MathMLElementTagNameMap[K]>; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): NodeListOf<HTMLElementDeprecatedTagNameMap[K]>; <E extends Element = Element>(selectors: string): NodeListOf<E>; }
+>                 : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                                    ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                                   ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                      ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                              ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^             ^^^
+>'button, div[role=button]' : "button, div[role=button]"
+>                           : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+const r6 = document.querySelector('' as `my-ns-${string}`)
+>r6 : Element | null
+>   : ^^^^^^^^^^^^^^
+>document.querySelector('' as `my-ns-${string}`) : Element | null
+>                                                : ^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>'' as `my-ns-${string}` : `my-ns-${string}`
+>                        : ^^^^^^^^^^^^^^^^^
+>'' : ""
+>   : ^^
+
+const r7 = document.querySelector('' as `input.${string}`)
+>r7 : Element | null
+>   : ^^^^^^^^^^^^^^
+>document.querySelector('' as `input.${string}`) : Element | null
+>                                                : ^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>'' as `input.${string}` : `input.${string}`
+>                        : ^^^^^^^^^^^^^^^^^
+>'' : ""
+>   : ^^
+
+const r8 = document.querySelector('' as `input ${string}`)
+>r8 : Element | null
+>   : ^^^^^^^^^^^^^^
+>document.querySelector('' as `input ${string}`) : Element | null
+>                                                : ^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>'' as `input ${string}` : `input ${string}`
+>                        : ^^^^^^^^^^^^^^^^^
+>'' : ""
+>   : ^^
+
+const r9 = document.querySelector('' as `input > ${string}`)
+>r9 : Element | null
+>   : ^^^^^^^^^^^^^^
+>document.querySelector('' as `input > ${string}`) : Element | null
+>                                                  : ^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>'' as `input > ${string}` : `input > ${string}`
+>                          : ^^^^^^^^^^^^^^^^^^^
+>'' : ""
+>   : ^^
+
+const r10 = document.querySelector('' as `input:has(${string})`)
+>r10 : Element | null
+>    : ^^^^^^^^^^^^^^
+>document.querySelector('' as `input:has(${string})`) : Element | null
+>                                                     : ^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>'' as `input:has(${string})` : `input:has(${string})`
+>                             : ^^^^^^^^^^^^^^^^^^^^^^
+>'' : ""
+>   : ^^
+
+const r11 = document.querySelector('' as `input[data-x=${string}]`)
+>r11 : Element | null
+>    : ^^^^^^^^^^^^^^
+>document.querySelector('' as `input[data-x=${string}]`) : Element | null
+>                                                        : ^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>'' as `input[data-x=${string}]` : `input[data-x=${string}]`
+>                                : ^^^^^^^^^^^^^^^^^^^^^^^^^
+>'' : ""
+>   : ^^
+
+const r12 = document.querySelector('a#link')
+>r12 : Element | null
+>    : ^^^^^^^^^^^^^^
+>document.querySelector('a#link') : Element | null
+>                                 : ^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>'a#link' : "a#link"
+>         : ^^^^^^^^
+
+const r13 = document.querySelector(`
+>r13 : Element | null
+>    : ^^^^^^^^^^^^^^
+>document.querySelector(`:is(a, div):is(button, input)    `) : Element | null
+>                                                            : ^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>`:is(a, div):is(button, input)    ` : "\n:is(a, div)\n:is(button, input)    \n"
+>                                    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:is(a, div)
+:is(button, input)    
+`)
+const r14 = document.querySelector('table:not(:has(> caption))')
+>r14 : Element | null
+>    : ^^^^^^^^^^^^^^
+>document.querySelector('table:not(:has(> caption))') : Element | null
+>                                                     : ^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>'table:not(:has(> caption))' : "table:not(:has(> caption))"
+>                             : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+const r15 = document.querySelector('a.status-actions:is(a[href^="/"])')
+>r15 : Element | null
+>    : ^^^^^^^^^^^^^^
+>document.querySelector('a.status-actions:is(a[href^="/"])') : Element | null
+>                                                            : ^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>'a.status-actions:is(a[href^="/"])' : "a.status-actions:is(a[href^=\"/\"])"
+>                                    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+const r16 = document.querySelector(':is(a, button).c')
+>r16 : Element | null
+>    : ^^^^^^^^^^^^^^
+>document.querySelector(':is(a, button).c') : Element | null
+>                                           : ^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>':is(a, button).c' : ":is(a, button).c"
+>                   : ^^^^^^^^^^^^^^^^^^
+
+const r17 = document.querySelector(':is(h1, h2, h3, h4):where(.foo)')
+>r17 : Element | null
+>    : ^^^^^^^^^^^^^^
+>document.querySelector(':is(h1, h2, h3, h4):where(.foo)') : Element | null
+>                                                          : ^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>':is(h1, h2, h3, h4):where(.foo)' : ":is(h1, h2, h3, h4):where(.foo)"
+>                                  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+const r18 = document.querySelector('div:first-child')
+>r18 : Element | null
+>    : ^^^^^^^^^^^^^^
+>document.querySelector('div:first-child') : Element | null
+>                                          : ^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>'div:first-child' : "div:first-child"
+>                  : ^^^^^^^^^^^^^^^^^
+
+const m1 = document.querySelector('a[foo')
+>m1 : Element | null
+>   : ^^^^^^^^^^^^^^
+>document.querySelector('a[foo') : Element | null
+>                                : ^^^^^^^^^^^^^^
+>document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>                       : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>document : Document
+>         : ^^^^^^^^
+>querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; }
+>              : ^^^ ^^^^^^^^^                           ^^         ^^ ^^^                               ^^^ ^^^^^^^^^                          ^^         ^^ ^^^                              ^^^ ^^^^^^^^^                             ^^         ^^ ^^^                                 ^^^ ^^^^^^^^^                                     ^^         ^^ ^^^                                         ^^^ ^^^^^^^^^       ^^^^^^^^^^^^         ^^      ^^^        ^^^
+>'a[foo' : "a[foo"
+>        : ^^^^^^^
+

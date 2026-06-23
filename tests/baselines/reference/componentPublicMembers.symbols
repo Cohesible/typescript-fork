@@ -1,0 +1,210 @@
+//// [tests/cases/syn/componentPublicMembers.syn] ////
+
+=== componentPublicMembers.syn ===
+{
+    // public functions
+    <#component Foo() {
+        const val = 1
+>val : Symbol(val, Decl(componentPublicMembers.syn, 3, 13))
+
+        public function bar() { return val }
+>bar : Symbol(bar, Decl(componentPublicMembers.syn, 3, 21))
+>val : Symbol(val, Decl(componentPublicMembers.syn, 3, 13))
+        {
+            // public functions must be top-level
+            public function bar2() { return val }
+>bar2 : Symbol(bar2, Decl(componentPublicMembers.syn, 5, 9))
+>val : Symbol(val, Decl(componentPublicMembers.syn, 3, 13))
+        }
+    }>
+        <#run>
+            // public functions cannot be inside the component template
+            public function bar2() { return val }
+>bar2 : Symbol(bar2, Decl(componentPublicMembers.syn, 10, 14))
+>val : Symbol(val, Decl(componentPublicMembers.syn, 3, 13))
+
+        </>
+        <div/>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+
+    const inst = <Foo />
+>inst : Symbol(inst, Decl(componentPublicMembers.syn, 17, 9))
+>Foo : Symbol(Foo, Decl(componentPublicMembers.syn, 0, 1))
+
+    const v = inst.bar()
+>v : Symbol(v, Decl(componentPublicMembers.syn, 18, 9))
+>inst.bar : Symbol(bar, Decl(componentPublicMembers.syn, 3, 21))
+>inst : Symbol(inst, Decl(componentPublicMembers.syn, 17, 9))
+>bar : Symbol(bar, Decl(componentPublicMembers.syn, 3, 21))
+
+    <#component Foo2<const T>(attr: T) {
+>T : Symbol(T, Decl(componentPublicMembers.syn, 20, 21))
+>attr : Symbol(attr, Decl(componentPublicMembers.syn, 20, 30))
+>T : Symbol(T, Decl(componentPublicMembers.syn, 20, 21))
+
+        public function bar() { return attr }
+>bar : Symbol(bar, Decl(componentPublicMembers.syn, 20, 40))
+>attr : Symbol(attr, Decl(componentPublicMembers.syn, 20, 30))
+
+    }>
+        <div/>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+
+    const inst2 = <Foo2 attr="test" />
+>inst2 : Symbol(inst2, Decl(componentPublicMembers.syn, 26, 9))
+>Foo2 : Symbol(Foo2, Decl(componentPublicMembers.syn, 18, 24))
+>attr : Symbol(attr, Decl(componentPublicMembers.syn, 26, 23))
+
+    const v2 = inst2.bar()
+>v2 : Symbol(v2, Decl(componentPublicMembers.syn, 27, 9))
+>inst2.bar : Symbol(bar, Decl(componentPublicMembers.syn, 20, 40))
+>inst2 : Symbol(inst2, Decl(componentPublicMembers.syn, 26, 9))
+>bar : Symbol(bar, Decl(componentPublicMembers.syn, 20, 40))
+
+
+    function createCompDecl<T>(v: T) {
+>createCompDecl : Symbol(createCompDecl, Decl(componentPublicMembers.syn, 27, 26))
+>T : Symbol(T, Decl(componentPublicMembers.syn, 30, 28))
+>v : Symbol(v, Decl(componentPublicMembers.syn, 30, 31))
+>T : Symbol(T, Decl(componentPublicMembers.syn, 30, 28))
+
+        <#component Foo3<U>(a: U, b = v) {
+>U : Symbol(U, Decl(componentPublicMembers.syn, 31, 25))
+>a : Symbol(a, Decl(componentPublicMembers.syn, 31, 28))
+>U : Symbol(U, Decl(componentPublicMembers.syn, 31, 25))
+>b : Symbol(b, Decl(componentPublicMembers.syn, 31, 33))
+>v : Symbol(v, Decl(componentPublicMembers.syn, 30, 31))
+
+            public function baz() { return { a, b } }
+>baz : Symbol(baz, Decl(componentPublicMembers.syn, 31, 42))
+>a : Symbol(a, Decl(componentPublicMembers.syn, 32, 44))
+>b : Symbol(b, Decl(componentPublicMembers.syn, 32, 47))
+
+        }>
+            <div/>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        </>
+        return Foo3
+>Foo3 : Symbol(Foo3, Decl(componentPublicMembers.syn, 30, 38))
+    }
+
+    const FooWithDefault = createCompDecl(1)
+>FooWithDefault : Symbol(FooWithDefault, Decl(componentPublicMembers.syn, 39, 9))
+>createCompDecl : Symbol(createCompDecl, Decl(componentPublicMembers.syn, 27, 26))
+
+    const inst3 = <FooWithDefault a="test" />
+>inst3 : Symbol(inst3, Decl(componentPublicMembers.syn, 40, 9))
+>FooWithDefault : Symbol(FooWithDefault, Decl(componentPublicMembers.syn, 39, 9))
+>a : Symbol(a, Decl(componentPublicMembers.syn, 40, 33))
+
+    const v3 = inst3.baz()
+>v3 : Symbol(v3, Decl(componentPublicMembers.syn, 41, 9))
+>inst3.baz : Symbol(baz, Decl(componentPublicMembers.syn, 31, 42))
+>inst3 : Symbol(inst3, Decl(componentPublicMembers.syn, 40, 9))
+>baz : Symbol(baz, Decl(componentPublicMembers.syn, 31, 42))
+
+    const inst4 = <FooWithDefault a="test" b=2 />
+>inst4 : Symbol(inst4, Decl(componentPublicMembers.syn, 42, 9))
+>FooWithDefault : Symbol(FooWithDefault, Decl(componentPublicMembers.syn, 39, 9))
+>a : Symbol(a, Decl(componentPublicMembers.syn, 42, 33))
+>b : Symbol(b, Decl(componentPublicMembers.syn, 42, 42))
+
+    const v4 = inst4.baz()
+>v4 : Symbol(v4, Decl(componentPublicMembers.syn, 43, 9))
+>inst4.baz : Symbol(baz, Decl(componentPublicMembers.syn, 31, 42))
+>inst4 : Symbol(inst4, Decl(componentPublicMembers.syn, 42, 9))
+>baz : Symbol(baz, Decl(componentPublicMembers.syn, 31, 42))
+
+    const d = <div>
+>d : Symbol(d, Decl(componentPublicMembers.syn, 45, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <FooWithDefault @ f a="test" />
+>FooWithDefault : Symbol(FooWithDefault, Decl(componentPublicMembers.syn, 39, 9))
+>f : Symbol(f, Decl(componentPublicMembers.syn, 46, 8))
+>a : Symbol(a, Decl(componentPublicMembers.syn, 46, 27))
+
+        <#run>
+          const v = f.baz()
+>v : Symbol(v, Decl(componentPublicMembers.syn, 48, 15))
+>f.baz : Symbol(baz, Decl(componentPublicMembers.syn, 31, 42))
+>f : Symbol(f, Decl(componentPublicMembers.syn, 46, 8))
+>baz : Symbol(baz, Decl(componentPublicMembers.syn, 31, 42))
+
+        </>
+        {v.a}
+>v.a : Symbol(a, Decl(componentPublicMembers.syn, 32, 44))
+>v : Symbol(v, Decl(componentPublicMembers.syn, 48, 15))
+>a : Symbol(a, Decl(componentPublicMembers.syn, 32, 44))
+
+    </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+}
+
+{
+    <#component Foo() {
+        const x = 1
+>x : Symbol(x, Decl(componentPublicMembers.syn, 56, 13))
+
+        public { x as y }
+>x : Symbol(x, Decl(componentPublicMembers.syn, 56, 13))
+>y : Symbol(y, Decl(componentPublicMembers.syn, 57, 16))
+
+    }>
+      <div>{x}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>x : Symbol(x, Decl(componentPublicMembers.syn, 56, 13))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+    const f = <Foo />
+>f : Symbol(f, Decl(componentPublicMembers.syn, 61, 9))
+>Foo : Symbol(Foo, Decl(componentPublicMembers.syn, 54, 1))
+
+    f.y // number
+>f.y : Symbol(y)
+>f : Symbol(f, Decl(componentPublicMembers.syn, 61, 9))
+>y : Symbol(y)
+
+    <#component Bar()>
+      <Foo />
+>Foo : Symbol(Foo, Decl(componentPublicMembers.syn, 54, 1))
+
+    </>
+
+    const b = <Bar />
+>b : Symbol(b, Decl(componentPublicMembers.syn, 68, 9))
+>Bar : Symbol(Bar, Decl(componentPublicMembers.syn, 62, 7))
+}
+
+{
+    <#component Foo() {
+        // FIXME: emit diag, public block decl must appear last
+        public { x as y }
+>x : Symbol(x, Decl(componentPublicMembers.syn, 75, 13))
+>y : Symbol(y, Decl(componentPublicMembers.syn, 74, 16))
+
+        const x = 1
+>x : Symbol(x, Decl(componentPublicMembers.syn, 75, 13))
+
+    }>
+      <div>{x}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>x : Symbol(x, Decl(componentPublicMembers.syn, 75, 13))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+}
+
+// FIXME: exported should not report unused
+export <#component ExportedComp()>
+    <div/>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+</>
+

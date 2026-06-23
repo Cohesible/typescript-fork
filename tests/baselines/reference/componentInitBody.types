@@ -1,0 +1,67 @@
+//// [tests/cases/syn/componentInitBody.syn] ////
+
+=== componentInitBody.syn ===
+{
+    // component with init body
+    <#component WithBody(x: string) {
+>WithBody : any
+>         : ^^^
+>x : string
+>  : ^^^^^^
+
+        const y = `hello: ${x}`
+>y : string
+>  : ^^^^^^
+>`hello: ${x}` : string
+>              : ^^^^^^
+>x : string
+>  : ^^^^^^
+
+    }>
+        <div>{y}</div>
+><div>{y}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>y : string
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+    const r6 = <WithBody x="world" />
+>r6 : WithBody
+>   : ^^^^^^^^
+><WithBody x="world" /> : WithBody
+>                       : ^^^^^^^^
+>WithBody : (attributes: { x: string; }) => WithBody
+>         : ^^^^^^^^^^^^^^^^^^      ^^^^^^^^^^^^^^^^
+>x : string
+>  : ^^^^^^
+}
+
+{
+    <#component BadReturn(x: string) {
+>BadReturn : any
+>          : ^^^
+>x : string
+>  : ^^^^^^
+
+        return x
+>x : string
+>  : ^^^^^^
+
+    }>
+        <div>{x}</div>
+><div>{x}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>x : string
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+    </>
+}
+

@@ -1,0 +1,60 @@
+jsxIf.syn(45,22): error TS2678: Type '"completed"' is not comparable to type '"all"'.
+jsxIf.syn(46,22): error TS2678: Type '"active"' is not comparable to type '"all"'.
+
+
+==== jsxIf.syn (2 errors) ====
+    {
+        const d3 = <div>
+            <#if (true)>
+                <div></div>
+            </>
+        </div>
+    
+        const cond = true
+        const d4 = <div><#if (cond)></></div>
+    }
+    
+    {
+        // cfa should work inside <#if>
+        let v = undefined as { x: () => number } | undefined
+        const d = <div>
+            <#if (v)>
+              <div>{v.x()}</div>
+            </>
+        </div>
+    }
+    
+    {
+        const cond = true as boolean
+        // [] | [HtmlDivElement]
+        const if1 = <#if (cond)>
+          <div></div>
+        </>
+        // [HtmlDivElement]
+        const if2 = <#if (true)>
+          <div></div>
+        </>
+        // []
+        const if3 = <#if (false)>
+          <div></div>
+        </>
+    }
+    
+    {
+        let filterState: 'all' | 'completed' | 'active' = 'all';
+        <div>
+            <#run>
+                let c
+                switch (filterState) {
+                    case 'all': c = 1;
+                    case 'completed': c = 2;
+                         ~~~~~~~~~~~
+!!! error TS2678: Type '"completed"' is not comparable to type '"all"'.
+                    case 'active': c = 3;
+                         ~~~~~~~~
+!!! error TS2678: Type '"active"' is not comparable to type '"all"'.
+                }
+            </>
+        </div>
+    }
+    

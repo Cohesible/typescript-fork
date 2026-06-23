@@ -1,0 +1,5 @@
+{
+    try {} catch (e) {}
+    try {} catch (e: Error) { e }
+    try {} catch (e: string) { e }
+}

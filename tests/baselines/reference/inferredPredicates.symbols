@@ -1,0 +1,88 @@
+//// [tests/cases/syn/inferredPredicates.syn] ////
+
+=== inferredPredicates.syn ===
+{
+    // Explicit annotation
+    function isString(val: any): asserts val is string {
+>isString : Symbol(isString, Decl(inferredPredicates.syn, 0, 1))
+>val : Symbol(val, Decl(inferredPredicates.syn, 2, 22))
+>val : Symbol(val, Decl(inferredPredicates.syn, 2, 22))
+
+        if (typeof val !== "string") throw "Nope"
+>val : Symbol(val, Decl(inferredPredicates.syn, 2, 22))
+    }
+
+    // Inferred assertion signature
+    function isString2(val: any) {
+>isString2 : Symbol(isString2, Decl(inferredPredicates.syn, 4, 5))
+>val : Symbol(val, Decl(inferredPredicates.syn, 7, 23))
+
+        if (typeof val !== "string") throw "Nope"
+>val : Symbol(val, Decl(inferredPredicates.syn, 7, 23))
+    }
+
+    const x: string | number = "3";
+>x : Symbol(x, Decl(inferredPredicates.syn, 11, 9))
+
+    isString(x);
+>isString : Symbol(isString, Decl(inferredPredicates.syn, 0, 1))
+>x : Symbol(x, Decl(inferredPredicates.syn, 11, 9))
+
+    x.toLowerCase() // should work, x is now string
+>x.toLowerCase : Symbol(String.toLowerCase, Decl(lib.es5.d.ts, --, --))
+>x : Symbol(x, Decl(inferredPredicates.syn, 11, 9))
+>toLowerCase : Symbol(String.toLowerCase, Decl(lib.es5.d.ts, --, --))
+
+    const y: string | number = "test";
+>y : Symbol(y, Decl(inferredPredicates.syn, 15, 9))
+
+    isString2(y);
+>isString2 : Symbol(isString2, Decl(inferredPredicates.syn, 4, 5))
+>y : Symbol(y, Decl(inferredPredicates.syn, 15, 9))
+
+    y.toLowerCase() // should also work, inferred asserts
+>y.toLowerCase : Symbol(String.toLowerCase, Decl(lib.es5.d.ts, --, --))
+>y : Symbol(y, Decl(inferredPredicates.syn, 15, 9))
+>toLowerCase : Symbol(String.toLowerCase, Decl(lib.es5.d.ts, --, --))
+
+    // Using 'is' expression instead of typeof
+    const isString3 = (val: any) => {
+>isString3 : Symbol(isString3, Decl(inferredPredicates.syn, 20, 9))
+>val : Symbol(val, Decl(inferredPredicates.syn, 20, 23))
+
+        if (!(val is string)) throw "Nope"
+>val : Symbol(val, Decl(inferredPredicates.syn, 20, 23))
+    }
+
+    const z: string | number = "hello";
+>z : Symbol(z, Decl(inferredPredicates.syn, 24, 9))
+
+    isString3(z);
+>isString3 : Symbol(isString3, Decl(inferredPredicates.syn, 20, 9))
+>z : Symbol(z, Decl(inferredPredicates.syn, 24, 9))
+
+    z.toLowerCase() // should also work with 'is' expression
+>z.toLowerCase : Symbol(String.toLowerCase, Decl(lib.es5.d.ts, --, --))
+>z : Symbol(z, Decl(inferredPredicates.syn, 24, 9))
+>toLowerCase : Symbol(String.toLowerCase, Decl(lib.es5.d.ts, --, --))
+}
+
+{
+    // `is` expressions should produce an `is` type directly
+    const isString = (val: any) => {
+>isString : Symbol(isString, Decl(inferredPredicates.syn, 31, 9))
+>val : Symbol(val, Decl(inferredPredicates.syn, 31, 22))
+
+        return val is string
+>val : Symbol(val, Decl(inferredPredicates.syn, 31, 22))
+    }
+    const x: string | number = "3";
+>x : Symbol(x, Decl(inferredPredicates.syn, 34, 9))
+
+    if (isString(x)) x.toLowerCase()
+>isString : Symbol(isString, Decl(inferredPredicates.syn, 31, 9))
+>x : Symbol(x, Decl(inferredPredicates.syn, 34, 9))
+>x.toLowerCase : Symbol(String.toLowerCase, Decl(lib.es5.d.ts, --, --))
+>x : Symbol(x, Decl(inferredPredicates.syn, 34, 9))
+>toLowerCase : Symbol(String.toLowerCase, Decl(lib.es5.d.ts, --, --))
+}

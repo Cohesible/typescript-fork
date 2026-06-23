@@ -1,0 +1,85 @@
+{
+    // public functions
+    <#component Foo() {
+        const val = 1
+        public function bar() { return val }
+        {
+            // public functions must be top-level
+            public function bar2() { return val }
+        }
+    }>
+        <#run>
+            // public functions cannot be inside the component template
+            public function bar2() { return val }
+        </>
+        <div/>
+    </>
+
+    const inst = <Foo />
+    const v = inst.bar()
+
+    <#component Foo2<const T>(attr: T) {
+        public function bar() { return attr }
+    }>
+        <div/>
+    </>
+
+    const inst2 = <Foo2 attr="test" />
+    const v2 = inst2.bar()
+
+
+    function createCompDecl<T>(v: T) {
+        <#component Foo3<U>(a: U, b = v) {
+            public function baz() { return { a, b } }
+        }>
+            <div/>
+        </>
+        return Foo3
+    }
+
+    const FooWithDefault = createCompDecl(1)
+    const inst3 = <FooWithDefault a="test" />
+    const v3 = inst3.baz()
+    const inst4 = <FooWithDefault a="test" b=2 />
+    const v4 = inst4.baz()
+
+    const d = <div>
+        <FooWithDefault @ f a="test" />
+        <#run>
+          const v = f.baz()
+        </>
+        {v.a}
+    </div>
+}
+
+{
+    <#component Foo() {
+        const x = 1
+        public { x as y }
+    }>
+      <div>{x}</div>
+    </>
+    const f = <Foo />
+    f.y // number
+
+    <#component Bar()>
+      <Foo />
+    </>
+
+    const b = <Bar />
+}
+
+{
+    <#component Foo() {
+        // FIXME: emit diag, public block decl must appear last
+        public { x as y }
+        const x = 1
+    }>
+      <div>{x}</div>
+    </>
+}
+
+// FIXME: exported should not report unused
+export <#component ExportedComp()>
+    <div/>
+</>

@@ -1,0 +1,64 @@
+//// [tests/cases/syn/isExpression.syn] ////
+
+=== isExpression.syn ===
+let arr!: number[] | number
+>arr : Symbol(arr, Decl(isExpression.syn, 0, 3))
+
+if (arr is number[]) {
+>arr : Symbol(arr, Decl(isExpression.syn, 0, 3))
+
+    const x = arr[0]
+>x : Symbol(x, Decl(isExpression.syn, 2, 9))
+>arr : Symbol(arr, Decl(isExpression.syn, 0, 3))
+}
+
+{
+    type F = { x: number } | { y: string }
+>F : Symbol(F, Decl(isExpression.syn, 5, 1))
+>x : Symbol(x, Decl(isExpression.syn, 6, 14))
+>y : Symbol(y, Decl(isExpression.syn, 6, 30))
+
+    function x(f: F) {
+>x : Symbol(x, Decl(isExpression.syn, 6, 42))
+>f : Symbol(f, Decl(isExpression.syn, 7, 15))
+>F : Symbol(F, Decl(isExpression.syn, 5, 1))
+
+        if (f is { x: number }) {
+>f : Symbol(f, Decl(isExpression.syn, 7, 15))
+>x : Symbol(x, Decl(isExpression.syn, 8, 18))
+
+            return f.x
+>f.x : Symbol(x, Decl(isExpression.syn, 6, 14))
+>f : Symbol(f, Decl(isExpression.syn, 7, 15))
+>x : Symbol(x, Decl(isExpression.syn, 6, 14))
+        }
+        return f.y
+>f.y : Symbol(y, Decl(isExpression.syn, 6, 30))
+>f : Symbol(f, Decl(isExpression.syn, 7, 15))
+>y : Symbol(y, Decl(isExpression.syn, 6, 30))
+    }
+}
+
+{
+    // Using 'is' expression instead of typeof
+    const isString3 = (val: any) => {
+>isString3 : Symbol(isString3, Decl(isExpression.syn, 17, 9))
+>val : Symbol(val, Decl(isExpression.syn, 17, 23))
+
+        if (!(val is string)) throw "Nope"
+>val : Symbol(val, Decl(isExpression.syn, 17, 23))
+    }
+
+    const z: string | number = "hello";
+>z : Symbol(z, Decl(isExpression.syn, 21, 9))
+
+    isString3(z);
+>isString3 : Symbol(isString3, Decl(isExpression.syn, 17, 9))
+>z : Symbol(z, Decl(isExpression.syn, 21, 9))
+
+    z.toLowerCase() // should also work with 'is' expression!
+>z.toLowerCase : Symbol(String.toLowerCase, Decl(lib.es5.d.ts, --, --))
+>z : Symbol(z, Decl(isExpression.syn, 21, 9))
+>toLowerCase : Symbol(String.toLowerCase, Decl(lib.es5.d.ts, --, --))
+}
+

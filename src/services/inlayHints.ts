@@ -333,6 +333,7 @@ export function provideInlayHints(context: InlayHintsContext): InlayHint[] {
             }
             if (decl.parent.parent.kind !== SyntaxKind.VariableStatement) return;
             if (decl.initializer && !(isArrayLiteralExpression(decl.initializer) && decl.initializer.elements.length === 0)) return;
+            if (!decl.initializer && (decl.parent.flags & NodeFlags.Const)) return;
             const inferred = checker.getInferredTypeForAutoVariable(decl);
             if (inferred) {
                 const hintParts = typeToInlayHintParts(inferred);

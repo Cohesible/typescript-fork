@@ -369,12 +369,12 @@
 >     : ^^^^^^^^^^^
 >append : (...nodes: (Node | string)[]) => void
 >       : ^^^^     ^^                 ^^^^^    
-><div @ d>        <#run>            static let cond = false            static let count = 0        </>        <Foo>            <#if (cond)>                test            </>        </Foo>        <button on:click() {            update d {                cond = !cond            }        }>click</button>    </div> : HTMLDivElement
->                                                                                                                                                                                                                                                                                                                         : ^^^^^^^^^^^^^^
+><div @ d>        <#run>            static let cond = false            static let count = 0        </>        <Foo>            <#if (cond)>                test            </>        </Foo>        <button on:click() {            update d {                cond = !cond            }        }>click</button>    </div> : HTMLDivElement & Updatable
+>                                                                                                                                                                                                                                                                                                                         : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->d : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+>d : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
         <#run>
             static let cond = false
@@ -419,8 +419,8 @@
 >      : ^^^
 
             update d {
->d : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+>d : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
                 cond = !cond
 >cond = !cond : boolean
@@ -439,88 +439,6 @@
     </div>)
 >div : any
 >    : ^^^
-}
-
-// unwind
-{
-    <#component EventComp(w: HTMLElement) {
->EventComp : any
->          : ^^^
->w : HTMLElement
->  : ^^^^^^^^^^^
-
-        function onKeyPress(ev: KeyboardEvent) {}
->onKeyPress : (ev: KeyboardEvent) => void
->           : ^  ^^             ^^^^^^^^^
->ev : KeyboardEvent
->   : ^^^^^^^^^^^^^
-
-        w.addEventListener('keypress', onKeyPress)
->w.addEventListener('keypress', onKeyPress) : void
->                                           : ^^^^
->w.addEventListener : { <K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void; (type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void; }
->                   : ^^^ ^^^^^^^^^                         ^^    ^^ ^^        ^^                                                      ^^       ^^^                                 ^^^    ^^^    ^^      ^^        ^^                                  ^^       ^^^                                 ^^^    ^^^
->w : HTMLElement
->  : ^^^^^^^^^^^
->addEventListener : { <K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void; (type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void; }
->                 : ^^^ ^^^^^^^^^                         ^^    ^^ ^^        ^^                                                      ^^       ^^^                                 ^^^    ^^^    ^^      ^^        ^^                                  ^^       ^^^                                 ^^^    ^^^
->'keypress' : "keypress"
->           : ^^^^^^^^^^
->onKeyPress : (ev: KeyboardEvent) => void
->           : ^  ^^             ^^^^^^^^^
-
-        unwind {
-            w.removeEventListener('keypress', onKeyPress)
->w.removeEventListener('keypress', onKeyPress) : void
->                                              : ^^^^
->w.removeEventListener : { <K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void; (type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void; }
->                      : ^^^ ^^^^^^^^^                         ^^    ^^ ^^        ^^                                                      ^^       ^^^                              ^^^    ^^^    ^^      ^^        ^^                                  ^^       ^^^                              ^^^    ^^^
->w : HTMLElement
->  : ^^^^^^^^^^^
->removeEventListener : { <K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void; (type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void; }
->                    : ^^^ ^^^^^^^^^                         ^^    ^^ ^^        ^^                                                      ^^       ^^^                              ^^^    ^^^    ^^      ^^        ^^                                  ^^       ^^^                              ^^^    ^^^
->'keypress' : "keypress"
->           : ^^^^^^^^^^
->onKeyPress : (ev: KeyboardEvent) => void
->           : ^  ^^             ^^^^^^^^^
-        }
-    }>
-        <div></div>
-><div></div> : HTMLDivElement
->            : ^^^^^^^^^^^^^^
->div : any
->    : ^^^
->div : any
->    : ^^^
-
-        <#run>
-            const el = document.createElement('div')
->el : HTMLDivElement
->   : ^^^^^^^^^^^^^^
->document.createElement('div') : HTMLDivElement
->                              : ^^^^^^^^^^^^^^
->document.createElement : { <K extends keyof HTMLElementTagNameMap>(tagName: K, options?: ElementCreationOptions): HTMLElementTagNameMap[K]; <K extends keyof HTMLElementDeprecatedTagNameMap>(tagName: K, options?: ElementCreationOptions): HTMLElementDeprecatedTagNameMap[K]; (tagName: string, options?: ElementCreationOptions): HTMLElement; }
->                       : ^^^ ^^^^^^^^^                           ^^       ^^ ^^       ^^^                      ^^^                        ^^^ ^^^^^^^^^                                     ^^       ^^ ^^       ^^^                      ^^^                                  ^^^       ^^      ^^       ^^^                      ^^^           ^^^
->document : Document
->         : ^^^^^^^^
->createElement : { <K extends keyof HTMLElementTagNameMap>(tagName: K, options?: ElementCreationOptions): HTMLElementTagNameMap[K]; <K extends keyof HTMLElementDeprecatedTagNameMap>(tagName: K, options?: ElementCreationOptions): HTMLElementDeprecatedTagNameMap[K]; (tagName: string, options?: ElementCreationOptions): HTMLElement; }
->              : ^^^ ^^^^^^^^^                           ^^       ^^ ^^       ^^^                      ^^^                        ^^^ ^^^^^^^^^                                     ^^       ^^ ^^       ^^^                      ^^^                                  ^^^       ^^      ^^       ^^^                      ^^^           ^^^
->'div' : "div"
->      : ^^^^^
-
-            unwind {
-                el.remove()
->el.remove() : void
->            : ^^^^
->el.remove : () => void
->          : ^^^^^^    
->el : HTMLDivElement
->   : ^^^^^^^^^^^^^^
->remove : () => void
->       : ^^^^^^    
-            }
-        </>
-    </>
 }
 
 {
@@ -548,35 +466,23 @@
 >0 : 0
 >  : ^
 
-        const d = <div>{c}</div>
->d : HTMLDivElement
->  : ^^^^^^^^^^^^^^
-><div>{c}</div> : HTMLDivElement
->               : ^^^^^^^^^^^^^^
->div : any
->    : ^^^
->c : number
->  : ^^^^^^
->div : any
->    : ^^^
-
         const counter = <div @ counter>
->counter : HTMLDivElement
->        : ^^^^^^^^^^^^^^
-><div @ counter>            <div @ d>                count: {c}            </div>            <#run>                if (active) {                    const id = setInterval(() => {                        update d {                            c += 1                        }                    }, rate)                    unwind { clearInterval(id) }                }            </>        </div> : HTMLDivElement
->                                                                                                                                                                                                                                                                                                                                                                                                         : ^^^^^^^^^^^^^^
+>counter : HTMLDivElement & Updatable
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+><div @ counter>            <div @ d>                count: {c}            </div>            <#run>                static let id                if (active) {                    id ??= setInterval(() => {                        update d {                            c += 1                        }                    }, rate)                } else {                    clearInterval(id)                    id = undefined                }                id; // should be `number | undefined`            </>        </div> : HTMLDivElement & Updatable
+>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->counter : HTMLDivElement
->        : ^^^^^^^^^^^^^^
+>counter : HTMLDivElement & Updatable
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
             <div @ d>
-><div @ d>                count: {c}            </div> : HTMLDivElement
->                                                      : ^^^^^^^^^^^^^^
+><div @ d>                count: {c}            </div> : HTMLDivElement & Updatable
+>                                                      : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->d : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+>d : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
                 count: {c}
 >c : number
@@ -587,13 +493,19 @@
 >    : ^^^
 
             <#run>
+                static let id
+>id : any
+>   : ^^^
+
                 if (active) {
 >active : true
 >       : ^^^^
 
-                    const id = setInterval(() => {
->id : number
->   : ^^^^^^
+                    id ??= setInterval(() => {
+>id ??= setInterval(() => {                        update d {                            c += 1                        }                    }, rate) : any
+>                                                                                                                                                    : ^^^
+>id : any
+>   : ^^^
 >setInterval(() => {                        update d {                            c += 1                        }                    }, rate) : number
 >                                                                                                                                             : ^^^^^^
 >setInterval : (handler: TimerHandler, timeout?: number, ...arguments: any[]) => number
@@ -602,8 +514,8 @@
 >                                                                                                                          : ^^^^^^^^^^
 
                         update d {
->d : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+>d : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
                             c += 1
 >c += 1 : number
@@ -617,22 +529,35 @@
 >rate : number
 >     : ^^^^^^
 
-                    unwind { clearInterval(id) }
+                } else {
+                    clearInterval(id)
 >clearInterval(id) : void
 >                  : ^^^^
 >clearInterval : (id: number | undefined) => void
 >              : ^  ^^                  ^^^^^    
->id : number
->   : ^^^^^^
+>id : undefined
+>   : ^^^^^^^^^
+
+                    id = undefined
+>id = undefined : undefined
+>               : ^^^^^^^^^
+>id : any
+>   : ^^^
+>undefined : undefined
+>          : ^^^^^^^^^
                 }
+                id; // should be `number | undefined`
+>id : number | undefined
+>   : ^^^^^^^^^^^^^^^^^^
+
             </>
         </div>
 >div : any
 >    : ^^^
 
         update counter {
->counter : HTMLDivElement
->        : ^^^^^^^^^^^^^^
+>counter : HTMLDivElement & Updatable
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
             rate = n
 >rate = n : number
@@ -643,11 +568,13 @@
 >  : ^^^^^^
         }
     }>
-        <div></div>
-><div></div> : HTMLDivElement
->            : ^^^^^^^^^^^^^^
+        <div>{counter}</div>
+><div>{counter}</div> : HTMLDivElement
+>                     : ^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
+>counter : HTMLDivElement & Updatable
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 
@@ -656,24 +583,24 @@
 
 // <#style>
 {
-    ;<#style d>
+    <#style d>
 >d : any
 >  : ^^^
 
-    </>
-    ;<#style (d)>
+    </>;
+    <#style (d)>
 >d : any
 >  : ^^^
 
-    </>
-    ;<#style d2(d)>
+    </>;
+    <#style d2(d)>
 >d2 : any
 >   : ^^^
 >d : any
 >  : ^^^
 
-    </>
-    ;<#style d3(d, d2)>
+    </>;
+    <#style d3(d, d2)>
 >d3 : any
 >   : ^^^
 >d : any
@@ -681,7 +608,7 @@
 >d2 : any
 >   : ^^^
 
-    </>
+    </>;
     const o = d
 >o : any
 >  : ^^^

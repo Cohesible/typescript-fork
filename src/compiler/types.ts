@@ -874,6 +874,9 @@ export const enum NodeFlags {
     // The following flags repurpose other NodeFlags as different meanings for Identifier nodes
     /** @internal */ IdentifierHasExtendedUnicodeEscape = ContainsThis, // Indicates whether the identifier contains an extended unicode escape sequence
     /** @internal */ IdentifierIsInJSDocNamespace = HasAsyncFunctions, // Indicates whether the identifier is part of a JSDoc namespace
+
+    // Repurposed for JSX literals
+    /** @internal */ TargetedJsxElement = AwaitUsing,
 }
 
 // dprint-ignore
@@ -3318,9 +3321,10 @@ export interface JsxTagNamePropertyAccess extends PropertyAccessExpression {
 }
 
 export interface JsxAttributes extends PrimaryExpression, Declaration {
-    readonly properties: NodeArray<JsxAttributeLike>;
     readonly kind: SyntaxKind.JsxAttributes;
     readonly parent: JsxOpeningLikeElement;
+    readonly properties: NodeArray<JsxAttributeLike>;
+    readonly staticBlock?: Block;
 }
 
 export interface JsxNamespacedName extends Node {
@@ -3425,7 +3429,7 @@ export interface UnwindStatement extends Statement, FlowContainer {
 export interface UpdateBlockStatement extends Statement {
     readonly kind: SyntaxKind.UpdateBlockStatement;
     readonly operands: NodeArray<Expression>;
-    readonly block: Block;
+    readonly block?: Block;
 }
 
 /// The opening element of a <>...</> JsxFragment
@@ -9526,8 +9530,8 @@ export interface NodeFactory {
     updateJsxPublicDeclaration(node: JsxPublicDeclaration, elements: readonly ExportSpecifier[]): JsxPublicDeclaration;
     createUnwindStatement(statement: Block): UnwindStatement;
     updateUnwindStatement(node: UnwindStatement, statement: Block): UnwindStatement;
-    createUpdateBlockStatement(operands: readonly Expression[], block: Block): UpdateBlockStatement;
-    updateUpdateBlockStatement(node: UpdateBlockStatement, operands: readonly Expression[], block: Block): UpdateBlockStatement;
+    createUpdateBlockStatement(operands: readonly Expression[], block?: Block): UpdateBlockStatement;
+    updateUpdateBlockStatement(node: UpdateBlockStatement, operands: readonly Expression[], block?: Block): UpdateBlockStatement;
 
     //
     // Clauses

@@ -1,11 +1,10 @@
 //// [tests/cases/syn/jsxUpdate.syn] ////
 
 === jsxUpdate.syn ===
-// update expression
 {
-    declare const el: Element;
->el : Element
->   : ^^^^^^^
+    declare const el: Element & Updatable;
+>el : Element & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^
 
     const d = <div on:click={() => {
 >d : HTMLDivElement
@@ -24,10 +23,8 @@
 >                              : ^^^^^^^^^^
 
         update el
->update el : Element
->          : ^^^^^^^
->el : Element
->   : ^^^^^^^
+>el : Element & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^
 
     }}></div>
 >div : any
@@ -37,8 +34,6 @@
 {
     // error, possibly null
     update document.querySelector('.a')
->update document.querySelector('.a') : Element | null
->                                    : ^^^^^^^^^^^^^^
 >document.querySelector('.a') : Element | null
 >                             : ^^^^^^^^^^^^^^
 >document.querySelector : { <K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null; <K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null; <K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null; <K extends keyof HTMLElementDeprecatedTagNameMap>(selectors: K): HTMLElementDeprecatedTagNameMap[K] | null; <E extends Element = Element>(selectors: string): E | null; <K extends string>(selectors: K): SelectedDOMElement<K>; }
@@ -64,12 +59,17 @@
 >'.a' : ".a"
 >     : ^^^^
 
-        // ok
-        update x
->update x : Element
->         : ^^^^^^^
+        if (x is Updatable) {
+>x is Updatable : boolean
+>               : ^^^^^^^
 >x : Element
 >  : ^^^^^^^
+
+            // ok
+            update x
+>x : Element & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^
+        }
     }
 
     {
@@ -79,11 +79,11 @@
 >0 : 0
 >  : ^
 
-        const x = <div>{y}</div>
->x : HTMLDivElement
->  : ^^^^^^^^^^^^^^
-><div>{y}</div> : HTMLDivElement
->               : ^^^^^^^^^^^^^^
+        const x = @<div>{y}</div>
+>x : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+><div>{y}</div> : HTMLDivElement & Updatable
+>               : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 >y : number
@@ -92,28 +92,50 @@
 >    : ^^^
 
         update x // ok
->update x : HTMLDivElement
->         : ^^^^^^^^^^^^^^
->x : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+>x : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        update x // redundant
+>x : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        const x2 = @<div>{y++}</div>
+>x2 : HTMLDivElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+><div>{y++}</div> : HTMLDivElement & Updatable
+>                 : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>y++ : number
+>    : ^^^^^^
+>y : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+        update x2
+>x2 : HTMLDivElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        update x2 // ok, because updating `x2` mutates something
+>x2 : HTMLDivElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
     }
 
     {
-        const x = <div>hi</div>
->x : HTMLDivElement
->  : ^^^^^^^^^^^^^^
-><div>hi</div> : HTMLDivElement
->              : ^^^^^^^^^^^^^^
+        const x = @<div>hi</div>
+>x : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+><div>hi</div> : HTMLDivElement & Updatable
+>              : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 >div : any
 >    : ^^^
 
         update x // error, `x` has no updatable expressions
->update x : never
->         : ^^^^^
->x : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+>x : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
     }
 
     {
@@ -123,11 +145,11 @@
 >0 : 0
 >  : ^
 
-        const x = <div><div>{y}</div></div>
->x : HTMLDivElement
->  : ^^^^^^^^^^^^^^
-><div><div>{y}</div></div> : HTMLDivElement
->                          : ^^^^^^^^^^^^^^
+        const x = @<div><div>{y}</div></div>
+>x : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+><div><div>{y}</div></div> : HTMLDivElement & Updatable
+>                          : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 ><div>{y}</div> : HTMLDivElement
@@ -142,10 +164,8 @@
 >    : ^^^
 
         update x // ok
->update x : HTMLDivElement
->         : ^^^^^^^^^^^^^^
->x : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+>x : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
     }
 
     {
@@ -155,11 +175,11 @@
 >'0' : "0"
 >    : ^^^
 
-        const x = <div><div id={y}></div></div>
->x : HTMLDivElement
->  : ^^^^^^^^^^^^^^
-><div><div id={y}></div></div> : HTMLDivElement
->                              : ^^^^^^^^^^^^^^
+        const x = @<div><div id={y}></div></div>
+>x : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+><div><div id={y}></div></div> : HTMLDivElement & Updatable
+>                              : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 ><div id={y}></div> : HTMLDivElement
@@ -176,10 +196,8 @@
 >    : ^^^
 
         update x // ok
->update x : HTMLDivElement
->         : ^^^^^^^^^^^^^^
->x : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+>x : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
     }
 
     {
@@ -189,11 +207,11 @@
 >'0' : "0"
 >    : ^^^
 
-        const x = <div id={y}></div>
->x : HTMLDivElement
->  : ^^^^^^^^^^^^^^
-><div id={y}></div> : HTMLDivElement
->                   : ^^^^^^^^^^^^^^
+        const x = @<div id={y}></div>
+>x : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+><div id={y}></div> : HTMLDivElement & Updatable
+>                   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 >id : string
@@ -204,10 +222,8 @@
 >    : ^^^
 
         update x // ok
->update x : HTMLDivElement
->         : ^^^^^^^^^^^^^^
->x : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+>x : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
     }
 
     {
@@ -222,28 +238,26 @@
 >div : any
 >    : ^^^
 
-        const el = <Comp/>
->el : HTMLDivElement
->   : ^^^^^^^^^^^^^^
-><Comp/> : HTMLDivElement
->        : ^^^^^^^^^^^^^^
+        const el = @<Comp/>
+>el : HTMLDivElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+><Comp/> : HTMLDivElement & Updatable
+>        : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >Comp : () => HTMLDivElement
 >     : ^^^^^^^^^^^^^^^^^^^^
 
         update el // ok
->update el : HTMLDivElement
->          : ^^^^^^^^^^^^^^
->el : HTMLDivElement
->   : ^^^^^^^^^^^^^^
+>el : HTMLDivElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
     }
 
     {
         // expressions and blocks always make the element updatable
-        const el = <div>
->el : HTMLDivElement
->   : ^^^^^^^^^^^^^^
-><div>            {<span>hi</span>}        </div> : HTMLDivElement
->                                                 : ^^^^^^^^^^^^^^
+        const el = @<div>
+>el : HTMLDivElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+><div>            {<span>hi</span>}        </div> : HTMLDivElement & Updatable
+>                                                 : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 
@@ -260,16 +274,14 @@
 >    : ^^^
 
         update el // ok
->update el : HTMLDivElement
->          : ^^^^^^^^^^^^^^
->el : HTMLDivElement
->   : ^^^^^^^^^^^^^^
+>el : HTMLDivElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-        const el2 = <div>
->el2 : HTMLDivElement
->    : ^^^^^^^^^^^^^^
-><div>            <#run>                console.log('hi')            </>        </div> : HTMLDivElement
->                                                                                      : ^^^^^^^^^^^^^^
+        const el2 = @<div>
+>el2 : HTMLDivElement & Updatable
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+><div>            <#run>                console.log('hi')            </>        </div> : HTMLDivElement & Updatable
+>                                                                                      : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 
@@ -292,10 +304,8 @@
 >    : ^^^
 
         update el2 // ok
->update el2 : HTMLDivElement
->           : ^^^^^^^^^^^^^^
->el2 : HTMLDivElement
->    : ^^^^^^^^^^^^^^
+>el2 : HTMLDivElement & Updatable
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^
     }
 }
 
@@ -307,11 +317,11 @@
 >0 : 0
 >  : ^
 
-    const x = <div>{y}</div>
->x : HTMLDivElement
->  : ^^^^^^^^^^^^^^
-><div>{y}</div> : HTMLDivElement
->               : ^^^^^^^^^^^^^^
+    const x = @<div>{y}</div>
+>x : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+><div>{y}</div> : HTMLDivElement & Updatable
+>               : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 >y : number
@@ -320,8 +330,8 @@
 >    : ^^^
 
     update x {
->x : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+>x : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
         y = 1
 >y = 1 : 1
@@ -333,10 +343,8 @@
     }
 
     update x
->update x : HTMLDivElement
->         : ^^^^^^^^^^^^^^
->x : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+>x : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     let a = 0
 >a : number
@@ -350,11 +358,11 @@
 >'' : ""
 >   : ^^
 
-    const xa = <div>{a}</div>
->xa : HTMLDivElement
->   : ^^^^^^^^^^^^^^
-><div>{a}</div> : HTMLDivElement
->               : ^^^^^^^^^^^^^^
+    const xa = @<div>{a}</div>
+>xa : HTMLDivElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+><div>{a}</div> : HTMLDivElement & Updatable
+>               : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 >a : number
@@ -362,11 +370,11 @@
 >div : any
 >    : ^^^
 
-    const xb = <span>{b}</span>
->xb : HTMLSpanElement
->   : ^^^^^^^^^^^^^^^
-><span>{b}</span> : HTMLSpanElement
->                 : ^^^^^^^^^^^^^^^
+    const xb = @<span>{b}</span>
+>xb : HTMLSpanElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+><span>{b}</span> : HTMLSpanElement & Updatable
+>                 : ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >span : any
 >     : ^^^
 >b : string
@@ -375,10 +383,10 @@
 >     : ^^^
 
     update xa, xb {
->xa : HTMLDivElement
->   : ^^^^^^^^^^^^^^
->xb : HTMLSpanElement
->   : ^^^^^^^^^^^^^^^
+>xa : HTMLDivElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>xb : HTMLSpanElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
         a = 1
 >a = 1 : 1
@@ -398,10 +406,10 @@
     }
 
     update xa, xb {
->xa : HTMLDivElement
->   : ^^^^^^^^^^^^^^
->xb : HTMLSpanElement
->   : ^^^^^^^^^^^^^^^
+>xa : HTMLDivElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>xb : HTMLSpanElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
         b = 'only b'
 >b = 'only b' : "only b"
@@ -412,15 +420,13 @@
 >         : ^^^^^^^^
     }
 
-    declare const unknown: Element
->unknown : Element
->        : ^^^^^^^
+    declare const unknown: Element & Updatable;
+>unknown : Element & Updatable
+>        : ^^^^^^^^^^^^^^^^^^^
 
     update unknown {
->update unknown : Element
->               : ^^^^^^^
->unknown : Element
->        : ^^^^^^^
+>unknown : Element & Updatable
+>        : ^^^^^^^^^^^^^^^^^^^
 
         y = 2
 >y = 2 : 2
@@ -434,19 +440,19 @@
 
 // catch recursive updates
 {
-    let c = 0
+    let c = 0;
 >c : number
 >  : ^^^^^^
 >0 : 0
 >  : ^
 
-    ;<div @ root>
-><div @ root>        {c}        <#run>            update root {                c += 1            }            if (c < 10) {                // ok                update root {                    c += 1                }            }        </>        <div @ d>            <#run>                update root {                    c += 1                }            </>        </div>    </div> : HTMLDivElement
->                                                                                                                                                                                                                                                                                                                                                                                                  : ^^^^^^^^^^^^^^
+    <div @ root>
+><div @ root>        {c}        <#run>            update root {                c += 1            }            if (c < 10) {                // ok                update root {                    c += 1                }            }        </>        <div @ d>            <#run>                update root {                    c += 1                }            </>        </div>    </div> : HTMLDivElement & Updatable
+>                                                                                                                                                                                                                                                                                                                                                                                                  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->root : HTMLDivElement
->     : ^^^^^^^^^^^^^^
+>root : HTMLDivElement & Updatable
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
         {c}
 >c : number
@@ -454,8 +460,8 @@
 
         <#run>
             update root {
->root : HTMLDivElement
->     : ^^^^^^^^^^^^^^
+>root : HTMLDivElement & Updatable
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
                 c += 1
 >c += 1 : number
@@ -475,8 +481,8 @@
 
                 // ok
                 update root {
->root : HTMLDivElement
->     : ^^^^^^^^^^^^^^
+>root : HTMLDivElement & Updatable
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
                     c += 1
 >c += 1 : number
@@ -489,17 +495,17 @@
             }
         </>
         <div @ d>
-><div @ d>            <#run>                update root {                    c += 1                }            </>        </div> : HTMLDivElement
->                                                                                                                                 : ^^^^^^^^^^^^^^
+><div @ d>            <#run>                update root {                    c += 1                }            </>        </div> : HTMLDivElement & Updatable
+>                                                                                                                                 : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->d : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+>d : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
             <#run>
                 update root {
->root : HTMLDivElement
->     : ^^^^^^^^^^^^^^
+>root : HTMLDivElement & Updatable
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
                     c += 1
 >c += 1 : number
@@ -514,11 +520,11 @@
 >div : any
 >    : ^^^
 
-    </div>
+    </div>;
 >div : any
 >    : ^^^
 
-    ;<div>
+    <div>
 ><div>        <#run>            // error (use-before-init)            update d { c += 1 }        </>        <div @ d>            {c}        </div>    </div> : HTMLDivElement
 >                                                                                                                                                            : ^^^^^^^^^^^^^^
 >div : any
@@ -527,8 +533,8 @@
         <#run>
             // error (use-before-init)
             update d { c += 1 }
->d : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+>d : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >c += 1 : number
 >       : ^^^^^^
 >c : number
@@ -538,12 +544,12 @@
 
         </>
         <div @ d>
-><div @ d>            {c}        </div> : HTMLDivElement
->                                       : ^^^^^^^^^^^^^^
+><div @ d>            {c}        </div> : HTMLDivElement & Updatable
+>                                       : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->d : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+>d : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
             {c}
 >c : number
@@ -553,33 +559,33 @@
 >div : any
 >    : ^^^
 
-    </div>
+    </div>;
 >div : any
 >    : ^^^
 }
 
 {
-    let c = 0
+    let c = 0;
 >c : number
 >  : ^^^^^^
 >0 : 0
 >  : ^
 
-    ;<div @ root>
-><div @ root>        <div @ d1>            {c}        </div>        <div @ d2>            {c}        </div>        <button on:click={() => {            // ok            update root {                c += 1            }            // ok            update d1, d2 {                c += 1            }            // error            update d1 {                c += 1            }        }}>          Increment        </button>    </div> : HTMLDivElement
->                                                                                                                                                                                                                                                                                                                                                                                                                                               : ^^^^^^^^^^^^^^
+    <div @ root>
+><div @ root>        <div @ d1>            {c}        </div>        <div @ d2>            {c}        </div>        <button on:click={() => {            // ok            update root {                c += 1            }            // ok            update d1, d2 {                c += 1            }            // error            update d1 {                c += 1            }        }}>          Increment        </button>    </div> : HTMLDivElement & Updatable
+>                                                                                                                                                                                                                                                                                                                                                                                                                                               : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->root : HTMLDivElement
->     : ^^^^^^^^^^^^^^
+>root : HTMLDivElement & Updatable
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
         <div @ d1>
-><div @ d1>            {c}        </div> : HTMLDivElement
->                                        : ^^^^^^^^^^^^^^
+><div @ d1>            {c}        </div> : HTMLDivElement & Updatable
+>                                        : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->d1 : HTMLDivElement
->   : ^^^^^^^^^^^^^^
+>d1 : HTMLDivElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
             {c}
 >c : number
@@ -590,12 +596,12 @@
 >    : ^^^
 
         <div @ d2>
-><div @ d2>            {c}        </div> : HTMLDivElement
->                                        : ^^^^^^^^^^^^^^
+><div @ d2>            {c}        </div> : HTMLDivElement & Updatable
+>                                        : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->d2 : HTMLDivElement
->   : ^^^^^^^^^^^^^^
+>d2 : HTMLDivElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
             {c}
 >c : number
@@ -621,8 +627,8 @@
 
             // ok
             update root {
->root : HTMLDivElement
->     : ^^^^^^^^^^^^^^
+>root : HTMLDivElement & Updatable
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
                 c += 1
 >c += 1 : number
@@ -634,10 +640,10 @@
             }
             // ok
             update d1, d2 {
->d1 : HTMLDivElement
->   : ^^^^^^^^^^^^^^
->d2 : HTMLDivElement
->   : ^^^^^^^^^^^^^^
+>d1 : HTMLDivElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>d2 : HTMLDivElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
                 c += 1
 >c += 1 : number
@@ -649,8 +655,8 @@
             }
             // error
             update d1 {
->d1 : HTMLDivElement
->   : ^^^^^^^^^^^^^^
+>d1 : HTMLDivElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
                 c += 1
 >c += 1 : number
@@ -672,27 +678,27 @@
 }
 
 {
-    let c = 0
+    let c = 0;
 >c : number
 >  : ^^^^^^
 >0 : 0
 >  : ^
 
-    ;<div @ root>
-><div @ root>        <div @ d1>            {c}        </div>        {c}        <button on:click={() => {            update d1, root {                c += 1            }            update d1 {                c += 1            }        }}>          Increment        </button>    </div> : HTMLDivElement
->                                                                                                                                                                                                                                                                                           : ^^^^^^^^^^^^^^
+    <div @ root>
+><div @ root>        <div @ d1>            {c}        </div>        {c}        <button on:click={() => {            update d1, root {                c += 1            }            update d1 {                c += 1            }        }}>          Increment        </button>    </div> : HTMLDivElement & Updatable
+>                                                                                                                                                                                                                                                                                           : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->root : HTMLDivElement
->     : ^^^^^^^^^^^^^^
+>root : HTMLDivElement & Updatable
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
         <div @ d1>
-><div @ d1>            {c}        </div> : HTMLDivElement
->                                        : ^^^^^^^^^^^^^^
+><div @ d1>            {c}        </div> : HTMLDivElement & Updatable
+>                                        : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->d1 : HTMLDivElement
->   : ^^^^^^^^^^^^^^
+>d1 : HTMLDivElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
             {c}
 >c : number
@@ -721,10 +727,10 @@
 >                                                                                                                                           : ^^^^^^^^^^
 
             update d1, root {
->d1 : HTMLDivElement
->   : ^^^^^^^^^^^^^^
->root : HTMLDivElement
->     : ^^^^^^^^^^^^^^
+>d1 : HTMLDivElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>root : HTMLDivElement & Updatable
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
                 c += 1
 >c += 1 : number
@@ -735,8 +741,8 @@
 >  : ^
             }
             update d1 {
->d1 : HTMLDivElement
->   : ^^^^^^^^^^^^^^
+>d1 : HTMLDivElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
                 c += 1
 >c += 1 : number
@@ -758,27 +764,27 @@
 }
 
 {
-    let c = 0
+    let c = 0;
 >c : number
 >  : ^^^^^^
 >0 : 0
 >  : ^
 
-    ;<div @ root>
-><div @ root>        <div @ d>            {c}        </div>        <button on:click={() => {            update root {                c += 1            }        }}>          Increment        </button>    </div> : HTMLDivElement
->                                                                                                                                                                                                                 : ^^^^^^^^^^^^^^
+    <div @ root>
+><div @ root>        <div @ d>            {c}        </div>        <button on:click={() => {            update root {                c += 1            }        }}>          Increment        </button>    </div> : HTMLDivElement & Updatable
+>                                                                                                                                                                                                                 : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->root : HTMLDivElement
->     : ^^^^^^^^^^^^^^
+>root : HTMLDivElement & Updatable
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
         <div @ d>
-><div @ d>            {c}        </div> : HTMLDivElement
->                                       : ^^^^^^^^^^^^^^
+><div @ d>            {c}        </div> : HTMLDivElement & Updatable
+>                                       : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->d : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+>d : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
             {c}
 >c : number
@@ -803,8 +809,8 @@
 >                                                                             : ^^^^^^^^^^
 
             update root {
->root : HTMLDivElement
->     : ^^^^^^^^^^^^^^
+>root : HTMLDivElement & Updatable
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
                 c += 1
 >c += 1 : number
@@ -866,11 +872,11 @@
 >     : ^^^^
         }
 
-        const x = <div>{count}</div>
->x : HTMLDivElement
->  : ^^^^^^^^^^^^^^
-><div>{count}</div> : HTMLDivElement
->                   : ^^^^^^^^^^^^^^
+        const x = @<div>{count}</div>
+>x : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+><div>{count}</div> : HTMLDivElement & Updatable
+>                   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 >count : number
@@ -879,8 +885,8 @@
 >    : ^^^
 
         update x {
->x : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+>x : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
             increment()
 >increment() : void
@@ -890,8 +896,8 @@
         }
 
         update x {
->x : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+>x : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
             unrelated()
 >unrelated() : void
@@ -941,11 +947,11 @@
 >Inner : () => Inner
 >      : ^^^^^^^^^^^
 
-    const root = <div>
->root : HTMLDivElement
->     : ^^^^^^^^^^^^^^
-><div>        <Inner />    </div> : HTMLDivElement
->                                 : ^^^^^^^^^^^^^^
+    const root = @<div>
+>root : HTMLDivElement & Updatable
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+><div>        <Inner />    </div> : HTMLDivElement & Updatable
+>                                 : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 
@@ -960,8 +966,8 @@
 >    : ^^^
 
     update root {
->root : HTMLDivElement
->     : ^^^^^^^^^^^^^^
+>root : HTMLDivElement & Updatable
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
         c += 1  // ok
 >c += 1 : number
@@ -971,16 +977,20 @@
 >1 : 1
 >  : ^
     }
-    // TODO: the no-effect case should suggest to use the expression form (?)
+    function noop() {}
+>noop : () => void
+>     : ^^^^^^^^^^
+
+    // TODO: the no-effect case should suggest to remove the block
     update root {
->root : HTMLDivElement
->     : ^^^^^^^^^^^^^^
+>root : HTMLDivElement & Updatable
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
         noop()  // error, no effect
->noop() : any
->       : ^^^
->noop : any
->     : ^^^
+>noop() : void
+>       : ^^^^
+>noop : () => void
+>     : ^^^^^^^^^^
     }
 }
 
@@ -1005,30 +1015,30 @@
 >div : any
 >    : ^^^
 
-    </>
-    ;<div @ root>
-><div @ root>        <InnerB @ d1 />        <div @ d2>{c}</div>        <#run>            setTimeout(() => {                update d1 {                    c += 1                }                update d2 {                    c += 1                }            })        </>    </div> : HTMLDivElement
->                                                                                                                                                                                                                                                                                          : ^^^^^^^^^^^^^^
+    </>;
+    <div @ root>
+><div @ root>        <InnerB @ d1 />        <div @ d2>{c}</div>        <#run>            setTimeout(() => {                update d1 {                    c += 1                }                update d2 {                    c += 1                }            })        </>    </div> : HTMLDivElement & Updatable
+>                                                                                                                                                                                                                                                                                          : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->root : HTMLDivElement
->     : ^^^^^^^^^^^^^^
+>root : HTMLDivElement & Updatable
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
         <InnerB @ d1 />
-><InnerB @ d1 /> : InnerB
->                : ^^^^^^
+><InnerB @ d1 /> : InnerB & Updatable
+>                : ^^^^^^^^^^^^^^^^^^
 >InnerB : () => InnerB
 >       : ^^^^^^^^^^^^
->d1 : InnerB
->   : ^^^^^^
+>d1 : InnerB & Updatable
+>   : ^^^^^^^^^^^^^^^^^^
 
         <div @ d2>{c}</div>
-><div @ d2>{c}</div> : HTMLDivElement
->                    : ^^^^^^^^^^^^^^
+><div @ d2>{c}</div> : HTMLDivElement & Updatable
+>                    : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->d2 : HTMLDivElement
->   : ^^^^^^^^^^^^^^
+>d2 : HTMLDivElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >c : number
 >  : ^^^^^^
 >div : any
@@ -1044,8 +1054,8 @@
 >                                                                                                                                                                 : ^^^^^^^^^^
 
                 update d1 {
->d1 : InnerB
->   : ^^^^^^
+>d1 : InnerB & Updatable
+>   : ^^^^^^^^^^^^^^^^^^
 
                     c += 1
 >c += 1 : number
@@ -1056,8 +1066,8 @@
 >  : ^
                 }
                 update d2 {
->d2 : HTMLDivElement
->   : ^^^^^^^^^^^^^^
+>d2 : HTMLDivElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
                     c += 1
 >c += 1 : number
@@ -1085,11 +1095,11 @@
 >External : any
 >         : ^^^
 
-    const root = <div>
->root : HTMLDivElement
->     : ^^^^^^^^^^^^^^
-><div>        <External />    </div> : HTMLDivElement
->                                    : ^^^^^^^^^^^^^^
+    const root = @<div>
+>root : HTMLDivElement & Updatable
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+><div>        <External />    </div> : HTMLDivElement & Updatable
+>                                    : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 
@@ -1104,8 +1114,8 @@
 >    : ^^^
 
     update root {
->root : HTMLDivElement
->     : ^^^^^^^^^^^^^^
+>root : HTMLDivElement & Updatable
+>     : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
         c += 1
 >c += 1 : number
@@ -1118,19 +1128,19 @@
 }
 
 {
-    let c = 0
+    let c = 0;
 >c : number
 >  : ^^^^^^
 >0 : 0
 >  : ^
 
-    ;<div @ p>
-><div @ p>        <#run>            let c = ''        </>        <div>            <input @ d2                value={c}                on:click={() => {                    // ok                    update d1, d2 {                        c = 'a'                    }                    // ok (assumed self-coherence)                    update d1 {                        c = 'b'                    }                    // error                    update d2 {                        c = 'c'                    }                }}            />        </div>        <input @ d1 value={c} />    </div> : HTMLDivElement
->                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   : ^^^^^^^^^^^^^^
+    <div @ p>
+><div @ p>        <#run>            let c = ''        </>        <div>            <input @ d2                value={c}                on:click={() => {                    // ok                    update d1, d2 {                        c = 'a'                    }                    // ok (assumed self-coherence)                    update d1 {                        c = 'b'                    }                    // error                    update d2 {                        c = 'c'                    }                }}            />        </div>        <input @ d1 value={c} />    </div> : HTMLDivElement & Updatable
+>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->p : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+>p : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
         <#run>
             let c = ''
@@ -1147,12 +1157,12 @@
 >    : ^^^
 
             <input @ d2
-><input @ d2                value={c}                on:click={() => {                    // ok                    update d1, d2 {                        c = 'a'                    }                    // ok (assumed self-coherence)                    update d1 {                        c = 'b'                    }                    // error                    update d2 {                        c = 'c'                    }                }}            /> : HTMLInputElement
->                                                                                                                                                                                                                                                                                                                                                                                                                                                                          : ^^^^^^^^^^^^^^^^
+><input @ d2                value={c}                on:click={() => {                    // ok                    update d1, d2 {                        c = 'a'                    }                    // ok (assumed self-coherence)                    update d1 {                        c = 'b'                    }                    // error                    update d2 {                        c = 'c'                    }                }}            /> : HTMLInputElement & Updatable
+>                                                                                                                                                                                                                                                                                                                                                                                                                                                                          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >input : any
 >      : ^^^
->d2 : HTMLInputElement
->   : ^^^^^^^^^^^^^^^^
+>d2 : HTMLInputElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
                 value={c}
 >value : string
@@ -1172,10 +1182,10 @@
 
                     // ok
                     update d1, d2 {
->d1 : HTMLInputElement
->   : ^^^^^^^^^^^^^^^^
->d2 : HTMLInputElement
->   : ^^^^^^^^^^^^^^^^
+>d1 : HTMLInputElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>d2 : HTMLInputElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
                         c = 'a'
 >c = 'a' : "a"
@@ -1187,8 +1197,8 @@
                     }
                     // ok (assumed self-coherence)
                     update d1 {
->d1 : HTMLInputElement
->   : ^^^^^^^^^^^^^^^^
+>d1 : HTMLInputElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
                         c = 'b'
 >c = 'b' : "b"
@@ -1200,8 +1210,8 @@
                     }
                     // error
                     update d2 {
->d2 : HTMLInputElement
->   : ^^^^^^^^^^^^^^^^
+>d2 : HTMLInputElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
                         c = 'c'
 >c = 'c' : "c"
@@ -1218,12 +1228,12 @@
 >    : ^^^
 
         <input @ d1 value={c} />
-><input @ d1 value={c} /> : HTMLInputElement
->                         : ^^^^^^^^^^^^^^^^
+><input @ d1 value={c} /> : HTMLInputElement & Updatable
+>                         : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >input : any
 >      : ^^^
->d1 : HTMLInputElement
->   : ^^^^^^^^^^^^^^^^
+>d1 : HTMLInputElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >value : string
 >      : ^^^^^^
 >c : string

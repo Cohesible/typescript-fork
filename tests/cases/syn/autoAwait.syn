@@ -87,7 +87,7 @@ async function z() {
     }
 
     async function foo3() {
-        // Promise.resolve / Promise.reject are special-cased — not auto-awaited
+        // Promise.resolve / Promise.reject are special-cased
         const x1 = Promise.resolve(0) // Promise<number>
         const x2 = Promise.reject(0) // Promise<number>
     }
@@ -115,5 +115,14 @@ async function z() {
         async function inner() { return 1 }
         const m = memoize(inner)
         const v = m()  // number
+    }
+}
+
+{
+    async function f1() {
+        return 1
+    }
+    async function f2(): Promise<number | undefined> {
+        return f1() // should not be a checker error, it's a direct return in an async fn
     }
 }

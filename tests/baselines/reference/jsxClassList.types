@@ -95,9 +95,9 @@
 >input : any
 >      : ^^^
 
-    <input .min.min2={cond} @ i></input>;
-><input .min.min2={cond} @ i></input> : HTMLInputElement
->                                     : ^^^^^^^^^^^^^^^^
+    <input @ i .min.min2={cond}></input>;
+><input @ i .min.min2={cond}></input> : HTMLInputElement & Updatable
+>                                     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >input : any
 >      : ^^^
 >min : any
@@ -106,20 +106,32 @@
 >     : ^^^
 >cond : true
 >     : ^^^^
->i : HTMLInputElement
->  : ^^^^^^^^^^^^^^^^
+>i : HTMLInputElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >input : any
 >      : ^^^
 
-    <input (.m) @ i2></input>;
-><input (.m) @ i2></input> : HTMLInputElement
->                          : ^^^^^^^^^^^^^^^^
+    <input @ i2 (.m)></input>;
+><input @ i2 (.m)></input> : HTMLInputElement & Updatable
+>                          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >input : any
 >      : ^^^
 >m : any
 >  : ^^^
->i2 : HTMLInputElement
->   : ^^^^^^^^^^^^^^^^
+>i2 : HTMLInputElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+
+    <input (.m) @ i2></input>; // wrong order
+><input (.m) @ i2></input> : HTMLInputElement & Updatable
+>                          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>input : any
+>      : ^^^
+>m : any
+>  : ^^^
+>i2 : HTMLInputElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >input : any
 >      : ^^^
 
@@ -149,22 +161,26 @@
 >    : ^^^
 
     <div @ foo_1 (.a)></div>;
-><div @ foo_1 (.a)></div> : HTMLDivElement
->                         : ^^^^^^^^^^^^^^
+><div @ foo_1 (.a)></div> : HTMLDivElement & Updatable
+>                         : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->foo_1 : HTMLDivElement
->      : ^^^^^^^^^^^^^^
+>a : any
+>  : ^^^
+>foo_1 : HTMLDivElement & Updatable
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 
     <div @ foo_2 .a></div>;
-><div @ foo_2 .a></div> : HTMLDivElement
->                       : ^^^^^^^^^^^^^^
+><div @ foo_2 .a></div> : HTMLDivElement & Updatable
+>                       : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->foo_2 : HTMLDivElement
->      : ^^^^^^^^^^^^^^
+>a : any
+>  : ^^^
+>foo_2 : HTMLDivElement & Updatable
+>      : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 

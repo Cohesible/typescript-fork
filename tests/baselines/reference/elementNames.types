@@ -4,21 +4,23 @@
 // element names
 {
     // b can be seen within the tree, but not outside
-    const a = <div>
->a : HTMLDivElement
->  : ^^^^^^^^^^^^^^
-><div>        <div @ b></div>        <#run>            console.log(a, b)        </>    </div> : HTMLDivElement
->                                                                                             : ^^^^^^^^^^^^^^
+    const a = <div @ a>
+>a : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+><div @ a>        <div @ b></div>        <#run>            console.log(a, b)        </>    </div> : HTMLDivElement & Updatable
+>                                                                                                 : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
+>a : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
         <div @ b></div>
-><div @ b></div> : HTMLDivElement
->                : ^^^^^^^^^^^^^^
+><div @ b></div> : HTMLDivElement & Updatable
+>                : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->b : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+>b : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 
@@ -32,10 +34,10 @@
 >        : ^^^^^^^
 >log : (...data: any[]) => void
 >    : ^^^^    ^^     ^^^^^    
->a : HTMLDivElement
->  : ^^^^^^^^^^^^^^
->b : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+>a : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>b : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
         </>
     </div>
@@ -51,14 +53,14 @@
 >        : ^^^^^^^
 >log : (...data: any[]) => void
 >    : ^^^^    ^^     ^^^^^    
->a : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+>a : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >b : any
 >  : ^^^
 
     <div @ c id="aaa" />;
-><div @ c id="aaa" /> : HTMLDivElement
->                     : ^^^^^^^^^^^^^^
+><div @ c id="aaa" /> : HTMLDivElement & Updatable
+>                     : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 >c : any
@@ -69,8 +71,8 @@
 
 {
     <div @ d />;
-><div @ d /> : HTMLDivElement
->            : ^^^^^^^^^^^^^^
+><div @ d /> : HTMLDivElement & Updatable
+>            : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
 >d : any

@@ -344,7 +344,7 @@ async function z() {
 >foo3 : () => Promise<void>
 >     : ^^^^^^^^^^^^^^^^^^^
 
-        // Promise.resolve / Promise.reject are special-cased — not auto-awaited
+        // Promise.resolve / Promise.reject are special-cased
         const x1 = Promise.resolve(0) // Promise<number>
 >x1 : number
 >   : ^^^^^^
@@ -480,6 +480,27 @@ async function z() {
 >    : ^^^^^^
 >m : () => Promise<number>
 >  : ^^^^^^^^^^^^^^^^^^^^^
+    }
+}
+
+{
+    async function f1() {
+>f1 : () => Promise<number>
+>   : ^^^^^^^^^^^^^^^^^^^^^
+
+        return 1
+>1 : 1
+>  : ^
+    }
+    async function f2(): Promise<number | undefined> {
+>f2 : () => Promise<number | undefined>
+>   : ^^^^^^                           
+
+        return f1() // should not be a checker error, it's a direct return in an async fn
+>f1() : number
+>     : ^^^^^^
+>f1 : () => Promise<number>
+>   : ^^^^^^^^^^^^^^^^^^^^^
     }
 }
 

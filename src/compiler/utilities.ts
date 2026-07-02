@@ -3180,6 +3180,11 @@ export function getThisContainer(node: Node, includeArrowFunctions: boolean, inc
                     node = node.parent;
                 }
                 break;
+            case SyntaxKind.Block:
+                if (node.parent.kind === SyntaxKind.JsxAttributes && (node.parent as { staticBlock?: Node }).staticBlock === node) {
+                    return node as ThisContainer;
+                }
+                break;
             case SyntaxKind.ArrowFunction:
                 if (!includeArrowFunctions) {
                     continue;
@@ -11649,7 +11654,10 @@ export function createNameResolver({
                         useResult = lastLocation !== location.elseStatement;
                     } else if ((location as Node).kind === SyntaxKind.JsxElement) {
                         // JsxElement locals should not be visible to the opening element attributes
-                        useResult = lastLocation !== (location as Node as JsxElement).openingElement;
+                        // unless it's the result is the name binding
+                        useResult = lastLocation !== (location as Node as JsxElement).openingElement || result.valueDeclaration === location;
+                    } else if ((location as Node).kind === SyntaxKind.JsxSelfClosingElement) {
+                        useResult = lastLocation !== (location as Node as JsxSelfClosingElement).attributes || result.valueDeclaration === location;
                     }
 
                     if (useResult) {

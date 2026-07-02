@@ -1,6 +1,5 @@
-// update expression
 {
-    declare const el: Element;
+    declare const el: Element & Updatable;
     const d = <div on:click={() => {
         update el
     }}></div>
@@ -11,54 +10,61 @@
     update document.querySelector('.a')
 
     if (const x = document.querySelector('.a')) {
-        // ok
-        update x
+        if (x is Updatable) {
+            // ok
+            update x
+        }
     }
 
     {
         let y = 0
-        const x = <div>{y}</div>
+        const x = @<div>{y}</div>
         update x // ok
+        update x // redundant
+
+        const x2 = @<div>{y++}</div>
+        update x2
+        update x2 // ok, because updating `x2` mutates something
     }
 
     {
-        const x = <div>hi</div>
+        const x = @<div>hi</div>
         update x // error, `x` has no updatable expressions
     }
 
     {
         let y = 0
-        const x = <div><div>{y}</div></div>
+        const x = @<div><div>{y}</div></div>
         update x // ok
     }
 
     {
         let y = '0'
-        const x = <div><div id={y}></div></div>
+        const x = @<div><div id={y}></div></div>
         update x // ok
     }
 
     {
         let y = '0'
-        const x = <div id={y}></div>
+        const x = @<div id={y}></div>
         update x // ok
     }
 
     {
         // components can always be updated
         function Comp() { return <div></div> }
-        const el = <Comp/>
+        const el = @<Comp/>
         update el // ok
     }
 
     {
         // expressions and blocks always make the element updatable
-        const el = <div>
+        const el = @<div>
             {<span>hi</span>}
         </div>
         update el // ok
 
-        const el2 = <div>
+        const el2 = @<div>
             <#run>
                 console.log('hi')
             </>
@@ -70,7 +76,7 @@
 // update block form
 {
     let y = 0
-    const x = <div>{y}</div>
+    const x = @<div>{y}</div>
 
     update x {
         y = 1
@@ -80,8 +86,8 @@
 
     let a = 0
     let b = ''
-    const xa = <div>{a}</div>
-    const xb = <span>{b}</span>
+    const xa = @<div>{a}</div>
+    const xb = @<span>{b}</span>
 
     update xa, xb {
         a = 1
@@ -92,7 +98,7 @@
         b = 'only b'
     }
 
-    declare const unknown: Element
+    declare const unknown: Element & Updatable;
     update unknown {
         y = 2
     }
@@ -100,8 +106,8 @@
 
 // catch recursive updates
 {
-    let c = 0
-    ;<div @ root>
+    let c = 0;
+    <div @ root>
         {c}
         <#run>
             update root {
@@ -121,9 +127,9 @@
                 }
             </>
         </div>
-    </div>
+    </div>;
 
-    ;<div>
+    <div>
         <#run>
             // error (use-before-init)
             update d { c += 1 }
@@ -131,12 +137,12 @@
         <div @ d>
             {c}
         </div>
-    </div>
+    </div>;
 }
 
 {
-    let c = 0
-    ;<div @ root>
+    let c = 0;
+    <div @ root>
         <div @ d1>
             {c}
         </div>
@@ -163,8 +169,8 @@
 }
 
 {
-    let c = 0
-    ;<div @ root>
+    let c = 0;
+    <div @ root>
         <div @ d1>
             {c}
         </div>
@@ -183,8 +189,8 @@
 }
 
 {
-    let c = 0
-    ;<div @ root>
+    let c = 0;
+    <div @ root>
         <div @ d>
             {c}
         </div>
@@ -210,7 +216,7 @@
             console.log('hi')
         }
 
-        const x = <div>{count}</div>
+        const x = @<div>{count}</div>
 
         update x {
             increment()
@@ -230,13 +236,14 @@
         <div>{c}</div>
     </>
     const inner = <Inner />
-    const root = <div>
+    const root = @<div>
         <Inner />
     </div>
     update root {
         c += 1  // ok
     }
-    // TODO: the no-effect case should suggest to use the expression form (?)
+    function noop() {}
+    // TODO: the no-effect case should suggest to remove the block
     update root {
         noop()  // error, no effect
     }
@@ -266,7 +273,7 @@
 {
     let c = 0
     declare const External: any
-    const root = <div>
+    const root = @<div>
         <External />
     </div>
     update root {

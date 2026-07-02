@@ -1178,29 +1178,49 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                 bindJsxElseDirective(node as JsxElseDirective);
                 break;
             case SyntaxKind.JsxRunDirective:
-                bindEach((node as JsxRunDirective).statements);
+                bindEachFunctionsFirst((node as JsxRunDirective).statements);
                 break;
             case SyntaxKind.JsxComponentDirective:
                 bindJsxComponentDirective(node as JsxComponentDirective);
                 break;
             case SyntaxKind.JsxFragment:
             case SyntaxKind.JsxElement: {
-                const elem = node as JsxElement | JsxFragment;
-                elem.startFlowNode = currentFlow;
-                bindEachChild(node);
-                elem.endFlowNode = currentFlow;
-                if (elem.kind === SyntaxKind.JsxElement) {
-                    if (elem.openingElement.name) {
-                        bindJsxElementIdentifier(elem);
+                (node as any).locals = undefined; // clear for reparse
+                const el = node as JsxElement | JsxFragment;
+                if (el.kind === SyntaxKind.JsxElement) {
+                    if (el.openingElement.name) {
+                        bindJsxElementIdentifier(el);
                     }
                 }
+                el.startFlowNode = currentFlow;
+                if (node.kind == SyntaxKind.JsxElement) {
+                    const block = (node as JsxElement).openingElement.attributes.staticBlock;
+                    if (block) {
+                        bindEachFunctionsFirst(block.statements);
+                        setParent(block, (node as JsxElement).openingElement.attributes);
+                        for (const s of block.statements) {
+                            setParent(s, block);
+                        }
+                    }
+                }
+                bindEachChild(node);
+                el.endFlowNode = currentFlow;
                 break;
             }
             case SyntaxKind.JsxSelfClosingElement:
-                bindEachChild(node);
+                (node as any).locals = undefined; // clear for reparse
                 if ((node as JsxSelfClosingElement).name) {
                     bindJsxElementIdentifier(node as JsxSelfClosingElement);
                 }
+                const block = (node as JsxSelfClosingElement).attributes.staticBlock;
+                if (block) {
+                    bindEachFunctionsFirst(block.statements);
+                    setParent(block, (node as JsxSelfClosingElement).attributes);
+                    for (const s of block.statements) {
+                        setParent(s, block);
+                    }
+                }
+                bindEachChild(node);
                 break;
             case SyntaxKind.ThrowStatement:
             case SyntaxKind.ReturnStatement:
@@ -1294,6 +1314,8 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                 break;
             }
             case SyntaxKind.Block:
+                if (node.parent.kind === SyntaxKind.JsxAttributes) break;
+                // falls through
             case SyntaxKind.ModuleBlock:
                 bindEachFunctionsFirst((node as Block).statements);
                 break;
@@ -2467,10 +2489,9 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                 if (isPushOrUnshiftIdentifier(propertyAccess.name)) {
                     currentFlow = createFlowMutation(FlowFlags.ArrayMutation, currentFlow, node);
                 }
-                else if (isPopOrShiftIdentifier(propertyAccess.name)) {
-                    // pop() and shift() can make a NonEmptyArray become empty, so create a mutation
-                    currentFlow = createFlowMutation(FlowFlags.ArrayMutation, currentFlow, node);
-                }
+                // else if (isPopOrShiftIdentifier(propertyAccess.name)) {
+                //     currentFlow = createFlowMutation(FlowFlags.ArrayMutation, currentFlow, node);
+                // }
             }
         }
     }
@@ -3223,7 +3244,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
                 return bindFunctionDeclaration(node as FunctionDeclaration);
             case SyntaxKind.JsxComponentDirective:
                 if ((node as JsxComponentDirective).name) {
-                    bindBlockScopedDeclaration(node as unknown as Declaration, SymbolFlags.Function | SymbolFlags.Interface, SymbolFlags.FunctionExcludes | SymbolFlags.TypeAliasExcludes);
+                    bindBlockScopedDeclaration(node as unknown as Declaration, SymbolFlags.Function | SymbolFlags.Interface | SymbolFlags.NamespaceModule, SymbolFlags.FunctionExcludes | SymbolFlags.TypeAliasExcludes);
                 }
                 return;
             case SyntaxKind.JsxStyleDirective:

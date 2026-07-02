@@ -251,122 +251,82 @@
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 }
 
-// unwind
-{
-    <#component EventComp(w: HTMLElement) {
->w : Symbol(w, Decl(staticBindings.syn, 105, 26))
->HTMLElement : Symbol(HTMLElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
-
-        function onKeyPress(ev: KeyboardEvent) {}
->onKeyPress : Symbol(onKeyPress, Decl(staticBindings.syn, 105, 43))
->ev : Symbol(ev, Decl(staticBindings.syn, 106, 28))
->KeyboardEvent : Symbol(KeyboardEvent, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
-
-        w.addEventListener('keypress', onKeyPress)
->w.addEventListener : Symbol(HTMLElement.addEventListener, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
->w : Symbol(w, Decl(staticBindings.syn, 105, 26))
->addEventListener : Symbol(HTMLElement.addEventListener, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
->onKeyPress : Symbol(onKeyPress, Decl(staticBindings.syn, 105, 43))
-
-        unwind {
-            w.removeEventListener('keypress', onKeyPress)
->w.removeEventListener : Symbol(HTMLElement.removeEventListener, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
->w : Symbol(w, Decl(staticBindings.syn, 105, 26))
->removeEventListener : Symbol(HTMLElement.removeEventListener, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
->onKeyPress : Symbol(onKeyPress, Decl(staticBindings.syn, 105, 43))
-        }
-    }>
-        <div></div>
->div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
-
-        <#run>
-            const el = document.createElement('div')
->el : Symbol(el, Decl(staticBindings.syn, 114, 17))
->document.createElement : Symbol(Document.createElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
->document : Symbol(document, Decl(lib.dom.d.ts, --, --))
->createElement : Symbol(Document.createElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
-
-            unwind {
-                el.remove()
->el.remove : Symbol(ChildNode.remove, Decl(lib.dom.d.ts, --, --))
->el : Symbol(el, Decl(staticBindings.syn, 114, 17))
->remove : Symbol(ChildNode.remove, Decl(lib.dom.d.ts, --, --))
-            }
-        </>
-    </>
-}
-
 {
     <#component Timer(n: number) {
->n : Symbol(n, Decl(staticBindings.syn, 123, 22))
+>n : Symbol(n, Decl(staticBindings.syn, 104, 22))
 
         let active = true
->active : Symbol(active, Decl(staticBindings.syn, 124, 11))
+>active : Symbol(active, Decl(staticBindings.syn, 105, 11))
 
         let rate = n
->rate : Symbol(rate, Decl(staticBindings.syn, 125, 11))
->n : Symbol(n, Decl(staticBindings.syn, 123, 22))
+>rate : Symbol(rate, Decl(staticBindings.syn, 106, 11))
+>n : Symbol(n, Decl(staticBindings.syn, 104, 22))
 
         let c = 0
->c : Symbol(c, Decl(staticBindings.syn, 126, 11))
-
-        const d = <div>{c}</div>
->d : Symbol(d, Decl(staticBindings.syn, 127, 13))
->div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->c : Symbol(c, Decl(staticBindings.syn, 126, 11))
->div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>c : Symbol(c, Decl(staticBindings.syn, 107, 11))
 
         const counter = <div @ counter>
->counter : Symbol(counter, Decl(staticBindings.syn, 128, 13))
+>counter : Symbol(counter, Decl(staticBindings.syn, 108, 13))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->counter : Symbol(counter, Decl(staticBindings.syn, 128, 23))
+>counter : Symbol(counter, Decl(staticBindings.syn, 108, 23))
 
             <div @ d>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->d : Symbol(d, Decl(staticBindings.syn, 129, 12))
+>d : Symbol(d, Decl(staticBindings.syn, 109, 12))
 
                 count: {c}
->c : Symbol(c, Decl(staticBindings.syn, 126, 11))
+>c : Symbol(c, Decl(staticBindings.syn, 107, 11))
 
             </div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
             <#run>
-                if (active) {
->active : Symbol(active, Decl(staticBindings.syn, 124, 11))
+                static let id
+>id : Symbol(id, Decl(staticBindings.syn, 113, 26))
 
-                    const id = setInterval(() => {
->id : Symbol(id, Decl(staticBindings.syn, 134, 25))
+                if (active) {
+>active : Symbol(active, Decl(staticBindings.syn, 105, 11))
+
+                    id ??= setInterval(() => {
+>id : Symbol(id, Decl(staticBindings.syn, 113, 26))
 >setInterval : Symbol(setInterval, Decl(lib.dom.d.ts, --, --))
 
                         update d {
->d : Symbol(d, Decl(staticBindings.syn, 129, 12))
+>d : Symbol(d, Decl(staticBindings.syn, 109, 12))
 
                             c += 1
->c : Symbol(c, Decl(staticBindings.syn, 126, 11))
+>c : Symbol(c, Decl(staticBindings.syn, 107, 11))
                         }
                     }, rate)
->rate : Symbol(rate, Decl(staticBindings.syn, 125, 11))
+>rate : Symbol(rate, Decl(staticBindings.syn, 106, 11))
 
-                    unwind { clearInterval(id) }
+                } else {
+                    clearInterval(id)
 >clearInterval : Symbol(clearInterval, Decl(lib.dom.d.ts, --, --))
->id : Symbol(id, Decl(staticBindings.syn, 134, 25))
+>id : Symbol(id, Decl(staticBindings.syn, 113, 26))
+
+                    id = undefined
+>id : Symbol(id, Decl(staticBindings.syn, 113, 26))
+>undefined : Symbol(undefined)
                 }
+                id; // should be `number | undefined`
+>id : Symbol(id, Decl(staticBindings.syn, 113, 26))
+
             </>
         </div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         update counter {
->counter : Symbol(counter, Decl(staticBindings.syn, 128, 13))
+>counter : Symbol(counter, Decl(staticBindings.syn, 108, 13))
 
             rate = n
->rate : Symbol(rate, Decl(staticBindings.syn, 125, 11))
->n : Symbol(n, Decl(staticBindings.syn, 123, 22))
+>rate : Symbol(rate, Decl(staticBindings.syn, 106, 11))
+>n : Symbol(n, Decl(staticBindings.syn, 104, 22))
         }
     }>
-        <div></div>
+        <div>{counter}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>counter : Symbol(counter, Decl(staticBindings.syn, 108, 13))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
@@ -374,17 +334,17 @@
 
 // <#style>
 {
-    ;<#style d>
-    </>
-    ;<#style (d)>
-    </>
-    ;<#style d2(d)>
-    </>
-    ;<#style d3(d, d2)>
-    </>
+    <#style d>
+    </>;
+    <#style (d)>
+    </>;
+    <#style d2(d)>
+    </>;
+    <#style d3(d, d2)>
+    </>;
     const o = d
->o : Symbol(o, Decl(staticBindings.syn, 162, 9))
->d : Symbol(d, Decl(staticBindings.syn, 154, 5))
+>o : Symbol(o, Decl(staticBindings.syn, 146, 9))
+>d : Symbol(d, Decl(staticBindings.syn, 137, 1))
 }
 
 {
@@ -397,9 +357,9 @@
         </>
     </>
     const d = <div> <Foo/> </div>
->d : Symbol(d, Decl(staticBindings.syn, 172, 9))
+>d : Symbol(d, Decl(staticBindings.syn, 156, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->Foo : Symbol(Foo, Decl(staticBindings.syn, 165, 1))
+>Foo : Symbol(Foo, Decl(staticBindings.syn, 149, 1))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 }
 

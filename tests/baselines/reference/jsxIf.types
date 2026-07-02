@@ -152,6 +152,59 @@
 }
 
 {
+    // #if bypasses unconditional update checks
+    let cond = true;
+>cond : boolean
+>     : ^^^^^^^
+>true : true
+>     : ^^^^
+
+    <div @ d>
+><div @ d>        <#if (cond)>            <#run>                static {                    update d { cond = !cond }                }            </>        </>    </div> : HTMLDivElement & Updatable
+>                                                                                                                                                                          : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+        <#if (cond)>
+>cond : true
+>     : ^^^^
+
+            <#run>
+                static {
+                    update d { cond = !cond }
+>d : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>cond = !cond : false
+>             : ^^^^^
+>cond : boolean
+>     : ^^^^^^^
+>!cond : false
+>      : ^^^^^
+>cond : true
+>     : ^^^^
+                }
+            </>
+        </>
+    </div>
+>div : any
+>    : ^^^
+
+    console.log('a')
+>console.log('a') : void
+>                 : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>'a' : "a"
+>    : ^^^
+}
+
+{
     let filterState: 'all' | 'completed' | 'active' = 'all';
 >filterState : "all" | "completed" | "active"
 >            : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

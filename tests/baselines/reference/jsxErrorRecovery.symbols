@@ -1,0 +1,31 @@
+//// [tests/cases/syn/jsxErrorRecovery.syn] ////
+
+=== jsxErrorRecovery.syn ===
+{
+    // parse tag looking structures correctly
+    <3></3>;
+    <3run></3run>;
+}
+
+{
+    const d = @<div>{'a'}</div>
+>d : Symbol(d, Decl(jsxErrorRecovery.syn, 7, 9))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    const f = () => { update d }
+>f : Symbol(f, Decl(jsxErrorRecovery.syn, 8, 9))
+>d : Symbol(d, Decl(jsxErrorRecovery.syn, 7, 9))
+}
+
+{
+    <div @ d></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>d : Symbol(d, Decl(jsxErrorRecovery.syn, 11, 1))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    <div @ d2></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>d2 : Symbol(d2, Decl(jsxErrorRecovery.syn, 12, 19))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+}

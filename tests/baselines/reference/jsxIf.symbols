@@ -86,27 +86,57 @@
 }
 
 {
+    // #if bypasses unconditional update checks
+    let cond = true;
+>cond : Symbol(cond, Decl(jsxIf.syn, 39, 7))
+
+    <div @ d>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>d : Symbol(d, Decl(jsxIf.syn, 39, 20))
+
+        <#if (cond)>
+>cond : Symbol(cond, Decl(jsxIf.syn, 39, 7))
+
+            <#run>
+                static {
+                    update d { cond = !cond }
+>d : Symbol(d, Decl(jsxIf.syn, 39, 20))
+>cond : Symbol(cond, Decl(jsxIf.syn, 39, 7))
+>cond : Symbol(cond, Decl(jsxIf.syn, 39, 7))
+                }
+            </>
+        </>
+    </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    console.log('a')
+>console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>console : Symbol(console, Decl(lib.dom.d.ts, --, --))
+>log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+}
+
+{
     let filterState: 'all' | 'completed' | 'active' = 'all';
->filterState : Symbol(filterState, Decl(jsxIf.syn, 38, 7))
+>filterState : Symbol(filterState, Decl(jsxIf.syn, 53, 7))
 
     <div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         <#run>
             let c
->c : Symbol(c, Decl(jsxIf.syn, 41, 15))
+>c : Symbol(c, Decl(jsxIf.syn, 56, 15))
 
             switch (filterState) {
->filterState : Symbol(filterState, Decl(jsxIf.syn, 38, 7))
+>filterState : Symbol(filterState, Decl(jsxIf.syn, 53, 7))
 
                 case 'all': c = 1;
->c : Symbol(c, Decl(jsxIf.syn, 41, 15))
+>c : Symbol(c, Decl(jsxIf.syn, 56, 15))
 
                 case 'completed': c = 2;
->c : Symbol(c, Decl(jsxIf.syn, 41, 15))
+>c : Symbol(c, Decl(jsxIf.syn, 56, 15))
 
                 case 'active': c = 3;
->c : Symbol(c, Decl(jsxIf.syn, 41, 15))
+>c : Symbol(c, Decl(jsxIf.syn, 56, 15))
             }
         </>
     </div>

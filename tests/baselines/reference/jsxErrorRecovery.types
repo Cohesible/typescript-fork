@@ -1,0 +1,65 @@
+//// [tests/cases/syn/jsxErrorRecovery.syn] ////
+
+=== jsxErrorRecovery.syn ===
+{
+    // parse tag looking structures correctly
+    <3></3>;
+><3></3> : Element
+>        : ^^^^^^^
+>3 : any
+>  : ^^^
+>3 : any
+>  : ^^^
+
+    <3run></3run>;
+><3run></3run> : Element
+>              : ^^^^^^^
+>3run : any
+>     : ^^^
+>3run : any
+>     : ^^^
+}
+
+{
+    const d = @<div>{'a'}</div>
+>d : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+><div>{'a'}</div> : HTMLDivElement & Updatable
+>                 : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>'a' : "a"
+>    : ^^^
+>div : any
+>    : ^^^
+
+    const f = () => { update d }
+>f : () => void
+>  : ^^^^^^^^^^
+>() => { update d } : () => void
+>                   : ^^^^^^^^^^
+>d : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+}
+
+{
+    <div @ d></div>
+><div @ d></div> : HTMLDivElement & Updatable
+>                : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+    <div @ d2></div>
+><div @ d2></div> : HTMLDivElement & Updatable
+>                 : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d2 : HTMLDivElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+}

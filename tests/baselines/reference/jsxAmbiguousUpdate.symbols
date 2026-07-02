@@ -1,0 +1,65 @@
+//// [tests/cases/syn/jsxAmbiguousUpdate.syn] ////
+
+=== jsxAmbiguousUpdate.syn ===
+let c = 0
+>c : Symbol(c, Decl(jsxAmbiguousUpdate.syn, 0, 3))
+
+const d = <div>{c}</div>
+>d : Symbol(d, Decl(jsxAmbiguousUpdate.syn, 1, 5))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>c : Symbol(c, Decl(jsxAmbiguousUpdate.syn, 0, 3))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+update d
+>d : Symbol(d, Decl(jsxAmbiguousUpdate.syn, 1, 5))
+
+const d2 = @ <div>{c}</div>
+>d2 : Symbol(d2, Decl(jsxAmbiguousUpdate.syn, 4, 5))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>c : Symbol(c, Decl(jsxAmbiguousUpdate.syn, 0, 3))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+update d2
+>d2 : Symbol(d2, Decl(jsxAmbiguousUpdate.syn, 4, 5))
+
+declare const d3: HTMLElement
+>d3 : Symbol(d3, Decl(jsxAmbiguousUpdate.syn, 7, 13))
+>HTMLElement : Symbol(HTMLElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+
+update d3
+>d3 : Symbol(d3, Decl(jsxAmbiguousUpdate.syn, 7, 13))
+
+if (d3 is Updatable) update d3
+>d3 : Symbol(d3, Decl(jsxAmbiguousUpdate.syn, 7, 13))
+>Updatable : Symbol(Updatable, Decl(lib.jsx.d.ts, --, --))
+>d3 : Symbol(d3, Decl(jsxAmbiguousUpdate.syn, 7, 13))
+
+<#component Foo(c: number)>
+>c : Symbol(c, Decl(jsxAmbiguousUpdate.syn, 12, 16))
+
+    <div>{c}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>c : Symbol(c, Decl(jsxAmbiguousUpdate.syn, 12, 16))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+</>
+
+const f = <Foo c={c++} />
+>f : Symbol(f, Decl(jsxAmbiguousUpdate.syn, 16, 5))
+>Foo : Symbol(Foo, Decl(jsxAmbiguousUpdate.syn, 10, 30))
+>c : Symbol(c, Decl(jsxAmbiguousUpdate.syn, 16, 14))
+>c : Symbol(c, Decl(jsxAmbiguousUpdate.syn, 0, 3))
+
+update f
+>f : Symbol(f, Decl(jsxAmbiguousUpdate.syn, 16, 5))
+
+const f2 = @ <Foo c={c++} />
+>f2 : Symbol(f2, Decl(jsxAmbiguousUpdate.syn, 19, 5))
+>Foo : Symbol(Foo, Decl(jsxAmbiguousUpdate.syn, 10, 30))
+>c : Symbol(c, Decl(jsxAmbiguousUpdate.syn, 19, 17))
+>c : Symbol(c, Decl(jsxAmbiguousUpdate.syn, 0, 3))
+
+update f2
+>f2 : Symbol(f2, Decl(jsxAmbiguousUpdate.syn, 19, 5))
+
+

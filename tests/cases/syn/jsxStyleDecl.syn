@@ -1,0 +1,11 @@
+<#component Foo()>
+    <div .foo>text</div>
+    <#style>
+        div { color: red; }
+    </>
+</>
+
+<#style>
+    div { background: gray; }
+    .foo { font-size: 3rem; }
+</>

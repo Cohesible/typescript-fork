@@ -1,7 +1,7 @@
 // element names
 {
     // b can be seen within the tree, but not outside
-    const a = <div>
+    const a = <div @ a>
         <div @ b></div>
         <#run>
             console.log(a, b)

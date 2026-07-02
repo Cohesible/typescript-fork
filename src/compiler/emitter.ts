@@ -1781,6 +1781,14 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
                     return emitJsxClosingElementOrFragment(node as JsxClosingElement);
                 case SyntaxKind.JsxAttribute:
                     return emitJsxAttribute(node as JsxAttribute);
+                case SyntaxKind.JsxClassList:
+                    return emitJsxClassList(node as ts.JsxClassList);
+                case SyntaxKind.JsxClassAttribute:
+                    return emitJsxClassAttribute(node as ts.JsxClassAttribute);
+                case SyntaxKind.JsxShorthandAttribute:
+                    return emitJsxShorthandAttribute(node as ts.JsxShorthandAttribute);
+                case SyntaxKind.JsxMethodAttribute:
+                    return emitJsxMethodAttribute(node as ts.JsxMethodAttribute);
                 case SyntaxKind.JsxAttributes:
                     return emitJsxAttributes(node as JsxAttributes);
                 case SyntaxKind.JsxSpreadAttribute:
@@ -3935,6 +3943,35 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
     function emitJsxAttribute(node: JsxAttribute) {
         emit(node.name);
         emitNodeWithPrefix("=", writePunctuation, node.initializer, emitJsxAttributeValue);
+    }
+
+    function emitJsxClassList(node: ts.JsxClassList) {
+        writePunctuation("(");
+        emitList(node, node.attributes, ListFormat.CommaListElements);
+        writePunctuation(")");
+    }
+
+    function emitJsxClassAttribute(node: ts.JsxClassAttribute) {
+        for (const n of node.names) {
+            writePunctuation(".");
+            emit(n);
+        }
+        if (node.initializer) {
+            writePunctuation("=");
+            emit(node.initializer);
+        }
+    }
+
+    function emitJsxShorthandAttribute(node: ts.JsxShorthandAttribute) {
+        writePunctuation("{");
+        emit(node.name);
+        writePunctuation("}");
+    }
+
+    function emitJsxMethodAttribute(node: ts.JsxMethodAttribute) {
+        emitDecoratorsAndModifiers(node, node.modifiers, /*allowDecorators*/ false);
+        emit(node.name);
+        emitSignatureAndBody(node, emitSignatureHead, emitFunctionBody);
     }
 
     function emitJsxSpreadAttribute(node: JsxSpreadAttribute) {

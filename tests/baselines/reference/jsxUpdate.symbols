@@ -1,19 +1,19 @@
 //// [tests/cases/syn/jsxUpdate.syn] ////
 
 === jsxUpdate.syn ===
-// update expression
 {
-    declare const el: Element;
->el : Symbol(el, Decl(jsxUpdate.syn, 2, 17))
+    declare const el: Element & Updatable;
+>el : Symbol(el, Decl(jsxUpdate.syn, 1, 17))
 >Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
+>Updatable : Symbol(Updatable, Decl(lib.jsx.d.ts, --, --))
 
     const d = <div on:click={() => {
->d : Symbol(d, Decl(jsxUpdate.syn, 3, 9))
+>d : Symbol(d, Decl(jsxUpdate.syn, 2, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->on:click : Symbol(on:click, Decl(jsxUpdate.syn, 3, 18))
+>on:click : Symbol(on:click, Decl(jsxUpdate.syn, 2, 18))
 
         update el
->el : Symbol(el, Decl(jsxUpdate.syn, 2, 17))
+>el : Symbol(el, Decl(jsxUpdate.syn, 1, 17))
 
     }}></div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
@@ -27,65 +27,68 @@
 >querySelector : Symbol(ParentNode.querySelector, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --) ... and 1 more)
 
     if (const x = document.querySelector('.a')) {
->x : Symbol(x, Decl(jsxUpdate.syn, 12, 13))
+>x : Symbol(x, Decl(jsxUpdate.syn, 11, 13))
 >document.querySelector : Symbol(ParentNode.querySelector, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --) ... and 1 more)
 >document : Symbol(document, Decl(lib.dom.d.ts, --, --))
 >querySelector : Symbol(ParentNode.querySelector, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --) ... and 1 more)
 
-        // ok
-        update x
->x : Symbol(x, Decl(jsxUpdate.syn, 12, 13))
+        if (x is Updatable) {
+>x : Symbol(x, Decl(jsxUpdate.syn, 11, 13))
+>Updatable : Symbol(Updatable, Decl(lib.jsx.d.ts, --, --))
+
+            // ok
+            update x
+>x : Symbol(x, Decl(jsxUpdate.syn, 11, 13))
+        }
     }
 
     {
         let y = 0
->y : Symbol(y, Decl(jsxUpdate.syn, 18, 11))
+>y : Symbol(y, Decl(jsxUpdate.syn, 19, 11))
 
-        const x = <div>{y}</div>
->x : Symbol(x, Decl(jsxUpdate.syn, 19, 13))
+        const x = @<div>{y}</div>
+>x : Symbol(x, Decl(jsxUpdate.syn, 20, 13))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->y : Symbol(y, Decl(jsxUpdate.syn, 18, 11))
+>y : Symbol(y, Decl(jsxUpdate.syn, 19, 11))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         update x // ok
->x : Symbol(x, Decl(jsxUpdate.syn, 19, 13))
+>x : Symbol(x, Decl(jsxUpdate.syn, 20, 13))
+
+        update x // redundant
+>x : Symbol(x, Decl(jsxUpdate.syn, 20, 13))
+
+        const x2 = @<div>{y++}</div>
+>x2 : Symbol(x2, Decl(jsxUpdate.syn, 24, 13))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>y : Symbol(y, Decl(jsxUpdate.syn, 19, 11))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        update x2
+>x2 : Symbol(x2, Decl(jsxUpdate.syn, 24, 13))
+
+        update x2 // ok, because updating `x2` mutates something
+>x2 : Symbol(x2, Decl(jsxUpdate.syn, 24, 13))
     }
 
     {
-        const x = <div>hi</div>
->x : Symbol(x, Decl(jsxUpdate.syn, 24, 13))
+        const x = @<div>hi</div>
+>x : Symbol(x, Decl(jsxUpdate.syn, 30, 13))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         update x // error, `x` has no updatable expressions
->x : Symbol(x, Decl(jsxUpdate.syn, 24, 13))
+>x : Symbol(x, Decl(jsxUpdate.syn, 30, 13))
     }
 
     {
         let y = 0
->y : Symbol(y, Decl(jsxUpdate.syn, 29, 11))
-
-        const x = <div><div>{y}</div></div>
->x : Symbol(x, Decl(jsxUpdate.syn, 30, 13))
->div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->y : Symbol(y, Decl(jsxUpdate.syn, 29, 11))
->div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
-
-        update x // ok
->x : Symbol(x, Decl(jsxUpdate.syn, 30, 13))
-    }
-
-    {
-        let y = '0'
 >y : Symbol(y, Decl(jsxUpdate.syn, 35, 11))
 
-        const x = <div><div id={y}></div></div>
+        const x = @<div><div>{y}</div></div>
 >x : Symbol(x, Decl(jsxUpdate.syn, 36, 13))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->id : Symbol(id, Decl(jsxUpdate.syn, 36, 27))
 >y : Symbol(y, Decl(jsxUpdate.syn, 35, 11))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
@@ -98,36 +101,53 @@
         let y = '0'
 >y : Symbol(y, Decl(jsxUpdate.syn, 41, 11))
 
-        const x = <div id={y}></div>
+        const x = @<div><div id={y}></div></div>
 >x : Symbol(x, Decl(jsxUpdate.syn, 42, 13))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->id : Symbol(id, Decl(jsxUpdate.syn, 42, 22))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>id : Symbol(id, Decl(jsxUpdate.syn, 42, 28))
 >y : Symbol(y, Decl(jsxUpdate.syn, 41, 11))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         update x // ok
 >x : Symbol(x, Decl(jsxUpdate.syn, 42, 13))
+    }
+
+    {
+        let y = '0'
+>y : Symbol(y, Decl(jsxUpdate.syn, 47, 11))
+
+        const x = @<div id={y}></div>
+>x : Symbol(x, Decl(jsxUpdate.syn, 48, 13))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>id : Symbol(id, Decl(jsxUpdate.syn, 48, 23))
+>y : Symbol(y, Decl(jsxUpdate.syn, 47, 11))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        update x // ok
+>x : Symbol(x, Decl(jsxUpdate.syn, 48, 13))
     }
 
     {
         // components can always be updated
         function Comp() { return <div></div> }
->Comp : Symbol(Comp, Decl(jsxUpdate.syn, 46, 5))
+>Comp : Symbol(Comp, Decl(jsxUpdate.syn, 52, 5))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
-        const el = <Comp/>
->el : Symbol(el, Decl(jsxUpdate.syn, 49, 13))
->Comp : Symbol(Comp, Decl(jsxUpdate.syn, 46, 5))
+        const el = @<Comp/>
+>el : Symbol(el, Decl(jsxUpdate.syn, 55, 13))
+>Comp : Symbol(Comp, Decl(jsxUpdate.syn, 52, 5))
 
         update el // ok
->el : Symbol(el, Decl(jsxUpdate.syn, 49, 13))
+>el : Symbol(el, Decl(jsxUpdate.syn, 55, 13))
     }
 
     {
         // expressions and blocks always make the element updatable
-        const el = <div>
->el : Symbol(el, Decl(jsxUpdate.syn, 55, 13))
+        const el = @<div>
+>el : Symbol(el, Decl(jsxUpdate.syn, 61, 13))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
             {<span>hi</span>}
@@ -138,10 +158,10 @@
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         update el // ok
->el : Symbol(el, Decl(jsxUpdate.syn, 55, 13))
+>el : Symbol(el, Decl(jsxUpdate.syn, 61, 13))
 
-        const el2 = <div>
->el2 : Symbol(el2, Decl(jsxUpdate.syn, 60, 13))
+        const el2 = @<div>
+>el2 : Symbol(el2, Decl(jsxUpdate.syn, 66, 13))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
             <#run>
@@ -155,206 +175,207 @@
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         update el2 // ok
->el2 : Symbol(el2, Decl(jsxUpdate.syn, 60, 13))
+>el2 : Symbol(el2, Decl(jsxUpdate.syn, 66, 13))
     }
 }
 
 // update block form
 {
     let y = 0
->y : Symbol(y, Decl(jsxUpdate.syn, 71, 7))
+>y : Symbol(y, Decl(jsxUpdate.syn, 77, 7))
 
-    const x = <div>{y}</div>
->x : Symbol(x, Decl(jsxUpdate.syn, 72, 9))
+    const x = @<div>{y}</div>
+>x : Symbol(x, Decl(jsxUpdate.syn, 78, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->y : Symbol(y, Decl(jsxUpdate.syn, 71, 7))
+>y : Symbol(y, Decl(jsxUpdate.syn, 77, 7))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     update x {
->x : Symbol(x, Decl(jsxUpdate.syn, 72, 9))
+>x : Symbol(x, Decl(jsxUpdate.syn, 78, 9))
 
         y = 1
->y : Symbol(y, Decl(jsxUpdate.syn, 71, 7))
+>y : Symbol(y, Decl(jsxUpdate.syn, 77, 7))
     }
 
     update x
->x : Symbol(x, Decl(jsxUpdate.syn, 72, 9))
+>x : Symbol(x, Decl(jsxUpdate.syn, 78, 9))
 
     let a = 0
->a : Symbol(a, Decl(jsxUpdate.syn, 80, 7))
+>a : Symbol(a, Decl(jsxUpdate.syn, 86, 7))
 
     let b = ''
->b : Symbol(b, Decl(jsxUpdate.syn, 81, 7))
+>b : Symbol(b, Decl(jsxUpdate.syn, 87, 7))
 
-    const xa = <div>{a}</div>
->xa : Symbol(xa, Decl(jsxUpdate.syn, 82, 9))
+    const xa = @<div>{a}</div>
+>xa : Symbol(xa, Decl(jsxUpdate.syn, 88, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->a : Symbol(a, Decl(jsxUpdate.syn, 80, 7))
+>a : Symbol(a, Decl(jsxUpdate.syn, 86, 7))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
-    const xb = <span>{b}</span>
->xb : Symbol(xb, Decl(jsxUpdate.syn, 83, 9))
+    const xb = @<span>{b}</span>
+>xb : Symbol(xb, Decl(jsxUpdate.syn, 89, 9))
 >span : Symbol(JSX.IntrinsicElements.span, Decl(lib.jsx.d.ts, --, --))
->b : Symbol(b, Decl(jsxUpdate.syn, 81, 7))
+>b : Symbol(b, Decl(jsxUpdate.syn, 87, 7))
 >span : Symbol(JSX.IntrinsicElements.span, Decl(lib.jsx.d.ts, --, --))
 
     update xa, xb {
->xa : Symbol(xa, Decl(jsxUpdate.syn, 82, 9))
->xb : Symbol(xb, Decl(jsxUpdate.syn, 83, 9))
+>xa : Symbol(xa, Decl(jsxUpdate.syn, 88, 9))
+>xb : Symbol(xb, Decl(jsxUpdate.syn, 89, 9))
 
         a = 1
->a : Symbol(a, Decl(jsxUpdate.syn, 80, 7))
+>a : Symbol(a, Decl(jsxUpdate.syn, 86, 7))
 
         b = 'hi'
->b : Symbol(b, Decl(jsxUpdate.syn, 81, 7))
+>b : Symbol(b, Decl(jsxUpdate.syn, 87, 7))
     }
 
     update xa, xb {
->xa : Symbol(xa, Decl(jsxUpdate.syn, 82, 9))
->xb : Symbol(xb, Decl(jsxUpdate.syn, 83, 9))
+>xa : Symbol(xa, Decl(jsxUpdate.syn, 88, 9))
+>xb : Symbol(xb, Decl(jsxUpdate.syn, 89, 9))
 
         b = 'only b'
->b : Symbol(b, Decl(jsxUpdate.syn, 81, 7))
+>b : Symbol(b, Decl(jsxUpdate.syn, 87, 7))
     }
 
-    declare const unknown: Element
->unknown : Symbol(unknown, Decl(jsxUpdate.syn, 94, 17))
+    declare const unknown: Element & Updatable;
+>unknown : Symbol(unknown, Decl(jsxUpdate.syn, 100, 17))
 >Element : Symbol(Element, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --), Decl(lib.jsx.d.ts, --, --), Decl(lib.jsx.d.ts, --, --))
+>Updatable : Symbol(Updatable, Decl(lib.jsx.d.ts, --, --))
 
     update unknown {
->unknown : Symbol(unknown, Decl(jsxUpdate.syn, 94, 17))
+>unknown : Symbol(unknown, Decl(jsxUpdate.syn, 100, 17))
 
         y = 2
->y : Symbol(y, Decl(jsxUpdate.syn, 71, 7))
+>y : Symbol(y, Decl(jsxUpdate.syn, 77, 7))
     }
 }
 
 // catch recursive updates
 {
-    let c = 0
->c : Symbol(c, Decl(jsxUpdate.syn, 102, 7))
+    let c = 0;
+>c : Symbol(c, Decl(jsxUpdate.syn, 108, 7))
 
-    ;<div @ root>
+    <div @ root>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->root : Symbol(root, Decl(jsxUpdate.syn, 103, 5))
+>root : Symbol(root, Decl(jsxUpdate.syn, 108, 14))
 
         {c}
->c : Symbol(c, Decl(jsxUpdate.syn, 102, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 108, 7))
 
         <#run>
             update root {
->root : Symbol(root, Decl(jsxUpdate.syn, 103, 5))
+>root : Symbol(root, Decl(jsxUpdate.syn, 108, 14))
 
                 c += 1
->c : Symbol(c, Decl(jsxUpdate.syn, 102, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 108, 7))
             }
             if (c < 10) {
->c : Symbol(c, Decl(jsxUpdate.syn, 102, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 108, 7))
 
                 // ok
                 update root {
->root : Symbol(root, Decl(jsxUpdate.syn, 103, 5))
+>root : Symbol(root, Decl(jsxUpdate.syn, 108, 14))
 
                     c += 1
->c : Symbol(c, Decl(jsxUpdate.syn, 102, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 108, 7))
                 }
             }
         </>
         <div @ d>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->d : Symbol(d, Decl(jsxUpdate.syn, 116, 8))
+>d : Symbol(d, Decl(jsxUpdate.syn, 122, 8))
 
             <#run>
                 update root {
->root : Symbol(root, Decl(jsxUpdate.syn, 103, 5))
+>root : Symbol(root, Decl(jsxUpdate.syn, 108, 14))
 
                     c += 1
->c : Symbol(c, Decl(jsxUpdate.syn, 102, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 108, 7))
                 }
             </>
         </div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
-    </div>
+    </div>;
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
-    ;<div>
+    <div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         <#run>
             // error (use-before-init)
             update d { c += 1 }
->d : Symbol(d, Decl(jsxUpdate.syn, 130, 8))
->c : Symbol(c, Decl(jsxUpdate.syn, 102, 7))
+>d : Symbol(d, Decl(jsxUpdate.syn, 136, 8))
+>c : Symbol(c, Decl(jsxUpdate.syn, 108, 7))
 
         </>
         <div @ d>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->d : Symbol(d, Decl(jsxUpdate.syn, 130, 8))
+>d : Symbol(d, Decl(jsxUpdate.syn, 136, 8))
 
             {c}
->c : Symbol(c, Decl(jsxUpdate.syn, 102, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 108, 7))
 
         </div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
-    </div>
+    </div>;
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 }
 
 {
-    let c = 0
->c : Symbol(c, Decl(jsxUpdate.syn, 137, 7))
+    let c = 0;
+>c : Symbol(c, Decl(jsxUpdate.syn, 143, 7))
 
-    ;<div @ root>
+    <div @ root>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->root : Symbol(root, Decl(jsxUpdate.syn, 138, 5))
+>root : Symbol(root, Decl(jsxUpdate.syn, 143, 14))
 
         <div @ d1>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->d1 : Symbol(d1, Decl(jsxUpdate.syn, 139, 8))
+>d1 : Symbol(d1, Decl(jsxUpdate.syn, 145, 8))
 
             {c}
->c : Symbol(c, Decl(jsxUpdate.syn, 137, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 143, 7))
 
         </div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         <div @ d2>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->d2 : Symbol(d2, Decl(jsxUpdate.syn, 142, 8))
+>d2 : Symbol(d2, Decl(jsxUpdate.syn, 148, 8))
 
             {c}
->c : Symbol(c, Decl(jsxUpdate.syn, 137, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 143, 7))
 
         </div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         <button on:click={() => {
 >button : Symbol(JSX.IntrinsicElements.button, Decl(lib.jsx.d.ts, --, --))
->on:click : Symbol(on:click, Decl(jsxUpdate.syn, 145, 15))
+>on:click : Symbol(on:click, Decl(jsxUpdate.syn, 151, 15))
 
             // ok
             update root {
->root : Symbol(root, Decl(jsxUpdate.syn, 138, 5))
+>root : Symbol(root, Decl(jsxUpdate.syn, 143, 14))
 
                 c += 1
->c : Symbol(c, Decl(jsxUpdate.syn, 137, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 143, 7))
             }
             // ok
             update d1, d2 {
->d1 : Symbol(d1, Decl(jsxUpdate.syn, 139, 8))
->d2 : Symbol(d2, Decl(jsxUpdate.syn, 142, 8))
+>d1 : Symbol(d1, Decl(jsxUpdate.syn, 145, 8))
+>d2 : Symbol(d2, Decl(jsxUpdate.syn, 148, 8))
 
                 c += 1
->c : Symbol(c, Decl(jsxUpdate.syn, 137, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 143, 7))
             }
             // error
             update d1 {
->d1 : Symbol(d1, Decl(jsxUpdate.syn, 139, 8))
+>d1 : Symbol(d1, Decl(jsxUpdate.syn, 145, 8))
 
                 c += 1
->c : Symbol(c, Decl(jsxUpdate.syn, 137, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 143, 7))
             }
         }}>
           Increment
@@ -366,42 +387,42 @@
 }
 
 {
-    let c = 0
->c : Symbol(c, Decl(jsxUpdate.syn, 165, 7))
+    let c = 0;
+>c : Symbol(c, Decl(jsxUpdate.syn, 171, 7))
 
-    ;<div @ root>
+    <div @ root>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->root : Symbol(root, Decl(jsxUpdate.syn, 166, 5))
+>root : Symbol(root, Decl(jsxUpdate.syn, 171, 14))
 
         <div @ d1>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->d1 : Symbol(d1, Decl(jsxUpdate.syn, 167, 8))
+>d1 : Symbol(d1, Decl(jsxUpdate.syn, 173, 8))
 
             {c}
->c : Symbol(c, Decl(jsxUpdate.syn, 165, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 171, 7))
 
         </div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         {c}
->c : Symbol(c, Decl(jsxUpdate.syn, 165, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 171, 7))
 
         <button on:click={() => {
 >button : Symbol(JSX.IntrinsicElements.button, Decl(lib.jsx.d.ts, --, --))
->on:click : Symbol(on:click, Decl(jsxUpdate.syn, 171, 15))
+>on:click : Symbol(on:click, Decl(jsxUpdate.syn, 177, 15))
 
             update d1, root {
->d1 : Symbol(d1, Decl(jsxUpdate.syn, 167, 8))
->root : Symbol(root, Decl(jsxUpdate.syn, 166, 5))
+>d1 : Symbol(d1, Decl(jsxUpdate.syn, 173, 8))
+>root : Symbol(root, Decl(jsxUpdate.syn, 171, 14))
 
                 c += 1
->c : Symbol(c, Decl(jsxUpdate.syn, 165, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 171, 7))
             }
             update d1 {
->d1 : Symbol(d1, Decl(jsxUpdate.syn, 167, 8))
+>d1 : Symbol(d1, Decl(jsxUpdate.syn, 173, 8))
 
                 c += 1
->c : Symbol(c, Decl(jsxUpdate.syn, 165, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 171, 7))
             }
         }}>
           Increment
@@ -413,32 +434,32 @@
 }
 
 {
-    let c = 0
->c : Symbol(c, Decl(jsxUpdate.syn, 185, 7))
+    let c = 0;
+>c : Symbol(c, Decl(jsxUpdate.syn, 191, 7))
 
-    ;<div @ root>
+    <div @ root>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->root : Symbol(root, Decl(jsxUpdate.syn, 186, 5))
+>root : Symbol(root, Decl(jsxUpdate.syn, 191, 14))
 
         <div @ d>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->d : Symbol(d, Decl(jsxUpdate.syn, 187, 8))
+>d : Symbol(d, Decl(jsxUpdate.syn, 193, 8))
 
             {c}
->c : Symbol(c, Decl(jsxUpdate.syn, 185, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 191, 7))
 
         </div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         <button on:click={() => {
 >button : Symbol(JSX.IntrinsicElements.button, Decl(lib.jsx.d.ts, --, --))
->on:click : Symbol(on:click, Decl(jsxUpdate.syn, 190, 15))
+>on:click : Symbol(on:click, Decl(jsxUpdate.syn, 196, 15))
 
             update root {
->root : Symbol(root, Decl(jsxUpdate.syn, 186, 5))
+>root : Symbol(root, Decl(jsxUpdate.syn, 191, 14))
 
                 c += 1
->c : Symbol(c, Decl(jsxUpdate.syn, 185, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 191, 7))
             }
         }}>
           Increment
@@ -451,21 +472,21 @@
 
 {
     <#component Comp(v: number) {
->v : Symbol(v, Decl(jsxUpdate.syn, 201, 21))
+>v : Symbol(v, Decl(jsxUpdate.syn, 207, 21))
 
         let count = v
->count : Symbol(count, Decl(jsxUpdate.syn, 202, 11))
->v : Symbol(v, Decl(jsxUpdate.syn, 201, 21))
+>count : Symbol(count, Decl(jsxUpdate.syn, 208, 11))
+>v : Symbol(v, Decl(jsxUpdate.syn, 207, 21))
 
         function increment() {
->increment : Symbol(increment, Decl(jsxUpdate.syn, 202, 21))
+>increment : Symbol(increment, Decl(jsxUpdate.syn, 208, 21))
 
             count++
->count : Symbol(count, Decl(jsxUpdate.syn, 202, 11))
+>count : Symbol(count, Decl(jsxUpdate.syn, 208, 11))
         }
 
         function unrelated() {
->unrelated : Symbol(unrelated, Decl(jsxUpdate.syn, 206, 9))
+>unrelated : Symbol(unrelated, Decl(jsxUpdate.syn, 212, 9))
 
             console.log('hi')
 >console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
@@ -473,24 +494,24 @@
 >log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
         }
 
-        const x = <div>{count}</div>
->x : Symbol(x, Decl(jsxUpdate.syn, 212, 13))
+        const x = @<div>{count}</div>
+>x : Symbol(x, Decl(jsxUpdate.syn, 218, 13))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->count : Symbol(count, Decl(jsxUpdate.syn, 202, 11))
+>count : Symbol(count, Decl(jsxUpdate.syn, 208, 11))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         update x {
->x : Symbol(x, Decl(jsxUpdate.syn, 212, 13))
+>x : Symbol(x, Decl(jsxUpdate.syn, 218, 13))
 
             increment()
->increment : Symbol(increment, Decl(jsxUpdate.syn, 202, 21))
+>increment : Symbol(increment, Decl(jsxUpdate.syn, 208, 21))
         }
 
         update x {
->x : Symbol(x, Decl(jsxUpdate.syn, 212, 13))
+>x : Symbol(x, Decl(jsxUpdate.syn, 218, 13))
 
             unrelated()
->unrelated : Symbol(unrelated, Decl(jsxUpdate.syn, 206, 9))
+>unrelated : Symbol(unrelated, Decl(jsxUpdate.syn, 212, 9))
         }
     }>
         <div></div>
@@ -502,66 +523,70 @@
 
 {
     let c = 0
->c : Symbol(c, Decl(jsxUpdate.syn, 227, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 233, 7))
 
     <#component Inner() {}>
         <div>{c}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->c : Symbol(c, Decl(jsxUpdate.syn, 227, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 233, 7))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
     const inner = <Inner />
->inner : Symbol(inner, Decl(jsxUpdate.syn, 231, 9))
->Inner : Symbol(Inner, Decl(jsxUpdate.syn, 227, 13))
+>inner : Symbol(inner, Decl(jsxUpdate.syn, 237, 9))
+>Inner : Symbol(Inner, Decl(jsxUpdate.syn, 233, 13))
 
-    const root = <div>
->root : Symbol(root, Decl(jsxUpdate.syn, 232, 9))
+    const root = @<div>
+>root : Symbol(root, Decl(jsxUpdate.syn, 238, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         <Inner />
->Inner : Symbol(Inner, Decl(jsxUpdate.syn, 227, 13))
+>Inner : Symbol(Inner, Decl(jsxUpdate.syn, 233, 13))
 
     </div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     update root {
->root : Symbol(root, Decl(jsxUpdate.syn, 232, 9))
+>root : Symbol(root, Decl(jsxUpdate.syn, 238, 9))
 
         c += 1  // ok
->c : Symbol(c, Decl(jsxUpdate.syn, 227, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 233, 7))
     }
-    // TODO: the no-effect case should suggest to use the expression form (?)
+    function noop() {}
+>noop : Symbol(noop, Decl(jsxUpdate.syn, 243, 5))
+
+    // TODO: the no-effect case should suggest to remove the block
     update root {
->root : Symbol(root, Decl(jsxUpdate.syn, 232, 9))
+>root : Symbol(root, Decl(jsxUpdate.syn, 238, 9))
 
         noop()  // error, no effect
+>noop : Symbol(noop, Decl(jsxUpdate.syn, 243, 5))
     }
 }
 
 {
     let c = 0
->c : Symbol(c, Decl(jsxUpdate.syn, 245, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 252, 7))
 
     <#component InnerB() {}>
         <div>{c}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->c : Symbol(c, Decl(jsxUpdate.syn, 245, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 252, 7))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
-    </>
-    ;<div @ root>
+    </>;
+    <div @ root>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->root : Symbol(root, Decl(jsxUpdate.syn, 249, 5))
+>root : Symbol(root, Decl(jsxUpdate.syn, 255, 8))
 
         <InnerB @ d1 />
->InnerB : Symbol(InnerB, Decl(jsxUpdate.syn, 245, 13))
->d1 : Symbol(d1, Decl(jsxUpdate.syn, 250, 8))
+>InnerB : Symbol(InnerB, Decl(jsxUpdate.syn, 252, 13))
+>d1 : Symbol(d1, Decl(jsxUpdate.syn, 257, 8))
 
         <div @ d2>{c}</div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->d2 : Symbol(d2, Decl(jsxUpdate.syn, 251, 8))
->c : Symbol(c, Decl(jsxUpdate.syn, 245, 7))
+>d2 : Symbol(d2, Decl(jsxUpdate.syn, 258, 8))
+>c : Symbol(c, Decl(jsxUpdate.syn, 252, 7))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         <#run>
@@ -569,16 +594,16 @@
 >setTimeout : Symbol(setTimeout, Decl(lib.dom.d.ts, --, --))
 
                 update d1 {
->d1 : Symbol(d1, Decl(jsxUpdate.syn, 250, 8))
+>d1 : Symbol(d1, Decl(jsxUpdate.syn, 257, 8))
 
                     c += 1
->c : Symbol(c, Decl(jsxUpdate.syn, 245, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 252, 7))
                 }
                 update d2 {
->d2 : Symbol(d2, Decl(jsxUpdate.syn, 251, 8))
+>d2 : Symbol(d2, Decl(jsxUpdate.syn, 258, 8))
 
                     c += 1
->c : Symbol(c, Decl(jsxUpdate.syn, 245, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 252, 7))
                 }
             })
         </>
@@ -588,40 +613,40 @@
 
 {
     let c = 0
->c : Symbol(c, Decl(jsxUpdate.syn, 266, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 273, 7))
 
     declare const External: any
->External : Symbol(External, Decl(jsxUpdate.syn, 267, 17))
+>External : Symbol(External, Decl(jsxUpdate.syn, 274, 17))
 
-    const root = <div>
->root : Symbol(root, Decl(jsxUpdate.syn, 268, 9))
+    const root = @<div>
+>root : Symbol(root, Decl(jsxUpdate.syn, 275, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
         <External />
->External : Symbol(External, Decl(jsxUpdate.syn, 267, 17))
+>External : Symbol(External, Decl(jsxUpdate.syn, 274, 17))
 
     </div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     update root {
->root : Symbol(root, Decl(jsxUpdate.syn, 268, 9))
+>root : Symbol(root, Decl(jsxUpdate.syn, 275, 9))
 
         c += 1
->c : Symbol(c, Decl(jsxUpdate.syn, 266, 7))
+>c : Symbol(c, Decl(jsxUpdate.syn, 273, 7))
     }
 }
 
 {
-    let c = 0
->c : Symbol(c, Decl(jsxUpdate.syn, 277, 7))
+    let c = 0;
+>c : Symbol(c, Decl(jsxUpdate.syn, 284, 7))
 
-    ;<div @ p>
+    <div @ p>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->p : Symbol(p, Decl(jsxUpdate.syn, 278, 5))
+>p : Symbol(p, Decl(jsxUpdate.syn, 284, 14))
 
         <#run>
             let c = ''
->c : Symbol(c, Decl(jsxUpdate.syn, 280, 15))
+>c : Symbol(c, Decl(jsxUpdate.syn, 287, 15))
 
         </>
         <div>
@@ -629,36 +654,36 @@
 
             <input @ d2
 >input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
->d2 : Symbol(d2, Decl(jsxUpdate.syn, 283, 12))
+>d2 : Symbol(d2, Decl(jsxUpdate.syn, 290, 12))
 
                 value={c}
->value : Symbol(value, Decl(jsxUpdate.syn, 283, 23))
->c : Symbol(c, Decl(jsxUpdate.syn, 280, 15))
+>value : Symbol(value, Decl(jsxUpdate.syn, 290, 23))
+>c : Symbol(c, Decl(jsxUpdate.syn, 287, 15))
 
                 on:click={() => {
->on:click : Symbol(on:click, Decl(jsxUpdate.syn, 284, 25))
+>on:click : Symbol(on:click, Decl(jsxUpdate.syn, 291, 25))
 
                     // ok
                     update d1, d2 {
->d1 : Symbol(d1, Decl(jsxUpdate.syn, 301, 8))
->d2 : Symbol(d2, Decl(jsxUpdate.syn, 283, 12))
+>d1 : Symbol(d1, Decl(jsxUpdate.syn, 308, 8))
+>d2 : Symbol(d2, Decl(jsxUpdate.syn, 290, 12))
 
                         c = 'a'
->c : Symbol(c, Decl(jsxUpdate.syn, 280, 15))
+>c : Symbol(c, Decl(jsxUpdate.syn, 287, 15))
                     }
                     // ok (assumed self-coherence)
                     update d1 {
->d1 : Symbol(d1, Decl(jsxUpdate.syn, 301, 8))
+>d1 : Symbol(d1, Decl(jsxUpdate.syn, 308, 8))
 
                         c = 'b'
->c : Symbol(c, Decl(jsxUpdate.syn, 280, 15))
+>c : Symbol(c, Decl(jsxUpdate.syn, 287, 15))
                     }
                     // error
                     update d2 {
->d2 : Symbol(d2, Decl(jsxUpdate.syn, 283, 12))
+>d2 : Symbol(d2, Decl(jsxUpdate.syn, 290, 12))
 
                         c = 'c'
->c : Symbol(c, Decl(jsxUpdate.syn, 280, 15))
+>c : Symbol(c, Decl(jsxUpdate.syn, 287, 15))
                     }
                 }}
             />
@@ -667,9 +692,9 @@
 
         <input @ d1 value={c} />
 >input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
->d1 : Symbol(d1, Decl(jsxUpdate.syn, 301, 8))
->value : Symbol(value, Decl(jsxUpdate.syn, 301, 19))
->c : Symbol(c, Decl(jsxUpdate.syn, 280, 15))
+>d1 : Symbol(d1, Decl(jsxUpdate.syn, 308, 8))
+>value : Symbol(value, Decl(jsxUpdate.syn, 308, 19))
+>c : Symbol(c, Decl(jsxUpdate.syn, 287, 15))
 
     </div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))

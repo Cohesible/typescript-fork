@@ -36,6 +36,21 @@
 }
 
 {
+    // #if bypasses unconditional update checks
+    let cond = true;
+    <div @ d>
+        <#if (cond)>
+            <#run>
+                static {
+                    update d { cond = !cond }
+                }
+            </>
+        </>
+    </div>
+    console.log('a')
+}
+
+{
     let filterState: 'all' | 'completed' | 'active' = 'all';
     <div>
         <#run>

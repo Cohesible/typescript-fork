@@ -1,0 +1,18 @@
+//// [tests/cases/syn/jsxStyleDecl.syn] ////
+
+=== jsxStyleDecl.syn ===
+<#component Foo()>
+    <div .foo>text</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    <#style>
+        div { color: red; }
+    </>
+</>
+
+<#style>
+    div { background: gray; }
+    .foo { font-size: 3rem; }
+</>
+

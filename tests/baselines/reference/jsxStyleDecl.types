@@ -1,0 +1,25 @@
+//// [tests/cases/syn/jsxStyleDecl.syn] ////
+
+=== jsxStyleDecl.syn ===
+<#component Foo()>
+>Foo : error
+
+    <div .foo>text</div>
+><div .foo>text</div> : HTMLDivElement
+>                     : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>foo : error
+>div : any
+>    : ^^^
+
+    <#style>
+        div { color: red; }
+    </>
+</>
+
+<#style>
+    div { background: gray; }
+    .foo { font-size: 3rem; }
+</>
+

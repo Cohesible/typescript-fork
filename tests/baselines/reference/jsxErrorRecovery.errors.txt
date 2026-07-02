@@ -1,0 +1,36 @@
+jsxErrorRecovery.syn(3,6): error TS2304: Cannot find name '3'.
+jsxErrorRecovery.syn(3,10): error TS2304: Cannot find name '3'.
+jsxErrorRecovery.syn(4,6): error TS2304: Cannot find name '3run'.
+jsxErrorRecovery.syn(4,7): error TS1351: An identifier or keyword cannot immediately follow a numeric literal.
+jsxErrorRecovery.syn(4,13): error TS2304: Cannot find name '3run'.
+jsxErrorRecovery.syn(4,14): error TS1351: An identifier or keyword cannot immediately follow a numeric literal.
+
+
+==== jsxErrorRecovery.syn (6 errors) ====
+    {
+        // parse tag looking structures correctly
+        <3></3>;
+         ~
+!!! error TS2304: Cannot find name '3'.
+             ~
+!!! error TS2304: Cannot find name '3'.
+        <3run></3run>;
+         ~~~~
+!!! error TS2304: Cannot find name '3run'.
+          ~~~
+!!! error TS1351: An identifier or keyword cannot immediately follow a numeric literal.
+                ~~~~
+!!! error TS2304: Cannot find name '3run'.
+                 ~~~
+!!! error TS1351: An identifier or keyword cannot immediately follow a numeric literal.
+    }
+    
+    {
+        const d = @<div>{'a'}</div>
+        const f = () => { update d }
+    }
+    
+    {
+        <div @ d></div>
+        <div @ d2></div>
+    }

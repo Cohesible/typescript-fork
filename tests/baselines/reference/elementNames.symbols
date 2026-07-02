@@ -4,9 +4,10 @@
 // element names
 {
     // b can be seen within the tree, but not outside
-    const a = <div>
+    const a = <div @ a>
 >a : Symbol(a, Decl(elementNames.syn, 3, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>a : Symbol(a, Decl(elementNames.syn, 3, 13))
 
         <div @ b></div>
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
@@ -18,7 +19,7 @@
 >console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
 >console : Symbol(console, Decl(lib.dom.d.ts, --, --))
 >log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
->a : Symbol(a, Decl(elementNames.syn, 3, 9))
+>a : Symbol(a, Decl(elementNames.syn, 3, 13))
 >b : Symbol(b, Decl(elementNames.syn, 4, 8))
 
         </>

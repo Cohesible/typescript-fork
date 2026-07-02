@@ -1,0 +1,35 @@
+jsxAmbiguousUpdate.syn(3,8): error TS95231: 'd' must have a '[Symbol.update]()' function. Use '@' on the original tree expression to add an update entrypoint.
+jsxAmbiguousUpdate.syn(9,8): error TS95232: 'd3' is not guaranteed to have '[Symbol.update]()'. Add an explicit 'is Updatable' check or cast.
+jsxAmbiguousUpdate.syn(18,8): error TS95231: 'f' must have a '[Symbol.update]()' function. Use '@' on the original tree expression to add an update entrypoint.
+
+
+==== jsxAmbiguousUpdate.syn (3 errors) ====
+    let c = 0
+    const d = <div>{c}</div>
+    update d
+           ~
+!!! error TS95231: 'd' must have a '[Symbol.update]()' function. Use '@' on the original tree expression to add an update entrypoint.
+    
+    const d2 = @ <div>{c}</div>
+    update d2
+    
+    declare const d3: HTMLElement
+    update d3
+           ~~
+!!! error TS95232: 'd3' is not guaranteed to have '[Symbol.update]()'. Add an explicit 'is Updatable' check or cast.
+    
+    if (d3 is Updatable) update d3
+    
+    <#component Foo(c: number)>
+        <div>{c}</div>
+    </>
+    
+    const f = <Foo c={c++} />
+    update f
+           ~
+!!! error TS95231: 'f' must have a '[Symbol.update]()' function. Use '@' on the original tree expression to add an update entrypoint.
+    
+    const f2 = @ <Foo c={c++} />
+    update f2
+    
+    

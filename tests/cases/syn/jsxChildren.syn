@@ -50,7 +50,7 @@
     <#component Many(items: string[])>
         <div>{...items}</div>
     </>
-    const d = <Many {items}/>
+    const d = @ <Many {items}/>
     update d {
         items.push('aa')
     }

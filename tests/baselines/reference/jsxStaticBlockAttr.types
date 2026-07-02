@@ -1,0 +1,65 @@
+//// [tests/cases/syn/jsxStaticBlockAttr.syn] ////
+
+=== jsxStaticBlockAttr.syn ===
+const el1 = @ <div static {
+>el1 : HTMLDivElement & Updatable
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+><div static {  console.log(this)  const x = 'aaa'}>  test test! {x}</div> : HTMLDivElement & Updatable
+>                                                                          : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+  console.log(this)
+>console.log(this) : void
+>                  : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>this : HTMLDivElement
+>     : ^^^^^^^^^^^^^^
+
+  const x = 'aaa'
+>x : "aaa"
+>  : ^^^^^
+>'aaa' : "aaa"
+>      : ^^^^^
+
+}>
+  test test! {x}
+>x : "aaa"
+>  : ^^^^^
+
+</div>
+>div : any
+>    : ^^^
+
+const el2 = <div @ d; static {
+>el2 : HTMLDivElement & Updatable
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+><div @ d; static {  console.log(d)}></div> : HTMLDivElement & Updatable
+>                                           : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>d : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+  console.log(d)
+>console.log(d) : void
+>               : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>d : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+}></div>
+>div : any
+>    : ^^^
+
+

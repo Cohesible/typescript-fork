@@ -1,0 +1,72 @@
+//// [tests/cases/syn/jsxCompNamespace.syn] ////
+
+=== jsxCompNamespace.syn ===
+<#component Foo(children) {
+>Foo : error
+>children : JSX.Children
+>         : ^^^^^^^^^^^^
+
+    public { Bar }
+>Bar : () => Bar
+>    : ^^^^^^^^^
+
+}>
+    <div>{...children}</div>
+><div>{...children}</div> : HTMLDivElement
+>                         : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>children : JSX.Children
+>         : ^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+    <#component Bar()>
+>Bar : error
+
+        <div></div>
+><div></div> : HTMLDivElement
+>            : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>div : any
+>    : ^^^
+
+    </>
+</>
+
+const x = <Foo></Foo>
+>x : Foo
+>  : ^^^
+><Foo></Foo> : Foo
+>            : ^^^
+>Foo : (attributes: {}, children: JSX.Children) => Foo
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>Foo : (attributes: {}, children: JSX.Children) => Foo
+>    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+const arr: Foo.Bar[] = []
+>arr : Bar[]
+>    : ^^^^^
+>Foo : any
+>    : ^^^
+>[] : never[]
+>   : ^^^^^^^
+
+arr.push(<x.Bar/>)
+>arr.push(<x.Bar/>) : number
+>                   : ^^^^^^
+>arr.push : (...items: Bar[]) => number
+>         : ^^^^     ^^^^^^^^^^^^      
+>arr : Bar[]
+>    : ^^^^^
+>push : (...items: Bar[]) => number
+>     : ^^^^     ^^^^^^^^^^^^      
+><x.Bar/> : any
+>x.Bar : () => Bar
+>      : ^^^^^^^^^
+>x : Foo
+>  : ^^^
+>Bar : () => Bar
+>    : ^^^^^^^^^
+

@@ -1,0 +1,38 @@
+//// [tests/cases/syn/jsxStaticBlockAttr.syn] ////
+
+=== jsxStaticBlockAttr.syn ===
+const el1 = @ <div static {
+>el1 : Symbol(el1, Decl(jsxStaticBlockAttr.syn, 0, 5))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+  console.log(this)
+>console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>console : Symbol(console, Decl(lib.dom.d.ts, --, --))
+>log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>this : Symbol(HTMLDivElement, Decl(lib.dom.d.ts, --, --), Decl(lib.dom.d.ts, --, --))
+
+  const x = 'aaa'
+>x : Symbol(x, Decl(jsxStaticBlockAttr.syn, 2, 7))
+
+}>
+  test test! {x}
+>x : Symbol(x, Decl(jsxStaticBlockAttr.syn, 2, 7))
+
+</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+const el2 = <div @ d; static {
+>el2 : Symbol(el2, Decl(jsxStaticBlockAttr.syn, 7, 5))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>d : Symbol(d, Decl(jsxStaticBlockAttr.syn, 7, 11))
+
+  console.log(d)
+>console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>console : Symbol(console, Decl(lib.dom.d.ts, --, --))
+>log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>d : Symbol(d, Decl(jsxStaticBlockAttr.syn, 7, 11))
+
+}></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+

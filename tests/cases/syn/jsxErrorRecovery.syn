@@ -1,0 +1,15 @@
+{
+    // parse tag looking structures correctly
+    <3></3>;
+    <3run></3run>;
+}
+
+{
+    const d = @<div>{'a'}</div>
+    const f = () => { update d }
+}
+
+{
+    <div @ d></div>
+    <div @ d2></div>
+}

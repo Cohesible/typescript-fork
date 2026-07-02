@@ -1500,21 +1500,6 @@ interface Array<T> {
     [n: number]: T;
 }
 
-/**
- * Represents an array that is known to be non-empty (has at least one element).
- * Methods like pop() and shift() return T instead of T | undefined.
- */
-interface NonEmptyArray<T> extends Array<T> {
-    /**
-     * Removes the last element from a non-empty array and returns it.
-     */
-    pop(): T;
-    /**
-     * Removes the first element from a non-empty array and returns it.
-     */
-    shift(): T;
-}
-
 interface ArrayConstructor {
     new (arrayLength?: number): any[];
     new <T>(arrayLength: number): T[];

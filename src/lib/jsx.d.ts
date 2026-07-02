@@ -91,6 +91,11 @@ declare namespace JSX {
 
 	type Element = globalThis.Element;
 
+	// Used by #component instances
+	interface MaybeUpdatable {
+		[Symbol.update]?(): void
+	}
+
 	type ScopedStylesheet = any; // TODO
 
 	// ============================================

@@ -3740,7 +3740,7 @@ function getCompletionData(
                     // `parent` will be `{true}` and `previousToken` will be `}`
                     // Second case is for `<div foo={true} t[||] ></div>`
                     // Second case must not match for `<div foo={undefine[||]}></div>`
-                    if (previousToken.kind === SyntaxKind.CloseBraceToken || (previousToken.kind === SyntaxKind.Identifier && previousToken.parent.kind === SyntaxKind.JsxAttribute)) {
+                    if (previousToken.kind === SyntaxKind.CloseBraceToken || (previousToken.kind === SyntaxKind.Identifier && previousToken.parent.kind === SyntaxKind.JsxAttribute) || previousToken.kind === SyntaxKind.SemicolonToken) {
                         isJsxIdentifierExpected = true;
                     }
                     break;
@@ -3755,14 +3755,14 @@ function getCompletionData(
 
                 case SyntaxKind.JsxClassAttribute:
                     // <div .x [||] 
-                    if (previousToken.kind === SyntaxKind.Identifier) {
+                    if (previousToken.kind === SyntaxKind.Identifier || previousToken.kind == SyntaxKind.SemicolonToken) {
                         isJsxIdentifierExpected = true;
                     }
                     break;
 
                 case SyntaxKind.JsxClassList:
                     // <div (.x) [||] 
-                    if (previousToken.kind === SyntaxKind.CloseParenToken || (contextToken.kind === SyntaxKind.CloseParenToken && contextToken.pos < previousToken.pos)) {
+                    if (previousToken.kind === SyntaxKind.CloseParenToken || (contextToken.kind === SyntaxKind.CloseParenToken && contextToken.pos < previousToken.pos) || previousToken.kind == SyntaxKind.SemicolonToken) {
                         isJsxIdentifierExpected = true;
                     }
                     break;
@@ -3779,6 +3779,9 @@ function getCompletionData(
                     switch (previousToken.kind) {
                         case SyntaxKind.EqualsToken:
                             isJsxInitializer = true;
+                            break;
+                        case SyntaxKind.SemicolonToken:
+                            isJsxIdentifierExpected = true;
                             break;
                         case SyntaxKind.Identifier:
                             isJsxIdentifierExpected = true;
@@ -5106,6 +5109,7 @@ function getCompletionData(
             const parent = contextToken.parent;
             if (!parent) return undefined;
             switch (contextToken.kind) {
+                case SyntaxKind.SemicolonToken:
                 case SyntaxKind.GreaterThanToken: // End of a type argument list
                 case SyntaxKind.LessThanSlashToken:
                 case SyntaxKind.SlashToken:

@@ -202,7 +202,7 @@ async function z() {
     async function foo3() {
 >foo3 : Symbol(foo3, Decl(autoAwait.syn, 86, 5))
 
-        // Promise.resolve / Promise.reject are special-cased — not auto-awaited
+        // Promise.resolve / Promise.reject are special-cased
         const x1 = Promise.resolve(0) // Promise<number>
 >x1 : Symbol(x1, Decl(autoAwait.syn, 90, 13))
 >Promise.resolve : Symbol(PromiseConstructor.resolve, Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --))
@@ -285,6 +285,21 @@ async function z() {
         const v = m()  // number
 >v : Symbol(v, Decl(autoAwait.syn, 116, 13))
 >m : Symbol(m, Decl(autoAwait.syn, 115, 13))
+    }
+}
+
+{
+    async function f1() {
+>f1 : Symbol(f1, Decl(autoAwait.syn, 120, 1))
+
+        return 1
+    }
+    async function f2(): Promise<number | undefined> {
+>f2 : Symbol(f2, Decl(autoAwait.syn, 123, 5))
+>Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --), Decl(lib.es2018.promise.d.ts, --, --))
+
+        return f1() // should not be a checker error, it's a direct return in an async fn
+>f1 : Symbol(f1, Decl(autoAwait.syn, 120, 1))
     }
 }
 

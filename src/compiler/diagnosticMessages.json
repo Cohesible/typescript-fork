@@ -3097,7 +3097,7 @@
         "category": "Error",
         "code": 95218
     },
-    "An element's class list must appear before its binding name.": {
+    "An element's binding name must appear immediately after the tag name.": {
         "category": "Error",
         "code": 95219
     },
@@ -3144,6 +3144,26 @@
     "A #component declaration cannot appear inside a '#run' directive.": {
         "category": "Error",
         "code": 95230
+    },
+    "'{0}' must have a '[Symbol.update]()' function. Use '@' on the original tree expression to add an update entrypoint.": {
+        "category": "Error",
+        "code": 95231
+    },
+    "'{0}' is not guaranteed to have '[Symbol.update]()'. Add an explicit 'is Updatable' check or cast.": {
+        "category": "Error",
+        "code": 95232
+    },
+    "Semicolons should not terminate a line inside of the opening tag.": {
+        "category": "Error",
+        "code": 95233
+    },
+    "A static block must be the last attribute in the opening tag.": {
+        "category": "Error",
+        "code": 95234
+    },
+    "Directive tags must close with '</>'.": {
+        "category": "Error",
+        "code": 95235
     },
     "'{0}' is defined as an accessor in class '{1}', but is overridden here in '{2}' as an instance property.": {
         "category": "Error",

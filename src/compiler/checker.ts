@@ -20729,6 +20729,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         if (container.kind === SyntaxKind.JsxMethodAttribute) {
             return getJsxMethodAttributeThisType(container as JsxMethodAttribute) ?? errorType;
         }
+        if ((container as any).kind === SyntaxKind.Block && container.parent.kind === SyntaxKind.JsxAttributes && (container.parent as JsxAttributes).staticBlock === (container as any)) {
+            return getJsxThisTypeFromAttributes(container.parent as JsxAttributes) ?? errorType;
+        }
         const parent = container && container.parent;
         if (parent && (isClassLike(parent) || parent.kind === SyntaxKind.InterfaceDeclaration)) {
             if (
@@ -29679,17 +29682,16 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 const flowType = getTypeAtFlowNode(flow.antecedent);
                 const type = getTypeFromFlowType(flowType);
 
-                // Handle pop() and shift() calls that invalidate NonEmptyArray narrowing
-                if (node.kind === SyntaxKind.CallExpression) {
-                    const call = node as CallExpression;
-                    if (call.expression.kind === SyntaxKind.PropertyAccessExpression) {
-                        const propAccess = call.expression as PropertyAccessExpression;
-                        if (isIdentifier(propAccess.name) && isPopOrShiftIdentifier(propAccess.name)) {
-                            // If the type is NonEmptyArray<T>, narrow it back to T[]
-                            return createFlowType(widenNonEmptyArrayType(type), isIncomplete(flowType));
-                        }
-                    }
-                }
+                // if (node.kind === SyntaxKind.CallExpression) {
+                //     const call = node as CallExpression;
+                //     if (call.expression.kind === SyntaxKind.PropertyAccessExpression) {
+                //         const propAccess = call.expression as PropertyAccessExpression;
+                //         if (isIdentifier(propAccess.name) && isPopOrShiftIdentifier(propAccess.name)) {
+                //             // If the type is NonEmptyArray<T>, narrow it back to T[]
+                //             return createFlowType(widenNonEmptyArrayType(type), isIncomplete(flowType));
+                //         }
+                //     }
+                // }
 
                 // Handle evolving arrays
                 if (declaredType === autoType || declaredType === autoArrayType) {
@@ -30198,27 +30200,25 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             const left = getReferenceCandidate(expr.left);
             const right = getReferenceCandidate(expr.right);
 
-            // Check if we're comparing arr.length with a number
-            if (isPropertyAccessExpression(left) && isIdentifier(left.name) && left.name.escapedText === "length") {
-                const target = getReferenceCandidate(left.expression);
-                if (isMatchingReference(reference, target) && isNumericLiteral(right)) {
-                    return narrowTypeByArrayLength(type, operator, Number(right.text), assumeTrue);
-                }
-            }
+            // if (isPropertyAccessExpression(left) && isIdentifier(left.name) && left.name.escapedText === "length") {
+            //     const target = getReferenceCandidate(left.expression);
+            //     if (isMatchingReference(reference, target) && isNumericLiteral(right)) {
+            //         return narrowTypeByArrayLength(type, operator, Number(right.text), assumeTrue);
+            //     }
+            // }
 
-            // Check the reverse: number > arr.length
-            if (isPropertyAccessExpression(right) && isIdentifier(right.name) && right.name.escapedText === "length") {
-                const target = getReferenceCandidate(right.expression);
-                if (isMatchingReference(reference, target) && isNumericLiteral(left)) {
-                    // Flip the operator for reverse comparison
-                    const flippedOperator =
-                        operator === SyntaxKind.GreaterThanToken ? SyntaxKind.LessThanToken :
-                        operator === SyntaxKind.GreaterThanEqualsToken ? SyntaxKind.LessThanEqualsToken :
-                        operator === SyntaxKind.LessThanToken ? SyntaxKind.GreaterThanToken :
-                        SyntaxKind.GreaterThanEqualsToken;
-                    return narrowTypeByArrayLength(type, flippedOperator, Number(left.text), assumeTrue);
-                }
-            }
+            // if (isPropertyAccessExpression(right) && isIdentifier(right.name) && right.name.escapedText === "length") {
+            //     const target = getReferenceCandidate(right.expression);
+            //     if (isMatchingReference(reference, target) && isNumericLiteral(left)) {
+            //         // Flip the operator for reverse comparison
+            //         const flippedOperator =
+            //             operator === SyntaxKind.GreaterThanToken ? SyntaxKind.LessThanToken :
+            //             operator === SyntaxKind.GreaterThanEqualsToken ? SyntaxKind.LessThanEqualsToken :
+            //             operator === SyntaxKind.LessThanToken ? SyntaxKind.GreaterThanToken :
+            //             SyntaxKind.GreaterThanEqualsToken;
+            //         return narrowTypeByArrayLength(type, flippedOperator, Number(left.text), assumeTrue);
+            //     }
+            // }
 
             // In Syn, optional chains short-circuit comparison expressions.
             // If we're in the true branch, the chain didn't short-circuit, so narrow to non-nullish.
@@ -31887,6 +31887,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     isInTypeQuery(node) || isInAmbientOrTypeNode(node) || node.parent.kind === SyntaxKind.ExportSpecifier) ||
             node.parent.kind === SyntaxKind.NonNullExpression ||
             declaration.kind === SyntaxKind.VariableDeclaration && (declaration as VariableDeclaration).exclamationToken ||
+            declaration.kind === SyntaxKind.VariableDeclaration && declaration.parent.kind === SyntaxKind.CatchClause ||
             declaration.flags & NodeFlags.Ambient;
         const initialType = isAutomaticTypeInNonNull ? undefinedType :
             assumeInitialized ? (isParameter ? removeOptionalityFromDeclaredType(type, declaration as VariableLikeDeclaration) : type) :
@@ -32174,6 +32175,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     function tryGetThisTypeAt(node: Node, includeGlobalThis = true, container = getThisContainer(node, /*includeArrowFunctions*/ false, /*includeClassComputedPropertyName*/ false)): Type | undefined {
         if (container.kind === SyntaxKind.JsxMethodAttribute) {
             return getJsxMethodAttributeThisType(container as JsxMethodAttribute);
+        }
+        if ((container as any).kind === SyntaxKind.Block && container.parent.kind === SyntaxKind.JsxAttributes && (container.parent as JsxAttributes).staticBlock === (container as any)) {
+            return getJsxThisTypeFromAttributes(container.parent as JsxAttributes);
         }
         const isInJS = isInJSFile(node);
         if (
@@ -34500,6 +34504,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             : isStaticSingularRoot(node) ? simplifySingularJsxTuple(childrenTuple) : childrenTuple;
         
         const members = createSymbolTable();
+        const exports = createSymbolTable();
 
         const rootSym = createSymbol(SymbolFlags.Property, "root" as __String, CheckFlags.Readonly);
         rootSym.links.type = rootType;
@@ -34520,13 +34525,17 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                             const propSym = createSymbol(SymbolFlags.Property, exportedName);
                             propSym.links.type = getTypeOfSymbol(localSym);
                             members.set(exportedName, propSym);
+                            if (localSym.valueDeclaration && localSym.valueDeclaration.kind === SyntaxKind.JsxComponentDirective) {
+                                const typeSym = resolveName(specifier, localName, SymbolFlags.Type, /*nameNotFoundMessage*/ undefined, /*isUse*/ true);
+                                if (typeSym) exports.set(exportedName, typeSym);
+                            }
                         }
                     }
                 }
             }
         }
-
-        const updatableType = getGlobalType("Updatable" as __String, /*arity*/ 0, /*reportErrors*/ false);
+        const updatableSymbol = getSymbol(getJsxNamespaceAt(node).exports!, "MaybeUpdatable" as __String, SymbolFlags.Type); // getGlobalType("Updatable" as __String, /*arity*/ 0, /*reportErrors*/ false);
+        const updatableType = updatableSymbol && getDeclaredTypeOfSymbol(updatableSymbol);
         if (updatableType) {
             for (const prop of getPropertiesOfType(updatableType)) {
                 members.set(prop.escapedName, prop);
@@ -34536,6 +34545,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         const typeSymbol = createSymbol(SymbolFlags.TypeLiteral, typeSymbolName ?? InternalSymbolName.Type);
         typeSymbol.members = members;
         typeSymbol.declarations = [node as Node as Declaration];
+        if (exports.size && node.symbol) node.symbol.exports = exports;
 
         const type = createObjectType(ObjectFlags.Anonymous, typeSymbol) as InterfaceType & GenericType;
 
@@ -34556,6 +34566,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         } else if (node.symbol) {
             type.objectFlags |= ObjectFlags.Reference;
             type.target = type;
+            type.instantiations = new Map<string, TypeReference>();
+            type.instantiations.set(getTypeListId(type.typeParameters), type);
         }
 
         return type;
@@ -34571,9 +34583,6 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function getJsxComponentInstanceType(node: JsxSelfClosingElement | JsxElement): Type | undefined {
-        // if (isJsxSelfClosingElement(node) && node.dotDotDotToken) return undefined;
-        // if (isJsxElement(node) && node.openingElement.dotDotDotToken) return undefined;
-
         const tagName = isJsxSelfClosingElement(node) ? node.tagName : node.openingElement.tagName;
         if (isJsxIntrinsicTagName(tagName) || isJsxNamespacedName(tagName) || !isIdentifier(tagName)) return undefined;
 
@@ -34619,7 +34628,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
     function checkJsxElement(node: JsxElement, _checkMode: CheckMode | undefined): Type {
         checkNodeDeferred(node);
-        return getJsxIntrinsicElementResultType(node) ?? getJsxComponentInstanceType(node) ?? getJsxElementTypeAt(node) ?? anyType;
+        const t = getJsxIntrinsicElementResultType(node) ?? getJsxComponentInstanceType(node) ?? getJsxElementTypeAt(node) ?? anyType;
+        return maybeDecorateJsxElementType(t, node);
     }
 
     function checkJsxIfDirective(node: JsxIfDirective, _checkMode: CheckMode | undefined): Type {
@@ -34784,7 +34794,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             : node.parameters;
         const attrsType = buildComponentPropsType(attrsParamDecls as NodeArray<ParameterDeclaration>, node);
         const attrsSymbol = createParameter("attributes" as __String, attrsType);
-
+        const childrenParamOptional = childrenParamDecl?.questionToken || childrenParamDecl?.initializer;
         const sigParams: Symbol[] = [attrsSymbol];
         if (childrenParamDecl) {
             const childrenType = getSymbolLinks(childrenParamDecl.symbol).type
@@ -34805,7 +34815,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             sigParams,
             instanceType,
             /*resolvedTypePredicate*/ undefined,
-            /*minArgumentCount*/ childrenParamDecl ? 2 : (allAttrOptional ? 0 : 1),
+            /*minArgumentCount*/ childrenParamDecl && !childrenParamOptional ? 2 : (allAttrOptional ? 0 : 1),
             SignatureFlags.None,
         );
         const funcTypeSymbol = createSymbol(SymbolFlags.TypeLiteral, InternalSymbolName.Type);
@@ -35246,10 +35256,25 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return links.resolvedType = fragmentType;
     }
 
+    function jsxElementCanBeUpdated(node: JsxElement | JsxSelfClosingElement | JsxComponentDirective | JsxFragment) {
+        return (node.flags & NodeFlags.TargetedJsxElement) 
+            || (isJsxElement(node) ? node.openingElement.name : (isJsxSelfClosingElement(node) && node.name))
+            || node.kind === SyntaxKind.JsxComponentDirective;
+    }
+
+    function maybeDecorateJsxElementType(t: Type, node: JsxElement | JsxSelfClosingElement | JsxFragment): Type {
+        if (jsxElementCanBeUpdated(node)) {
+            const updatable = getGlobalType("Updatable" as __String, 0, /*reportErrors*/ false);
+            if (updatable) {
+                return intersectTypes(t, updatable);
+            }
+        }
+        return t;
+    }
+
     function getTypeOfJsxElementIdentifierDeclaration(node: JsxElement | JsxSelfClosingElement): Type {
         const intrinsic = getJsxIntrinsicElementResultType(node);
-        if (intrinsic) return intrinsic;
-        return getJsxComponentInstanceType(node) ?? anyType;
+        return maybeDecorateJsxElementType(intrinsic ?? getJsxComponentInstanceType(node) ?? anyType, node);
     }
 
     function checkJsxFragment(node: JsxFragment): Type {
@@ -35295,8 +35320,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             : trueType; // <Elem attr /> is sugar for <Elem attr={true} />
     }
 
-    function getJsxMethodAttributeThisType(node: JsxMethodAttribute): Type | undefined {
-        const openingLike = node.parent.parent as JsxOpeningLikeElement;
+    function getJsxThisTypeFromAttributes(node: JsxAttributes): Type | undefined {
+        const openingLike = node.parent as JsxOpeningLikeElement;
         const tagName = isJsxSelfClosingElement(openingLike) ? openingLike.tagName : (openingLike as JsxOpeningElement).tagName;
         if (!isJsxIntrinsicTagName(tagName)) {
             if (isIdentifier(tagName)) return getJsxComponentNodeTypeFromSymbol(getResolvedSymbol(tagName));
@@ -35308,6 +35333,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             ? getEscapedTextOfJsxNamespacedName(tagName)
             : tagName.escapedText;
         return getTypeOfPropertyOfType(intrinsicResultsType, propName) ?? undefined;
+    }
+
+    function getJsxMethodAttributeThisType(node: JsxMethodAttribute): Type | undefined {
+        return getJsxThisTypeFromAttributes(node.parent);
     }
 
     function checkJsxMethodAttribute(node: JsxMethodAttribute): Type {
@@ -39853,6 +39882,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                         && !(contextualType.flags & (TypeFlags.Any | TypeFlags.Unknown))
                         && isTypeAssignableTo(returnType, contextualType)
                         && isTypeAssignableTo(unwrapped, contextualType)
+                        && findAncestor(node.parent, p => p.kind !== SyntaxKind.ParenthesizedExpression)?.kind !== SyntaxKind.ReturnStatement
                     ) {
                         const funcText = isIdentifier(node.expression) ? idText(node.expression)
                             : isPropertyAccessExpression(node.expression) ? idText(node.expression.name)
@@ -51466,29 +51496,70 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function checkUpdateBlockStatement(node: UpdateBlockStatement) {
+        const types: Type[] = []
         for (const operand of node.operands) {
-            checkExpression(operand);
+            types.push(checkExpression(operand));
         }
         checkSourceElement(node.block);
 
         addLazyDiagnostic(checkUpdateBlockStatementDeferred);
         function checkUpdateBlockStatementDeferred() {
+            const checked: boolean[] = []
+            // interface/redundancy checks
+            for (let i = 0; i < types.length; i++) {
+                const exprType = types[i];
+                const operand = node.operands[i];
+                const updatePropName = getPropertyNameForKnownSymbolName("update");
+                const updateSym = getPropertyOfType(exprType, updatePropName);
+
+                if (!updateSym) {
+                    const elementType = getGlobalType("Updatable" as __String, 0, /*reportErrors*/ false);
+                    if (elementType) {
+                        checked[i] = true;
+                        checkTypeRelatedTo(exprType, elementType, assignableRelation, operand,
+                            Diagnostics.Argument_of_type_0_is_not_assignable_to_parameter_of_type_1);
+                        continue;
+                    }
+                }
+                const jsxSource = getJsxSourceOfExpression(operand);
+                if (jsxSource !== undefined) {
+                    // if (!jsxHasDynamicContent(jsxSource)) {
+                    //     checked[i] = true;
+                    //     error(operand, Diagnostics.update_has_no_effect_Colon_this_element_contains_no_dynamic_expressions);
+                    // }
+                    if (!jsxElementCanBeUpdated(jsxSource)) {
+                        checked[i] = true;
+                        error(operand, Diagnostics._0_must_have_a_Symbol_update_function_Use_on_the_original_tree_expression_to_add_an_update_entrypoint, getTextOfNode(operand));
+                    }
+                } else {
+                    const decl = updateSym?.valueDeclaration;
+                    if (decl && (isPropertyDeclaration(decl) || isPropertySignature(decl) || isMethodDeclaration(decl) || isMethodSignature(decl))) {
+                        if (decl.questionToken) {
+                            error(operand, Diagnostics._0_is_not_guaranteed_to_have_Symbol_update_Add_an_explicit_is_Updatable_check_or_cast, getTextOfNode(operand));
+                        }
+                    }
+                }
+            }
+
             // plausibility check
             const component = findEnclosingJsxComponentDirective(node);
-            for (const operand of node.operands) {
-                const jsxSource = getJsxSourceOfExpression(operand);
-                if (jsxSource === undefined) continue;
-                // any dynamic update is plausible
-                if (containsJsxDynamicUpdateExpression(jsxSource)) continue;
-                const deps = collectJsxExpressionIdentifiers(jsxSource);
-                if (isIdentifier(operand)) {
-                    // self references can make sense e.g. `update el { el.remove() }`
-                    const sym = getResolvedSymbol(operand);
-                    if (sym !== unknownSymbol) deps.add(unknownSymbol);
-                }
-                if (deps.size === 0) continue;
-                if (!blockPlausiblyAffectsDeps(node.block, deps, component)) {
-                    error(operand, Diagnostics.update_has_no_plausible_effect_on_0_the_block_does_not_reference_any_variable_that_0_depends_on, getTextOfNode(operand));
+            if (node.block) {
+                for (const operand of node.operands) {
+                    const jsxSource = getJsxSourceOfExpression(operand);
+                    if (jsxSource === undefined) continue;
+                    // any dynamic update is plausible
+                    if (containsJsxDynamicUpdate(jsxSource)) continue;
+                    const deps = collectJsxExpressionIdentifiers(jsxSource);
+                    if (isIdentifier(operand)) {
+                        // self references can make sense e.g. `update el { el.remove() }`
+                        const sym = getResolvedSymbol(operand);
+                        if (sym !== unknownSymbol) deps.add(unknownSymbol);
+                    }
+                    if (deps.size === 0) continue;
+                    if (!blockPlausiblyAffectsDeps(node.block, deps, component)) {
+                        checked[node.operands.indexOf(operand)] = true;
+                        error(operand, Diagnostics.update_has_no_plausible_effect_on_0_the_block_does_not_reference_any_variable_that_0_depends_on, getTextOfNode(operand));
+                    }
                 }
             }
 
@@ -51500,6 +51571,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 const p = findAncestor(node, n => n.kind === SyntaxKind.JsxMethodAttribute);
                 if (p && isNodeDescendantOf(p, jsxSource)) continue;
                 if (!isUpdateUnderConditional(node, jsxSource)) {
+                    checked[node.operands.indexOf(operand)] = true;
                     error(operand, Diagnostics.This_update_runs_unconditionally_and_is_possibly_infinite);
                 }
             }
@@ -51512,6 +51584,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     if (i === j) continue;
                     const otherSrc = getJsxSourceOfExpression(node.operands[j]);
                     if (otherSrc && isNodeDescendantOf(src, otherSrc)) {
+                        checked[i] = true;
                         error(node.operands[i], Diagnostics._0_is_already_covered_by_1_in_this_update,
                             getTextOfNode(node.operands[i]), getTextOfNode(node.operands[j]));
                         break;
@@ -51519,8 +51592,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 }
             }
 
+            checkRedundantUpdate(node, checked);
+
             // missing dependent 
-            const mutatedVars = collectMutatedIdentifiers(node.block);
+            const mutatedVars = node.block ? collectMutatedIdentifiers(node.block) : new Set();
             if (mutatedVars.size > 0) {
                 const skipAttributesFor = new Set<Node>();
                 const ignoredElement = getJsxContainingElementOfCallback(node);
@@ -51703,6 +51778,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             }
             if (parent.kind === SyntaxKind.FunctionDeclaration || parent.kind === SyntaxKind.MethodDeclaration ||
                 parent.kind === SyntaxKind.GetAccessor || parent.kind === SyntaxKind.SetAccessor) return true;
+            if (parent.kind === SyntaxKind.JsxIfDirective && (parent as JsxIfDirective).condition !== current) return true;
+            if (parent.kind === SyntaxKind.JsxElseDirective) return true;
             current = parent;
         }
         return false;
@@ -51768,9 +51845,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return;
     }
 
-    function containsJsxDynamicUpdateExpression(node: Node): boolean | undefined {
+    function containsJsxDynamicUpdate(node: Node): boolean | undefined {
         function visit(node: Node): boolean | undefined {
-            if (node.kind === SyntaxKind.UpdateExpressionExpression) return true;
+            if (node.kind === SyntaxKind.UpdateBlockStatement && !(node as any).block) return true;
             if (node.kind === SyntaxKind.JsxComponentDirective) return;
             if (node.kind === SyntaxKind.JsxSelfClosingElement || node.kind === SyntaxKind.JsxOpeningElement) {
                 const tag = (node as JsxOpeningLikeElement).tagName;
@@ -52142,66 +52219,107 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 error(node, Diagnostics.update_has_no_effect_Colon_this_element_contains_no_dynamic_expressions);
                 return silentNeverType;
             }
-            checkRedundantUpdate(node);
             return exprType;
         }
-
-        checkRedundantUpdate(node);
 
         return exprType;
     }
 
-    function checkRedundantUpdate(node: UpdateExpressionExpression): void {
-        const stmt = node.parent;
-        if (!stmt || stmt.kind !== SyntaxKind.ExpressionStatement) return;
-        const block = stmt.parent;
+    function checkRedundantUpdate(node: UpdateBlockStatement, checked: boolean[] = []): void {
+        const block = node.parent;
         if (!block || !(block.kind === SyntaxKind.Block || block.kind === SyntaxKind.SourceFile || block.kind === SyntaxKind.ModuleBlock || block.kind === SyntaxKind.CaseClause || block.kind === SyntaxKind.DefaultClause)) return;
 
-        const stmts = (block as Block | SourceFile).statements;
-        const idx = stmts.indexOf(stmt as Statement);
-        if (idx <= 0) return;
+        for (let j = 0; j < node.operands.length; j++) {
+            if (checked[j]) continue;
+            const source = getJsxSourceOfExpression(node.operands[j])
+            if (source === undefined) {
+                checked[j] = true;
+                continue;
+            }
+        }
 
-        const operand = node.expression;
+        if (checked.length === node.operands.length && checked.every(x => !!x)) {
+            return;
+        }
+
+        const stmts = (block as Block | SourceFile).statements;
+        const idx = stmts.indexOf(node as Statement);
+        if (idx <= 0) return;
 
         for (let i = idx - 1; i >= 0; i--) {
             const prev = stmts[i];
-
-            if (
-                prev.kind === SyntaxKind.ExpressionStatement &&
-                (prev as ExpressionStatement).expression.kind === SyntaxKind.UpdateExpressionExpression
-            ) {
-                const prevUpdate = (prev as ExpressionStatement).expression as UpdateExpressionExpression;
-                if (isMatchingReference(operand, prevUpdate.expression)) {
-                    error(node, Diagnostics.Possibly_redundant_update_Colon_0_was_already_updated_above_with_no_intervening_changes, getTextOfNode(operand));
-                    return;
+            if (statementContainsCallOrAssignment(prev)) return;
+            for (let j = 0; j < node.operands.length; j++) {
+                if (checked[j]) continue;
+                const operand = node.operands[j];
+                if (prev.kind === SyntaxKind.UpdateBlockStatement) {
+                    const match = (prev as UpdateBlockStatement).operands.find(other => isMatchingReference(operand, other));
+                    if (match) {
+                        error(operand, Diagnostics.Possibly_redundant_update_Colon_0_was_already_updated_above_with_no_intervening_changes, getTextOfNode(operand));
+                        checked[j] = true;
+                        if (checked.length === node.operands.length && checked.every(x => !!x)) {
+                            return;
+                        }
+                    }
+                    continue;
                 }
-                continue;
             }
-
-            if (statementContainsCall(prev)) return;
-
-            if (statementAssignsTo(prev, operand)) return;
+            // give up the search
+            if ((idx-i) > 25) return;
         }
     }
 
-    function statementContainsCall(node: Node): boolean {
-        return !!forEachChild(node, function visit(n): boolean | undefined {
-            if (isCallExpression(n)) return true;
+    function statementContainsCallOrAssignment(node: Node): boolean {
+        const visiting = new Set<Node>();
+        function visit(n: Node): boolean | undefined {
+            if (isAssignmentExpression(n)) return true;
+            if (isPrefixUnaryExpression(n) || n.kind === SyntaxKind.PostfixUnaryExpression) {
+                switch ((n as any as { operator: SyntaxKind }).operator) {
+                    case SyntaxKind.PlusPlusToken:
+                    case SyntaxKind.MinusMinusToken:
+                        return true;
+                }
+            }
+            switch (n.kind) {
+                case SyntaxKind.UpdateBlockStatement: {
+                    const operands = (n as UpdateBlockStatement).operands;
+                    for (const operand of operands) {
+                        if (visit(operand)) return true;
+                        const source = getJsxSourceOfExpression(operand);
+                        if (source === undefined) return true; // assume dynamic
+                        if (visiting.has(source)) return true;
+                        visiting.add(source);
+                        if (visit(source)) return true;
+                        visiting.delete(source);
+                    }
+                    const block = (n as UpdateBlockStatement).block;
+                    return block ? visit(block) : undefined;
+                }
+                case SyntaxKind.CallExpression:
+                case SyntaxKind.NewExpression:
+                case SyntaxKind.DeleteExpression:
+                    return true;
+                case SyntaxKind.PropertyDeclaration:
+                    if (!hasStaticModifier(n)) return;
+                    break;
+                case SyntaxKind.JsxMethodAttribute:
+                case SyntaxKind.MethodDeclaration:
+                case SyntaxKind.FunctionDeclaration:
+                    return;
+                case SyntaxKind.ArrowFunction:
+                case SyntaxKind.FunctionExpression:
+                    if (
+                        n.parent.kind !== SyntaxKind.ParenthesizedExpression || 
+                        n.parent.parent.kind !== SyntaxKind.CallExpression || 
+                        (n.parent.parent as CallExpression).expression !== n.parent
+                    ) {
+                        return;
+                    }
+                    break;
+            }
             return forEachChild(n, visit);
-        });
-    }
-
-    function statementAssignsTo(node: Node, operand: Expression): boolean {
-        const operandSymbol = isIdentifier(operand) ? getResolvedSymbol(operand) : undefined;
-        return !!forEachChild(node, function visit(n): boolean | undefined {
-            if (
-                isBinaryExpression(n) &&
-                isAssignmentOperator(n.operatorToken.kind) &&
-                isMatchingReference(operand, n.left)
-            ) return true;
-            if (isVariableDeclaration(n) && operandSymbol && getSymbolOfDeclaration(n) === operandSymbol) return true;
-            return forEachChild(n, visit);
-        });
+        }
+        return !!visit(node);
     }
 
     function getJsxSourceOfExpression(expr: Expression): JsxElement | JsxSelfClosingElement | JsxFragment | undefined {
@@ -52217,7 +52335,6 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             return decl;
         }
     }
-
 
     function jsxHasDynamicContent(node: JsxElement | JsxSelfClosingElement | JsxFragment | JsxIfDirective | JsxElseDirective): boolean {
         const tagName = isJsxSelfClosingElement(node) ? node.tagName : isJsxElement(node) ? node.openingElement.tagName : undefined;
@@ -54854,7 +54971,6 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
         globalReadonlyArrayType = getGlobalTypeOrUndefined("ReadonlyArray" as __String, /*arity*/ 1) as GenericType || globalArrayType;
         anyReadonlyArrayType = globalReadonlyArrayType ? createTypeFromGenericGlobalType(globalReadonlyArrayType, [anyType]) : anyArrayType;
-        globalNonEmptyArrayType = getGlobalTypeOrUndefined("NonEmptyArray" as __String, /*arity*/ 1) as GenericType || globalArrayType;
         globalThisType = getGlobalTypeOrUndefined("ThisType" as __String, /*arity*/ 1) as GenericType;
 
         if (augmentations) {

@@ -5282,9 +5282,10 @@ declare namespace ts {
         readonly expression: Identifier | ThisExpression | JsxTagNamePropertyAccess;
     }
     interface JsxAttributes extends PrimaryExpression, Declaration {
-        readonly properties: NodeArray<JsxAttributeLike>;
         readonly kind: SyntaxKind.JsxAttributes;
         readonly parent: JsxOpeningLikeElement;
+        readonly properties: NodeArray<JsxAttributeLike>;
+        readonly staticBlock?: Block;
     }
     interface JsxNamespacedName extends Node {
         readonly kind: SyntaxKind.JsxNamespacedName;
@@ -5364,7 +5365,7 @@ declare namespace ts {
     interface UpdateBlockStatement extends Statement {
         readonly kind: SyntaxKind.UpdateBlockStatement;
         readonly operands: NodeArray<Expression>;
-        readonly block: Block;
+        readonly block?: Block;
     }
     interface JsxOpeningFragment extends Expression {
         readonly kind: SyntaxKind.JsxOpeningFragment;
@@ -8107,8 +8108,8 @@ declare namespace ts {
         updateJsxPublicDeclaration(node: JsxPublicDeclaration, elements: readonly ExportSpecifier[]): JsxPublicDeclaration;
         createUnwindStatement(statement: Block): UnwindStatement;
         updateUnwindStatement(node: UnwindStatement, statement: Block): UnwindStatement;
-        createUpdateBlockStatement(operands: readonly Expression[], block: Block): UpdateBlockStatement;
-        updateUpdateBlockStatement(node: UpdateBlockStatement, operands: readonly Expression[], block: Block): UpdateBlockStatement;
+        createUpdateBlockStatement(operands: readonly Expression[], block?: Block): UpdateBlockStatement;
+        updateUpdateBlockStatement(node: UpdateBlockStatement, operands: readonly Expression[], block?: Block): UpdateBlockStatement;
         createCaseClause(expression: Expression, statements: readonly Statement[]): CaseClause;
         updateCaseClause(node: CaseClause, expression: Expression, statements: readonly Statement[]): CaseClause;
         createCaseIsClause(type: TypeNode, statements: readonly Statement[]): CaseIsClause;

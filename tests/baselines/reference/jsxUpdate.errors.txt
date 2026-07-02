@@ -1,26 +1,28 @@
-jsxUpdate.syn(11,12): error TS2345: Argument of type 'Element | null' is not assignable to parameter of type 'Updatable'.
+jsxUpdate.syn(2,5): error TS1184: Modifiers cannot appear here.
+jsxUpdate.syn(10,12): error TS2345: Argument of type 'Element | null' is not assignable to parameter of type 'Updatable'.
   Type 'null' is not assignable to type 'Updatable'.
-jsxUpdate.syn(26,9): error TS95201: update has no effect: this element contains no dynamic expressions
-jsxUpdate.syn(91,12): error TS95210: update has no plausible effect on 'xa', the block does not reference any variable that 'xa' depends on.
-jsxUpdate.syn(96,20): error TS1005: ';' expected.
-jsxUpdate.syn(107,20): error TS95223: This update runs unconditionally and is possibly infinite.
-jsxUpdate.syn(119,24): error TS95223: This update runs unconditionally and is possibly infinite.
-jsxUpdate.syn(129,20): error TS2448: Block-scoped variable 'd' used before its declaration.
-jsxUpdate.syn(156,13): error TS95225: 'd2' depends on these changes but is not included in this update.
-jsxUpdate.syn(173,20): error TS95224: 'd1' is already covered by 'root' in this update.
-jsxUpdate.syn(176,13): error TS95226: 'root' depends on these changes and covers 'd1'; use 'update root' instead.
-jsxUpdate.syn(219,16): error TS95210: update has no plausible effect on 'x', the block does not reference any variable that 'x' depends on.
-jsxUpdate.syn(240,12): error TS95210: update has no plausible effect on 'root', the block does not reference any variable that 'root' depends on.
-jsxUpdate.syn(241,9): error TS2304: Cannot find name 'noop'.
-jsxUpdate.syn(255,17): error TS95225: 'd2' depends on these changes but is not included in this update.
-jsxUpdate.syn(258,17): error TS95225: 'd1' depends on these changes but is not included in this update.
-jsxUpdate.syn(296,21): error TS95225: 'd1' depends on these changes but is not included in this update.
+jsxUpdate.syn(23,16): error TS95202: Possibly redundant 'update': 'x' was already updated above with no intervening changes.
+jsxUpdate.syn(97,12): error TS95210: update has no plausible effect on 'xa', the block does not reference any variable that 'xa' depends on.
+jsxUpdate.syn(101,5): error TS1184: Modifiers cannot appear here.
+jsxUpdate.syn(113,20): error TS95223: This update runs unconditionally and is possibly infinite.
+jsxUpdate.syn(125,24): error TS95223: This update runs unconditionally and is possibly infinite.
+jsxUpdate.syn(135,20): error TS2448: Block-scoped variable 'd' used before its declaration.
+jsxUpdate.syn(162,13): error TS95225: 'd2' depends on these changes but is not included in this update.
+jsxUpdate.syn(179,20): error TS95224: 'd1' is already covered by 'root' in this update.
+jsxUpdate.syn(182,13): error TS95226: 'root' depends on these changes and covers 'd1'; use 'update root' instead.
+jsxUpdate.syn(225,16): error TS95210: update has no plausible effect on 'x', the block does not reference any variable that 'x' depends on.
+jsxUpdate.syn(247,12): error TS95210: update has no plausible effect on 'root', the block does not reference any variable that 'root' depends on.
+jsxUpdate.syn(262,17): error TS95225: 'd2' depends on these changes but is not included in this update.
+jsxUpdate.syn(265,17): error TS95225: 'd1' depends on these changes but is not included in this update.
+jsxUpdate.syn(275,5): error TS1184: Modifiers cannot appear here.
+jsxUpdate.syn(303,21): error TS95225: 'd1' depends on these changes but is not included in this update.
 
 
-==== jsxUpdate.syn (16 errors) ====
-    // update expression
+==== jsxUpdate.syn (17 errors) ====
     {
-        declare const el: Element;
+        declare const el: Element & Updatable;
+        ~~~~~~~
+!!! error TS1184: Modifiers cannot appear here.
         const d = <div on:click={() => {
             update el
         }}></div>
@@ -34,56 +36,63 @@ jsxUpdate.syn(296,21): error TS95225: 'd1' depends on these changes but is not i
 !!! error TS2345:   Type 'null' is not assignable to type 'Updatable'.
     
         if (const x = document.querySelector('.a')) {
-            // ok
-            update x
+            if (x is Updatable) {
+                // ok
+                update x
+            }
         }
     
         {
             let y = 0
-            const x = <div>{y}</div>
+            const x = @<div>{y}</div>
             update x // ok
+            update x // redundant
+                   ~
+!!! error TS95202: Possibly redundant 'update': 'x' was already updated above with no intervening changes.
+    
+            const x2 = @<div>{y++}</div>
+            update x2
+            update x2 // ok, because updating `x2` mutates something
         }
     
         {
-            const x = <div>hi</div>
+            const x = @<div>hi</div>
             update x // error, `x` has no updatable expressions
-            ~~~~~~~~
-!!! error TS95201: update has no effect: this element contains no dynamic expressions
         }
     
         {
             let y = 0
-            const x = <div><div>{y}</div></div>
+            const x = @<div><div>{y}</div></div>
             update x // ok
         }
     
         {
             let y = '0'
-            const x = <div><div id={y}></div></div>
+            const x = @<div><div id={y}></div></div>
             update x // ok
         }
     
         {
             let y = '0'
-            const x = <div id={y}></div>
+            const x = @<div id={y}></div>
             update x // ok
         }
     
         {
             // components can always be updated
             function Comp() { return <div></div> }
-            const el = <Comp/>
+            const el = @<Comp/>
             update el // ok
         }
     
         {
             // expressions and blocks always make the element updatable
-            const el = <div>
+            const el = @<div>
                 {<span>hi</span>}
             </div>
             update el // ok
     
-            const el2 = <div>
+            const el2 = @<div>
                 <#run>
                     console.log('hi')
                 </>
@@ -95,7 +104,7 @@ jsxUpdate.syn(296,21): error TS95225: 'd1' depends on these changes but is not i
     // update block form
     {
         let y = 0
-        const x = <div>{y}</div>
+        const x = @<div>{y}</div>
     
         update x {
             y = 1
@@ -105,8 +114,8 @@ jsxUpdate.syn(296,21): error TS95225: 'd1' depends on these changes but is not i
     
         let a = 0
         let b = ''
-        const xa = <div>{a}</div>
-        const xb = <span>{b}</span>
+        const xa = @<div>{a}</div>
+        const xb = @<span>{b}</span>
     
         update xa, xb {
             a = 1
@@ -119,18 +128,18 @@ jsxUpdate.syn(296,21): error TS95225: 'd1' depends on these changes but is not i
             b = 'only b'
         }
     
-        declare const unknown: Element
+        declare const unknown: Element & Updatable;
+        ~~~~~~~
+!!! error TS1184: Modifiers cannot appear here.
         update unknown {
-                       ~
-!!! error TS1005: ';' expected.
             y = 2
         }
     }
     
     // catch recursive updates
     {
-        let c = 0
-        ;<div @ root>
+        let c = 0;
+        <div @ root>
             {c}
             <#run>
                 update root {
@@ -154,25 +163,25 @@ jsxUpdate.syn(296,21): error TS95225: 'd1' depends on these changes but is not i
                     }
                 </>
             </div>
-        </div>
+        </div>;
     
-        ;<div>
+        <div>
             <#run>
                 // error (use-before-init)
                 update d { c += 1 }
                        ~
 !!! error TS2448: Block-scoped variable 'd' used before its declaration.
-!!! related TS2728 jsxUpdate.syn:131:9: 'd' is declared here.
+!!! related TS2728 jsxUpdate.syn:137:9: 'd' is declared here.
             </>
             <div @ d>
                 {c}
             </div>
-        </div>
+        </div>;
     }
     
     {
-        let c = 0
-        ;<div @ root>
+        let c = 0;
+        <div @ root>
             <div @ d1>
                 {c}
             </div>
@@ -203,8 +212,8 @@ jsxUpdate.syn(296,21): error TS95225: 'd1' depends on these changes but is not i
     }
     
     {
-        let c = 0
-        ;<div @ root>
+        let c = 0;
+        <div @ root>
             <div @ d1>
                 {c}
             </div>
@@ -229,8 +238,8 @@ jsxUpdate.syn(296,21): error TS95225: 'd1' depends on these changes but is not i
     }
     
     {
-        let c = 0
-        ;<div @ root>
+        let c = 0;
+        <div @ root>
             <div @ d>
                 {c}
             </div>
@@ -256,7 +265,7 @@ jsxUpdate.syn(296,21): error TS95225: 'd1' depends on these changes but is not i
                 console.log('hi')
             }
     
-            const x = <div>{count}</div>
+            const x = @<div>{count}</div>
     
             update x {
                 increment()
@@ -278,19 +287,18 @@ jsxUpdate.syn(296,21): error TS95225: 'd1' depends on these changes but is not i
             <div>{c}</div>
         </>
         const inner = <Inner />
-        const root = <div>
+        const root = @<div>
             <Inner />
         </div>
         update root {
             c += 1  // ok
         }
-        // TODO: the no-effect case should suggest to use the expression form (?)
+        function noop() {}
+        // TODO: the no-effect case should suggest to remove the block
         update root {
                ~~~~
 !!! error TS95210: update has no plausible effect on 'root', the block does not reference any variable that 'root' depends on.
             noop()  // error, no effect
-            ~~~~
-!!! error TS2304: Cannot find name 'noop'.
         }
     }
     
@@ -298,8 +306,8 @@ jsxUpdate.syn(296,21): error TS95225: 'd1' depends on these changes but is not i
         let c = 0
         <#component InnerB() {}>
             <div>{c}</div>
-        </>
-        ;<div @ root>
+        </>;
+        <div @ root>
             <InnerB @ d1 />
             <div @ d2>{c}</div>
             <#run>
@@ -326,7 +334,9 @@ jsxUpdate.syn(296,21): error TS95225: 'd1' depends on these changes but is not i
     {
         let c = 0
         declare const External: any
-        const root = <div>
+        ~~~~~~~
+!!! error TS1184: Modifiers cannot appear here.
+        const root = @<div>
             <External />
         </div>
         update root {
@@ -335,8 +345,8 @@ jsxUpdate.syn(296,21): error TS95225: 'd1' depends on these changes but is not i
     }
     
     {
-        let c = 0
-        ;<div @ p>
+        let c = 0;
+        <div @ p>
             <#run>
                 let c = ''
             </>

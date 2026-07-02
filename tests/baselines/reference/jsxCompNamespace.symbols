@@ -1,0 +1,41 @@
+//// [tests/cases/syn/jsxCompNamespace.syn] ////
+
+=== jsxCompNamespace.syn ===
+<#component Foo(children) {
+>children : Symbol(children, Decl(jsxCompNamespace.syn, 0, 16))
+
+    public { Bar }
+>Bar : Symbol(Bar, Decl(jsxCompNamespace.syn, 1, 12), Decl(jsxCompNamespace.syn, 4, 4))
+
+}>
+    <div>{...children}</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>children : Symbol(children, Decl(jsxCompNamespace.syn, 0, 16))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    <#component Bar()>
+        <div></div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    </>
+</>
+
+const x = <Foo></Foo>
+>x : Symbol(x, Decl(jsxCompNamespace.syn, 9, 5))
+>Foo : Symbol(Foo, Decl(jsxCompNamespace.syn, 0, 0))
+>Foo : Symbol(Foo, Decl(jsxCompNamespace.syn, 0, 0))
+
+const arr: Foo.Bar[] = []
+>arr : Symbol(arr, Decl(jsxCompNamespace.syn, 10, 5))
+>Foo : Symbol(Foo, Decl(jsxCompNamespace.syn, 0, 0))
+>Bar : Symbol(Bar, Decl(jsxCompNamespace.syn, 1, 12), Decl(jsxCompNamespace.syn, 4, 4))
+
+arr.push(<x.Bar/>)
+>arr.push : Symbol(Array.push, Decl(lib.es5.d.ts, --, --))
+>arr : Symbol(arr, Decl(jsxCompNamespace.syn, 10, 5))
+>push : Symbol(Array.push, Decl(lib.es5.d.ts, --, --))
+>x.Bar : Symbol(Bar)
+>x : Symbol(x, Decl(jsxCompNamespace.syn, 9, 5))
+>Bar : Symbol(Bar)
+

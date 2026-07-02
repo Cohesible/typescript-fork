@@ -160,8 +160,8 @@
 {
     // expression form
     const Expr = <#component(x: string)>
->Expr : (attributes: { x: string; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->     : ^^^^^^^^^^^^^^^^^^      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Expr : (attributes: { x: string; }) => { readonly root: HTMLDivElement; [Symbol.update]?(): void; }
+>     : ^^^^^^^^^^^^^^^^^^      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 >x : string
 >  : ^^^^^^
 
@@ -177,12 +177,12 @@
 
     </>
     const r5 = <Expr x="hello" />
->r5 : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
-><Expr x="hello" /> : { readonly root: HTMLDivElement; [Symbol.update](): void; }
->                   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
->Expr : (attributes: { x: string; }) => { readonly root: HTMLDivElement; [Symbol.update](): void; }
->     : ^^^^^^^^^^^^^^^^^^      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>r5 : { readonly root: HTMLDivElement; [Symbol.update]?(): void; }
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+><Expr x="hello" /> : { readonly root: HTMLDivElement; [Symbol.update]?(): void; }
+>                   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
+>Expr : (attributes: { x: string; }) => { readonly root: HTMLDivElement; [Symbol.update]?(): void; }
+>     : ^^^^^^^^^^^^^^^^^^      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^
 >x : string
 >  : ^^^^^^
 }

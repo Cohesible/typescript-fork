@@ -1,5 +1,5 @@
-jsxIf.syn(45,22): error TS2678: Type '"completed"' is not comparable to type '"all"'.
-jsxIf.syn(46,22): error TS2678: Type '"active"' is not comparable to type '"all"'.
+jsxIf.syn(60,22): error TS2678: Type '"completed"' is not comparable to type '"all"'.
+jsxIf.syn(61,22): error TS2678: Type '"active"' is not comparable to type '"all"'.
 
 
 ==== jsxIf.syn (2 errors) ====
@@ -38,6 +38,21 @@ jsxIf.syn(46,22): error TS2678: Type '"active"' is not comparable to type '"all"
         const if3 = <#if (false)>
           <div></div>
         </>
+    }
+    
+    {
+        // #if bypasses unconditional update checks
+        let cond = true;
+        <div @ d>
+            <#if (cond)>
+                <#run>
+                    static {
+                        update d { cond = !cond }
+                    }
+                </>
+            </>
+        </div>
+        console.log('a')
     }
     
     {

@@ -345,7 +345,7 @@ function getSymbolDisplayPartsDocumentationAndSymbolKindWorker(
             callExpressionLike = location.parent;
         }
 
-        if (callExpressionLike) {
+        if (callExpressionLike) blk: {
             signature = typeChecker.getResolvedSignature(callExpressionLike); // TODO: GH#18217
 
             const useConstructSignatures = callExpressionLike.kind === SyntaxKind.NewExpression || (isCallExpression(callExpressionLike) && callExpressionLike.expression.kind === SyntaxKind.SuperKeyword);
@@ -377,6 +377,28 @@ function getSymbolDisplayPartsDocumentationAndSymbolKindWorker(
                         displayParts.push(spacePart());
                     }
                     addFullSymbolName(symbol);
+                }
+                else if ((symbolFlags & (SymbolFlags.Function | SymbolFlags.Interface | SymbolFlags.NamespaceModule)) && isJsxOpeningLikeElement(callExpressionLike) && symbol.valueDeclaration?.kind === SyntaxKind.JsxComponentDirective) {
+                    displayParts.push({ text: '#component', kind: 'keyword' })
+                    displayParts.push(spacePart());
+                    addFullSymbolName(symbol);
+                    const start = displayParts.length;
+                    addSignatureDisplayParts(signature, allSignatures);
+                    // XXX: chop off the return type
+                    let end
+                    for (let i = displayParts.length-1; i > start; i--) {
+                        const x = displayParts[i];
+                        if (x.kind !== 'punctuation' || x.text !== ':') continue
+                        if (displayParts[i-1].text !== ')') continue
+                        end = i
+                        break
+                    }
+                    if (end) {
+                        displayParts.splice(end, displayParts.length-end)
+                    }
+                    hasAddedSymbolInfo = true;
+                    hasMultipleSignatures = allSignatures.length > 1;
+                    break blk
                 }
                 else {
                     addPrefixForAnyFunctionOrVar(symbol, symbolKind);

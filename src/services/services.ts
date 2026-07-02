@@ -2357,7 +2357,7 @@ export function createLanguageService(
             if (isJsxElement(node)) {
                 const opening = node.openingElement;
                 const closing = node.closingElement;
-                if (opening.name || node.parent?.kind === SyntaxKind.VariableDeclaration) {
+                if (opening.name || (node.flags & NodeFlags.TargetedJsxElement)) {
                     const p1 = sourceFile.getLineAndCharacterOfPosition(opening.getStart());
                     const p2 = sourceFile.getLineAndCharacterOfPosition(closing.getEnd());
                     if (p1.line === p2.line) {
@@ -2383,7 +2383,7 @@ export function createLanguageService(
                 }
             }
             else if (isJsxSelfClosingElement(node)) {
-                if (node.name) {
+                if (node.name || (node.flags & NodeFlags.TargetedJsxElement)) {
                     const start = node.getStart(sourceFile);
                     const locs: number[] = [
                         start,          // <
@@ -3254,7 +3254,7 @@ export function createLanguageService(
 
     function getJsxStyleRegions(fileName: string) {
         const sourceFile = syntaxTreeCache.getCurrentSourceFile(fileName);
-        if (!sourceFile.containsJsx) return;
+        if (!sourceFile.containsJsx) return { regions: [], text: '', classAttributes: [] };;
 
         function appendSpaces(result: string, n: number, str = ' '): string {
             while (n > 0) {
@@ -3282,14 +3282,21 @@ export function createLanguageService(
                     // fallsthrough
                 }
                 case SyntaxKind.Block:
+                case SyntaxKind.SourceFile:
                 case SyntaxKind.JsxIfDirective:
                 case SyntaxKind.JsxElseDirective:
                 case SyntaxKind.JsxFragment:
                 case SyntaxKind.JsxElement:
                 case SyntaxKind.JsxLabeledFragment: {
+                    cancellationToken.throwIfCancellationRequested();
                     let didInsertScope = false;
-                    const children = node.kind === SyntaxKind.Block ? (node as BlockLike).statements :  (node as JsxElement).children
-                    for (const child of children) {
+                    const children = node.kind === SyntaxKind.Block || node.kind === SyntaxKind.SourceFile 
+                        ? (node as BlockLike).statements 
+                        : (node as JsxElement).children
+                    for (let child of children as Iterable<Node>) {
+                        if (child.kind === SyntaxKind.ExpressionStatement) {
+                            child = (child as any as { expression: Node }).expression;
+                        }
                         if (child.kind === SyntaxKind.JsxStyleDirective) {
                             const scopeHeader = '@scope(*){';
                             const source = sourceFile.text;
@@ -3360,6 +3367,7 @@ export function createLanguageService(
                 case SyntaxKind.JsxIfDirective:
                 case SyntaxKind.JsxElseDirective:
                 case SyntaxKind.JsxLabeledFragment:
+                    cancellationToken.throwIfCancellationRequested();
                     for (const child of (parent as JsxElement).children) {
                         if (child.kind === SyntaxKind.JsxStyleDirective) {
                             result.push(getSpanFromStyleDirective(sourceFile, child as JsxStyleDirective));
@@ -3367,6 +3375,7 @@ export function createLanguageService(
                     }
                     break;
                 case SyntaxKind.JsxComponentDirective: {
+                    cancellationToken.throwIfCancellationRequested();
                     const comp = parent as JsxComponentDirective;
                     for (const child of comp.children) {
                         if (child.kind === SyntaxKind.JsxStyleDirective) {

@@ -262,12 +262,12 @@
 
         </>
         <div @ v>{c}</div>
-><div @ v>{c}</div> : HTMLDivElement
->                   : ^^^^^^^^^^^^^^
+><div @ v>{c}</div> : HTMLDivElement & Updatable
+>                   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->v : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+>v : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >c : number
 >  : ^^^^^^
 >div : any
@@ -286,8 +286,8 @@
 >      : ^^^
 
             update v { c += 1 }
->v : HTMLDivElement
->  : ^^^^^^^^^^^^^^
+>v : HTMLDivElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >c += 1 : number
 >       : ^^^^^^
 >c : number

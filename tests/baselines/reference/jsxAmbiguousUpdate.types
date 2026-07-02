@@ -1,0 +1,112 @@
+//// [tests/cases/syn/jsxAmbiguousUpdate.syn] ////
+
+=== jsxAmbiguousUpdate.syn ===
+let c = 0
+>c : number
+>  : ^^^^^^
+>0 : 0
+>  : ^
+
+const d = <div>{c}</div>
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div>{c}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>c : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+update d
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+
+const d2 = @ <div>{c}</div>
+>d2 : HTMLDivElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+><div>{c}</div> : HTMLDivElement & Updatable
+>               : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>c : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+update d2
+>d2 : HTMLDivElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+declare const d3: HTMLElement
+>d3 : HTMLElement
+>   : ^^^^^^^^^^^
+
+update d3
+>d3 : HTMLElement
+>   : ^^^^^^^^^^^
+
+if (d3 is Updatable) update d3
+>d3 is Updatable : boolean
+>                : ^^^^^^^
+>d3 : HTMLElement
+>   : ^^^^^^^^^^^
+>d3 : HTMLElement & Updatable
+>   : ^^^^^^^^^^^^^^^^^^^^^^^
+
+<#component Foo(c: number)>
+>Foo : any
+>    : ^^^
+>c : number
+>  : ^^^^^^
+
+    <div>{c}</div>
+><div>{c}</div> : HTMLDivElement
+>               : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>c : number
+>  : ^^^^^^
+>div : any
+>    : ^^^
+
+</>
+
+const f = <Foo c={c++} />
+>f : Foo
+>  : ^^^
+><Foo c={c++} /> : Foo
+>                : ^^^
+>Foo : (attributes: { c: number; }) => Foo
+>    : ^^^^^^^^^^^^^^^^^^      ^^^^^^^^^^^
+>c : number
+>  : ^^^^^^
+>c++ : number
+>    : ^^^^^^
+>c : number
+>  : ^^^^^^
+
+update f
+>f : Foo
+>  : ^^^
+
+const f2 = @ <Foo c={c++} />
+>f2 : Foo & Updatable
+>   : ^^^^^^^^^^^^^^^
+><Foo c={c++} /> : Foo & Updatable
+>                : ^^^^^^^^^^^^^^^
+>Foo : (attributes: { c: number; }) => Foo
+>    : ^^^^^^^^^^^^^^^^^^      ^^^^^^^^^^^
+>c : number
+>  : ^^^^^^
+>c++ : number
+>    : ^^^^^^
+>c : number
+>  : ^^^^^^
+
+update f2
+>f2 : Foo & Updatable
+>   : ^^^^^^^^^^^^^^^
+
+

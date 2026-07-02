@@ -1,0 +1,12 @@
+<#component Foo(children) {
+    public { Bar }
+}>
+    <div>{...children}</div>
+    <#component Bar()>
+        <div></div>
+    </>
+</>
+
+const x = <Foo></Foo>
+const arr: Foo.Bar[] = []
+arr.push(<x.Bar/>)

@@ -212,12 +212,12 @@
 >    : ^^^
 
         <FooWithDefault @ f a="test" />
-><FooWithDefault @ f a="test" /> : createCompDecl<number>.Foo3<string>
->                                : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+><FooWithDefault @ f a="test" /> : createCompDecl<number>.Foo3<string> & Updatable
+>                                : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >FooWithDefault : <U>(attributes: { a: U; b?: number | undefined; }) => createCompDecl<number>.Foo3<U>
 >               : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->f : createCompDecl<number>.Foo3<string>
->  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>f : createCompDecl<number>.Foo3<string> & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >a : string
 >  : ^^^^^^
 
@@ -229,8 +229,8 @@
 >        : ^^^^^^^^^^^^^^^^^^^^^^^^^
 >f.baz : () => { a: string; b: number; }
 >      : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->f : createCompDecl<number>.Foo3<string>
->  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>f : createCompDecl<number>.Foo3<string> & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >baz : () => { a: string; b: number; }
 >    : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

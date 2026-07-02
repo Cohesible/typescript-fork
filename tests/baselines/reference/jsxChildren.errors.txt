@@ -11,9 +11,10 @@ jsxChildren.syn(29,28): error TS2747: 'FooOpt' components don't accept text as c
   Type 'Text' is missing the following properties from type 'Element': attributes, classList, className, clientHeight, and 124 more.
 jsxChildren.syn(30,21): error TS2741: Property 'children' is missing in type '{}' but required in type '{ children: Element[] | undefined; }'.
 jsxChildren.syn(85,12): error TS95210: update has no plausible effect on 'q', the block does not reference any variable that 'q' depends on.
+jsxChildren.syn(85,12): error TS95231: 'q' must have a '[Symbol.update]()' function. Use '@' on the original tree expression to add an update entrypoint.
 
 
-==== jsxChildren.syn (8 errors) ====
+==== jsxChildren.syn (9 errors) ====
     {
         const elements: Element[] = []
         function Foo(attrs: {}, children: Element[]) {
@@ -85,7 +86,7 @@ jsxChildren.syn(85,12): error TS95210: update has no plausible effect on 'q', th
         <#component Many(items: string[])>
             <div>{...items}</div>
         </>
-        const d = <Many {items}/>
+        const d = @ <Many {items}/>
         update d {
             items.push('aa')
         }
@@ -120,5 +121,7 @@ jsxChildren.syn(85,12): error TS95210: update has no plausible effect on 'q', th
         update q {}
                ~
 !!! error TS95210: update has no plausible effect on 'q', the block does not reference any variable that 'q' depends on.
+               ~
+!!! error TS95231: 'q' must have a '[Symbol.update]()' function. Use '@' on the original tree expression to add an update entrypoint.
     }
     

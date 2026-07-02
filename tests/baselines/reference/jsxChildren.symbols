@@ -173,7 +173,7 @@
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     </>
-    const d = <Many {items}/>
+    const d = @ <Many {items}/>
 >d : Symbol(d, Decl(jsxChildren.syn, 52, 9))
 >Many : Symbol(Many, Decl(jsxChildren.syn, 48, 23))
 >items : Symbol(items, Decl(jsxChildren.syn, 48, 9))

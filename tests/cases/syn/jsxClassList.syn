@@ -8,8 +8,9 @@
     <input (.min.min2={cond})></input>;
     <input (.min.min2={cond}, .bar)></input>;
     <input .min.min2={cond}></input>;
-    <input .min.min2={cond} @ i></input>;
-    <input (.m) @ i2></input>;
+    <input @ i .min.min2={cond}></input>;
+    <input @ i2 (.m)></input>;
+    <input (.m) @ i2></input>; // wrong order
 
     // errors emitted during parse
     <div id="foo" .a.a></div>;

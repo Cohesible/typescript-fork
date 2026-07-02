@@ -101,44 +101,28 @@
     </div>)
 }
 
-// unwind
-{
-    <#component EventComp(w: HTMLElement) {
-        function onKeyPress(ev: KeyboardEvent) {}
-        w.addEventListener('keypress', onKeyPress)
-        unwind {
-            w.removeEventListener('keypress', onKeyPress)
-        }
-    }>
-        <div></div>
-        <#run>
-            const el = document.createElement('div')
-            unwind {
-                el.remove()
-            }
-        </>
-    </>
-}
-
 {
     <#component Timer(n: number) {
         let active = true
         let rate = n
         let c = 0
-        const d = <div>{c}</div>
         const counter = <div @ counter>
             <div @ d>
                 count: {c}
             </div>
             <#run>
+                static let id
                 if (active) {
-                    const id = setInterval(() => {
+                    id ??= setInterval(() => {
                         update d {
                             c += 1
                         }
                     }, rate)
-                    unwind { clearInterval(id) }
+                } else {
+                    clearInterval(id)
+                    id = undefined
                 }
+                id; // should be `number | undefined`
             </>
         </div>
 
@@ -146,20 +130,20 @@
             rate = n
         }
     }>
-        <div></div>
+        <div>{counter}</div>
     </>
 }
 
 // <#style>
 {
-    ;<#style d>
-    </>
-    ;<#style (d)>
-    </>
-    ;<#style d2(d)>
-    </>
-    ;<#style d3(d, d2)>
-    </>
+    <#style d>
+    </>;
+    <#style (d)>
+    </>;
+    <#style d2(d)>
+    </>;
+    <#style d3(d, d2)>
+    </>;
     const o = d
 }
 

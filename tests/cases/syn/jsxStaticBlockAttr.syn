@@ -1,0 +1,12 @@
+
+const el1 = @ <div static {
+  console.log(this)
+  const x = 'aaa'
+}>
+  test test! {x}
+</div>
+
+const el2 = <div @ d; static {
+  console.log(d)
+}></div>
+

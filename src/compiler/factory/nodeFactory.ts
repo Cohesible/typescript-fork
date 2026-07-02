@@ -5797,8 +5797,8 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         node.tagName = tagName;
         node.typeArguments = asNodeArray(typeArguments);
         node.name = identifier;
-        node.attributes = attributes;
         node.classList = classList;
+        node.attributes = attributes;
         node.transformFlags |= propagateChildFlags(node.dotDotDotToken) |
             propagateChildFlags(node.tagName) |
             propagateChildrenFlags(node.typeArguments) |
@@ -5831,8 +5831,8 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
         node.tagName = tagName;
         node.typeArguments = asNodeArray(typeArguments);
         node.name = identifier;
-        node.attributes = attributes;
         node.classList = classList;
+        node.attributes = attributes;
         node.transformFlags |= propagateChildFlags(node.dotDotDotToken) |
             propagateChildFlags(node.tagName) |
             propagateChildrenFlags(node.typeArguments) |
@@ -6251,7 +6251,7 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     }
 
     // @api
-    function createUpdateBlockStatement(operands: readonly Expression[], block: Block) {
+    function createUpdateBlockStatement(operands: readonly Expression[], block?: Block) {
         const node = createBaseNode<UpdateBlockStatement>(SyntaxKind.UpdateBlockStatement);
         node.operands = createNodeArray(operands);
         node.block = block;
@@ -6260,7 +6260,7 @@ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNode
     }
 
     // @api
-    function updateUpdateBlockStatement(node: UpdateBlockStatement, operands: readonly Expression[], block: Block) {
+    function updateUpdateBlockStatement(node: UpdateBlockStatement, operands: readonly Expression[], block?: Block) {
         return node.operands !== operands || node.block !== block
             ? update(createUpdateBlockStatement(operands, block), node)
             : node;

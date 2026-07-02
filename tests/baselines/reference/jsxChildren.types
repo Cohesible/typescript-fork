@@ -362,19 +362,19 @@
 >    : ^^^
 
     </>
-    const d = <Many {items}/>
->d : Many
->  : ^^^^
-><Many {items}/> : Many
->                : ^^^^
+    const d = @ <Many {items}/>
+>d : Many & Updatable
+>  : ^^^^^^^^^^^^^^^^
+><Many {items}/> : Many & Updatable
+>                : ^^^^^^^^^^^^^^^^
 >Many : (attributes: { items: string[]; }) => Many
 >     : ^^^^^^^^^^^^^^^^^^^^^^        ^^^^^^^^^^^^
 >items : string[]
 >      : ^^^^^^^^
 
     update d {
->d : Many
->  : ^^^^
+>d : Many & Updatable
+>  : ^^^^^^^^^^^^^^^^
 
         items.push('aa')
 >items.push('aa') : number

@@ -1,0 +1,29 @@
+// @lib: es5,machine
+
+declare const u: u8
+declare const i: i8
+declare const f: f32
+
+function plainDefault() {
+    const a: number = -u
+    const b: number = -i
+    const c: number = -f
+}
+
+function checked() {
+    "use checked"
+    const a: i8 = -u   // u8 -> i8
+    const b: i8 = -i   // stays i8
+    const c: f32 = -f  // stays f32
+}
+
+function wrapping() {
+    "use wrapping"
+    const a: i8 = -u
+}
+
+function checkedNoMachineResult() {
+    "use checked"
+    const a: number = -u  // ok
+    const b: u8 = -u      // err
+}

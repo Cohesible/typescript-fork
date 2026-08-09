@@ -28,3 +28,23 @@ const sym: symbol = reify u32 // ok
 >sym : Symbol(sym, Decl(reifyMachineTypes.syn, 9, 5))
 >u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
 
+declare function assert<T>(x: unknown): asserts x is T
+>assert : Symbol(assert, Decl(reifyMachineTypes.syn, 9, 29))
+>T : Symbol(T, Decl(reifyMachineTypes.syn, 11, 24))
+>x : Symbol(x, Decl(reifyMachineTypes.syn, 11, 27))
+>x : Symbol(x, Decl(reifyMachineTypes.syn, 11, 27))
+>T : Symbol(T, Decl(reifyMachineTypes.syn, 11, 24))
+
+const y = 1 as number
+>y : Symbol(y, Decl(reifyMachineTypes.syn, 12, 5))
+
+assert(y is u32)
+>assert : Symbol(assert, Decl(reifyMachineTypes.syn, 9, 29))
+>y : Symbol(y, Decl(reifyMachineTypes.syn, 12, 5))
+>u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
+
+const y2: u32 = y
+>y2 : Symbol(y2, Decl(reifyMachineTypes.syn, 14, 5))
+>u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
+>y : Symbol(y, Decl(reifyMachineTypes.syn, 12, 5))
+

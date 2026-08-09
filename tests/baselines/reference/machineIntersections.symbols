@@ -1,0 +1,124 @@
+//// [tests/cases/syn/machineIntersections.syn] ////
+
+=== machineIntersections.syn ===
+type A = u8 & i8    // u7 (exact value-range intersection)
+>A : Symbol(A, Decl(machineIntersections.syn, 0, 0))
+>u8 : Symbol(u8, Decl(lib.machine.d.ts, --, --))
+>i8 : Symbol(i8, Decl(lib.machine.d.ts, --, --))
+
+type B = u8 & u32   // u8
+>B : Symbol(B, Decl(machineIntersections.syn, 0, 16))
+>u8 : Symbol(u8, Decl(lib.machine.d.ts, --, --))
+>u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
+
+type C = u32 & u8   // u8
+>C : Symbol(C, Decl(machineIntersections.syn, 1, 17))
+>u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
+>u8 : Symbol(u8, Decl(lib.machine.d.ts, --, --))
+
+type D = u8 & number // u8
+>D : Symbol(D, Decl(machineIntersections.syn, 2, 17))
+>u8 : Symbol(u8, Decl(lib.machine.d.ts, --, --))
+
+type E = number & u8 // u8
+>E : Symbol(E, Decl(machineIntersections.syn, 3, 20))
+>u8 : Symbol(u8, Decl(lib.machine.d.ts, --, --))
+
+type F = u32 & u64  // u32
+>F : Symbol(F, Decl(machineIntersections.syn, 4, 20))
+>u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
+>u64 : Symbol(u64, Decl(lib.machine.d.ts, --, --))
+
+type G = i32 & i32  // i32
+>G : Symbol(G, Decl(machineIntersections.syn, 5, 18))
+>i32 : Symbol(i32, Decl(lib.machine.d.ts, --, --))
+>i32 : Symbol(i32, Decl(lib.machine.d.ts, --, --))
+
+type H = u16 & i8   // u7 ([0,65535] & [-128,127] = [0,127])
+>H : Symbol(H, Decl(machineIntersections.syn, 6, 18))
+>u16 : Symbol(u16, Decl(lib.machine.d.ts, --, --))
+>i8 : Symbol(i8, Decl(lib.machine.d.ts, --, --))
+
+type I = f32 & u32  // u32 (float never restricts an integral type further)
+>I : Symbol(I, Decl(machineIntersections.syn, 7, 17))
+>f32 : Symbol(f32, Decl(lib.machine.d.ts, --, --))
+>u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
+
+type J = f32 & f64  // f32
+>J : Symbol(J, Decl(machineIntersections.syn, 8, 18))
+>f32 : Symbol(f32, Decl(lib.machine.d.ts, --, --))
+>f64 : Symbol(f64, Decl(lib.machine.d.ts, --, --))
+
+type K = i8 & f32   // i8
+>K : Symbol(K, Decl(machineIntersections.syn, 9, 18))
+>i8 : Symbol(i8, Decl(lib.machine.d.ts, --, --))
+>f32 : Symbol(f32, Decl(lib.machine.d.ts, --, --))
+
+type L = i8 & 255   // never (255 is out of i8's range)
+>L : Symbol(L, Decl(machineIntersections.syn, 10, 17))
+>i8 : Symbol(i8, Decl(lib.machine.d.ts, --, --))
+
+type M = i8 & 1     // 1 (literal is in range, and more specific)
+>M : Symbol(M, Decl(machineIntersections.syn, 11, 17))
+>i8 : Symbol(i8, Decl(lib.machine.d.ts, --, --))
+
+type N = 1 & i8     // 1 (order shouldn't matter)
+>N : Symbol(N, Decl(machineIntersections.syn, 12, 15))
+>i8 : Symbol(i8, Decl(lib.machine.d.ts, --, --))
+
+type O = u8 & 1     // 1
+>O : Symbol(O, Decl(machineIntersections.syn, 13, 15))
+>u8 : Symbol(u8, Decl(lib.machine.d.ts, --, --))
+
+type P = u8 & (1 | -1)     // 1
+>P : Symbol(P, Decl(machineIntersections.syn, 14, 15))
+>u8 : Symbol(u8, Decl(lib.machine.d.ts, --, --))
+
+const p: P = -1
+>p : Symbol(p, Decl(machineIntersections.syn, 16, 5))
+>P : Symbol(P, Decl(machineIntersections.syn, 14, 15))
+
+declare const a: A
+>a : Symbol(a, Decl(machineIntersections.syn, 18, 13))
+>A : Symbol(A, Decl(machineIntersections.syn, 0, 0))
+
+declare const b: B
+>b : Symbol(b, Decl(machineIntersections.syn, 19, 13))
+>B : Symbol(B, Decl(machineIntersections.syn, 0, 16))
+
+declare const c: C
+>c : Symbol(c, Decl(machineIntersections.syn, 20, 13))
+>C : Symbol(C, Decl(machineIntersections.syn, 1, 17))
+
+declare const d: D
+>d : Symbol(d, Decl(machineIntersections.syn, 21, 13))
+>D : Symbol(D, Decl(machineIntersections.syn, 2, 17))
+
+declare const e: E
+>e : Symbol(e, Decl(machineIntersections.syn, 22, 13))
+>E : Symbol(E, Decl(machineIntersections.syn, 3, 20))
+
+declare const f: F
+>f : Symbol(f, Decl(machineIntersections.syn, 23, 13))
+>F : Symbol(F, Decl(machineIntersections.syn, 4, 20))
+
+declare const g: G
+>g : Symbol(g, Decl(machineIntersections.syn, 24, 13))
+>G : Symbol(G, Decl(machineIntersections.syn, 5, 18))
+
+declare const h: H
+>h : Symbol(h, Decl(machineIntersections.syn, 25, 13))
+>H : Symbol(H, Decl(machineIntersections.syn, 6, 18))
+
+declare const i: I
+>i : Symbol(i, Decl(machineIntersections.syn, 26, 13))
+>I : Symbol(I, Decl(machineIntersections.syn, 7, 17))
+
+declare const j: J
+>j : Symbol(j, Decl(machineIntersections.syn, 27, 13))
+>J : Symbol(J, Decl(machineIntersections.syn, 8, 18))
+
+declare const k: K
+>k : Symbol(k, Decl(machineIntersections.syn, 28, 13))
+>K : Symbol(K, Decl(machineIntersections.syn, 9, 18))
+

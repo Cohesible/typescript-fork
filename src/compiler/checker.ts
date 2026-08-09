@@ -2111,6 +2111,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
     var seenIntrinsicNames = new Set<string>();
     var machineNumberTypes = new Map<string, MachineNumberInfo>();
+    var deferredMachineIntAliasSymbol: Symbol | undefined;
+    var deferredMachineFloatAliasSymbol: Symbol | undefined;
 
     var anyType = createIntrinsicType(TypeFlags.Any, "any");
     var autoType = createIntrinsicType(TypeFlags.Any, "any", ObjectFlags.NonInferrableType, "auto");
@@ -17227,10 +17229,24 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         const name = `${kind}${width}`;
         let info = machineNumberTypes.get(name);
         if (!info) {
-            info = { type: createIntrinsicType(TypeFlags.Number, name), kind, width };
+            const type = createIntrinsicType(TypeFlags.Number, name);
+            const aliasSymbol = kind === "f" ? getMachineFloatAliasSymbol() : getMachineIntAliasSymbol();
+            if (aliasSymbol) {
+                type.aliasSymbol = aliasSymbol;
+                type.aliasTypeArguments = kind === "f" ? [getNumberLiteralType(width)] : [getNumberLiteralType(width), kind === "i" ? trueType : falseType];
+            }
+            info = { type, kind, width };
             machineNumberTypes.set(name, info);
         }
         return info.type;
+    }
+
+    function getMachineIntAliasSymbol(): Symbol | undefined {
+        return deferredMachineIntAliasSymbol ??= getGlobalSymbol("Int" as __String, SymbolFlags.Type, /*diagnostic*/ undefined);
+    }
+
+    function getMachineFloatAliasSymbol(): Symbol | undefined {
+        return deferredMachineFloatAliasSymbol ??= getGlobalSymbol("Float" as __String, SymbolFlags.Type, /*diagnostic*/ undefined);
     }
 
     function getMachineIntWidth(widthType: Type): number | undefined {
@@ -17241,9 +17257,35 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return Number.isInteger(width) && width > 0 ? width : undefined;
     }
 
+    function createMachineTypeVariablePattern(aliasSymbol: Symbol | undefined, aliasTypeArguments: readonly Type[]): Type {
+        // technically, this makes "null" try to match against the type. so we have to special case it later on
+        const type = createType(TypeFlags.Number | TypeFlags.Null) as IntrinsicType;
+        type.intrinsicName = "number";
+        type.aliasSymbol = aliasSymbol;
+        type.aliasTypeArguments = aliasTypeArguments;
+        type.objectFlags = ObjectFlags.CouldContainTypeVariablesComputed | ObjectFlags.CouldContainTypeVariables;
+        return type;
+    }
+
+    function getMachineTypeVariablePatternKind(type: Type): string | undefined {
+        if (!type.aliasSymbol || getMachineNumberInfo(type)) {
+            return undefined;
+        }
+        if (type.aliasSymbol === getMachineIntAliasSymbol()) {
+            return "iu";
+        }
+        if (type.aliasSymbol === getMachineFloatAliasSymbol()) {
+            return "f";
+        }
+        return undefined;
+    }
+
     function getMachineIntType(widthType: Type, signedType: Type): Type {
         const width = getMachineIntWidth(widthType);
         if (width === undefined || !(signedType.flags & TypeFlags.BooleanLiteral)) {
+            if (couldContainTypeVariables(widthType) || couldContainTypeVariables(signedType)) {
+                return createMachineTypeVariablePattern(getMachineIntAliasSymbol(), [widthType, signedType]);
+            }
             return numberType;
         }
         const signed = (signedType as IntrinsicType).intrinsicName === "true";
@@ -17251,6 +17293,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function getMachineFloatType(widthType: Type): Type {
+        if (getMachineIntWidth(widthType) === undefined && couldContainTypeVariables(widthType)) {
+            return createMachineTypeVariablePattern(getMachineFloatAliasSymbol(), [widthType]);
+        }
         const width = getMachineIntWidth(widthType);
         if (width === undefined) {
             return numberType;
@@ -17265,6 +17310,75 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         const name = (type as IntrinsicType).intrinsicName;
         const info = name && machineNumberTypes.get(name);
         return info && info.type === type ? info : undefined;
+    }
+
+    function getMachineIntegerTypeForRange(min: number, max: number): Type | undefined {
+        if (min === 0) {
+            const width = Math.round(Math.log2(max + 1));
+            return 2 ** width - 1 === max ? getOrCreateMachineNumberType("u", width) : undefined;
+        }
+        if (min === -(max + 1)) {
+            const width = Math.round(Math.log2(max + 1)) + 1;
+            return 2 ** (width - 1) - 1 === max ? getOrCreateMachineNumberType("i", width) : undefined;
+        }
+        return undefined;
+    }
+
+    function reconcileMachineNumberIntersectionMember(typeSet: Map<string, Type>, type: Type): "skip" | "impossible" | Type {
+        let info = getMachineNumberInfo(type);
+        const literalValue = type.flags & TypeFlags.NumberLiteral ? (type as NumberLiteralType).value : undefined;
+        let current = type;
+        for (const [key, existing] of typeSet) {
+            if (!(existing.flags & TypeFlags.NumberLike)) {
+                continue;
+            }
+            const existingInfo = getMachineNumberInfo(existing);
+            const existingLiteralValue = existing.flags & TypeFlags.NumberLiteral ? (existing as NumberLiteralType).value : undefined;
+            if (!info && !existingInfo) {
+                continue;
+            }
+            if (literalValue !== undefined && existingInfo) {
+                if (!numberLiteralFitsMachineType(literalValue, existingInfo)) {
+                    return "impossible";
+                }
+                typeSet.delete(key);
+                continue;
+            }
+            if (existingLiteralValue !== undefined && info) {
+                return numberLiteralFitsMachineType(existingLiteralValue, info) ? "skip" : "impossible";
+            }
+            if (info && !existingInfo) {
+                typeSet.delete(key); 
+                continue;
+            }
+            if (!info && existingInfo) {
+                return "skip";
+            }
+            if (info!.kind === "f" && existingInfo!.kind === "f") {
+                if (info!.width <= existingInfo!.width) {
+                    typeSet.delete(key);
+                    continue;
+                }
+                return "skip";
+            }
+            if (info!.kind === "f" || existingInfo!.kind === "f") {
+                if (info!.kind === "f") {
+                    return "skip";
+                }
+                typeSet.delete(key);
+                continue;
+            }
+            const min = Math.max(getMachineIntegerMin(info!), getMachineIntegerMin(existingInfo!));
+            const max = Math.min(getMachineIntegerMax(info!), getMachineIntegerMax(existingInfo!));
+            const reduced = getMachineIntegerTypeForRange(min, max);
+            if (!reduced) {
+                continue;
+            }
+            typeSet.delete(key);
+            current = reduced;
+            info = getMachineNumberInfo(reduced);
+        }
+        return current;
     }
 
     function numberLiteralFitsMachineType(value: number, info: MachineNumberInfo): boolean {
@@ -18983,7 +19097,18 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                         // empty intersection. Adding TypeFlags.NonPrimitive causes that to happen.
                         includes |= TypeFlags.NonPrimitive;
                     }
-                    typeSet.set(type.id.toString(), type);
+                    if (type.flags & TypeFlags.NumberLike) {
+                        const reconciled = reconcileMachineNumberIntersectionMember(typeSet, type);
+                        if (reconciled === "impossible") {
+                            includes |= TypeFlags.Never;
+                        }
+                        else if (reconciled !== "skip") {
+                            typeSet.set(reconciled.id.toString(), reconciled);
+                        }
+                    }
+                    else {
+                        typeSet.set(type.id.toString(), type);
+                    }
                 }
             }
             includes |= flags & TypeFlags.IncludesMask;
@@ -22806,11 +22931,19 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             (source as StringLiteralType).value === (target as StringLiteralType).value
         ) return true;
         if (s & TypeFlags.NumberLike && t & TypeFlags.Number) {
+            const patternKind = getMachineTypeVariablePatternKind(target);
+            if (patternKind) {
+                const sourceMachine = getMachineNumberInfo(source);
+                return !!sourceMachine && patternKind.includes(sourceMachine.kind);
+            }
             const targetMachine = getMachineNumberInfo(target);
             if (targetMachine) {
                 const sourceMachine = getMachineNumberInfo(source);
-                if (sourceMachine) return sourceMachine.kind === targetMachine.kind && sourceMachine.width <= targetMachine.width;
+                if (sourceMachine) {
+                    return relation === comparableRelation || sourceMachine.kind === targetMachine.kind && sourceMachine.width <= targetMachine.width;
+                }
                 if (s & TypeFlags.NumberLiteral) return numberLiteralFitsMachineType((source as NumberLiteralType).value, targetMachine);
+                if (relation === comparableRelation) return true;
                 return false;
             }
             return true;
@@ -22837,7 +22970,12 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         // In non-strictNullChecks mode, `undefined` and `null` are assignable to anything except `never`.
         // Since unions and intersections may reduce to `never`, we exclude them here.
         if (s & TypeFlags.Undefined && (!strictNullChecks && !(t & TypeFlags.UnionOrIntersection) || t & (TypeFlags.Undefined | TypeFlags.Void))) return true;
-        if (s & TypeFlags.Null && (!strictNullChecks && !(t & TypeFlags.UnionOrIntersection) || t & TypeFlags.Null)) return true;
+        if (s & TypeFlags.Null && (!strictNullChecks && !(t & TypeFlags.UnionOrIntersection) || t & TypeFlags.Null)) {
+            // machine types use Number | Null as their intrinsic pattern matcher
+            if (!(t & TypeFlags.Number)) {
+                return true;
+            }
+        }
         if (s & TypeFlags.Object && t & TypeFlags.NonPrimitive && !(relation === strictSubtypeRelation && isEmptyAnonymousObjectType(source) && !(getObjectFlags(source) & ObjectFlags.FreshLiteral))) return true;
         if (relation === assignableRelation || relation === comparableRelation) {
             if (s & TypeFlags.Any) return true;
@@ -26133,6 +26271,12 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         // A type is mutable-array-like if it is a reference to the global Array type, or if it is not the
         // any, undefined or null type and if it is assignable to Array<any>
         return isMutableArrayOrTuple(type) || !(type.flags & (TypeFlags.Any | TypeFlags.Nullable)) && isTypeAssignableTo(type, anyArrayType);
+    }
+
+    function isMachineTypeAlias(type: Type): type is TypeReference {
+        if (!(getObjectFlags(type) & ObjectFlags.Reference) || (type as TypeReference).target !== intrinsicMarkerType as any) return false;
+        const kind = intrinsicTypeKinds.get((type as TypeReference).symbol.escapedName as string);
+        return kind === IntrinsicTypeKind.Float || kind === IntrinsicTypeKind.Int;
     }
 
     function getSingleBaseForNonAugmentingSubtype(type: Type) {
@@ -29442,7 +29586,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
     function getTypePredicateArgument(predicate: TypePredicate, callExpression: CallExpression) {
         if (predicate.kind === TypePredicateKind.Identifier || predicate.kind === TypePredicateKind.AssertsIdentifier) {
-            return callExpression.arguments[predicate.parameterIndex];
+            const arg = callExpression.arguments[predicate.parameterIndex];
+            return arg && arg.kind === SyntaxKind.IsExpression ? (arg as IsExpression).expression : arg;
         }
         const invokedExpression = skipParentheses(callExpression.expression);
         return isAccessExpression(invokedExpression) ? skipParentheses(invokedExpression.expression) : undefined;
@@ -38131,6 +38276,18 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             inferTypes(context.inferences, getThisArgumentType(thisArgumentNode), thisType);
         }
 
+        const predicate = getTypePredicateOfSignature(signature);
+        if (
+            predicate && predicate.kind === TypePredicateKind.AssertsIdentifier && predicate.type &&
+            predicate.type.flags & TypeFlags.TypeParameter && contains(signature.typeParameters, predicate.type) &&
+            predicate.parameterIndex < argCount
+        ) {
+            const predicateArg = args[predicate.parameterIndex];
+            if (predicateArg.kind === SyntaxKind.IsExpression) {
+                inferTypes(context.inferences, getTypeFromTypeNode((predicateArg as IsExpression).type), predicate.type);
+            }
+        }
+
         for (let i = 0; i < argCount; i++) {
             const arg = args[i];
             if (arg.kind !== SyntaxKind.OmittedExpression) {
@@ -42555,6 +42712,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     }
                     return numberType;
                 }
+                if (node.operator === SyntaxKind.MinusToken) {
+                    return getUnaryMinusResultType(operandType, node.operand);
+                }
                 return getUnaryResultType(operandType);
             case SyntaxKind.ExclamationToken:
                 checkTruthinessOfType(operandType, node.operand);
@@ -42609,6 +42769,22 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 : bigintType;
         }
         // If it's not a bigint type, implicit coercion will result in a number
+        return numberType;
+    }
+
+    // Like `getUnaryResultType`, but for unary `-`: negating machine number types widens to plain
+    // `number` by default, same as binary arithmetic. Under a `"use checked"`/`"use wrapping"`
+    // directive, negation instead preserves a machine type, using the same-width *signed* type for
+    // an unsigned operand (two's-complement negation of a `uN` bit pattern is the same operation as
+    // negating an `iN` value) and leaving a signed or float operand's type unchanged.
+    function getUnaryMinusResultType(operandType: Type, operandNode: Expression): Type {
+        if (maybeTypeOfKind(operandType, TypeFlags.BigIntLike)) {
+            return getUnaryResultType(operandType);
+        }
+        const info = getMachineNumberInfo(operandType);
+        if (info && isInCheckedOrWrappingArithmeticScope(operandNode)) {
+            return info.kind === "u" ? getOrCreateMachineNumberType("i", info.width) : operandType;
+        }
         return numberType;
     }
 
@@ -52303,8 +52479,11 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
         else if (isTypeAssignableToKind(subject, TypeFlags.Literal | TypeFlags.UniqueESSymbol | TypeFlags.Undefined | TypeFlags.Null)) {
             if (subject.flags & TypeFlags.Number) {
-                if (getMachineNumberInfo(subject)) {
-                    return getReifiedIntrinsicType('intrinsic');
+                const info = getMachineNumberInfo(subject)
+                if (info) {
+                    if (info.kind === 'f') return getMemberType('Float');
+                    if (info.kind === 'u' || info.kind === 'i') return getMemberType('Int');
+                    return getMemberType('Machine');
                 }
             }
             if (kindName !== undefined && kindName !== 'literal') {

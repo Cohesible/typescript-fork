@@ -1,0 +1,19 @@
+// @lib: es5,machine
+
+type Decompose<T> = T extends Int<infer U, infer S> ? [U, S] : never;
+type Decomposed64 = Decompose<u64>;   // [64, false]
+type Decomposed64i = Decompose<i64>;  // [64, true]
+type Decomposed32 = Decompose<i32>;   // [32, true]
+
+type DecomposeFloat<T> = T extends Float<infer U> ? U : never;
+type DecomposedF32 = DecomposeFloat<f32>; // 32
+
+type NotAnInt = Decompose<number>; // never
+type NotAnInt2 = Decompose<null>;
+
+declare const d1: Decomposed64
+declare const d2: Decomposed64i
+declare const d3: Decomposed32
+declare const d4: DecomposedF32
+declare const d5: NotAnInt
+

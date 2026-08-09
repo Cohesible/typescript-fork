@@ -35,9 +35,41 @@ type smi = Int<31, true>;
 type usize = Int<64, false>;
 type isize = Int<64, true>;
 
+// type Align<T, U> = T extends Int<infer Width, infer Sign>
+
 declare namespace Type {
+    function isInt(t: Type): boolean
     function isFloat(t: Type): boolean
     function isSigned(t: Type): boolean | undefined
-    function isInteger(t: Type): boolean
     function getBitWidth(t: Type): u32 | undefined
+
+    abstract class Machine {
+        static Int: typeof Int
+        static Float: typeof Float
+        readonly width: Type
+        isInt(): this is Int
+        isFloat(): this is Float
+        isConcrete(): this is this & { width: u32 }
+    }
+
+    class Int extends Machine {
+        readonly signed: Type
+        readonly alignment?: Type
+        readonly endianness?: Type
+        get name(): `${'i' | 'u'}${string}`
+        isConcrete(): this is this & {
+            signed: boolean
+            width: u32
+            alignment?: u32
+            endianess?: 'le' | 'be'
+        }
+    }
+
+    class Float extends Machine {
+        get name(): `f${string}`
+    }
+
+    interface Kinds {
+        machine: Machine
+    }
 }

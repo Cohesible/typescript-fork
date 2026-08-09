@@ -16,3 +16,8 @@ reifyMachineTypes.syn(9,7): error TS2322: Type 'reify u32' is not assignable to 
 !!! error TS2322: Type 'reify u32' is not assignable to type 'reify number'.
 !!! error TS2322:   Type 'typeof Type.intrinsic' is not assignable to type 'reify number'.
     const sym: symbol = reify u32 // ok
+    
+    declare function assert<T>(x: unknown): asserts x is T
+    const y = 1 as number
+    assert(y is u32)
+    const y2: u32 = y

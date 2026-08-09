@@ -1,0 +1,123 @@
+//// [tests/cases/syn/machineIntersections.syn] ////
+
+=== machineIntersections.syn ===
+type A = u8 & i8    // u7 (exact value-range intersection)
+>A : u7
+>  : ^^
+
+type B = u8 & u32   // u8
+>B : u8
+>  : ^^
+
+type C = u32 & u8   // u8
+>C : u8
+>  : ^^
+
+type D = u8 & number // u8
+>D : u8
+>  : ^^
+
+type E = number & u8 // u8
+>E : u8
+>  : ^^
+
+type F = u32 & u64  // u32
+>F : u32
+>  : ^^^
+
+type G = i32 & i32  // i32
+>G : i32
+>  : ^^^
+
+type H = u16 & i8   // u7 ([0,65535] & [-128,127] = [0,127])
+>H : u7
+>  : ^^
+
+type I = f32 & u32  // u32 (float never restricts an integral type further)
+>I : u32
+>  : ^^^
+
+type J = f32 & f64  // f32
+>J : f32
+>  : ^^^
+
+type K = i8 & f32   // i8
+>K : i8
+>  : ^^
+
+type L = i8 & 255   // never (255 is out of i8's range)
+>L : never
+>  : ^^^^^
+
+type M = i8 & 1     // 1 (literal is in range, and more specific)
+>M : 1
+>  : ^
+
+type N = 1 & i8     // 1 (order shouldn't matter)
+>N : 1
+>  : ^
+
+type O = u8 & 1     // 1
+>O : 1
+>  : ^
+
+type P = u8 & (1 | -1)     // 1
+>P : 1
+>  : ^
+>-1 : -1
+>   : ^^
+>1 : 1
+>  : ^
+
+const p: P = -1
+>p : 1
+>  : ^
+>-1 : -1
+>   : ^^
+>1 : 1
+>  : ^
+
+declare const a: A
+>a : u7
+>  : ^^
+
+declare const b: B
+>b : u8
+>  : ^^
+
+declare const c: C
+>c : u8
+>  : ^^
+
+declare const d: D
+>d : u8
+>  : ^^
+
+declare const e: E
+>e : u8
+>  : ^^
+
+declare const f: F
+>f : u32
+>  : ^^^
+
+declare const g: G
+>g : i32
+>  : ^^^
+
+declare const h: H
+>h : u7
+>  : ^^
+
+declare const i: I
+>i : u32
+>  : ^^^
+
+declare const j: J
+>j : f32
+>  : ^^^
+
+declare const k: K
+>k : i8
+>  : ^^
+

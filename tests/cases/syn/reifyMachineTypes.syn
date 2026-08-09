@@ -9,4 +9,11 @@ type T1 = reify u32
 type T2 = reify number
 
 const cross: typeof r2 = r1
-const sym: symbol = reify u32 // ok
+const t1: Type.Machine = reify u32 // ok
+const t2: Type.Int = reify u32 // ok
+const t3: Type.Float = reify u32 // err
+
+declare function assert<T>(x: unknown): asserts x is T
+const y = 1 as number
+assert(y is u32)
+const y2: u32 = y

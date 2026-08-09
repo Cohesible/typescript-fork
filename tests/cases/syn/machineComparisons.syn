@@ -19,3 +19,15 @@ function alwaysTrue2(a: u8) {
 function maybeTrue(a: u8) {
     return a <= 0 // boolean
 }
+
+function cmpFloatWithInt(a: f32) {
+    return a is u32 // should not error
+}
+
+function cmpSigned(a: i32) {
+    return a is u32 // should not error
+}
+
+function impossibleIsCheck(a: u32) {
+    return a is -1
+}

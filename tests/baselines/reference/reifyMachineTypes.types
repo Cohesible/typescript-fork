@@ -35,3 +35,33 @@ const sym: symbol = reify u32 // ok
 >sym : symbol
 >    : ^^^^^^
 
+declare function assert<T>(x: unknown): asserts x is T
+>assert : <T>(x: unknown) => asserts x is T
+>       : ^ ^^ ^^       ^^^^^              
+>x : unknown
+>  : ^^^^^^^
+
+const y = 1 as number
+>y : number
+>  : ^^^^^^
+>1 as number : number
+>            : ^^^^^^
+>1 : 1
+>  : ^
+
+assert(y is u32)
+>assert(y is u32) : void
+>                 : ^^^^
+>assert : <T>(x: unknown) => asserts x is T
+>       : ^ ^^ ^^       ^^^^^              
+>y is u32 : boolean
+>         : ^^^^^^^
+>y : number
+>  : ^^^^^^
+
+const y2: u32 = y
+>y2 : u32
+>   : ^^^
+>y : u32
+>  : ^^^
+

@@ -185,5 +185,42 @@
 >catch : Symbol(Promise.catch, Decl(lib.es5.d.ts, --, --))
 >then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
     }
+
+    function f8() {
+>f8 : Symbol(f8, Decl(autoAwaitEdgeCases.syn, 60, 5))
+
+        foo().then(x => x + 1).then(x => x * 2) as async
+>foo().then(x => x + 1).then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
+>foo().then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
+>foo : Symbol(foo, Decl(autoAwaitEdgeCases.syn, 35, 5))
+>then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
+>x : Symbol(x, Decl(autoAwaitEdgeCases.syn, 63, 19))
+>x : Symbol(x, Decl(autoAwaitEdgeCases.syn, 63, 19))
+>then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
+>x : Symbol(x, Decl(autoAwaitEdgeCases.syn, 63, 36))
+>x : Symbol(x, Decl(autoAwaitEdgeCases.syn, 63, 36))
+>async : Symbol(async)
+    }
+
+    function f9() {
+>f9 : Symbol(f9, Decl(autoAwaitEdgeCases.syn, 64, 5))
+
+        async function f(v: number) {
+>f : Symbol(f, Decl(autoAwaitEdgeCases.syn, 66, 19))
+>v : Symbol(v, Decl(autoAwaitEdgeCases.syn, 67, 25))
+
+            return v * v
+>v : Symbol(v, Decl(autoAwaitEdgeCases.syn, 67, 25))
+>v : Symbol(v, Decl(autoAwaitEdgeCases.syn, 67, 25))
+        }
+        foo().then(x => f(x)) as async
+>foo().then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
+>foo : Symbol(foo, Decl(autoAwaitEdgeCases.syn, 35, 5))
+>then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
+>x : Symbol(x, Decl(autoAwaitEdgeCases.syn, 70, 19))
+>f : Symbol(f, Decl(autoAwaitEdgeCases.syn, 66, 19))
+>x : Symbol(x, Decl(autoAwaitEdgeCases.syn, 70, 19))
+>async : Symbol(async)
+    }
 }
 

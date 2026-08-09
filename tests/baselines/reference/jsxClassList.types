@@ -100,14 +100,14 @@
 >                                     : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >input : any
 >      : ^^^
+>i : HTMLInputElement & Updatable
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >min : any
 >    : ^^^
 >min2 : any
 >     : ^^^
 >cond : true
 >     : ^^^^
->i : HTMLInputElement & Updatable
->  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >input : any
 >      : ^^^
 
@@ -116,10 +116,10 @@
 >                          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >input : any
 >      : ^^^
->m : any
->  : ^^^
 >i2 : HTMLInputElement & Updatable
 >   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>m : any
+>  : ^^^
 >input : any
 >      : ^^^
 
@@ -128,10 +128,10 @@
 >                          : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 >input : any
 >      : ^^^
->m : any
->  : ^^^
 >i2 : HTMLInputElement & Updatable
 >   : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>m : any
+>  : ^^^
 >input : any
 >      : ^^^
 
@@ -165,10 +165,10 @@
 >                         : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->a : any
->  : ^^^
 >foo_1 : HTMLDivElement & Updatable
 >      : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>a : any
+>  : ^^^
 >div : any
 >    : ^^^
 
@@ -177,10 +177,10 @@
 >                       : ^^^^^^^^^^^^^^^^^^^^^^^^^^
 >div : any
 >    : ^^^
->a : any
->  : ^^^
 >foo_2 : HTMLDivElement & Updatable
 >      : ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>a : any
+>  : ^^^
 >div : any
 >    : ^^^
 
@@ -347,8 +347,8 @@
 >div : any
 >    : ^^^
 
-    // class attribute cannot be used with class list
-    <div .a class="b" />;
+    // dynamic class attribute cannot be used with class list
+    <div .a class="b" />; // ok
 ><div .a class="b" /> : HTMLDivElement
 >                     : ^^^^^^^^^^^^^^
 >div : any
@@ -358,7 +358,7 @@
 >class : string
 >      : ^^^^^^
 
-    <div .a {...{ class: 'b' }} />;
+    <div .a {...{ class: 'b' }} />; // not ok
 ><div .a {...{ class: 'b' }} /> : HTMLDivElement
 >                               : ^^^^^^^^^^^^^^
 >div : any
@@ -370,6 +370,18 @@
 >class : string
 >      : ^^^^^^
 >'b' : "b"
+>    : ^^^
+
+    <div .a class={"b"} />; // not ok
+><div .a class={"b"} /> : HTMLDivElement
+>                       : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>a : any
+>  : ^^^
+>class : string
+>      : ^^^^^^
+>"b" : "b"
 >    : ^^^
 
     // ok

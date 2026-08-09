@@ -1,0 +1,31 @@
+// @lib: es5,machine
+
+// exercise every predefined machine number alias
+declare const u8v: u8
+declare const u16v: u16
+declare const u32v: u32
+declare const u64v: u64
+declare const i8v: i8
+declare const i16v: i16
+declare const i32v: i32
+declare const i64v: i64
+declare const f16v: f16
+declare const f32v: f32
+declare const f64v: f64
+
+// referencing the same width/signedness more than once must reuse the cached
+// synthetic type rather than re-creating (and crashing on) a duplicate intrinsic
+declare const u8v2: u8
+declare const u8v3: Int<8, false>
+declare const f64v2: Float<64>
+
+// Width can come from any literal type, not just a literal written in place
+type W = 16
+type W2 = Int<W, true>
+declare const w: W2
+declare const w2: i16
+
+// all of these are plain `number`s under the hood
+const n1: number = u8v
+const n2: number = i32v
+const n3: number = f64v

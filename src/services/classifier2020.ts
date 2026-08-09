@@ -48,6 +48,7 @@ import {
     Type,
     TypeChecker,
     VariableDeclaration,
+    JsxIfDirective,
 } from "./_namespaces/ts.js";
 
 /** @internal */
@@ -156,15 +157,24 @@ function collectTokens(program: Program, sourceFile: SourceFile, span: TextSpan,
             return;
         }
         
-        if (isJsxExpression(node) || isJsxRunDirective(node) || node.kind === SyntaxKind.JsxMethodAttribute) {
-            const prevInJSX = inJSX;
-            const prevInJSXElement = inJSXElement;
-            inJSX = true;
-            inJSXElement = false;
-            forEachChild(node, visit);
-            inJSX = prevInJSX;
-            inJSXElement = prevInJSXElement;
-            return;
+        if (inJSX) {
+            if (isJsxExpression(node) || isJsxRunDirective(node) || node.kind === SyntaxKind.JsxMethodAttribute) {
+                const prevInJSX = inJSX;
+                const prevInJSXElement = inJSXElement;
+                inJSX = true;
+                inJSXElement = false;
+                forEachChild(node, visit);
+                inJSX = prevInJSX;
+                inJSXElement = prevInJSXElement;
+                return;
+            }
+            if (node.parent.kind === SyntaxKind.JsxIfDirective && (node.parent as JsxIfDirective).condition === node) {
+                const prevInJSX = inJSX;
+                inJSX = false;
+                visit(node);
+                inJSX = prevInJSX;
+                return;
+            }
         }
 
         if (inJSXElement && isIdentifier(node)) {

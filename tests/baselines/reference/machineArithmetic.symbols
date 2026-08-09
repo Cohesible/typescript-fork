@@ -1,0 +1,110 @@
+//// [tests/cases/syn/machineArithmetic.syn] ////
+
+=== machineArithmetic.syn ===
+declare const a: u32
+>a : Symbol(a, Decl(machineArithmetic.syn, 0, 13))
+>u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
+
+declare const b: u32
+>b : Symbol(b, Decl(machineArithmetic.syn, 1, 13))
+>u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
+
+declare const c: u64
+>c : Symbol(c, Decl(machineArithmetic.syn, 2, 13))
+>u64 : Symbol(u64, Decl(lib.machine.d.ts, --, --))
+
+declare const lit: 200
+>lit : Symbol(lit, Decl(machineArithmetic.syn, 3, 13))
+
+declare const lit2: 200 | 256
+>lit2 : Symbol(lit2, Decl(machineArithmetic.syn, 4, 13))
+
+// default: widens to plain number
+const defaultResult: number = a + b
+>defaultResult : Symbol(defaultResult, Decl(machineArithmetic.syn, 7, 5))
+>a : Symbol(a, Decl(machineArithmetic.syn, 0, 13))
+>b : Symbol(b, Decl(machineArithmetic.syn, 1, 13))
+
+// assignability: widening is fine
+const w: u64 = a
+>w : Symbol(w, Decl(machineArithmetic.syn, 10, 5))
+>u64 : Symbol(u64, Decl(lib.machine.d.ts, --, --))
+>a : Symbol(a, Decl(machineArithmetic.syn, 0, 13))
+
+const w2: u64 = c
+>w2 : Symbol(w2, Decl(machineArithmetic.syn, 11, 5))
+>u64 : Symbol(u64, Decl(lib.machine.d.ts, --, --))
+>c : Symbol(c, Decl(machineArithmetic.syn, 2, 13))
+
+// assignability: narrowing/cross-kind should be flagged
+const bad1: u32 = c
+>bad1 : Symbol(bad1, Decl(machineArithmetic.syn, 14, 5))
+>u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
+>c : Symbol(c, Decl(machineArithmetic.syn, 2, 13))
+
+const bad2: i32 = a
+>bad2 : Symbol(bad2, Decl(machineArithmetic.syn, 15, 5))
+>i32 : Symbol(i32, Decl(lib.machine.d.ts, --, --))
+>a : Symbol(a, Decl(machineArithmetic.syn, 0, 13))
+
+// literal into machine type: fits => ok, doesn't fit => flagged
+const okLit: u8 = lit
+>okLit : Symbol(okLit, Decl(machineArithmetic.syn, 18, 5))
+>u8 : Symbol(u8, Decl(lib.machine.d.ts, --, --))
+>lit : Symbol(lit, Decl(machineArithmetic.syn, 3, 13))
+
+const badLit: u8 = 999
+>badLit : Symbol(badLit, Decl(machineArithmetic.syn, 19, 5))
+>u8 : Symbol(u8, Decl(lib.machine.d.ts, --, --))
+
+const badLit2: u8 = lit2
+>badLit2 : Symbol(badLit2, Decl(machineArithmetic.syn, 20, 5))
+>u8 : Symbol(u8, Decl(lib.machine.d.ts, --, --))
+>lit2 : Symbol(lit2, Decl(machineArithmetic.syn, 4, 13))
+
+// any machine type is assignable into plain number
+const n: number = a
+>n : Symbol(n, Decl(machineArithmetic.syn, 23, 5))
+>a : Symbol(a, Decl(machineArithmetic.syn, 0, 13))
+
+function checkedFn() {
+>checkedFn : Symbol(checkedFn, Decl(machineArithmetic.syn, 23, 19))
+
+    "use checked"
+    const r: u32 = a + b // stays u32 under "use checked"
+>r : Symbol(r, Decl(machineArithmetic.syn, 27, 9))
+>u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
+>a : Symbol(a, Decl(machineArithmetic.syn, 0, 13))
+>b : Symbol(b, Decl(machineArithmetic.syn, 1, 13))
+}
+
+function wrappingFn() {
+>wrappingFn : Symbol(wrappingFn, Decl(machineArithmetic.syn, 28, 1))
+
+    "use wrapping"
+    const r: u32 = a + b // stays u32 under "use wrapping"
+>r : Symbol(r, Decl(machineArithmetic.syn, 32, 9))
+>u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
+>a : Symbol(a, Decl(machineArithmetic.syn, 0, 13))
+>b : Symbol(b, Decl(machineArithmetic.syn, 1, 13))
+}
+
+function plainFn() {
+>plainFn : Symbol(plainFn, Decl(machineArithmetic.syn, 33, 1))
+
+    const r: number = a + b // still widens without directive
+>r : Symbol(r, Decl(machineArithmetic.syn, 36, 9))
+>a : Symbol(a, Decl(machineArithmetic.syn, 0, 13))
+>b : Symbol(b, Decl(machineArithmetic.syn, 1, 13))
+}
+
+function noDirectiveShouldFail() {
+>noDirectiveShouldFail : Symbol(noDirectiveShouldFail, Decl(machineArithmetic.syn, 37, 1))
+
+    const r: u32 = a + b // error: widened to number, not assignable to u32
+>r : Symbol(r, Decl(machineArithmetic.syn, 40, 9))
+>u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
+>a : Symbol(a, Decl(machineArithmetic.syn, 0, 13))
+>b : Symbol(b, Decl(machineArithmetic.syn, 1, 13))
+}
+

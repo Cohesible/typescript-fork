@@ -5392,7 +5392,7 @@ declare namespace ts {
         readonly name: Identifier;
         readonly parent: JsxAttributes;
     }
-    interface JsxMethodAttribute extends Declaration, LocalsContainer {
+    interface JsxMethodAttribute extends Declaration, LocalsContainer, FlowContainer {
         readonly kind: SyntaxKind.JsxMethodAttribute;
         readonly parent: JsxAttributes;
         readonly modifiers?: NodeArray<Modifier>;

@@ -1,0 +1,225 @@
+//// [tests/cases/syn/jsxIfRunNarrowing.syn] ////
+
+=== jsxIfRunNarrowing.syn ===
+declare const nav: { 
+>nav : { prev?: { href: string; label: string; }; next?: { href: string; label: string; }; }
+>    : ^^^^^^^^^                                ^^^^^^^^^                                ^^^
+
+    prev?: { href: string; label: string }
+>prev : { href: string; label: string; } | undefined
+>     : ^^^^^^^^      ^^^^^^^^^      ^^^^^^^^^^^^^^^
+>href : string
+>     : ^^^^^^
+>label : string
+>      : ^^^^^^
+
+    next?: { href: string; label: string }
+>next : { href: string; label: string; } | undefined
+>     : ^^^^^^^^      ^^^^^^^^^      ^^^^^^^^^^^^^^^
+>href : string
+>     : ^^^^^^
+>label : string
+>      : ^^^^^^
+}
+const d = <div>
+>d : HTMLDivElement
+>  : ^^^^^^^^^^^^^^
+><div>    <div .pager>        <#if (nav.prev || nav.next)>            <#if (nav.prev)>                <#run>                    const prev = nav.prev                </>                <a href={prev.href} on:click(e) {                    console.log(prev.href)                }>                    <span .dir>Previous</span>{prev.label}                </a>            </><#else>                <a></a>            </>            <#run>                const next = nav.next            </>            <#if (next)>                <a href={next.href} on:click(e) {                    console.log(next.href)                }>                    <span .dir>Previous</span>{next.label}                </a>            </>        </>    </div></div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+
+    <div .pager>
+><div .pager>        <#if (nav.prev || nav.next)>            <#if (nav.prev)>                <#run>                    const prev = nav.prev                </>                <a href={prev.href} on:click(e) {                    console.log(prev.href)                }>                    <span .dir>Previous</span>{prev.label}                </a>            </><#else>                <a></a>            </>            <#run>                const next = nav.next            </>            <#if (next)>                <a href={next.href} on:click(e) {                    console.log(next.href)                }>                    <span .dir>Previous</span>{next.label}                </a>            </>        </>    </div> : HTMLDivElement
+>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   : ^^^^^^^^^^^^^^
+>div : any
+>    : ^^^
+>pager : error
+
+        <#if (nav.prev || nav.next)>
+>nav.prev || nav.next : { href: string; label: string; } | undefined
+>                     : ^^^^^^^^      ^^^^^^^^^      ^^^^^^^^^^^^^^^
+>nav.prev : { href: string; label: string; } | undefined
+>         : ^^^^^^^^      ^^^^^^^^^      ^^^^^^^^^^^^^^^
+>nav : { prev?: { href: string; label: string; }; next?: { href: string; label: string; }; }
+>    : ^^^^^^^^^                                ^^^^^^^^^                                ^^^
+>prev : { href: string; label: string; } | undefined
+>     : ^^^^^^^^      ^^^^^^^^^      ^^^^^^^^^^^^^^^
+>nav.next : { href: string; label: string; } | undefined
+>         : ^^^^^^^^      ^^^^^^^^^      ^^^^^^^^^^^^^^^
+>nav : { prev?: { href: string; label: string; }; next?: { href: string; label: string; }; }
+>    : ^^^^^^^^^                                ^^^^^^^^^                                ^^^
+>next : { href: string; label: string; } | undefined
+>     : ^^^^^^^^      ^^^^^^^^^      ^^^^^^^^^^^^^^^
+
+            <#if (nav.prev)>
+>nav.prev : { href: string; label: string; } | undefined
+>         : ^^^^^^^^      ^^^^^^^^^      ^^^^^^^^^^^^^^^
+>nav : { prev?: { href: string; label: string; }; next?: { href: string; label: string; }; }
+>    : ^^^^^^^^^                                ^^^^^^^^^                                ^^^
+>prev : { href: string; label: string; } | undefined
+>     : ^^^^^^^^      ^^^^^^^^^      ^^^^^^^^^^^^^^^
+
+                <#run>
+                    const prev = nav.prev
+>prev : { href: string; label: string; }
+>     : ^^^^^^^^      ^^^^^^^^^      ^^^
+>nav.prev : { href: string; label: string; }
+>         : ^^^^^^^^      ^^^^^^^^^      ^^^
+>nav : { prev?: { href: string; label: string; }; next?: { href: string; label: string; }; }
+>    : ^^^^^^^^^                                ^^^^^^^^^                                ^^^
+>prev : { href: string; label: string; }
+>     : ^^^^^^^^      ^^^^^^^^^      ^^^
+
+                </>
+
+                <a href={prev.href} on:click(e) {
+><a href={prev.href} on:click(e) {                    console.log(prev.href)                }>                    <span .dir>Previous</span>{prev.label}                </a> : HTMLAnchorElement
+>                                                                                                                                                                            : ^^^^^^^^^^^^^^^^^
+>a : any
+>  : ^^^
+>href : string
+>     : ^^^^^^
+>prev.href : string
+>          : ^^^^^^
+>prev : { href: string; label: string; }
+>     : ^^^^^^^^      ^^^^^^^^^      ^^^
+>href : string
+>     : ^^^^^^
+>on:click : (e: JSX.TargetedEvent<HTMLAnchorElement, MouseEvent>) => void
+>         : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>on : error
+>click : error
+>e : JSX.TargetedEvent<HTMLAnchorElement, MouseEvent>
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+                    console.log(prev.href)
+>console.log(prev.href) : void
+>                       : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>prev.href : string
+>          : ^^^^^^
+>prev : { href: string; label: string; }
+>     : ^^^^^^^^      ^^^^^^^^^      ^^^
+>href : string
+>     : ^^^^^^
+
+                }>
+                    <span .dir>Previous</span>{prev.label}
+><span .dir>Previous</span> : HTMLSpanElement
+>                           : ^^^^^^^^^^^^^^^
+>span : any
+>     : ^^^
+>dir : error
+>span : any
+>     : ^^^
+>prev.label : string
+>           : ^^^^^^
+>prev : { href: string; label: string; }
+>     : ^^^^^^^^      ^^^^^^^^^      ^^^
+>label : string
+>      : ^^^^^^
+
+                </a>
+>a : any
+>  : ^^^
+
+            </><#else>
+                <a></a>
+><a></a> : HTMLAnchorElement
+>        : ^^^^^^^^^^^^^^^^^
+>a : any
+>  : ^^^
+>a : any
+>  : ^^^
+
+            </>
+
+            <#run>
+                const next = nav.next
+>next : { href: string; label: string; } | undefined
+>     : ^^^^^^^^      ^^^^^^^^^      ^^^^^^^^^^^^^^^
+>nav.next : { href: string; label: string; } | undefined
+>         : ^^^^^^^^      ^^^^^^^^^      ^^^^^^^^^^^^^^^
+>nav : { prev?: { href: string; label: string; }; next?: { href: string; label: string; }; }
+>    : ^^^^^^^^^                                ^^^^^^^^^                                ^^^
+>next : { href: string; label: string; } | undefined
+>     : ^^^^^^^^      ^^^^^^^^^      ^^^^^^^^^^^^^^^
+
+            </>
+            <#if (next)>
+>next : { href: string; label: string; } | undefined
+>     : ^^^^^^^^      ^^^^^^^^^      ^^^^^^^^^^^^^^^
+
+                <a href={next.href} on:click(e) {
+><a href={next.href} on:click(e) {                    console.log(next.href)                }>                    <span .dir>Previous</span>{next.label}                </a> : HTMLAnchorElement
+>                                                                                                                                                                            : ^^^^^^^^^^^^^^^^^
+>a : any
+>  : ^^^
+>href : string
+>     : ^^^^^^
+>next.href : string
+>          : ^^^^^^
+>next : { href: string; label: string; }
+>     : ^^^^^^^^      ^^^^^^^^^      ^^^
+>href : string
+>     : ^^^^^^
+>on:click : (e: JSX.TargetedEvent<HTMLAnchorElement, MouseEvent>) => void
+>         : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>on : error
+>click : error
+>e : JSX.TargetedEvent<HTMLAnchorElement, MouseEvent>
+>  : ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+                    console.log(next.href)
+>console.log(next.href) : void
+>                       : ^^^^
+>console.log : (...data: any[]) => void
+>            : ^^^^    ^^     ^^^^^    
+>console : Console
+>        : ^^^^^^^
+>log : (...data: any[]) => void
+>    : ^^^^    ^^     ^^^^^    
+>next.href : string
+>          : ^^^^^^
+>next : { href: string; label: string; }
+>     : ^^^^^^^^      ^^^^^^^^^      ^^^
+>href : string
+>     : ^^^^^^
+
+                }>
+                    <span .dir>Previous</span>{next.label}
+><span .dir>Previous</span> : HTMLSpanElement
+>                           : ^^^^^^^^^^^^^^^
+>span : any
+>     : ^^^
+>dir : error
+>span : any
+>     : ^^^
+>next.label : string
+>           : ^^^^^^
+>next : { href: string; label: string; }
+>     : ^^^^^^^^      ^^^^^^^^^      ^^^
+>label : string
+>      : ^^^^^^
+
+                </a>
+>a : any
+>  : ^^^
+
+            </>
+        </>
+    </div>
+>div : any
+>    : ^^^
+
+</div>
+>div : any
+>    : ^^^
+
+

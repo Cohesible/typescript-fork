@@ -1670,6 +1670,12 @@ type Uncapitalize<S extends string> = intrinsic;
 type NoInfer<T> = intrinsic;
 
 /**
+ * Resolves to the type declared under the global name `Name`, using normal type-name lookup.
+ * If no such type exists, resolves to `Fallback` instead of erroring.
+ */
+type LookupType<Name extends string, Fallback> = intrinsic;
+
+/**
  * Marker for contextual 'this' type
  */
 interface ThisType<T> {}

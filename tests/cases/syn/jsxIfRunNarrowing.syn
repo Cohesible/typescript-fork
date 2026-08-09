@@ -1,0 +1,35 @@
+declare const nav: { 
+    prev?: { href: string; label: string }
+    next?: { href: string; label: string }
+}
+const d = <div>
+    <div .pager>
+        <#if (nav.prev || nav.next)>
+            <#if (nav.prev)>
+                <#run>
+                    const prev = nav.prev
+                </>
+
+                <a href={prev.href} on:click(e) {
+                    console.log(prev.href)
+                }>
+                    <span .dir>Previous</span>{prev.label}
+                </a>
+            </><#else>
+                <a></a>
+            </>
+
+            <#run>
+                const next = nav.next
+            </>
+            <#if (next)>
+                <a href={next.href} on:click(e) {
+                    console.log(next.href)
+                }>
+                    <span .dir>Previous</span>{next.label}
+                </a>
+            </>
+        </>
+    </div>
+</div>
+

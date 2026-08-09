@@ -708,6 +708,7 @@ import {
     isPlainJsFile,
     isPrefixUnaryExpression,
     isPrivateIdentifier,
+    isPrologueDirective,
     isPrivateIdentifierClassElementDeclaration,
     isPrivateIdentifierPropertyAccessExpression,
     isPropertyAccessEntityNameExpression,
@@ -1455,6 +1456,9 @@ const enum IntrinsicTypeKind {
     Uncapitalize,
     SelectedDOMTag,
     NoInfer,
+    LookupType,
+    Int,
+    Float,
 }
 
 const intrinsicTypeKinds: ReadonlyMap<string, IntrinsicTypeKind> = new Map(Object.entries({
@@ -1464,7 +1468,16 @@ const intrinsicTypeKinds: ReadonlyMap<string, IntrinsicTypeKind> = new Map(Objec
     Uncapitalize: IntrinsicTypeKind.Uncapitalize,
     SelectedDOMTag: IntrinsicTypeKind.SelectedDOMTag,
     NoInfer: IntrinsicTypeKind.NoInfer,
+    LookupType: IntrinsicTypeKind.LookupType,
+    Int: IntrinsicTypeKind.Int,
+    Float: IntrinsicTypeKind.Float,
 }));
+
+interface MachineNumberInfo {
+    type: IntrinsicType;
+    kind: "i" | "u" | "f";
+    width: number;
+}
 
 const SymbolLinks = class implements SymbolLinks {
     declare _symbolLinksBrand: any;
@@ -2097,6 +2110,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     // We can then just examine the first constituent(s) of a union to check for their presence.
 
     var seenIntrinsicNames = new Set<string>();
+    var machineNumberTypes = new Map<string, MachineNumberInfo>();
 
     var anyType = createIntrinsicType(TypeFlags.Any, "any");
     var autoType = createIntrinsicType(TypeFlags.Any, "any", ObjectFlags.NonInferrableType, "auto");
@@ -6777,6 +6791,13 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 return factory.createKeywordTypeNode(SyntaxKind.StringKeyword);
             }
             if (type.flags & TypeFlags.Number) {
+                if (type !== numberType) {
+                    const name = (type as IntrinsicType).intrinsicName;
+                    if (machineNumberTypes.get(name)?.type === type) {
+                        context.approximateLength += name.length;
+                        return factory.createTypeReferenceNode(name, /*typeArguments*/ undefined);
+                    }
+                }
                 context.approximateLength += 6;
                 return factory.createKeywordTypeNode(SyntaxKind.NumberKeyword);
             }
@@ -17169,6 +17190,15 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         const type = getDeclaredTypeOfSymbol(symbol);
         if (type === intrinsicMarkerType) {
             const typeKind = intrinsicTypeKinds.get(symbol.escapedName as string);
+            if (typeKind === IntrinsicTypeKind.LookupType && typeArguments && typeArguments.length === 2) {
+                return getLookupType(symbol, typeArguments[0], typeArguments[1]);
+            }
+            if (typeKind === IntrinsicTypeKind.Int && typeArguments && typeArguments.length === 2) {
+                return getMachineIntType(typeArguments[0], typeArguments[1]);
+            }
+            if (typeKind === IntrinsicTypeKind.Float && typeArguments && typeArguments.length === 1) {
+                return getMachineFloatType(typeArguments[0]);
+            }
             if (typeKind !== undefined && typeArguments && typeArguments.length === 1) {
                 return typeKind === IntrinsicTypeKind.NoInfer ? getNoInferType(typeArguments[0]) :
                     getStringMappingType(symbol, typeArguments[0], typeKind);
@@ -17182,6 +17212,96 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             links.instantiations!.set(id, instantiation = instantiateTypeWithAlias(type, createTypeMapper(typeParameters, fillMissingTypeArguments(typeArguments, typeParameters, getMinTypeArgumentCount(typeParameters), isInJSFile(symbol.valueDeclaration))), aliasSymbol, aliasTypeArguments));
         }
         return instantiation;
+    }
+
+    function getLookupType(symbol: Symbol, nameType: Type, fallbackType: Type): Type {
+        if (!(nameType.flags & TypeFlags.StringLiteral)) {
+            return fallbackType;
+        }
+        const location = symbol.declarations && symbol.declarations[0];
+        const resolved = location && resolveName(location, escapeLeadingUnderscores((nameType as StringLiteralType).value), SymbolFlags.Type, /*nameNotFoundMessage*/ undefined, /*isUse*/ false);
+        return resolved ? getDeclaredTypeOfSymbol(resolved) : fallbackType;
+    }
+
+    function getOrCreateMachineNumberType(kind: MachineNumberInfo["kind"], width: number): Type {
+        const name = `${kind}${width}`;
+        let info = machineNumberTypes.get(name);
+        if (!info) {
+            info = { type: createIntrinsicType(TypeFlags.Number, name), kind, width };
+            machineNumberTypes.set(name, info);
+        }
+        return info.type;
+    }
+
+    function getMachineIntWidth(widthType: Type): number | undefined {
+        if (!(widthType.flags & TypeFlags.NumberLiteral)) {
+            return undefined;
+        }
+        const width = (widthType as NumberLiteralType).value;
+        return Number.isInteger(width) && width > 0 ? width : undefined;
+    }
+
+    function getMachineIntType(widthType: Type, signedType: Type): Type {
+        const width = getMachineIntWidth(widthType);
+        if (width === undefined || !(signedType.flags & TypeFlags.BooleanLiteral)) {
+            return numberType;
+        }
+        const signed = (signedType as IntrinsicType).intrinsicName === "true";
+        return getOrCreateMachineNumberType(signed ? "i" : "u", width);
+    }
+
+    function getMachineFloatType(widthType: Type): Type {
+        const width = getMachineIntWidth(widthType);
+        if (width === undefined) {
+            return numberType;
+        }
+        return getOrCreateMachineNumberType("f", width);
+    }
+
+    function getMachineNumberInfo(type: Type): MachineNumberInfo | undefined {
+        if (!(type.flags & TypeFlags.Number)) {
+            return undefined;
+        }
+        const name = (type as IntrinsicType).intrinsicName;
+        const info = name && machineNumberTypes.get(name);
+        return info && info.type === type ? info : undefined;
+    }
+
+    function numberLiteralFitsMachineType(value: number, info: MachineNumberInfo): boolean {
+        if (info.kind === "f") {
+            return true;
+        }
+        if (!Number.isInteger(value)) {
+            return false;
+        }
+        return info.kind === "u" ?
+            value >= 0 && value <= 2 ** info.width - 1 :
+            value >= -(2 ** (info.width - 1)) && value <= 2 ** (info.width - 1) - 1;
+    }
+
+    function isCheckedOrWrappingArithmeticDirective(stmt: Statement): boolean {
+        return isExpressionStatement(stmt) && isStringLiteralLike(stmt.expression) &&
+            (stmt.expression.text === "use checked" || stmt.expression.text === "use wrapping");
+    }
+
+    function hasCheckedOrWrappingArithmeticDirective(statements: readonly Statement[]): boolean {
+        for (const stmt of statements) {
+            if (!isPrologueDirective(stmt)) break;
+            if (isCheckedOrWrappingArithmeticDirective(stmt)) return true;
+        }
+        return false;
+    }
+
+    function isInCheckedOrWrappingArithmeticScope(node: Node): boolean {
+        const container = getContainingFunction(node);
+        const body = container ? (isFunctionLikeDeclaration(container) ? container.body : undefined) : getSourceFileOfNode(node);
+        if (!body) {
+            return false;
+        }
+        if (isBlock(body) || isSourceFile(body) || isModuleBlock(body)) {
+            return hasCheckedOrWrappingArithmeticDirective(body.statements);
+        }
+        return false;
     }
 
     /**
@@ -22621,7 +22741,16 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             t & TypeFlags.StringLiteral && !(t & TypeFlags.EnumLiteral) &&
             (source as StringLiteralType).value === (target as StringLiteralType).value
         ) return true;
-        if (s & TypeFlags.NumberLike && t & TypeFlags.Number) return true;
+        if (s & TypeFlags.NumberLike && t & TypeFlags.Number) {
+            const targetMachine = getMachineNumberInfo(target);
+            if (targetMachine) {
+                const sourceMachine = getMachineNumberInfo(source);
+                if (sourceMachine) return sourceMachine.kind === targetMachine.kind && sourceMachine.width <= targetMachine.width;
+                if (s & TypeFlags.NumberLiteral) return numberLiteralFitsMachineType((source as NumberLiteralType).value, targetMachine);
+                return false;
+            }
+            return true;
+        }
         if (
             s & TypeFlags.NumberLiteral && s & TypeFlags.EnumLiteral &&
             t & TypeFlags.NumberLiteral && !(t & TypeFlags.EnumLiteral) &&
@@ -25314,7 +25443,9 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             }
         }
 
-        return isUnitType(type) || !!(type.flags & TypeFlags.TemplateLiteral) || !!(type.flags & TypeFlags.StringMapping);
+        // Machine number types (e.g. `u8`) reject some literal values but not others, so widening the
+        // source literal for display would erase the exact reason for the mismatch.
+        return isUnitType(type) || !!(type.flags & TypeFlags.TemplateLiteral) || !!(type.flags & TypeFlags.StringMapping) || !!getMachineNumberInfo(type);
     }
 
     function getExactOptionalUnassignableProperties(source: Type, target: Type) {
@@ -31868,6 +31999,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             flowContainer !== declarationContainer && (
                 flowContainer.kind === SyntaxKind.FunctionExpression ||
                 flowContainer.kind === SyntaxKind.ArrowFunction ||
+                flowContainer.kind === SyntaxKind.JsxMethodAttribute ||
                 isObjectLiteralOrClassExpressionMethodOrAccessor(flowContainer)
             ) && (
                 isConstantVariable(localOrExportSymbol) && type !== autoArrayType ||
@@ -34995,7 +35127,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
         function visitInvalidPosition(node: Node) {
             if (conflict) return;
+            if (isTypeNode(node)) return;
             if (node.kind === SyntaxKind.Identifier) {
+                if (isDeclarationName(node)) return;
+                if (node.parent.kind === SyntaxKind.PropertyAccessExpression && (node.parent as PropertyAccessExpression).name === node) return;
                 if (matchesParam(node as Expression)) {
                     return meet(undefined);
                 } 
@@ -35087,7 +35222,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 getSymbolLinks(param.symbol).type = paramType;
             }
             const optional = !!param.questionToken || !!param.initializer;
-            const propSym = createProperty(paramName, optional ? getOptionalType(paramType, /*isProperty*/ true) : paramType);
+            const propSym = createProperty(paramName, optional && strictNullChecks ? getOptionalType(paramType, /*isProperty*/ true) : paramType);
             propSym.declarations ??= [param];
             if (optional) propSym.flags |= SymbolFlags.Optional;
             members.set(paramName, propSym);
@@ -39902,10 +40037,12 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             if (signature && (signature.flags & SignatureFlags.ReturnsPromise)
                 && node.parent.kind !== SyntaxKind.AwaitExpression
             ) {
+                const isChain = isPropertyAccessExpression(node.parent) && node.parent.expression === node && getPropertyOfType(returnType, node.parent.name.escapedText);
                 const isAsAsync = node.parent.kind === SyntaxKind.AsExpression
                     && isConstOrAsyncTypeReference((node.parent as AsExpression).type);
                 const isExplicitBinding = node.parent.kind === SyntaxKind.VariableDeclaration
                     && !!(node.parent as VariableDeclaration).type;
+                const isArrowReturn = node.parent.kind === SyntaxKind.ArrowFunction && (node.parent as ArrowFunction).body === node;
                 const isReturnOutsideTry = node.parent.kind === SyntaxKind.ReturnStatement
                     && !findAncestor(node, n => isFunctionLike(n) ? "quit" : n.kind === SyntaxKind.TryStatement);
                 // BRITTLE: special case Promise.resolve / Promise.reject so that they are not considered async
@@ -39913,7 +40050,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     && isIdentifier(node.expression.expression)
                     && idText(node.expression.expression) === "Promise"
                     && (idText(node.expression.name) === "resolve" || idText(node.expression.name) === "reject");
-                if (!isAsAsync && !isExplicitBinding && !isReturnOutsideTry && !isPromiseConstructor) {
+                if (!isArrowReturn && !isChain && !isAsAsync && !isExplicitBinding && !isReturnOutsideTry && !isPromiseConstructor) {
                     const funcText = isIdentifier(node.expression) ? idText(node.expression)
                         : isPropertyAccessExpression(node.expression) ? idText(node.expression.name)
                         : getTextOfNode(node.expression);
@@ -43132,7 +43269,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                         // Or, if neither could be bigint, implicit coercion results in a number result
                         !(maybeTypeOfKind(leftType, TypeFlags.BigIntLike) || maybeTypeOfKind(rightType, TypeFlags.BigIntLike))
                     ) {
-                        resultType = numberType;
+                        resultType = getMachineNumberInfo(leftType) && isInCheckedOrWrappingArithmeticScope(left) ? leftType : numberType;
                     }
                     // At least one is assignable to bigint, so check that both are
                     else if (bothAreBigIntLike(leftType, rightType)) {
@@ -43196,7 +43333,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 if (isTypeAssignableToKind(leftType, TypeFlags.NumberLike, /*strict*/ true) && isTypeAssignableToKind(rightType, TypeFlags.NumberLike, /*strict*/ true)) {
                     // Operands of an enum type are treated as having the primitive type Number.
                     // If both operands are of the Number primitive type, the result is of the Number primitive type.
-                    resultType = numberType;
+                    resultType = getMachineNumberInfo(leftType) && isInCheckedOrWrappingArithmeticScope(left) ? leftType : numberType;
                 }
                 else if (isTypeAssignableToKind(leftType, TypeFlags.BigIntLike, /*strict*/ true) && isTypeAssignableToKind(rightType, TypeFlags.BigIntLike, /*strict*/ true)) {
                     // If both operands are of the BigInt primitive type, the result is of the BigInt primitive type.
@@ -50365,8 +50502,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         checkTypeParameters(node.typeParameters);
         if (node.type.kind === SyntaxKind.IntrinsicKeyword) {
             const typeParameterCount = length(node.typeParameters);
+            const typeKind = intrinsicTypeKinds.get(node.name.escapedText as string);
             const valid = typeParameterCount === 0 ? node.name.escapedText === "BuiltinIteratorReturn" :
-                typeParameterCount === 1 && intrinsicTypeKinds.has(node.name.escapedText as string);
+                typeParameterCount === 1 ? typeKind !== undefined && typeKind !== IntrinsicTypeKind.LookupType && typeKind !== IntrinsicTypeKind.Int :
+                typeParameterCount === 2 && (typeKind === IntrinsicTypeKind.LookupType || typeKind === IntrinsicTypeKind.Int);
             if (!valid) {
                 error(node.type, Diagnostics.The_intrinsic_keyword_can_only_be_used_to_declare_compiler_provided_intrinsic_types);
             }
@@ -51929,6 +52068,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         if ((isJsxAttribute(node.parent)) && node.parent.name === node) return false;
         if (isJsxOpeningLikeElement(node.parent) && node.parent.tagName === node) return false;
         if (node.parent.kind === SyntaxKind.JsxClosingElement) return false;
+        if (node.parent.kind === SyntaxKind.PropertyAccessExpression && (node.parent as PropertyAccessExpression).name === node) return false;
         return true;
     }
 

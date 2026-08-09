@@ -1,0 +1,92 @@
+//// [tests/cases/syn/machineIntrinsics.syn] ////
+
+=== machineIntrinsics.syn ===
+// exercise every predefined machine number alias
+declare const u8v: u8
+>u8v : Symbol(u8v, Decl(machineIntrinsics.syn, 1, 13))
+>u8 : Symbol(u8, Decl(lib.machine.d.ts, --, --))
+
+declare const u16v: u16
+>u16v : Symbol(u16v, Decl(machineIntrinsics.syn, 2, 13))
+>u16 : Symbol(u16, Decl(lib.machine.d.ts, --, --))
+
+declare const u32v: u32
+>u32v : Symbol(u32v, Decl(machineIntrinsics.syn, 3, 13))
+>u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
+
+declare const u64v: u64
+>u64v : Symbol(u64v, Decl(machineIntrinsics.syn, 4, 13))
+>u64 : Symbol(u64, Decl(lib.machine.d.ts, --, --))
+
+declare const i8v: i8
+>i8v : Symbol(i8v, Decl(machineIntrinsics.syn, 5, 13))
+>i8 : Symbol(i8, Decl(lib.machine.d.ts, --, --))
+
+declare const i16v: i16
+>i16v : Symbol(i16v, Decl(machineIntrinsics.syn, 6, 13))
+>i16 : Symbol(i16, Decl(lib.machine.d.ts, --, --))
+
+declare const i32v: i32
+>i32v : Symbol(i32v, Decl(machineIntrinsics.syn, 7, 13))
+>i32 : Symbol(i32, Decl(lib.machine.d.ts, --, --))
+
+declare const i64v: i64
+>i64v : Symbol(i64v, Decl(machineIntrinsics.syn, 8, 13))
+>i64 : Symbol(i64, Decl(lib.machine.d.ts, --, --))
+
+declare const f16v: f16
+>f16v : Symbol(f16v, Decl(machineIntrinsics.syn, 9, 13))
+>f16 : Symbol(f16, Decl(lib.machine.d.ts, --, --))
+
+declare const f32v: f32
+>f32v : Symbol(f32v, Decl(machineIntrinsics.syn, 10, 13))
+>f32 : Symbol(f32, Decl(lib.machine.d.ts, --, --))
+
+declare const f64v: f64
+>f64v : Symbol(f64v, Decl(machineIntrinsics.syn, 11, 13))
+>f64 : Symbol(f64, Decl(lib.machine.d.ts, --, --))
+
+// referencing the same width/signedness more than once must reuse the cached
+// synthetic type rather than re-creating (and crashing on) a duplicate intrinsic
+declare const u8v2: u8
+>u8v2 : Symbol(u8v2, Decl(machineIntrinsics.syn, 15, 13))
+>u8 : Symbol(u8, Decl(lib.machine.d.ts, --, --))
+
+declare const u8v3: Int<8, false>
+>u8v3 : Symbol(u8v3, Decl(machineIntrinsics.syn, 16, 13))
+>Int : Symbol(Int, Decl(lib.machine.d.ts, --, --))
+
+declare const f64v2: Float<64>
+>f64v2 : Symbol(f64v2, Decl(machineIntrinsics.syn, 17, 13))
+>Float : Symbol(Float, Decl(lib.machine.d.ts, --, --))
+
+// Width can come from any literal type, not just a literal written in place
+type W = 16
+>W : Symbol(W, Decl(machineIntrinsics.syn, 17, 30))
+
+type W2 = Int<W, true>
+>W2 : Symbol(W2, Decl(machineIntrinsics.syn, 20, 11))
+>Int : Symbol(Int, Decl(lib.machine.d.ts, --, --))
+>W : Symbol(W, Decl(machineIntrinsics.syn, 17, 30))
+
+declare const w: W2
+>w : Symbol(w, Decl(machineIntrinsics.syn, 22, 13))
+>W2 : Symbol(W2, Decl(machineIntrinsics.syn, 20, 11))
+
+declare const w2: i16
+>w2 : Symbol(w2, Decl(machineIntrinsics.syn, 23, 13))
+>i16 : Symbol(i16, Decl(lib.machine.d.ts, --, --))
+
+// all of these are plain `number`s under the hood
+const n1: number = u8v
+>n1 : Symbol(n1, Decl(machineIntrinsics.syn, 26, 5))
+>u8v : Symbol(u8v, Decl(machineIntrinsics.syn, 1, 13))
+
+const n2: number = i32v
+>n2 : Symbol(n2, Decl(machineIntrinsics.syn, 27, 5))
+>i32v : Symbol(i32v, Decl(machineIntrinsics.syn, 7, 13))
+
+const n3: number = f64v
+>n3 : Symbol(n3, Decl(machineIntrinsics.syn, 28, 5))
+>f64v : Symbol(f64v, Decl(machineIntrinsics.syn, 11, 13))
+

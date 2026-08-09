@@ -39,8 +39,8 @@
 
     <input @ i .min.min2={cond}></input>;
 >input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
->cond : Symbol(cond, Decl(jsxClassList.syn, 1, 9))
 >i : Symbol(i, Decl(jsxClassList.syn, 9, 37))
+>cond : Symbol(cond, Decl(jsxClassList.syn, 1, 9))
 >input : Symbol(JSX.IntrinsicElements.input, Decl(lib.jsx.d.ts, --, --))
 
     <input @ i2 (.m)></input>;
@@ -130,32 +130,36 @@
 >cond : Symbol(cond, Decl(jsxClassList.syn, 1, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
-    // class attribute cannot be used with class list
-    <div .a class="b" />;
+    // dynamic class attribute cannot be used with class list
+    <div .a class="b" />; // ok
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >class : Symbol(class, Decl(jsxClassList.syn, 34, 11))
 
-    <div .a {...{ class: 'b' }} />;
+    <div .a {...{ class: 'b' }} />; // not ok
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >class : Symbol(class, Decl(jsxClassList.syn, 35, 17))
+
+    <div .a class={"b"} />; // not ok
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+>class : Symbol(class, Decl(jsxClassList.syn, 36, 11))
 
     // ok
     <div class="b" />;
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->class : Symbol(class, Decl(jsxClassList.syn, 38, 8))
+>class : Symbol(class, Decl(jsxClassList.syn, 39, 8))
 
     // ok
     const cond2 = false as boolean
->cond2 : Symbol(cond2, Decl(jsxClassList.syn, 41, 9))
+>cond2 : Symbol(cond2, Decl(jsxClassList.syn, 42, 9))
 
     const cond3 = false as boolean;
->cond3 : Symbol(cond3, Decl(jsxClassList.syn, 42, 9))
+>cond3 : Symbol(cond3, Decl(jsxClassList.syn, 43, 9))
 
     <div (.a={cond}, .a.b={cond2}, .a={cond3})></div>;
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 >cond : Symbol(cond, Decl(jsxClassList.syn, 1, 9))
->cond2 : Symbol(cond2, Decl(jsxClassList.syn, 41, 9))
->cond3 : Symbol(cond3, Decl(jsxClassList.syn, 42, 9))
+>cond2 : Symbol(cond2, Decl(jsxClassList.syn, 42, 9))
+>cond3 : Symbol(cond3, Decl(jsxClassList.syn, 43, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     // errors
@@ -193,11 +197,11 @@
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     const arr = ['a', 'b'];
->arr : Symbol(arr, Decl(jsxClassList.syn, 56, 9))
+>arr : Symbol(arr, Decl(jsxClassList.syn, 57, 9))
 
     <div ({...arr})></div>;
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
->arr : Symbol(arr, Decl(jsxClassList.syn, 56, 9))
+>arr : Symbol(arr, Decl(jsxClassList.syn, 57, 9))
 >div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
 
     // suggest use class list

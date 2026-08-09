@@ -2399,7 +2399,9 @@ function isDeclarationStatementKind(kind: SyntaxKind) {
         || kind === SyntaxKind.ImportEqualsDeclaration
         || kind === SyntaxKind.ExportDeclaration
         || kind === SyntaxKind.ExportAssignment
-        || kind === SyntaxKind.NamespaceExportDeclaration;
+        || kind === SyntaxKind.NamespaceExportDeclaration
+        || kind === SyntaxKind.JsxPublicDeclaration
+        || kind === SyntaxKind.JsxComponentDirective;
 }
 
 function isStatementKindButNotDeclarationKind(kind: SyntaxKind) {

@@ -31,9 +31,10 @@
     <div (.a, .a.b={cond})></div>;
     <div (.a={cond}, .a.b={cond})></div>;
 
-    // class attribute cannot be used with class list
-    <div .a class="b" />;
-    <div .a {...{ class: 'b' }} />;
+    // dynamic class attribute cannot be used with class list
+    <div .a class="b" />; // ok
+    <div .a {...{ class: 'b' }} />; // not ok
+    <div .a class={"b"} />; // not ok
 
     // ok
     <div class="b" />;

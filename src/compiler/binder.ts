@@ -132,6 +132,7 @@ import {
     JsxRunDirective,
     JsxComponentDirective,
     JsxElseDirective,
+    JsxMethodAttribute,
     JsxStyleDirective,
     UnwindStatement,
     UpdateBlockStatement,
@@ -1047,8 +1048,8 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             // similarly to break statements that exit to a label just past the statement body.
             if (!isImmediatelyInvoked) {
                 currentFlow = createFlowNode(FlowFlags.Start, /*node*/ undefined, /*antecedent*/ undefined);
-                if (containerFlags & (ContainerFlags.IsFunctionExpression | ContainerFlags.IsObjectLiteralOrClassExpressionMethodOrAccessor)) {
-                    currentFlow.node = node as FunctionExpression | ArrowFunction | MethodDeclaration | GetAccessorDeclaration | SetAccessorDeclaration;
+                if (containerFlags & (ContainerFlags.IsFunctionExpression | ContainerFlags.IsObjectLiteralOrClassExpressionMethodOrAccessor) || node.kind === SyntaxKind.JsxMethodAttribute) {
+                    currentFlow.node = node as FunctionExpression | ArrowFunction | MethodDeclaration | GetAccessorDeclaration | SetAccessorDeclaration | JsxMethodAttribute;
                 }
             }
             // We create a return control flow graph for IIFEs and constructors. For constructors
@@ -1548,6 +1549,8 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             case SyntaxKind.ForStatement:
             case SyntaxKind.ConditionalExpression:
                 return (parent as ForStatement | ConditionalExpression).condition === node;
+            case SyntaxKind.JsxIfDirective:
+                return (parent as JsxIfDirective).condition === node;
         }
         return false;
     }
@@ -3314,6 +3317,9 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
             case SyntaxKind.JsxAttribute:
                 return bindJsxAttribute(node as JsxAttribute, SymbolFlags.Property, SymbolFlags.PropertyExcludes);
             case SyntaxKind.JsxMethodAttribute:
+                if (currentFlow) {
+                    (node as JsxMethodAttribute).flowNode = currentFlow;
+                }
                 return bindJsxAttribute(node as unknown as JsxAttribute, SymbolFlags.Property, SymbolFlags.PropertyExcludes);
 
             // Imports and exports

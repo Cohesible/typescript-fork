@@ -1292,8 +1292,8 @@ function forEachChildInJsxOpeningOrSelfClosingElement<T>(node: JsxOpeningLikeEle
     return visitNode(cbNode, node.dotDotDotToken) ||
         visitNode(cbNode, node.tagName) ||
         visitNodes(cbNode, cbNodes, node.typeArguments) ||
-        visitNode(cbNode, node.classList) ||
         visitNode(cbNode, node.name) ||
+        visitNode(cbNode, node.classList) ||
         visitNode(cbNode, node.attributes);
 }
 

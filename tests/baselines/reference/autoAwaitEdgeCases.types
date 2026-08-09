@@ -371,5 +371,93 @@
 >then : <TResult1 = Catchable, TResult2 = never>(onfulfilled?: ((value: Catchable) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined) => Promise<TResult1 | TResult2>
 >     : ^        ^^^^^^^^^^^^^^        ^^^^^^^^^^           ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^          ^^^^^      ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     }
+
+    function f8() {
+>f8 : () => void
+>   : ^^^^^^^^^^
+
+        foo().then(x => x + 1).then(x => x * 2) as async
+>foo().then(x => x + 1).then(x => x * 2) as async : Promise<number>
+>                                                 : ^^^^^^^^^^^^^^^
+>foo().then(x => x + 1).then(x => x * 2) : Promise<number>
+>                                        : ^^^^^^^^^^^^^^^
+>foo().then(x => x + 1).then : <TResult1 = number, TResult2 = never>(onfulfilled?: ((value: number) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined) => Promise<TResult1 | TResult2>
+>                            : ^        ^^^^^^^^^^^        ^^^^^^^^^^           ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^          ^^^^^      ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>foo().then(x => x + 1) : Promise<number>
+>                       : ^^^^^^^^^^^^^^^
+>foo().then : <TResult1 = number, TResult2 = never>(onfulfilled?: ((value: number) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined) => Promise<TResult1 | TResult2>
+>           : ^        ^^^^^^^^^^^        ^^^^^^^^^^           ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^          ^^^^^      ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>foo() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+>then : <TResult1 = number, TResult2 = never>(onfulfilled?: ((value: number) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined) => Promise<TResult1 | TResult2>
+>     : ^        ^^^^^^^^^^^        ^^^^^^^^^^           ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^          ^^^^^      ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x => x + 1 : (x: number) => number
+>           : ^ ^^^^^^^^^^^^^^^^^^^
+>x : number
+>  : ^^^^^^
+>x + 1 : number
+>      : ^^^^^^
+>x : number
+>  : ^^^^^^
+>1 : 1
+>  : ^
+>then : <TResult1 = number, TResult2 = never>(onfulfilled?: ((value: number) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined) => Promise<TResult1 | TResult2>
+>     : ^        ^^^^^^^^^^^        ^^^^^^^^^^           ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^          ^^^^^      ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x => x * 2 : (x: number) => number
+>           : ^ ^^^^^^^^^^^^^^^^^^^
+>x : number
+>  : ^^^^^^
+>x * 2 : number
+>      : ^^^^^^
+>x : number
+>  : ^^^^^^
+>2 : 2
+>  : ^
+    }
+
+    function f9() {
+>f9 : () => void
+>   : ^^^^^^^^^^
+
+        async function f(v: number) {
+>f : (v: number) => Promise<number>
+>  : ^ ^^      ^^^^^^^^^^^^^^^^^^^^
+>v : number
+>  : ^^^^^^
+
+            return v * v
+>v * v : number
+>      : ^^^^^^
+>v : number
+>  : ^^^^^^
+>v : number
+>  : ^^^^^^
+        }
+        foo().then(x => f(x)) as async
+>foo().then(x => f(x)) as async : Promise<number>
+>                               : ^^^^^^^^^^^^^^^
+>foo().then(x => f(x)) : Promise<number>
+>                      : ^^^^^^^^^^^^^^^
+>foo().then : <TResult1 = number, TResult2 = never>(onfulfilled?: ((value: number) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined) => Promise<TResult1 | TResult2>
+>           : ^        ^^^^^^^^^^^        ^^^^^^^^^^           ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^          ^^^^^      ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>foo() : Promise<number>
+>      : ^^^^^^^^^^^^^^^
+>foo : () => Promise<number>
+>    : ^^^^^^^^^^^^^^^^^^^^^
+>then : <TResult1 = number, TResult2 = never>(onfulfilled?: ((value: number) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined) => Promise<TResult1 | TResult2>
+>     : ^        ^^^^^^^^^^^        ^^^^^^^^^^           ^^^^^     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^          ^^^^^      ^^   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x => f(x) : (x: number) => Promise<number>
+>          : ^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>x : number
+>  : ^^^^^^
+>f(x) : Promise<number>
+>     : ^^^^^^^^^^^^^^^
+>f : (v: number) => Promise<number>
+>  : ^ ^^      ^^^^^^^^^^^^^^^^^^^^
+>x : number
+>  : ^^^^^^
+    }
 }
 

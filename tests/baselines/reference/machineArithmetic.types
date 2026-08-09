@@ -1,0 +1,154 @@
+//// [tests/cases/syn/machineArithmetic.syn] ////
+
+=== machineArithmetic.syn ===
+declare const a: u32
+>a : u32
+>  : ^^^
+
+declare const b: u32
+>b : u32
+>  : ^^^
+
+declare const c: u64
+>c : u64
+>  : ^^^
+
+declare const lit: 200
+>lit : 200
+>    : ^^^
+
+declare const lit2: 200 | 256
+>lit2 : 200 | 256
+>     : ^^^^^^^^^
+
+// default: widens to plain number
+const defaultResult: number = a + b
+>defaultResult : number
+>              : ^^^^^^
+>a + b : number
+>      : ^^^^^^
+>a : u32
+>  : ^^^
+>b : u32
+>  : ^^^
+
+// assignability: widening is fine
+const w: u64 = a
+>w : u64
+>  : ^^^
+>a : u32
+>  : ^^^
+
+const w2: u64 = c
+>w2 : u64
+>   : ^^^
+>c : u64
+>  : ^^^
+
+// assignability: narrowing/cross-kind should be flagged
+const bad1: u32 = c
+>bad1 : u32
+>     : ^^^
+>c : u64
+>  : ^^^
+
+const bad2: i32 = a
+>bad2 : i32
+>     : ^^^
+>a : u32
+>  : ^^^
+
+// literal into machine type: fits => ok, doesn't fit => flagged
+const okLit: u8 = lit
+>okLit : u8
+>      : ^^
+>lit : 200
+>    : ^^^
+
+const badLit: u8 = 999
+>badLit : u8
+>       : ^^
+>999 : 999
+>    : ^^^
+
+const badLit2: u8 = lit2
+>badLit2 : u8
+>        : ^^
+>lit2 : 200 | 256
+>     : ^^^^^^^^^
+
+// any machine type is assignable into plain number
+const n: number = a
+>n : number
+>  : ^^^^^^
+>a : u32
+>  : ^^^
+
+function checkedFn() {
+>checkedFn : () => void
+>          : ^^^^^^^^^^
+
+    "use checked"
+>"use checked" : "use checked"
+>              : ^^^^^^^^^^^^^
+
+    const r: u32 = a + b // stays u32 under "use checked"
+>r : u32
+>  : ^^^
+>a + b : u32
+>      : ^^^
+>a : u32
+>  : ^^^
+>b : u32
+>  : ^^^
+}
+
+function wrappingFn() {
+>wrappingFn : () => void
+>           : ^^^^^^^^^^
+
+    "use wrapping"
+>"use wrapping" : "use wrapping"
+>               : ^^^^^^^^^^^^^^
+
+    const r: u32 = a + b // stays u32 under "use wrapping"
+>r : u32
+>  : ^^^
+>a + b : u32
+>      : ^^^
+>a : u32
+>  : ^^^
+>b : u32
+>  : ^^^
+}
+
+function plainFn() {
+>plainFn : () => void
+>        : ^^^^^^^^^^
+
+    const r: number = a + b // still widens without directive
+>r : number
+>  : ^^^^^^
+>a + b : number
+>      : ^^^^^^
+>a : u32
+>  : ^^^
+>b : u32
+>  : ^^^
+}
+
+function noDirectiveShouldFail() {
+>noDirectiveShouldFail : () => void
+>                      : ^^^^^^^^^^
+
+    const r: u32 = a + b // error: widened to number, not assignable to u32
+>r : u32
+>  : ^^^
+>a + b : number
+>      : ^^^^^^
+>a : u32
+>  : ^^^
+>b : u32
+>  : ^^^
+}
+

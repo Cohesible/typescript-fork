@@ -1825,11 +1825,14 @@ export function createProgram(_rootNamesOrOptions: readonly string[] | CreatePro
                 });
             }
 
-            // For .syn files that contain JSX with no explicit lib or jsxImportSource,
-            // automatically include the built-in JSX lib.
             if (!options.lib && !options.jsxImportSource &&
                 processingOtherFiles!.some(f => f.scriptKind === ScriptKind.Syn && f.containsJsx)) {
                 processRootFile(pathForLibFile("lib.jsx.d.ts"), /*isDefaultLib*/ true, /*ignoreNoDefaultLib*/ false, { kind: FileIncludeKind.LibFile });
+            }
+
+            if (options.strict === undefined && options.strictNullChecks === undefined &&
+                processingOtherFiles!.some(f => f.scriptKind === ScriptKind.Syn)) {
+                options.strictNullChecks = true;
             }
         }
 

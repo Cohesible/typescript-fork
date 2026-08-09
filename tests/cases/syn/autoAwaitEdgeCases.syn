@@ -59,4 +59,15 @@
         // error, emits as `(await f().catch()).then()` because we must materialize after `.catch`
         f().catch().then()
     }
+
+    function f8() {
+        foo().then(x => x + 1).then(x => x * 2) as async
+    }
+
+    function f9() {
+        async function f(v: number) {
+            return v * v
+        }
+        foo().then(x => f(x)) as async
+    }
 }

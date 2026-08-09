@@ -1,0 +1,128 @@
+//// [tests/cases/syn/jsxIfRunNarrowing.syn] ////
+
+=== jsxIfRunNarrowing.syn ===
+declare const nav: { 
+>nav : Symbol(nav, Decl(jsxIfRunNarrowing.syn, 0, 13))
+
+    prev?: { href: string; label: string }
+>prev : Symbol(prev, Decl(jsxIfRunNarrowing.syn, 0, 20))
+>href : Symbol(href, Decl(jsxIfRunNarrowing.syn, 1, 12))
+>label : Symbol(label, Decl(jsxIfRunNarrowing.syn, 1, 26))
+
+    next?: { href: string; label: string }
+>next : Symbol(next, Decl(jsxIfRunNarrowing.syn, 1, 42))
+>href : Symbol(href, Decl(jsxIfRunNarrowing.syn, 2, 12))
+>label : Symbol(label, Decl(jsxIfRunNarrowing.syn, 2, 26))
+}
+const d = <div>
+>d : Symbol(d, Decl(jsxIfRunNarrowing.syn, 4, 5))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+    <div .pager>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+        <#if (nav.prev || nav.next)>
+>nav.prev : Symbol(prev, Decl(jsxIfRunNarrowing.syn, 0, 20))
+>nav : Symbol(nav, Decl(jsxIfRunNarrowing.syn, 0, 13))
+>prev : Symbol(prev, Decl(jsxIfRunNarrowing.syn, 0, 20))
+>nav.next : Symbol(next, Decl(jsxIfRunNarrowing.syn, 1, 42))
+>nav : Symbol(nav, Decl(jsxIfRunNarrowing.syn, 0, 13))
+>next : Symbol(next, Decl(jsxIfRunNarrowing.syn, 1, 42))
+
+            <#if (nav.prev)>
+>nav.prev : Symbol(prev, Decl(jsxIfRunNarrowing.syn, 0, 20))
+>nav : Symbol(nav, Decl(jsxIfRunNarrowing.syn, 0, 13))
+>prev : Symbol(prev, Decl(jsxIfRunNarrowing.syn, 0, 20))
+
+                <#run>
+                    const prev = nav.prev
+>prev : Symbol(prev, Decl(jsxIfRunNarrowing.syn, 9, 25))
+>nav.prev : Symbol(prev, Decl(jsxIfRunNarrowing.syn, 0, 20))
+>nav : Symbol(nav, Decl(jsxIfRunNarrowing.syn, 0, 13))
+>prev : Symbol(prev, Decl(jsxIfRunNarrowing.syn, 0, 20))
+
+                </>
+
+                <a href={prev.href} on:click(e) {
+>a : Symbol(JSX.IntrinsicElements.a, Decl(lib.jsx.d.ts, --, --))
+>href : Symbol(href, Decl(jsxIfRunNarrowing.syn, 12, 18))
+>prev.href : Symbol(href, Decl(jsxIfRunNarrowing.syn, 1, 12))
+>prev : Symbol(prev, Decl(jsxIfRunNarrowing.syn, 9, 25))
+>href : Symbol(href, Decl(jsxIfRunNarrowing.syn, 1, 12))
+>on:click : Symbol(on:click, Decl(jsxIfRunNarrowing.syn, 12, 35))
+>e : Symbol(e, Decl(jsxIfRunNarrowing.syn, 12, 45))
+
+                    console.log(prev.href)
+>console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>console : Symbol(console, Decl(lib.dom.d.ts, --, --))
+>log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>prev.href : Symbol(href, Decl(jsxIfRunNarrowing.syn, 1, 12))
+>prev : Symbol(prev, Decl(jsxIfRunNarrowing.syn, 9, 25))
+>href : Symbol(href, Decl(jsxIfRunNarrowing.syn, 1, 12))
+
+                }>
+                    <span .dir>Previous</span>{prev.label}
+>span : Symbol(JSX.IntrinsicElements.span, Decl(lib.jsx.d.ts, --, --))
+>span : Symbol(JSX.IntrinsicElements.span, Decl(lib.jsx.d.ts, --, --))
+>prev.label : Symbol(label, Decl(jsxIfRunNarrowing.syn, 1, 26))
+>prev : Symbol(prev, Decl(jsxIfRunNarrowing.syn, 9, 25))
+>label : Symbol(label, Decl(jsxIfRunNarrowing.syn, 1, 26))
+
+                </a>
+>a : Symbol(JSX.IntrinsicElements.a, Decl(lib.jsx.d.ts, --, --))
+
+            </><#else>
+                <a></a>
+>a : Symbol(JSX.IntrinsicElements.a, Decl(lib.jsx.d.ts, --, --))
+>a : Symbol(JSX.IntrinsicElements.a, Decl(lib.jsx.d.ts, --, --))
+
+            </>
+
+            <#run>
+                const next = nav.next
+>next : Symbol(next, Decl(jsxIfRunNarrowing.syn, 22, 21))
+>nav.next : Symbol(next, Decl(jsxIfRunNarrowing.syn, 1, 42))
+>nav : Symbol(nav, Decl(jsxIfRunNarrowing.syn, 0, 13))
+>next : Symbol(next, Decl(jsxIfRunNarrowing.syn, 1, 42))
+
+            </>
+            <#if (next)>
+>next : Symbol(next, Decl(jsxIfRunNarrowing.syn, 22, 21))
+
+                <a href={next.href} on:click(e) {
+>a : Symbol(JSX.IntrinsicElements.a, Decl(lib.jsx.d.ts, --, --))
+>href : Symbol(href, Decl(jsxIfRunNarrowing.syn, 25, 18))
+>next.href : Symbol(href, Decl(jsxIfRunNarrowing.syn, 2, 12))
+>next : Symbol(next, Decl(jsxIfRunNarrowing.syn, 22, 21))
+>href : Symbol(href, Decl(jsxIfRunNarrowing.syn, 2, 12))
+>on:click : Symbol(on:click, Decl(jsxIfRunNarrowing.syn, 25, 35))
+>e : Symbol(e, Decl(jsxIfRunNarrowing.syn, 25, 45))
+
+                    console.log(next.href)
+>console.log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>console : Symbol(console, Decl(lib.dom.d.ts, --, --))
+>log : Symbol(Console.log, Decl(lib.dom.d.ts, --, --))
+>next.href : Symbol(href, Decl(jsxIfRunNarrowing.syn, 2, 12))
+>next : Symbol(next, Decl(jsxIfRunNarrowing.syn, 22, 21))
+>href : Symbol(href, Decl(jsxIfRunNarrowing.syn, 2, 12))
+
+                }>
+                    <span .dir>Previous</span>{next.label}
+>span : Symbol(JSX.IntrinsicElements.span, Decl(lib.jsx.d.ts, --, --))
+>span : Symbol(JSX.IntrinsicElements.span, Decl(lib.jsx.d.ts, --, --))
+>next.label : Symbol(label, Decl(jsxIfRunNarrowing.syn, 2, 26))
+>next : Symbol(next, Decl(jsxIfRunNarrowing.syn, 22, 21))
+>label : Symbol(label, Decl(jsxIfRunNarrowing.syn, 2, 26))
+
+                </a>
+>a : Symbol(JSX.IntrinsicElements.a, Decl(lib.jsx.d.ts, --, --))
+
+            </>
+        </>
+    </div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+</div>
+>div : Symbol(JSX.IntrinsicElements.div, Decl(lib.jsx.d.ts, --, --))
+
+

@@ -1,0 +1,37 @@
+//// [tests/cases/syn/lookupTypeIntrinsic.syn] ////
+
+=== index.d.ts ===
+declare module "x" {
+>"x" : typeof import("x")
+>    : ^^^^^^^^^^^^^^^^^^
+
+    global {
+>global : any
+>       : ^^^
+
+        type SmiWidth = 7
+>SmiWidth : 7
+>         : ^
+    }
+}
+
+=== main.syn ===
+import "x"
+
+type R1 = LookupType<"SmiWidth", 31> // 7
+>R1 : 7
+>   : ^
+
+type R2 = LookupType<"SmiWidth2", 31> // 31
+>R2 : 31
+>   : ^^
+
+declare const r1: R1
+>r1 : 7
+>   : ^
+
+declare const r2: R2
+>r2 : 31
+>   : ^^
+
+

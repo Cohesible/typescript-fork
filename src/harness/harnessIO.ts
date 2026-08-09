@@ -974,7 +974,7 @@ export namespace Compiler {
         harnessSettings: TestCaseParser.CompilerSettings,
     ): void {
         if (!options.noEmit && !options.emitDeclarationOnly && result.js.size === 0 && result.diagnostics.length === 0) {
-            if (toBeCompiled.every(x => x.unitName.endsWith('.syn'))) return;
+            if (header.endsWith('.syn')) return;
             throw new Error("Expected at least one js file to be emitted or at least one error to be created.");
         }
 

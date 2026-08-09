@@ -3473,7 +3473,7 @@ export interface JsxShorthandAttribute extends ObjectLiteralElement {
     readonly parent: JsxAttributes;
 }
 
-export interface JsxMethodAttribute extends Declaration, LocalsContainer {
+export interface JsxMethodAttribute extends Declaration, LocalsContainer, FlowContainer {
     readonly kind: SyntaxKind.JsxMethodAttribute;
     readonly parent: JsxAttributes;
     readonly modifiers?: NodeArray<Modifier>;
@@ -4441,7 +4441,7 @@ export interface FlowUnreachable extends FlowNodeBase {
 // property for the containing control flow).
 /** @internal */
 export interface FlowStart extends FlowNodeBase {
-    node: FunctionExpression | ArrowFunction | MethodDeclaration | GetAccessorDeclaration | SetAccessorDeclaration | undefined;
+    node: FunctionExpression | ArrowFunction | MethodDeclaration | GetAccessorDeclaration | SetAccessorDeclaration | JsxMethodAttribute | undefined;
     antecedent: undefined;
 }
 

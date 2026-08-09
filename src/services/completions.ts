@@ -2025,8 +2025,10 @@ function createCompletionEntry(
                     // const sig = callSigs[0];
                     // sig.parameters.map((p, i) => `\${${i + 1}:${unescapeLeadingUnderscores(p.escapedName)}}`).join(", ");
                     // insertText = `${escapeSnippetText(name)}(${params}) {$${sig.parameters.length + 1}}`;
-                    insertText = `${escapeSnippetText(name)}() {$1}`;
+                    // insertText = `${escapeSnippetText(name)}() {$1}`;
+                    insertText = `${escapeSnippetText(name)}$1`;
                     isSnippet = true;
+                    //source = CompletionSource.JsxMethodAttributeSnippet;
                 }
                 else {
                     useBraces = true;
@@ -5117,6 +5119,8 @@ function getCompletionData(
                 case SyntaxKind.PropertyAccessExpression:
                 case SyntaxKind.JsxAttributes:
                 case SyntaxKind.JsxAttribute:
+                case SyntaxKind.JsxClassAttribute:
+                case SyntaxKind.JsxClassList:
                 case SyntaxKind.JsxShorthandAttribute:
                 case SyntaxKind.JsxSpreadAttribute:
                     if (parent.kind === SyntaxKind.JsxSelfClosingElement || parent.kind === SyntaxKind.JsxOpeningElement) {

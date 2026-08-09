@@ -1,0 +1,102 @@
+//// [tests/cases/syn/machineIntrinsics.syn] ////
+
+=== machineIntrinsics.syn ===
+// exercise every predefined machine number alias
+declare const u8v: u8
+>u8v : u8
+>    : ^^
+
+declare const u16v: u16
+>u16v : u16
+>     : ^^^
+
+declare const u32v: u32
+>u32v : u32
+>     : ^^^
+
+declare const u64v: u64
+>u64v : u64
+>     : ^^^
+
+declare const i8v: i8
+>i8v : i8
+>    : ^^
+
+declare const i16v: i16
+>i16v : i16
+>     : ^^^
+
+declare const i32v: i32
+>i32v : i32
+>     : ^^^
+
+declare const i64v: i64
+>i64v : i64
+>     : ^^^
+
+declare const f16v: f16
+>f16v : f16
+>     : ^^^
+
+declare const f32v: f32
+>f32v : f32
+>     : ^^^
+
+declare const f64v: f64
+>f64v : f64
+>     : ^^^
+
+// referencing the same width/signedness more than once must reuse the cached
+// synthetic type rather than re-creating (and crashing on) a duplicate intrinsic
+declare const u8v2: u8
+>u8v2 : u8
+>     : ^^
+
+declare const u8v3: Int<8, false>
+>u8v3 : u8
+>     : ^^
+>false : false
+>      : ^^^^^
+
+declare const f64v2: Float<64>
+>f64v2 : f64
+>      : ^^^
+
+// Width can come from any literal type, not just a literal written in place
+type W = 16
+>W : 16
+>  : ^^
+
+type W2 = Int<W, true>
+>W2 : i16
+>   : ^^^
+>true : true
+>     : ^^^^
+
+declare const w: W2
+>w : i16
+>  : ^^^
+
+declare const w2: i16
+>w2 : i16
+>   : ^^^
+
+// all of these are plain `number`s under the hood
+const n1: number = u8v
+>n1 : number
+>   : ^^^^^^
+>u8v : u8
+>    : ^^
+
+const n2: number = i32v
+>n2 : number
+>   : ^^^^^^
+>i32v : i32
+>     : ^^^
+
+const n3: number = f64v
+>n3 : number
+>   : ^^^^^^
+>f64v : f64
+>     : ^^^
+

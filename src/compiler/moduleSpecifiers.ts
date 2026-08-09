@@ -1433,6 +1433,7 @@ function getJSExtensionForFile(fileName: string, options: CompilerOptions): Exte
 export function tryGetJSExtensionForFile(fileName: string, options: CompilerOptions): Extension | undefined {
     const ext = tryGetExtensionFromPath(fileName);
     switch (ext) {
+        case Extension.Syn:
         case Extension.Ts:
         case Extension.Dts:
             return Extension.Js;

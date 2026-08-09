@@ -1,0 +1,63 @@
+machineArithmetic.syn(15,7): error TS2322: Type 'u64' is not assignable to type 'u32'.
+machineArithmetic.syn(16,7): error TS2322: Type 'u32' is not assignable to type 'i32'.
+machineArithmetic.syn(20,7): error TS2322: Type '999' is not assignable to type 'u8'.
+machineArithmetic.syn(21,7): error TS2322: Type '200 | 256' is not assignable to type 'u8'.
+  Type '256' is not assignable to type 'u8'.
+machineArithmetic.syn(41,11): error TS2322: Type 'number' is not assignable to type 'u32'.
+
+
+==== machineArithmetic.syn (5 errors) ====
+    declare const a: u32
+    declare const b: u32
+    declare const c: u64
+    declare const lit: 200
+    declare const lit2: 200 | 256
+    
+    // default: widens to plain number
+    const defaultResult: number = a + b
+    
+    // assignability: widening is fine
+    const w: u64 = a
+    const w2: u64 = c
+    
+    // assignability: narrowing/cross-kind should be flagged
+    const bad1: u32 = c
+          ~~~~
+!!! error TS2322: Type 'u64' is not assignable to type 'u32'.
+    const bad2: i32 = a
+          ~~~~
+!!! error TS2322: Type 'u32' is not assignable to type 'i32'.
+    
+    // literal into machine type: fits => ok, doesn't fit => flagged
+    const okLit: u8 = lit
+    const badLit: u8 = 999
+          ~~~~~~
+!!! error TS2322: Type '999' is not assignable to type 'u8'.
+    const badLit2: u8 = lit2
+          ~~~~~~~
+!!! error TS2322: Type '200 | 256' is not assignable to type 'u8'.
+!!! error TS2322:   Type '256' is not assignable to type 'u8'.
+    
+    // any machine type is assignable into plain number
+    const n: number = a
+    
+    function checkedFn() {
+        "use checked"
+        const r: u32 = a + b // stays u32 under "use checked"
+    }
+    
+    function wrappingFn() {
+        "use wrapping"
+        const r: u32 = a + b // stays u32 under "use wrapping"
+    }
+    
+    function plainFn() {
+        const r: number = a + b // still widens without directive
+    }
+    
+    function noDirectiveShouldFail() {
+        const r: u32 = a + b // error: widened to number, not assignable to u32
+              ~
+!!! error TS2322: Type 'number' is not assignable to type 'u32'.
+    }
+    

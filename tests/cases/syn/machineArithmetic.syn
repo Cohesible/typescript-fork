@@ -1,0 +1,45 @@
+// @lib: es5,machine
+
+declare const a: u32
+declare const b: u32
+declare const c: u64
+declare const lit: 200
+declare const lit2: 200 | 256
+
+// default: widens to plain number
+const defaultResult: number = a + b
+
+// assignability: widening is fine
+const w: u64 = a
+const w2: u64 = c
+
+// assignability: narrowing/cross-kind should be flagged
+const bad1: u32 = c
+const bad2: i32 = a
+
+// literal into machine type: fits => ok, doesn't fit => flagged
+const okLit: u8 = lit
+const badLit: u8 = 999
+const badLit2: u8 = lit2
+
+// any machine type is assignable into plain number
+const n: number = a
+
+function checkedFn() {
+    "use checked"
+    const r: u32 = a + b // stays u32
+}
+
+function wrappingFn() {
+    "use wrapping"
+    const r: u32 = a + b // stays u32
+}
+
+function plainFn() {
+    const r = a + b // widens without directive
+    const r2: number = a + b // sanity check for widening
+}
+
+function noDirectiveShouldFail() {
+    const r: u32 = a + b // error: widened to number, not assignable to u32
+}

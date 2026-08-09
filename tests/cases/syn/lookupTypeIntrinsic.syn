@@ -1,0 +1,16 @@
+// @filename: index.d.ts
+declare module "x" {
+    global {
+        type SmiWidth = 7
+    }
+}
+
+// @filename: main.syn
+import "x"
+
+type R1 = LookupType<"SmiWidth", 31> // 7
+type R2 = LookupType<"SmiWidth2", 31> // 31
+
+declare const r1: R1
+declare const r2: R2
+

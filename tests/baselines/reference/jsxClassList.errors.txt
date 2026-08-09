@@ -17,18 +17,19 @@ jsxClassList.syn(32,12): error TS95214: Duplicate class name 'a'.
 jsxClassList.syn(32,23): error TS95214: Duplicate class name 'a'.
 jsxClassList.syn(35,13): error TS95216: 'class' attribute will always overwrite the class list.
 jsxClassList.syn(36,13): error TS95216: 'class' attribute will always overwrite the class list.
-jsxClassList.syn(47,11): error TS95214: Duplicate class name 'a'.
-jsxClassList.syn(48,12): error TS95214: Duplicate class name 'a'.
-jsxClassList.syn(48,15): error TS95214: Duplicate class name 'a'.
-jsxClassList.syn(49,11): error TS95214: Duplicate class name 'a'.
-jsxClassList.syn(49,24): error TS95214: Duplicate class name 'a'.
-jsxClassList.syn(50,15): error TS2322: Type 'number' is not assignable to type 'readonly string[]'.
-jsxClassList.syn(51,15): error TS2322: Type 'string' is not assignable to type 'readonly string[]'.
-jsxClassList.syn(61,10): error TS95217: Type 'string[]' is being spread as attributes. Did you mean to use a class list '( {...} )'?
-jsxClassList.syn(62,10): error TS95217: Type 'readonly ["a", "b"]' is being spread as attributes. Did you mean to use a class list '( {...} )'?
+jsxClassList.syn(37,13): error TS95216: 'class' attribute will always overwrite the class list.
+jsxClassList.syn(48,11): error TS95214: Duplicate class name 'a'.
+jsxClassList.syn(49,12): error TS95214: Duplicate class name 'a'.
+jsxClassList.syn(49,15): error TS95214: Duplicate class name 'a'.
+jsxClassList.syn(50,11): error TS95214: Duplicate class name 'a'.
+jsxClassList.syn(50,24): error TS95214: Duplicate class name 'a'.
+jsxClassList.syn(51,15): error TS2322: Type 'number' is not assignable to type 'readonly string[]'.
+jsxClassList.syn(52,15): error TS2322: Type 'string' is not assignable to type 'readonly string[]'.
+jsxClassList.syn(62,10): error TS95217: Type 'string[]' is being spread as attributes. Did you mean to use a class list '( {...} )'?
+jsxClassList.syn(63,10): error TS95217: Type 'readonly ["a", "b"]' is being spread as attributes. Did you mean to use a class list '( {...} )'?
 
 
-==== jsxClassList.syn (28 errors) ====
+==== jsxClassList.syn (29 errors) ====
     {
         const cond = true;
         <div .foo/>;
@@ -96,12 +97,15 @@ jsxClassList.syn(62,10): error TS95217: Type 'readonly ["a", "b"]' is being spre
                           ~
 !!! error TS95214: Duplicate class name 'a'.
     
-        // class attribute cannot be used with class list
-        <div .a class="b" />;
+        // dynamic class attribute cannot be used with class list
+        <div .a class="b" />; // ok
                 ~~~~~
 !!! error TS95216: 'class' attribute will always overwrite the class list.
-        <div .a {...{ class: 'b' }} />;
+        <div .a {...{ class: 'b' }} />; // not ok
                 ~~~~~~~~~~~~~~~~~~~
+!!! error TS95216: 'class' attribute will always overwrite the class list.
+        <div .a class={"b"} />; // not ok
+                ~~~~~
 !!! error TS95216: 'class' attribute will always overwrite the class list.
     
         // ok

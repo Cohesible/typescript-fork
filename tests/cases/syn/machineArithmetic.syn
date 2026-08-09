@@ -43,3 +43,28 @@ function plainFn() {
 function noDirectiveShouldFail() {
     const r: u32 = a + b // error: widened to number, not assignable to u32
 }
+
+function nested() {
+    "use checked"
+    function add(a: u32, b: u32) {
+        return a + b
+    }
+    return add
+}
+
+function compound() {
+    "use checked"
+    let i: u8 = 0
+    const z = (i += 1)
+    return z + 1
+}
+
+function unary() {
+    "use checked"
+    let r: u32 = 0
+    for (let i: u8 = 0; i < 0; i++) {
+        r += i
+    }
+    return r
+}
+

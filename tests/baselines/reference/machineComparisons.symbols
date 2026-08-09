@@ -1,0 +1,48 @@
+//// [tests/cases/syn/machineComparisons.syn] ////
+
+=== machineComparisons.syn ===
+function alwaysFalse(a: u32) {
+>alwaysFalse : Symbol(alwaysFalse, Decl(machineComparisons.syn, 0, 0))
+>a : Symbol(a, Decl(machineComparisons.syn, 0, 21))
+>u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
+
+    return a < -5
+>a : Symbol(a, Decl(machineComparisons.syn, 0, 21))
+}
+
+function alwaysTrue(a: u32) {
+>alwaysTrue : Symbol(alwaysTrue, Decl(machineComparisons.syn, 2, 1))
+>a : Symbol(a, Decl(machineComparisons.syn, 4, 20))
+>u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
+
+    return a > -5
+>a : Symbol(a, Decl(machineComparisons.syn, 4, 20))
+}
+
+function signedCompare(a: i32) {
+>signedCompare : Symbol(signedCompare, Decl(machineComparisons.syn, 6, 1))
+>a : Symbol(a, Decl(machineComparisons.syn, 8, 23))
+>i32 : Symbol(i32, Decl(lib.machine.d.ts, --, --))
+
+    return a > -5 // boolean
+>a : Symbol(a, Decl(machineComparisons.syn, 8, 23))
+}
+
+function alwaysTrue2(a: u8) {
+>alwaysTrue2 : Symbol(alwaysTrue2, Decl(machineComparisons.syn, 10, 1))
+>a : Symbol(a, Decl(machineComparisons.syn, 12, 21))
+>u8 : Symbol(u8, Decl(lib.machine.d.ts, --, --))
+
+    return a >= 0 // true
+>a : Symbol(a, Decl(machineComparisons.syn, 12, 21))
+}
+
+function maybeTrue(a: u8) {
+>maybeTrue : Symbol(maybeTrue, Decl(machineComparisons.syn, 14, 1))
+>a : Symbol(a, Decl(machineComparisons.syn, 16, 19))
+>u8 : Symbol(u8, Decl(lib.machine.d.ts, --, --))
+
+    return a <= 0 // boolean
+>a : Symbol(a, Decl(machineComparisons.syn, 16, 19))
+}
+

@@ -1,0 +1,30 @@
+//// [tests/cases/syn/reifyMachineTypes.syn] ////
+
+=== reifyMachineTypes.syn ===
+const r1 = reify u32
+>r1 : Symbol(r1, Decl(reifyMachineTypes.syn, 0, 5))
+>u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
+
+type R1 = typeof r1
+>R1 : Symbol(R1, Decl(reifyMachineTypes.syn, 0, 20))
+>r1 : Symbol(r1, Decl(reifyMachineTypes.syn, 0, 5))
+
+const r2 = reify number
+>r2 : Symbol(r2, Decl(reifyMachineTypes.syn, 3, 5))
+
+type T1 = reify u32
+>T1 : Symbol(T1, Decl(reifyMachineTypes.syn, 3, 23))
+>u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
+
+type T2 = reify number
+>T2 : Symbol(T2, Decl(reifyMachineTypes.syn, 5, 19))
+
+const cross: typeof r2 = r1
+>cross : Symbol(cross, Decl(reifyMachineTypes.syn, 8, 5))
+>r2 : Symbol(r2, Decl(reifyMachineTypes.syn, 3, 5))
+>r1 : Symbol(r1, Decl(reifyMachineTypes.syn, 0, 5))
+
+const sym: symbol = reify u32 // ok
+>sym : Symbol(sym, Decl(reifyMachineTypes.syn, 9, 5))
+>u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
+

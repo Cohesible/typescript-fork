@@ -3,10 +3,11 @@ machineArithmetic.syn(16,7): error TS2322: Type 'u32' is not assignable to type 
 machineArithmetic.syn(20,7): error TS2322: Type '999' is not assignable to type 'u8'.
 machineArithmetic.syn(21,7): error TS2322: Type '200 | 256' is not assignable to type 'u8'.
   Type '256' is not assignable to type 'u8'.
-machineArithmetic.syn(41,11): error TS2322: Type 'number' is not assignable to type 'u32'.
+machineArithmetic.syn(42,11): error TS2322: Type 'number' is not assignable to type 'u32'.
+machineArithmetic.syn(63,25): error TS2845: This condition will always return 'false'.
 
 
-==== machineArithmetic.syn (5 errors) ====
+==== machineArithmetic.syn (6 errors) ====
     declare const a: u32
     declare const b: u32
     declare const c: u64
@@ -43,16 +44,17 @@ machineArithmetic.syn(41,11): error TS2322: Type 'number' is not assignable to t
     
     function checkedFn() {
         "use checked"
-        const r: u32 = a + b // stays u32 under "use checked"
+        const r: u32 = a + b // stays u32
     }
     
     function wrappingFn() {
         "use wrapping"
-        const r: u32 = a + b // stays u32 under "use wrapping"
+        const r: u32 = a + b // stays u32
     }
     
     function plainFn() {
-        const r: number = a + b // still widens without directive
+        const r = a + b // widens without directive
+        const r2: number = a + b // sanity check for widening
     }
     
     function noDirectiveShouldFail() {
@@ -60,4 +62,31 @@ machineArithmetic.syn(41,11): error TS2322: Type 'number' is not assignable to t
               ~
 !!! error TS2322: Type 'number' is not assignable to type 'u32'.
     }
+    
+    function nested() {
+        "use checked"
+        function add(a: u32, b: u32) {
+            return a + b
+        }
+        return add
+    }
+    
+    function compound() {
+        "use checked"
+        let i: u8 = 0
+        const z = (i += 1)
+        return z + 1
+    }
+    
+    function unary() {
+        "use checked"
+        let r: u32 = 0
+        for (let i: u8 = 0; i < 0; i++) {
+                            ~~~~~
+!!! error TS2845: This condition will always return 'false'.
+            r += i
+        }
+        return r
+    }
+    
     

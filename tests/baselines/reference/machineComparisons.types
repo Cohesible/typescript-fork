@@ -1,0 +1,84 @@
+//// [tests/cases/syn/machineComparisons.syn] ////
+
+=== machineComparisons.syn ===
+function alwaysFalse(a: u32) {
+>alwaysFalse : (a: u32) => boolean
+>            : ^ ^^   ^^^^^^^^^^^^
+>a : u32
+>  : ^^^
+
+    return a < -5
+>a < -5 : boolean
+>       : ^^^^^^^
+>a : u32
+>  : ^^^
+>-5 : -5
+>   : ^^
+>5 : 5
+>  : ^
+}
+
+function alwaysTrue(a: u32) {
+>alwaysTrue : (a: u32) => boolean
+>           : ^ ^^   ^^^^^^^^^^^^
+>a : u32
+>  : ^^^
+
+    return a > -5
+>a > -5 : boolean
+>       : ^^^^^^^
+>a : u32
+>  : ^^^
+>-5 : -5
+>   : ^^
+>5 : 5
+>  : ^
+}
+
+function signedCompare(a: i32) {
+>signedCompare : (a: i32) => boolean
+>              : ^ ^^   ^^^^^^^^^^^^
+>a : i32
+>  : ^^^
+
+    return a > -5 // boolean
+>a > -5 : boolean
+>       : ^^^^^^^
+>a : i32
+>  : ^^^
+>-5 : -5
+>   : ^^
+>5 : 5
+>  : ^
+}
+
+function alwaysTrue2(a: u8) {
+>alwaysTrue2 : (a: u8) => boolean
+>            : ^ ^^  ^^^^^^^^^^^^
+>a : u8
+>  : ^^
+
+    return a >= 0 // true
+>a >= 0 : boolean
+>       : ^^^^^^^
+>a : u8
+>  : ^^
+>0 : 0
+>  : ^
+}
+
+function maybeTrue(a: u8) {
+>maybeTrue : (a: u8) => boolean
+>          : ^ ^^  ^^^^^^^^^^^^
+>a : u8
+>  : ^^
+
+    return a <= 0 // boolean
+>a <= 0 : boolean
+>       : ^^^^^^^
+>a : u8
+>  : ^^
+>0 : 0
+>  : ^
+}
+

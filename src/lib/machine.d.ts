@@ -34,3 +34,10 @@ type f64 = Float<64>;
 type smi = Int<31, true>;
 type usize = Int<64, false>;
 type isize = Int<64, true>;
+
+declare namespace Type {
+    function isFloat(t: Type): boolean
+    function isSigned(t: Type): boolean | undefined
+    function isInteger(t: Type): boolean
+    function getBitWidth(t: Type): u32 | undefined
+}

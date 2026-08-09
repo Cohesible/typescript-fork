@@ -1,0 +1,21 @@
+// @lib: es5,machine
+
+function alwaysFalse(a: u32) {
+    return a < -5
+}
+
+function alwaysTrue(a: u32) {
+    return a > -5
+}
+
+function signedCompare(a: i32) {
+    return a > -5 // boolean
+}
+
+function alwaysTrue2(a: u8) {
+    return a >= 0 // true
+}
+
+function maybeTrue(a: u8) {
+    return a <= 0 // boolean
+}

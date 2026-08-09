@@ -1,0 +1,12 @@
+// @lib: es5,reify,machine
+
+const r1 = reify u32
+type R1 = typeof r1
+
+const r2 = reify number
+
+type T1 = reify u32
+type T2 = reify number
+
+const cross: typeof r2 = r1
+const sym: symbol = reify u32 // ok

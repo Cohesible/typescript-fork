@@ -71,7 +71,7 @@ function checkedFn() {
 >checkedFn : Symbol(checkedFn, Decl(machineArithmetic.syn, 23, 19))
 
     "use checked"
-    const r: u32 = a + b // stays u32 under "use checked"
+    const r: u32 = a + b // stays u32
 >r : Symbol(r, Decl(machineArithmetic.syn, 27, 9))
 >u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
 >a : Symbol(a, Decl(machineArithmetic.syn, 0, 13))
@@ -82,7 +82,7 @@ function wrappingFn() {
 >wrappingFn : Symbol(wrappingFn, Decl(machineArithmetic.syn, 28, 1))
 
     "use wrapping"
-    const r: u32 = a + b // stays u32 under "use wrapping"
+    const r: u32 = a + b // stays u32
 >r : Symbol(r, Decl(machineArithmetic.syn, 32, 9))
 >u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
 >a : Symbol(a, Decl(machineArithmetic.syn, 0, 13))
@@ -92,19 +92,82 @@ function wrappingFn() {
 function plainFn() {
 >plainFn : Symbol(plainFn, Decl(machineArithmetic.syn, 33, 1))
 
-    const r: number = a + b // still widens without directive
+    const r = a + b // widens without directive
 >r : Symbol(r, Decl(machineArithmetic.syn, 36, 9))
+>a : Symbol(a, Decl(machineArithmetic.syn, 0, 13))
+>b : Symbol(b, Decl(machineArithmetic.syn, 1, 13))
+
+    const r2: number = a + b // sanity check for widening
+>r2 : Symbol(r2, Decl(machineArithmetic.syn, 37, 9))
 >a : Symbol(a, Decl(machineArithmetic.syn, 0, 13))
 >b : Symbol(b, Decl(machineArithmetic.syn, 1, 13))
 }
 
 function noDirectiveShouldFail() {
->noDirectiveShouldFail : Symbol(noDirectiveShouldFail, Decl(machineArithmetic.syn, 37, 1))
+>noDirectiveShouldFail : Symbol(noDirectiveShouldFail, Decl(machineArithmetic.syn, 38, 1))
 
     const r: u32 = a + b // error: widened to number, not assignable to u32
->r : Symbol(r, Decl(machineArithmetic.syn, 40, 9))
+>r : Symbol(r, Decl(machineArithmetic.syn, 41, 9))
 >u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
 >a : Symbol(a, Decl(machineArithmetic.syn, 0, 13))
 >b : Symbol(b, Decl(machineArithmetic.syn, 1, 13))
 }
+
+function nested() {
+>nested : Symbol(nested, Decl(machineArithmetic.syn, 42, 1))
+
+    "use checked"
+    function add(a: u32, b: u32) {
+>add : Symbol(add, Decl(machineArithmetic.syn, 45, 17))
+>a : Symbol(a, Decl(machineArithmetic.syn, 46, 17))
+>u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
+>b : Symbol(b, Decl(machineArithmetic.syn, 46, 24))
+>u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
+
+        return a + b
+>a : Symbol(a, Decl(machineArithmetic.syn, 46, 17))
+>b : Symbol(b, Decl(machineArithmetic.syn, 46, 24))
+    }
+    return add
+>add : Symbol(add, Decl(machineArithmetic.syn, 45, 17))
+}
+
+function compound() {
+>compound : Symbol(compound, Decl(machineArithmetic.syn, 50, 1))
+
+    "use checked"
+    let i: u8 = 0
+>i : Symbol(i, Decl(machineArithmetic.syn, 54, 7))
+>u8 : Symbol(u8, Decl(lib.machine.d.ts, --, --))
+
+    const z = (i += 1)
+>z : Symbol(z, Decl(machineArithmetic.syn, 55, 9))
+>i : Symbol(i, Decl(machineArithmetic.syn, 54, 7))
+
+    return z + 1
+>z : Symbol(z, Decl(machineArithmetic.syn, 55, 9))
+}
+
+function unary() {
+>unary : Symbol(unary, Decl(machineArithmetic.syn, 57, 1))
+
+    "use checked"
+    let r: u32 = 0
+>r : Symbol(r, Decl(machineArithmetic.syn, 61, 7))
+>u32 : Symbol(u32, Decl(lib.machine.d.ts, --, --))
+
+    for (let i: u8 = 0; i < 0; i++) {
+>i : Symbol(i, Decl(machineArithmetic.syn, 62, 12))
+>u8 : Symbol(u8, Decl(lib.machine.d.ts, --, --))
+>i : Symbol(i, Decl(machineArithmetic.syn, 62, 12))
+>i : Symbol(i, Decl(machineArithmetic.syn, 62, 12))
+
+        r += i
+>r : Symbol(r, Decl(machineArithmetic.syn, 61, 7))
+>i : Symbol(i, Decl(machineArithmetic.syn, 62, 12))
+    }
+    return r
+>r : Symbol(r, Decl(machineArithmetic.syn, 61, 7))
+}
+
 

@@ -17279,6 +17279,67 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             value >= -(2 ** (info.width - 1)) && value <= 2 ** (info.width - 1) - 1;
     }
 
+    function getMachineIntegerMin(info: MachineNumberInfo): number {
+        return info.kind === "u" ? 0 : -(2 ** (info.width - 1));
+    }
+
+    function getMachineIntegerMax(info: MachineNumberInfo): number {
+        return info.kind === "u" ? 2 ** info.width - 1 : 2 ** (info.width - 1) - 1;
+    }
+
+    function getMachineComparisonResult(operator: SyntaxKind, info: MachineNumberInfo, literal: number): boolean | undefined {
+        const min = getMachineIntegerMin(info);
+        const max = getMachineIntegerMax(info);
+        switch (operator) {
+            case SyntaxKind.LessThanToken:
+                if (max < literal) return true;
+                if (min >= literal) return false;
+                return undefined;
+            case SyntaxKind.LessThanEqualsToken:
+                if (max <= literal) return true;
+                if (min > literal) return false;
+                return undefined;
+            case SyntaxKind.GreaterThanToken:
+                if (min > literal) return true;
+                if (max <= literal) return false;
+                return undefined;
+            case SyntaxKind.GreaterThanEqualsToken:
+                if (min >= literal) return true;
+                if (max < literal) return false;
+                return undefined;
+            default:
+                return undefined;
+        }
+    }
+
+    function flipComparisonOperator(operator: SyntaxKind): SyntaxKind {
+        switch (operator) {
+            case SyntaxKind.LessThanToken: return SyntaxKind.GreaterThanToken;
+            case SyntaxKind.GreaterThanToken: return SyntaxKind.LessThanToken;
+            case SyntaxKind.LessThanEqualsToken: return SyntaxKind.GreaterThanEqualsToken;
+            case SyntaxKind.GreaterThanEqualsToken: return SyntaxKind.LessThanEqualsToken;
+            default: return operator;
+        }
+    }
+
+    function checkMachineNumberComparison(operator: SyntaxKind, left: Expression, leftType: Type, right: Expression, rightType: Type, errorNode: Node | undefined) {
+        let machineInfo = getMachineNumberInfo(leftType);
+        let literalType = rightType;
+        let effectiveOperator = operator;
+        if (!machineInfo || !(rightType.flags & TypeFlags.NumberLiteral)) {
+            machineInfo = getMachineNumberInfo(rightType);
+            literalType = leftType;
+            effectiveOperator = flipComparisonOperator(operator);
+        }
+        if (!machineInfo || machineInfo.kind === "f" || !(literalType.flags & TypeFlags.NumberLiteral)) {
+            return;
+        }
+        const result = getMachineComparisonResult(effectiveOperator, machineInfo, (literalType as NumberLiteralType).value);
+        if (result !== undefined) {
+            error(errorNode || left.parent, Diagnostics.This_condition_will_always_return_0, result ? "true" : "false");
+        }
+    }
+
     function isCheckedOrWrappingArithmeticDirective(stmt: Statement): boolean {
         return isExpressionStatement(stmt) && isStringLiteralLike(stmt.expression) &&
             (stmt.expression.text === "use checked" || stmt.expression.text === "use wrapping");
@@ -17299,7 +17360,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             return false;
         }
         if (isBlock(body) || isSourceFile(body) || isModuleBlock(body)) {
-            return hasCheckedOrWrappingArithmeticDirective(body.statements);
+            if (hasCheckedOrWrappingArithmeticDirective(body.statements)) return true;
+            if (node.parent) {
+                return isInCheckedOrWrappingArithmeticScope(node.parent);
+            }
         }
         return false;
     }
@@ -43375,6 +43439,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             case SyntaxKind.GreaterThanToken:
             case SyntaxKind.LessThanEqualsToken:
             case SyntaxKind.GreaterThanEqualsToken:
+                checkMachineNumberComparison(operator, left, leftType, right, rightType, errorNode);
                 if (checkForDisallowedESSymbolOperand(operator)) {
                     leftType = getBaseTypeOfLiteralTypeForComparison(checkNonNullType(leftType, left));
                     rightType = getBaseTypeOfLiteralTypeForComparison(checkNonNullType(rightType, right));
@@ -52164,7 +52229,6 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
             return getTypeForVariableLikeDeclaration(sym!.valueDeclaration! as VariableDeclaration, false, CheckMode.Normal) || errorType;
         }
-
         switch (subject) {
             case stringType:
                 return getReifiedIntrinsicType('string');
@@ -52238,6 +52302,11 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             return getMemberType('Intrinsic');
         }
         else if (isTypeAssignableToKind(subject, TypeFlags.Literal | TypeFlags.UniqueESSymbol | TypeFlags.Undefined | TypeFlags.Null)) {
+            if (subject.flags & TypeFlags.Number) {
+                if (getMachineNumberInfo(subject)) {
+                    return getReifiedIntrinsicType('intrinsic');
+                }
+            }
             if (kindName !== undefined && kindName !== 'literal') {
                 return neverType;
             }
@@ -52281,7 +52350,6 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             }
             return getMemberType('Object');
         }
-
         return getDeclaredTypeOfTypeAlias(ns);
     }
 

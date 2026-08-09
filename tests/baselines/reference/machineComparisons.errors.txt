@@ -1,0 +1,32 @@
+machineComparisons.syn(2,12): error TS2845: This condition will always return 'false'.
+machineComparisons.syn(6,12): error TS2845: This condition will always return 'true'.
+machineComparisons.syn(14,12): error TS2845: This condition will always return 'true'.
+
+
+==== machineComparisons.syn (3 errors) ====
+    function alwaysFalse(a: u32) {
+        return a < -5
+               ~~~~~~
+!!! error TS2845: This condition will always return 'false'.
+    }
+    
+    function alwaysTrue(a: u32) {
+        return a > -5
+               ~~~~~~
+!!! error TS2845: This condition will always return 'true'.
+    }
+    
+    function signedCompare(a: i32) {
+        return a > -5 // boolean
+    }
+    
+    function alwaysTrue2(a: u8) {
+        return a >= 0 // true
+               ~~~~~~
+!!! error TS2845: This condition will always return 'true'.
+    }
+    
+    function maybeTrue(a: u8) {
+        return a <= 0 // boolean
+    }
+    

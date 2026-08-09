@@ -2117,7 +2117,7 @@ interface Int8Array<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> {
     /** Returns the primitive value of the specified object. */
     valueOf(): this;
 
-    [index: number]: number;
+    [index: number]: LookupType<"i8", number>;
 }
 interface Int8ArrayConstructor {
     readonly prototype: Int8Array<ArrayBufferLike>;
@@ -2399,7 +2399,7 @@ interface Uint8Array<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> {
     /** Returns the primitive value of the specified object. */
     valueOf(): this;
 
-    [index: number]: number;
+    [index: number]: LookupType<"u8", number>;
 }
 interface Uint8ArrayConstructor {
     readonly prototype: Uint8Array<ArrayBufferLike>;
@@ -2962,7 +2962,7 @@ interface Int16Array<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> {
     /** Returns the primitive value of the specified object. */
     valueOf(): this;
 
-    [index: number]: number;
+    [index: number]: LookupType<"i16", number>;
 }
 interface Int16ArrayConstructor {
     readonly prototype: Int16Array<ArrayBufferLike>;
@@ -3244,7 +3244,7 @@ interface Uint16Array<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> {
     /** Returns the primitive value of the specified object. */
     valueOf(): this;
 
-    [index: number]: number;
+    [index: number]: LookupType<"u16", number>;
 }
 interface Uint16ArrayConstructor {
     readonly prototype: Uint16Array<ArrayBufferLike>;
@@ -3525,7 +3525,7 @@ interface Int32Array<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> {
     /** Returns the primitive value of the specified object. */
     valueOf(): this;
 
-    [index: number]: number;
+    [index: number]: LookupType<"i32", number>;
 }
 interface Int32ArrayConstructor {
     readonly prototype: Int32Array<ArrayBufferLike>;
@@ -3806,7 +3806,7 @@ interface Uint32Array<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> {
     /** Returns the primitive value of the specified object. */
     valueOf(): this;
 
-    [index: number]: number;
+    [index: number]: LookupType<"u32", number>;
 }
 interface Uint32ArrayConstructor {
     readonly prototype: Uint32Array<ArrayBufferLike>;
@@ -4088,7 +4088,7 @@ interface Float32Array<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> {
     /** Returns the primitive value of the specified object. */
     valueOf(): this;
 
-    [index: number]: number;
+    [index: number]: LookupType<"f32", number>;
 }
 interface Float32ArrayConstructor {
     readonly prototype: Float32Array<ArrayBufferLike>;
@@ -4370,7 +4370,7 @@ interface Float64Array<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> {
     /** Returns the primitive value of the specified object. */
     valueOf(): this;
 
-    [index: number]: number;
+    [index: number]: LookupType<"f64", number>;
 }
 interface Float64ArrayConstructor {
     readonly prototype: Float64Array<ArrayBufferLike>;

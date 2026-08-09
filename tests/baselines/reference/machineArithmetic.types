@@ -92,7 +92,7 @@ function checkedFn() {
 >"use checked" : "use checked"
 >              : ^^^^^^^^^^^^^
 
-    const r: u32 = a + b // stays u32 under "use checked"
+    const r: u32 = a + b // stays u32
 >r : u32
 >  : ^^^
 >a + b : u32
@@ -111,7 +111,7 @@ function wrappingFn() {
 >"use wrapping" : "use wrapping"
 >               : ^^^^^^^^^^^^^^
 
-    const r: u32 = a + b // stays u32 under "use wrapping"
+    const r: u32 = a + b // stays u32
 >r : u32
 >  : ^^^
 >a + b : u32
@@ -126,9 +126,19 @@ function plainFn() {
 >plainFn : () => void
 >        : ^^^^^^^^^^
 
-    const r: number = a + b // still widens without directive
+    const r = a + b // widens without directive
 >r : number
 >  : ^^^^^^
+>a + b : number
+>      : ^^^^^^
+>a : u32
+>  : ^^^
+>b : u32
+>  : ^^^
+
+    const r2: number = a + b // sanity check for widening
+>r2 : number
+>   : ^^^^^^
 >a + b : number
 >      : ^^^^^^
 >a : u32
@@ -151,4 +161,112 @@ function noDirectiveShouldFail() {
 >b : u32
 >  : ^^^
 }
+
+function nested() {
+>nested : () => (a: u32, b: u32) => u32
+>       : ^^^^^^^ ^^   ^^ ^^   ^^^^^^^^
+
+    "use checked"
+>"use checked" : "use checked"
+>              : ^^^^^^^^^^^^^
+
+    function add(a: u32, b: u32) {
+>add : (a: u32, b: u32) => u32
+>    : ^ ^^   ^^ ^^   ^^^^^^^^
+>a : u32
+>  : ^^^
+>b : u32
+>  : ^^^
+
+        return a + b
+>a + b : u32
+>      : ^^^
+>a : u32
+>  : ^^^
+>b : u32
+>  : ^^^
+    }
+    return add
+>add : (a: u32, b: u32) => u32
+>    : ^ ^^   ^^ ^^   ^^^^^^^^
+}
+
+function compound() {
+>compound : () => u8
+>         : ^^^^^^^^
+
+    "use checked"
+>"use checked" : "use checked"
+>              : ^^^^^^^^^^^^^
+
+    let i: u8 = 0
+>i : u8
+>  : ^^
+>0 : 0
+>  : ^
+
+    const z = (i += 1)
+>z : u8
+>  : ^^
+>(i += 1) : u8
+>         : ^^
+>i += 1 : u8
+>       : ^^
+>i : u8
+>  : ^^
+>1 : 1
+>  : ^
+
+    return z + 1
+>z + 1 : u8
+>      : ^^
+>z : u8
+>  : ^^
+>1 : 1
+>  : ^
+}
+
+function unary() {
+>unary : () => u32
+>      : ^^^^^^^^^
+
+    "use checked"
+>"use checked" : "use checked"
+>              : ^^^^^^^^^^^^^
+
+    let r: u32 = 0
+>r : u32
+>  : ^^^
+>0 : 0
+>  : ^
+
+    for (let i: u8 = 0; i < 0; i++) {
+>i : u8
+>  : ^^
+>0 : 0
+>  : ^
+>i < 0 : boolean
+>      : ^^^^^^^
+>i : u8
+>  : ^^
+>0 : 0
+>  : ^
+>i++ : number
+>    : ^^^^^^
+>i : u8
+>  : ^^
+
+        r += i
+>r += i : u32
+>       : ^^^
+>r : u32
+>  : ^^^
+>i : u8
+>  : ^^
+    }
+    return r
+>r : u32
+>  : ^^^
+}
+
 

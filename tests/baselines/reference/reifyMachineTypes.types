@@ -1,0 +1,37 @@
+//// [tests/cases/syn/reifyMachineTypes.syn] ////
+
+=== reifyMachineTypes.syn ===
+const r1 = reify u32
+>r1 : reify u32
+>   : ^^^^^^^^^
+
+type R1 = typeof r1
+>R1 : reify u32
+>   : ^^^^^^^^^
+>r1 : reify u32
+>   : ^^^^^^^^^
+
+const r2 = reify number
+>r2 : reify number
+>   : ^^^^^^^^^^^^
+
+type T1 = reify u32
+>T1 : reify u32
+>   : ^^^^^^^^^
+
+type T2 = reify number
+>T2 : reify number
+>   : ^^^^^^^^^^^^
+
+const cross: typeof r2 = r1
+>cross : reify number
+>      : ^^^^^^^^^^^^
+>r2 : reify number
+>   : ^^^^^^^^^^^^
+>r1 : reify u32
+>   : ^^^^^^^^^
+
+const sym: symbol = reify u32 // ok
+>sym : symbol
+>    : ^^^^^^
+

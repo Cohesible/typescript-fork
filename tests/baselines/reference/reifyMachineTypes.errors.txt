@@ -1,0 +1,18 @@
+reifyMachineTypes.syn(9,7): error TS2322: Type 'reify u32' is not assignable to type 'reify number'.
+  Type 'typeof Type.intrinsic' is not assignable to type 'reify number'.
+
+
+==== reifyMachineTypes.syn (1 errors) ====
+    const r1 = reify u32
+    type R1 = typeof r1
+    
+    const r2 = reify number
+    
+    type T1 = reify u32
+    type T2 = reify number
+    
+    const cross: typeof r2 = r1
+          ~~~~~
+!!! error TS2322: Type 'reify u32' is not assignable to type 'reify number'.
+!!! error TS2322:   Type 'typeof Type.intrinsic' is not assignable to type 'reify number'.
+    const sym: symbol = reify u32 // ok

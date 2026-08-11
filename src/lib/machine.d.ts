@@ -49,7 +49,7 @@ declare namespace Type {
         readonly width: Type
         isInt(): this is Int
         isFloat(): this is Float
-        isConcrete(): this is this & { width: u32 }
+        isConcrete(): this is Omit<this, 'width'> & { width: u32 }
     }
 
     class Int extends Machine {
@@ -57,7 +57,7 @@ declare namespace Type {
         readonly alignment?: Type
         readonly endianness?: Type
         get name(): `${'i' | 'u'}${string}`
-        isConcrete(): this is this & {
+        isConcrete(): this is Omit<this, 'width'> & {
             signed: boolean
             width: u32
             alignment?: u32
@@ -70,6 +70,10 @@ declare namespace Type {
     }
 
     interface Kinds {
+        machine: Machine
+    }
+
+    interface ExtraKinds {
         machine: Machine
     }
 }

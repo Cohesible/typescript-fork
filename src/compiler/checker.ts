@@ -16029,7 +16029,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 const member = getPropertyOfType(inner, name, skipObjectFunctionPropertyAugment, true);
                 if (!member) return undefined;
 
-                const clone = createSymbolWithType(member, createReifiedType(getTypeOfSymbol(member)));
+                const memberType = getTypeOfSymbol(member);
+                const clone = createSymbolWithType(member, isUnitType(memberType) ? memberType : createReifiedType(memberType));
                 clone.parent = member.valueDeclaration?.symbol?.parent;
                 cache.set(name, clone);
 
@@ -17258,8 +17259,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     }
 
     function createMachineTypeVariablePattern(aliasSymbol: Symbol | undefined, aliasTypeArguments: readonly Type[]): Type {
-        // technically, this makes "null" try to match against the type. so we have to special case it later on
-        const type = createType(TypeFlags.Number | TypeFlags.Null) as IntrinsicType;
+        const type = createType(TypeFlags.VariableMachineType) as IntrinsicType;
         type.intrinsicName = "number";
         type.aliasSymbol = aliasSymbol;
         type.aliasTypeArguments = aliasTypeArguments;
@@ -17456,7 +17456,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
 
     function isCheckedOrWrappingArithmeticDirective(stmt: Statement): boolean {
         return isExpressionStatement(stmt) && isStringLiteralLike(stmt.expression) &&
-            (stmt.expression.text === "use checked" || stmt.expression.text === "use wrapping");
+            (stmt.expression.text === "use checked" || stmt.expression.text === "use wrapped");
     }
 
     function hasCheckedOrWrappingArithmeticDirective(statements: readonly Statement[]): boolean {
@@ -17467,7 +17467,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return false;
     }
 
-    function isInCheckedOrWrappingArithmeticScope(node: Node): boolean {
+    function isInCheckedOrWrappedArithmeticScope(node: Node): boolean {
         const container = getContainingFunction(node);
         const body = container ? (isFunctionLikeDeclaration(container) ? container.body : undefined) : getSourceFileOfNode(node);
         if (!body) {
@@ -17476,10 +17476,54 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         if (isBlock(body) || isSourceFile(body) || isModuleBlock(body)) {
             if (hasCheckedOrWrappingArithmeticDirective(body.statements)) return true;
             if (node.parent) {
-                return isInCheckedOrWrappingArithmeticScope(node.parent);
+                return isInCheckedOrWrappedArithmeticScope(node.parent);
             }
         }
         return false;
+    }
+
+    function getCheckedArithmeticResultType(leftType: Type, rightType: Type, node: Node): Type {
+        if (!isInCheckedOrWrappedArithmeticScope(node)) {
+            return numberType;
+        }
+        if (getMachineNumberInfo(leftType)) {
+            return leftType;
+        }
+        if (leftType.flags & TypeFlags.NumberLiteral && getMachineNumberInfo(rightType)) {
+            return rightType;
+        }
+        return numberType;
+    }
+
+    function getConstantFoldedMachineLiteralType(node: Expression, defaultType: Type): Type {
+        if (defaultType !== numberType) {
+            return defaultType;
+        }
+        const contextualType = getContextualType(node, /*contextFlags*/ undefined);
+        if (!contextualType || !someType(contextualType, t => !!getMachineNumberInfo(t))) {
+            return defaultType;
+        }
+        const evaluated = evaluate(node);
+        return typeof evaluated.value === "number" ? getFreshTypeOfLiteralType(getNumberLiteralType(evaluated.value)) : defaultType;
+    }
+
+    function getSmallestUnsignedMachineType(max: number): Type {
+        return getOrCreateMachineNumberType("u", max === 0 ? 0 : Math.ceil(Math.log2(max + 1)));
+    }
+
+    function getBitwiseAndResultType(leftType: Type, rightType: Type): Type | undefined {
+        const leftMask = leftType.flags & TypeFlags.NumberLiteral ? (leftType as NumberLiteralType).value : undefined;
+        const rightMask = rightType.flags & TypeFlags.NumberLiteral ? (rightType as NumberLiteralType).value : undefined;
+        if ((leftMask !== undefined) === (rightMask !== undefined)) {
+            return undefined;
+        }
+        const mask = leftMask !== undefined ? leftMask : rightMask!;
+        if (!Number.isInteger(mask) || mask < 0) {
+            return undefined;
+        }
+        const otherInfo = getMachineNumberInfo(leftMask !== undefined ? rightType : leftType);
+        const max = otherInfo && otherInfo.kind !== "f" ? Math.min(mask, getMachineIntegerMax(otherInfo)) : mask;
+        return getSmallestUnsignedMachineType(max);
     }
 
     /**
@@ -19652,9 +19696,11 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 case SyntaxKind.ReadonlyKeyword:
                     links.resolvedType = getTypeFromTypeNode(node.type);
                     break;
-                case SyntaxKind.ReifyKeyword:
-                    links.resolvedType = createReifiedType(getTypeFromTypeNode(node.type));
+                case SyntaxKind.ReifyKeyword: {
+                    const reifySubject = getTypeFromTypeNode(node.type);
+                    links.resolvedType = isUnitType(reifySubject) ? reifySubject : createReifiedType(reifySubject);
                     break;
+                }
                 default:
                     Debug.assertNever(node.operator);
             }
@@ -22970,12 +23016,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         // In non-strictNullChecks mode, `undefined` and `null` are assignable to anything except `never`.
         // Since unions and intersections may reduce to `never`, we exclude them here.
         if (s & TypeFlags.Undefined && (!strictNullChecks && !(t & TypeFlags.UnionOrIntersection) || t & (TypeFlags.Undefined | TypeFlags.Void))) return true;
-        if (s & TypeFlags.Null && (!strictNullChecks && !(t & TypeFlags.UnionOrIntersection) || t & TypeFlags.Null)) {
-            // machine types use Number | Null as their intrinsic pattern matcher
-            if (!(t & TypeFlags.Number)) {
-                return true;
-            }
-        }
+        if (s & TypeFlags.Null && (!strictNullChecks && !(t & TypeFlags.UnionOrIntersection) || t & TypeFlags.Null)) return true;
         if (s & TypeFlags.Object && t & TypeFlags.NonPrimitive && !(relation === strictSubtypeRelation && isEmptyAnonymousObjectType(source) && !(getObjectFlags(source) & ObjectFlags.FreshLiteral))) return true;
         if (relation === assignableRelation || relation === comparableRelation) {
             if (s & TypeFlags.Any) return true;
@@ -27118,7 +27159,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
     // we perform type inference (i.e. a type parameter of a generic function). We cache
     // results for union and intersection types for performance reasons.
     function couldContainTypeVariables(type: Type): boolean {
-        const objectFlags = getObjectFlags(type);
+        const objectFlags = getObjectFlags(type) || (type.flags === TypeFlags.VariableMachineType ? (type as any).objectFlags : 0);
         if (objectFlags & ObjectFlags.CouldContainTypeVariablesComputed) {
             return !!(objectFlags & ObjectFlags.CouldContainTypeVariables);
         }
@@ -42772,17 +42813,12 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         return numberType;
     }
 
-    // Like `getUnaryResultType`, but for unary `-`: negating machine number types widens to plain
-    // `number` by default, same as binary arithmetic. Under a `"use checked"`/`"use wrapping"`
-    // directive, negation instead preserves a machine type, using the same-width *signed* type for
-    // an unsigned operand (two's-complement negation of a `uN` bit pattern is the same operation as
-    // negating an `iN` value) and leaving a signed or float operand's type unchanged.
     function getUnaryMinusResultType(operandType: Type, operandNode: Expression): Type {
         if (maybeTypeOfKind(operandType, TypeFlags.BigIntLike)) {
             return getUnaryResultType(operandType);
         }
         const info = getMachineNumberInfo(operandType);
-        if (info && isInCheckedOrWrappingArithmeticScope(operandNode)) {
+        if (info && isInCheckedOrWrappedArithmeticScope(operandNode)) {
             return info.kind === "u" ? getOrCreateMachineNumberType("i", info.width) : operandType;
         }
         return numberType;
@@ -43509,7 +43545,8 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                         // Or, if neither could be bigint, implicit coercion results in a number result
                         !(maybeTypeOfKind(leftType, TypeFlags.BigIntLike) || maybeTypeOfKind(rightType, TypeFlags.BigIntLike))
                     ) {
-                        resultType = getMachineNumberInfo(leftType) && isInCheckedOrWrappingArithmeticScope(left) ? leftType : numberType;
+                        const andResult = (operator === SyntaxKind.AmpersandToken || operator === SyntaxKind.AmpersandEqualsToken) ? getBitwiseAndResultType(leftType, rightType) : undefined;
+                        resultType = andResult ?? getConstantFoldedMachineLiteralType(left.parent as Expression, getCheckedArithmeticResultType(leftType, rightType, left));
                     }
                     // At least one is assignable to bigint, so check that both are
                     else if (bothAreBigIntLike(leftType, rightType)) {
@@ -43573,7 +43610,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                 if (isTypeAssignableToKind(leftType, TypeFlags.NumberLike, /*strict*/ true) && isTypeAssignableToKind(rightType, TypeFlags.NumberLike, /*strict*/ true)) {
                     // Operands of an enum type are treated as having the primitive type Number.
                     // If both operands are of the Number primitive type, the result is of the Number primitive type.
-                    resultType = getMachineNumberInfo(leftType) && isInCheckedOrWrappingArithmeticScope(left) ? leftType : numberType;
+                    resultType = getConstantFoldedMachineLiteralType(left.parent as Expression, getCheckedArithmeticResultType(leftType, rightType, left));
                 }
                 else if (isTypeAssignableToKind(leftType, TypeFlags.BigIntLike, /*strict*/ true) && isTypeAssignableToKind(rightType, TypeFlags.BigIntLike, /*strict*/ true)) {
                     // If both operands are of the BigInt primitive type, the result is of the BigInt primitive type.
@@ -52387,7 +52424,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
         }
 
         if (!resolve) {
-            return createReifiedType(subject);
+            return isUnitType(subject) ? subject : createReifiedType(subject);
         }
 
         function getMemberType(name: string) {

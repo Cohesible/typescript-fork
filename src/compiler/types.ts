@@ -6639,6 +6639,8 @@ export const enum TypeFlags {
     ESSymbolLike = ESSymbol | UniqueESSymbol,
     VoidLike = Void | Undefined,
     /** @internal */
+    VariableMachineType = Number | NonPrimitive, // normally an impossible type
+    /** @internal */
     Primitive = StringLike | NumberLike | BigIntLike | BooleanLike | EnumLike | ESSymbolLike | VoidLike | Null,
     /** @internal */
     DefinitelyNonNullable = StringLike | NumberLike | BigIntLike | BooleanLike | EnumLike | ESSymbolLike | Object | NonPrimitive,
